@@ -33,7 +33,7 @@ extern byte *net_profile_dvar;
 
 extern Bool Netchan_TransmitNextFragment(netchan_t *chan);
 extern Bool Netchan_Transmit(netchan_t *chan, int length, const byte *data);
-extern void NetProf_PrepProfiling(netProfileInfo_t *prof);
+extern void NetProf_PrepProfiling(netProfileInfo_t **pProf);
 extern void NetProf_AddPacket(netProfileStream_t *stream, int iLength, qboolean bFragment);
 extern void NetProf_UpdateStatistics(netProfileStream_t *stream);
 extern int Com_sprintf(char *dest, int size, const char *fmt, ...);
@@ -184,7 +184,7 @@ void SV_Netchan_AddOOBProfilePacket(int iLength)
 
     {
         byte *svs = (byte *)imp_svs;
-        NetProf_PrepProfiling((netProfileInfo_t *)(svs + SVS_POOBPROF_OFF));
+        NetProf_PrepProfiling((netProfileInfo_t **)(svs + SVS_POOBPROF_OFF));
         pOOBProf = *(netProfileInfo_t **)(svs + SVS_POOBPROF_OFF);
         NetProf_AddPacket((netProfileStream_t *)pOOBProf, iLength, 0);
     }
@@ -349,8 +349,8 @@ void SV_Netchan_PrintProfileStats(qboolean bPrintToConsole)
                 iTotalBPSSent, iTotalMaxSent, iTotalMinSent, 0,
                 iTotalBPSRecieved, iTotalMaxRecieved, iTotalMinRecieved, 0,
                 iTotalBPSSent + iTotalBPSRecieved,
-                (double)_fmaxf((float)iTotalMaxSent, (float)iTotalMaxRecieved),
-                (double)_fminf((float)iTotalMinSent, (float)iTotalMinRecieved),
+                (int)_fmaxf((float)iTotalMaxSent, (float)iTotalMaxRecieved),
+                (int)_fminf((float)iTotalMinSent, (float)iTotalMinRecieved),
                 iFragmentTotal);
     if (bPrintToConsole) {
         Com_Printf("%s\n", szLine);
@@ -382,8 +382,8 @@ void SV_Netchan_PrintProfileStats(qboolean bPrintToConsole)
                     pOOBProf->recieve.iSmallestPacket,
                     pOOBProf->recieve.iFragmentPercentage,
                     pOOBProf->send.iBytesPerSecond + pOOBProf->recieve.iBytesPerSecond,
-                    (double)_fmaxf((float)pOOBProf->send.iLargestPacket, (float)pOOBProf->recieve.iLargestPacket),
-                    (double)_fminf((float)pOOBProf->send.iSmallestPacket, (float)pOOBProf->recieve.iSmallestPacket),
+                    (int)_fmaxf((float)pOOBProf->send.iLargestPacket, (float)pOOBProf->recieve.iLargestPacket),
+                    (int)_fminf((float)pOOBProf->send.iSmallestPacket, (float)pOOBProf->recieve.iSmallestPacket),
                     oobFragPerc);
     } else {
         Com_sprintf(szLine, 1024,
@@ -435,8 +435,8 @@ void SV_Netchan_PrintProfileStats(qboolean bPrintToConsole)
                         pProf->recieve.iSmallestPacket,
                         pProf->recieve.iFragmentPercentage,
                         pProf->send.iBytesPerSecond + pProf->recieve.iBytesPerSecond,
-                        (double)_fmaxf((float)pProf->send.iLargestPacket, (float)pProf->recieve.iLargestPacket),
-                        (double)_fminf((float)pProf->send.iSmallestPacket, (float)pProf->recieve.iSmallestPacket),
+                        (int)_fmaxf((float)pProf->send.iLargestPacket, (float)pProf->recieve.iLargestPacket),
+                        (int)_fminf((float)pProf->send.iSmallestPacket, (float)pProf->recieve.iSmallestPacket),
                         clFragPerc);
         }
 
