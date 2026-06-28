@@ -188,7 +188,9 @@ void CL_Netchan_SendOOBPacket(int iLength, const void *pData, netadr_t to)
 {
     byte *clc_base;
 
-    if (*(int *)pData != -1) {
+    if (iLength < (int)sizeof(int)) {
+        Com_Printf("CL_Netchan_SendOOBPacket got short packet (%i bytes).\n", iLength);
+    } else if (*(const int *)pData != -1) {
         Com_Printf("CL_Netchan_SendOOBPacket used to send non-OOB packet.\n");
     }
 
