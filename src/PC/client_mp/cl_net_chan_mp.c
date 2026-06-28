@@ -355,15 +355,11 @@ void CL_Netchan_PrintProfileStats(qboolean bPrintToConsole)
     }
 
     iYPos += 0xa;
-    if (!bPrintToConsole) {
-        CL_DrawString(0x20, iYPos, szLine, 0, 0xa);
-    }
-
     Com_sprintf(szLine, 0x400, "       Total: %5i",
                 iTotalBPSSent + iTotalBPSRecieved);
     if (bPrintToConsole) {
         Com_Printf("%s\n", szLine);
     } else {
-        CL_DrawString(0x20, iYPos + 0xa, szLine, 0, 0xa);
+        CL_DrawString(0x20, iYPos, szLine, 0, 0xa);
     }
 }
