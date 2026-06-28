@@ -401,14 +401,14 @@ qboolean FS_iwIwd(char *iwd, char *base)
         return 0;
     }
 
-    strcpy(szFile, iwd);
+    I_strncpyz(szFile, iwd, sizeof(szFile));
     szFile[(p - iwd) + 10] = '\0';
 
     if (FS_FilenameCompare(szFile, va("%s/localized_", base)) != 0) {
         return 0;
     }
 
-    strcpy(szFile, p + 10);
+    I_strncpyz(szFile, p + 10, sizeof(szFile));
     I_strlwr(szFile);
 
     for (i = 0; i < 25; i++) {
@@ -1012,7 +1012,7 @@ int FS_GetModList(char *listbuf, int bufsize)
 
         nameLen = (int)strlen(name);
 
-        strcpy(descPath, name);
+        I_strncpyz(descPath, name, sizeof(descPath));
         I_strncat(descPath, 0x100, "/description.txt");
 
         if (FS_SV_FOpenFileRead(descPath, &descHandle) > 0 && descHandle != 0) {
@@ -1028,10 +1028,10 @@ int FS_GetModList(char *listbuf, int bufsize)
             FS_FCloseFile(descHandle);
         } else if (I_stricmp(name, "main") == 0) {
 
-            strcpy(descPath, "Call of 2 Multiplayer");
+            I_strncpyz(descPath, "Call of 2 Multiplayer", sizeof(descPath));
         } else {
 
-            strcpy(descPath, name);
+            I_strncpyz(descPath, name, sizeof(descPath));
         }
 
         descLen = (int)strlen(descPath);
@@ -1040,11 +1040,11 @@ int FS_GetModList(char *listbuf, int bufsize)
             break;
         }
 
-        strcpy(listbuf, name);
+        I_strncpyz(listbuf, name, bufsize - nTotal);
 
         listbuf += nameLen;
 
-        strcpy(listbuf, descPath);
+        I_strncpyz(listbuf, descPath, bufsize - nTotal - nameLen);
         listbuf += descLen;
 
         nTotal += nameLen + descLen;

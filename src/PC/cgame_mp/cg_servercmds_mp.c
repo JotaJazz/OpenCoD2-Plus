@@ -121,9 +121,11 @@ void CG_ParseServerinfo(void)
 
     val = Info_ValueForKey(info, (const char *)"sv_hostname");
     strncpy(cgs->szHostName, val, 0x100);
+    cgs->szHostName[0x100 - 1] = '\0';
 
     val = Info_ValueForKey(info, (const char *)"g_gametype");
     strncpy(cgs->gametype, val, 0x20);
+    cgs->gametype[0x20 - 1] = '\0';
 
     if (cgs->localServer == 0) {
         Dvar_SetStringByName((const char *)"g_gametype", cgs->gametype);

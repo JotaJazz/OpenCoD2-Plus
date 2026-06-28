@@ -978,7 +978,7 @@ void SND_LoadSoundFile(SoundFile *soundFile)
         return;
     }
 
-    sprintf(realname, (const char *)"sound/%s", soundFile->soundName);
+    snprintf(realname, sizeof(realname), "sound/%s", soundFile->soundName);
     if (FS_ReadFile(realname, &buffer) < 0) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' not found\n", realname);
         soundFile->fileMem = NULL;
@@ -1329,7 +1329,7 @@ int SND_StartAliasStreamOnChannel(const snd_alias_t *pAlias0, const snd_alias_t 
         milesGlob.handle_stream[streamIdx] = NULL;
     }
 
-    sprintf(realname, (const char *)"sound/%s", Com_GetSoundFileName(pAlias0));
+    snprintf(realname, sizeof(realname), "sound/%s", Com_GetSoundFileName(pAlias0));
 
     if (mss_q3fs->current.enabled != 0) {
         handle = AIL_open_stream( (void *)(milesGlob.driver_2D), realname, 0);

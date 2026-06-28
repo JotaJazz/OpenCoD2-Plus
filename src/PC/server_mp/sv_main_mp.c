@@ -427,7 +427,7 @@ void SVC_Status(netadr_t from)
     LargeLocal_LargeLocal(&status_large_local, MAX_MSGLEN);
     status = (char *)LargeLocal_GetBuf(&status_large_local);
 
-    strcpy(infostring, Dvar_InfoString(0x404));
+    I_strncpyz(infostring, Dvar_InfoString(0x404), sizeof(infostring));
     Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
 
     if (Dvar_GetBool("fs_restrict")) {
@@ -455,7 +455,7 @@ void SVC_Status(netadr_t from)
         if ((unsigned int)newStatusLength > 0x3fff)
             break;
 
-        strcpy(status + statusLength, player);
+        I_strncpyz(status + statusLength, player, MAX_MSGLEN - statusLength);
         statusLength = newStatusLength;
     }
 
@@ -513,7 +513,7 @@ void SVC_GameCompleteStatus(netadr_t from)
     LargeLocal_LargeLocal(&status_large_local, MAX_MSGLEN);
     status = (char *)LargeLocal_GetBuf(&status_large_local);
 
-    strcpy(infostring, Dvar_InfoString(0x404));
+    I_strncpyz(infostring, Dvar_InfoString(0x404), sizeof(infostring));
     Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
 
     if (Dvar_GetBool("fs_restrict")) {
@@ -539,7 +539,7 @@ void SVC_GameCompleteStatus(netadr_t from)
         if ((unsigned int)newStatusLength > 0x3fff)
             break;
 
-        strcpy(status + statusLength, player);
+        I_strncpyz(status + statusLength, player, MAX_MSGLEN - statusLength);
         statusLength = newStatusLength;
     }
 

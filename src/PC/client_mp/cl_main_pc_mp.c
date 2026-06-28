@@ -609,7 +609,7 @@ void CL_GlobalServers_f(void)
     to.type = (netadrtype_t)(4);
     to.port = (unsigned short)0xe650;
 
-    sprintf(command, (const char *)"getservers %s", Cmd_Argv(2));
+    snprintf(command, sizeof(command), "getservers %s", Cmd_Argv(2));
 
     buffptr = command + strlen(command);
 
@@ -617,7 +617,7 @@ void CL_GlobalServers_f(void)
     if (count > 3) {
 
         for (i = 3; i != count; i++) {
-            buffptr += sprintf(buffptr, (const char *)" %s", Cmd_Argv(i));
+            buffptr += snprintf(buffptr, sizeof(command) - (buffptr - command), " %s", Cmd_Argv(i));
         }
     }
 

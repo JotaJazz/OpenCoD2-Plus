@@ -1295,7 +1295,7 @@ static BM_NOINLINE void Com_ErrorCleanup(void)
     Dvar_SetIntByName("cl_paused", 0);
     FS_PureServerSetLoadedIwds("", "");
     SEH_UpdateLanguageInfo();
-    strcpy(szUnlocedMsg, com_errorMessage);
+    I_strncpyz(szUnlocedMsg, com_errorMessage, sizeof(szUnlocedMsg));
 
     if (errorcode == 3) {
         if (com_errorMessage[0]) {

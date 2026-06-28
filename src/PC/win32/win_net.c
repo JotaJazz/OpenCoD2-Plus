@@ -335,6 +335,10 @@ void Sys_SendPacket(int length, const void *data, netadr_t to)
     }
 
     if (usingSocks && to.type == NA_IP) {
+        if (length > (int)sizeof(socksBuf) - 10) {
+            Com_Printf("Sys_SendPacket: SOCKS packet too large (%i bytes)\n", length);
+            return;
+        }
         socksBuf[0] = 0;
         socksBuf[1] = 0;
         socksBuf[2] = 0;

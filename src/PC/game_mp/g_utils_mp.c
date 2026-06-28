@@ -8,6 +8,7 @@ extern void SV_SetConfigstring(const int index, const char *val);
 extern void Scr_Error(const char *msg);
 extern char *va(const char *format, ...);
 extern void Com_Error(int code, const char *fmt, ...);
+extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern void Com_Printf(const char *fmt, ...);
 extern int stricmp(const char *s1, const char *s2);
 extern char *I_strlwr(char *str);
@@ -225,7 +226,7 @@ int G_ShaderIndex(const char *name)
 {
     char shaderName[64];
 
-    strcpy(shaderName, name);
+    I_strncpyz(shaderName, name, sizeof(shaderName));
     I_strlwr(shaderName);
 
     return G_FindConfigstringIndex(shaderName, 0x61e, 0x80, LEVEL_INITIALIZING, "shader");

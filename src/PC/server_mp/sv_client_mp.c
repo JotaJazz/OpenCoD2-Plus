@@ -220,7 +220,7 @@ void SV_AuthorizeRequest(struct netadr_t from, int challenge)
         const char *val = fs_game->current.string;
         if (val[0] != '\0') {
 
-            strcpy(game, val);
+            I_strncpyz(game, val, sizeof(game));
         }
     }
 

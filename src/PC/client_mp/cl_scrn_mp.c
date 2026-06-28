@@ -399,7 +399,7 @@ static void SCR_UpdateFrame(void)
                 int posKB = (pos + 0x3ff) >> 10;
                 char buf[1024];
                 float color[4];
-                sprintf(buf, "RECORDING %s: %ik", clc->demoName, posKB);
+                snprintf(buf, sizeof(buf), "RECORDING %s: %ik", clc->demoName, posKB);
 
                 CL_LookupColor(0x37, color);
                 float x = 5.0f;

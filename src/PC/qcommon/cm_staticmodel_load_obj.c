@@ -13,6 +13,7 @@ extern int XModelGetStaticBounds(const XModel *model, vec3_t *axis, vec_t *outMi
 extern void Com_Error(int level, const char *fmt, ...);
 extern void *CM_Hunk_Alloc(int size, const char *name, int align);
 extern int sscanf(const char *str, const char *fmt, ...);
+extern void I_strncpyz(char *dest, const char *src, int destsize);
 
 void CM_LoadStaticModels(void)
 {
@@ -41,20 +42,20 @@ void CM_LoadStaticModels(void)
             if (ptr == NULL || *token == '}')
                 break;
 
-            strcpy(key, token);
+            I_strncpyz(key, token, sizeof(key));
 
             token = Com_Parse(&ptr);
             if (ptr == NULL)
                 break;
 
-            strcpy(value, token);
+            I_strncpyz(value, token, sizeof(value));
 
             if (stricmp(key, "classname") == 0) {
                 if (stricmp(value, "misc_model") == 0) {
                     bMiscModel = 1;
                 }
             } else if (stricmp(key, "model") == 0) {
-                strcpy(modelName, value);
+                I_strncpyz(modelName, value, sizeof(modelName));
             }
         }
 
@@ -99,20 +100,20 @@ void CM_LoadStaticModels(void)
             if (ptr == NULL || *token == '}')
                 break;
 
-            strcpy(key, token);
+            I_strncpyz(key, token, sizeof(key));
 
             token = Com_Parse(&ptr);
             if (ptr == NULL)
                 break;
 
-            strcpy(value, token);
+            I_strncpyz(value, token, sizeof(value));
 
             if (stricmp(key, "classname") == 0) {
                 if (stricmp(value, "misc_model") == 0) {
                     found = 1;
                 }
             } else if (stricmp(key, "model") == 0) {
-                strcpy(modelName, value);
+                I_strncpyz(modelName, value, sizeof(modelName));
             } else if (stricmp(key, "origin") == 0) {
                 sscanf(value, "%f %f %f", &origin[0], &origin[1], &origin[2]);
             } else if (stricmp(key, "angles") == 0) {

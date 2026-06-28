@@ -181,12 +181,20 @@ void CL_Netchan_AddOOBProfilePacket(int iLength)
     clc_base = *(byte **)clc_ptr;
     NetProf_PrepProfiling(&((clientConnection_t *)clc_base)->pOOBProf);
     pOOBProf = ((clientConnection_t *)clc_base)->pOOBProf;
+    if (pOOBProf == NULL)
+        return;
     NetProf_AddPacket(&pOOBProf->send, iLength, 0);
 }
 
 void CL_Netchan_SendOOBPacket(int iLength, const void *pData, netadr_t to)
 {
     byte *clc_base;
+    netProfileInfo_t *pOOBProf;
+
+    if (iLength > 0 && pData == NULL) {
+        Com_Printf("CL_Netchan_SendOOBPacket got null payload with positive length (%i).\n", iLength);
+        return;
+    }
 
     if (iLength < (int)sizeof(int)) {
         Com_Printf("CL_Netchan_SendOOBPacket got short packet (%i bytes).\n", iLength);
@@ -203,7 +211,10 @@ void CL_Netchan_SendOOBPacket(int iLength, const void *pData, netadr_t to)
         return;
 
     NetProf_PrepProfiling(&((clientConnection_t *)clc_base)->pOOBProf);
-    NetProf_AddPacket(&((clientConnection_t *)clc_base)->pOOBProf->send, iLength, 0);
+    pOOBProf = ((clientConnection_t *)clc_base)->pOOBProf;
+    if (pOOBProf == NULL)
+        return;
+    NetProf_AddPacket(&pOOBProf->send, iLength, 0);
 }
 
 void CL_Netchan_PrintProfileStats(qboolean bPrintToConsole)

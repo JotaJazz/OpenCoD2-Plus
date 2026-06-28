@@ -349,6 +349,12 @@ const char *NET_AdrToString(netadr_t a)
                     (int)a.ip[2],
                     (int)a.ip[3],
                     (int)(short)portHost);
+    } else if (a.type == 0) {
+
+        Com_sprintf(s, 0x40, "localhost");
+    } else {
+
+        Com_sprintf(s, 0x40, "bad address");
     }
 
     return s;
@@ -418,6 +424,8 @@ Bool NET_SendPacket(netsrc_t sock, int length, const void *data, netadr_t to)
             int sendSlot = loop->send & 0xf;
             loop->send++;
             msg = &loop->msgs[sendSlot];
+            if (length > (int)sizeof(msg->data))
+                length = (int)sizeof(msg->data);
             memcpy(msg, data, length);
             msg->datalen = length;
             msg->port = 0;
@@ -430,6 +438,8 @@ Bool NET_SendPacket(netsrc_t sock, int length, const void *data, netadr_t to)
             int sendSlot = loop->send & 0xf;
             loop->send++;
             msg = &loop->msgs[sendSlot];
+            if (length > (int)sizeof(msg->data))
+                length = (int)sizeof(msg->data);
             memcpy(msg, data, length);
             msg->datalen = length;
             msg->port = portVal;
@@ -450,6 +460,11 @@ Bool NET_SendPacket(netsrc_t sock, int length, const void *data, netadr_t to)
 void NET_OutOfBandVoiceData(netsrc_t sock, netadr_t adr, byte *format, int len)
 {
     byte string[0x8000 + 4];
+
+    if (len > 0x8000) {
+        Com_DPrintf("NET_OutOfBandVoiceData: len %i too large, clamping\n", len);
+        len = 0x8000;
+    }
 
     string[0] = 0xff;
     string[1] = 0xff;
@@ -481,6 +496,11 @@ Bool NET_OutOfBandData(netsrc_t sock, netadr_t adr, byte *format, int len)
     string[1] = 0xff;
     string[2] = 0xff;
     string[3] = 0xff;
+
+    if (len > MAX_MSGLEN - 4) {
+        Com_DPrintf("NET_OutOfBandData: len %i too large, clamping\n", len);
+        len = MAX_MSGLEN - 4;
+    }
 
     for (i = 0; i < len; i++) {
         string[4 + i] = format[i];
@@ -902,7 +922,7 @@ qboolean Netchan_Process(netchan_t *chan, msg_t *msg)
         return 0;
     }
 
-    if (chan->fragmentLength > msg->maxsize) {
+    if (chan->fragmentLength + 4 > msg->maxsize) {
         Com_Printf("%s:fragmentLength %i > msg->maxsize\n",
                    NET_AdrToString(chan->remoteAddress),
                    chan->fragmentLength);

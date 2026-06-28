@@ -186,6 +186,8 @@ void SV_Netchan_AddOOBProfilePacket(int iLength)
         byte *svs = (byte *)imp_svs;
         NetProf_PrepProfiling((netProfileInfo_t **)(svs + SVS_POOBPROF_OFF));
         pOOBProf = *(netProfileInfo_t **)(svs + SVS_POOBPROF_OFF);
+        if (pOOBProf == NULL)
+            return;
         NetProf_AddPacket((netProfileStream_t *)pOOBProf, iLength, 0);
     }
 }
