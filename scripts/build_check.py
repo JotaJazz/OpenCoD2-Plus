@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|all ...] [--cxx-dirs "a;b"] [--cxx-all]
+    python3 scripts/build_check.py [linux|linux-10|mingw|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one and mingw the Windows
-cross-compile. Exits with 0 when every requested variant builds with no errors.
+cross-compile. The engine compiles as C++ unless --c is given; with --c,
+--cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
+every requested variant builds with no errors.
 """
 import argparse, os, subprocess, sys
 
@@ -36,12 +38,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
     ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
-    ap.add_argument('--cxx-all', action='store_true', help='passes -DCOD2_CXX_ALL=ON')
+    ap.add_argument('--c', action='store_true', help='builds C instead of C++ (-DCOD2_CXX_ALL=OFF)')
     args = ap.parse_args()
 
     variants = list(VARIANTS) if 'all' in args.variants else args.variants
     extra = ['-DCOD2_CXX_DIRS=' + (args.cxx_dirs or '')]
-    extra.append('-DCOD2_CXX_ALL=' + ('ON' if args.cxx_all else 'OFF'))
+    extra.append('-DCOD2_CXX_ALL=' + ('OFF' if args.c else 'ON'))
 
     failed = False
     for variant in variants:

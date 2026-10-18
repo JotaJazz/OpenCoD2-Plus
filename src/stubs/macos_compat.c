@@ -11,11 +11,11 @@
 #    ifdef __EMSCRIPTEN__
 #        include <GLES3/gl3.h>
 #    elif defined(_WIN32)
-
-#        define GL_COLOR_BUFFER_BIT 0x00004000
-#        define GL_DEPTH_BUFFER_BIT 0x00000100
 #        include <SDL2/SDL_syswm.h>
 #        include <windows.h>
+/* the real prototypes: GL is __stdcall on Windows, so calling it through an
+   implicit (cdecl) declaration left the stack unbalanced */
+#        include <GL/gl.h>
 #    else
 #        include <SDL2/SDL_syswm.h>
 #        include <GL/gl.h>
@@ -658,9 +658,6 @@ ContextRef MacDisplay_CreateScreenContext(int inDepthSize, int inUseStencil,
         SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &got_stencil);
         SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &got_db);
         extern void Com_Printf(const char *fmt, ...);
-        /* glGetString returns a pointer; without a prototype it defaults to int
-         * return -> the 8-byte pointer is truncated to 32 bits on x64. */
-        extern const unsigned char *glGetString(unsigned int name);
         glver = (const char *)glGetString(0x1F02 );
         glrend = (const char *)glGetString(0x1F01 );
         (void)got_db; (void)glver; (void)glrend;

@@ -37,12 +37,20 @@ trust and avoid exposing test servers to untrusted networks.
 All targets are driven by **CMake (≥ 3.16)**, each an out-of-source build into
 its own directory.
 
+On Linux and MinGW the engine compiles as **C++** (gnu++17): each C source is
+built through a generated wrapper, `extern "C" { #include "x.c" }`, so every
+symbol keeps the C name the data blobs and `.S` files refer to. The data blobs
+and the third-party libraries (speex, jpeg-6, zlib) stay C. Configure with
+`-DCOD2_CXX_ALL=OFF` to build plain C again. The MSVC build below still
+compiles C.
+
 ### Linux (primary)
 
 The engine is a 32-bit x86 binary; you need a multilib toolchain and 32-bit libs
 (Debian/Ubuntu names shown):
 
 ```sh
+sudo dpkg --add-architecture i386 && sudo apt update
 sudo apt install build-essential gcc-multilib g++-multilib cmake \
      libsdl2-dev:i386 libgl1-mesa-dev:i386 libx11-dev:i386 \
      libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386
@@ -56,6 +64,8 @@ cmake --build build-native -j
 ```
 
 ### Windows (MinGW cross-compile)
+
+Needs `g++-mingw-w64-i686` and the static zlib for MinGW (`libz-mingw-w64-dev`).
 
 ```sh
 cmake -S . -B build-win32 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake
@@ -150,6 +160,23 @@ With no SDL2 lib at all, the link falls back to a stub and no window opens.
 This target compiles all TUs, links with no unresolved or duplicate symbols,
 boots, renders the menu, and can load maps — but the same work-in-progress
 caveats above apply.
+
+### Checks
+
+```sh
+python3 scripts/build_check.py all        # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
+python3 scripts/check_c_linkage.py build/check-linux   # no C++-mangled engine symbols
+python3 scripts/opencod2_smoke.py /path/to/CoD2 --protocol 118   # 115 for the 1.0 build
+python3 -m unittest discover -s test
+```
+
+`opencod2_smoke.py` runs `scripts/smoke_test.py` (unchanged from
+[CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus)) against the dedicated
+server and compares its failures with `test/smoke_expected_failures_<protocol>.txt`,
+the checks this server does not pass yet; the lists may only shrink.
+`scripts/cxx_errors.py` counts the C++ errors of a module compiled as C++
+(`--return-type` finds non-void functions that can end without a return,
+undefined behaviour in C++).
 
 ## Running
 
