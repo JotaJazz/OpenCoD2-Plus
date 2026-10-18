@@ -1,6 +1,6 @@
 # Changes in opencod2-plus
 
-Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/opencod2), in detail: the functions, files and fixes behind each item that the [README](../README.md#changes-in-this-fork) summarizes. The design and the plans these changes follow are in [docs/superpowers](superpowers).
+Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/opencod2), in detail: the functions, files and fixes behind each item that the [README](../README.md#changes-in-this-fork) summarizes.
 
 ## Building
 

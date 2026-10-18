@@ -37,7 +37,7 @@ Este repositorio es un fork de [opencod2/opencod2](https://github.com/opencod2/o
 - **Arreglos:** el servidor respondía al puerto equivocado, no veía ningún `.iwd` en unidades de Windows bajo WSL y se caía con cualquier expulsión; anunciaba el protocolo 118 en la compilación 1.0; la compilación C++ de Linux sigue en glibc 2.34; `getAnimLength` y otras tres funciones de animación ya no tumban el servidor.
 - **Pruebas:** el smoke test de CoD2rev-Plus, sin cambios, contra este servidor, con la lista de comprobaciones que todavía no pasa; una prueba de dos jugadores, una de las funciones de animación, y comprobaciones de la disposición de las estructuras, de los nombres de C y de los archivos copiados de CoD2rev-Plus.
 
-Cada cambio en detalle está en [docs/CHANGES.md](docs/CHANGES.md) (en inglés). El plan detrás de ellos está en [docs/superpowers](docs/superpowers).
+Cada cambio en detalle está en [docs/CHANGES.md](docs/CHANGES.md) (en inglés).
 
 ## Versiones del juego
 
@@ -174,7 +174,7 @@ python3 -m unittest discover -s test
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Código de cada plataforma y stubs. |
 | `scripts` | Scripts de compilación y de prueba, y el cliente de prueba de CoD2rev-Plus. |
 | `test` | Pruebas unitarias y las listas que leen las comprobaciones. |
-| `docs` | [CHANGES.md](docs/CHANGES.md), el banner, y el diseño y los planes en `docs/superpowers`. |
+| `docs` | [CHANGES.md](docs/CHANGES.md) y el banner. |
 
 ## Aviso
 
