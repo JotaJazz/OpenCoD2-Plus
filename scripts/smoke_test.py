@@ -280,15 +280,20 @@ def check_master(args, check):
             rcon(port, password, 'heartbeat')
             check('heartbeat command sends one now', master.receive(lambda t: t.startswith('heartbeat '), 5) is not None)
 
-            rcon(port, password, 'quit')
+            # SIGTERM quits as the quit command does
+            server.send_signal(signal.SIGTERM)
             flat = master.receive(lambda t: t.startswith('heartbeat '), 10)
-            check('flatline heartbeat on quit', flat is not None and flat[1] == 'heartbeat flatline\n',
+            check('flatline heartbeat on SIGTERM', flat is not None and flat[1] == 'heartbeat flatline\n',
                   repr(flat[1]) if flat else 'nothing received')
             try:
                 server.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 pass
-            check('server quit', server.poll() is not None)
+            check('server quit on SIGTERM with exit code 0', server.poll() == 0, f'exit code {server.poll()}')
+            # g_logSync is 0, so this line only reaches the file if the log was closed
+            game_log = os.path.join(home, 'main', 'games_mp.log')
+            game_text = open(game_log, encoding='latin-1').read() if os.path.exists(game_log) else ''
+            check('games_mp.log closed on SIGTERM', 'ShutdownGame:' in game_text)
 
             log_text = open(log_path, encoding='latin-1').read()
             others = sorted(set(re.findall(r'Sending heartbeat to (\S+)', log_text)) - {f'127.0.0.1:{master.port}'})
