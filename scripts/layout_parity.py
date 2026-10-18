@@ -9,7 +9,7 @@ name, optionally followed by ':field1,field2,...' (# comments); a name ending
 in '~' compares only the fields, not sizeof. For each side a
 C++ program prints sizeof and offsetof of every field; the two results are
 compared. Side A is this repo (common_types.h and imports.h inside extern "C"),
-side B is CoD2rev-Plus (src/qcommon/qcommon.h and src/script/script_public.h); both use the flags of the
+side B is CoD2rev-Plus (qcommon.h, script_public.h, server.h and g_shared.h); both use the flags of the
 variant's build in build/check-<variant>/. Prints 'ok <type>' or
 'DIFF <type>: <field> <A> != <B>', and exits with 0 when nothing differs. The
 mingw variant needs wine to run its programs.
@@ -103,7 +103,9 @@ def main():
                   'extern "C" {\n#include "common_types.h"\n#include "imports.h"\n}')
     prologue_b = (f'#include "{args.headers_b}"' if args.headers_b else
                   f'#include "{os.path.join(SRC, "qcommon", "qcommon.h")}"\n'
-                  f'#include "{os.path.join(SRC, "script", "script_public.h")}"')
+                  f'#include "{os.path.join(SRC, "script", "script_public.h")}"\n'
+                  f'#include "{os.path.join(SRC, "server", "server.h")}"\n'
+                  f'#include "{os.path.join(SRC, "game", "g_shared.h")}"')
 
     with tempfile.TemporaryDirectory(prefix='layout_parity_') as tmp:
         a = measure(compiler, flags_a, program(prologue_a, types), tmp, 'a', runner)

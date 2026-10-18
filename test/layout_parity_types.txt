@@ -21,3 +21,24 @@ function_stack_t:pos,localId,localVarCount,top,startTop
 function_frame_t:fs,topType
 scr_entref_t:entnum,classnum
 scr_anim_s
+# Types that cross between the engine and CoD2rev-Plus's server. client_t and
+# serverStatic_t stay inside the server (their 1.0 forms differ on purpose);
+# cm_world.c reads sv.svEntities.
+server_t
+svEntity_t
+entityShared_t
+entityState_s
+playerState_s
+gentity_s
+gclient_s
+archivedEntity_s
+netadr_t:type,ip,port
+msg_t
+usercmd_s
+DObj_s:tree,skel,timeStamp,animToModel,duplicateParts,locked,numModels,numBones,ignoreCollision,models,modelParents,matOffset,mins,maxs
+# netchan_t: dropped and incomingSequence are swapped (the engine's order is
+# CoD2MP_s.exe's); the server reads neither, the engine's Netchan_* the rest.
+netchan_t:outgoingSequence,sock,remoteAddress,qport,fragmentSequence,fragmentLength,fragmentBuffer,unsentFragments,unsentFragmentStart,unsentLength,unsentBuffer,pProf
+# dvar_s keeps vectors in line in CoD2rev-Plus (72 bytes) and points to them
+# here (36); the server reads only these.
+dvar_s~:name,flags,type,modified,current
