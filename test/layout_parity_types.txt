@@ -1,0 +1,23 @@
+# Types that cross between the engine and CoD2rev-Plus's script VM
+# (scripts/layout_parity.py). name or name:field,field,...; name~ compares
+# only the fields.
+# The VM globals the engine reaches directly (g_main_mp.c: scrVarPub at 0,
+# scrVmPub +12 function_frame and +16 top) and the rest of their fields.
+# CoD2rev-Plus defines these globals now. This repo's scrVarPub_t also has the
+# single-player saveIdMap tables (262216 bytes against 80) and its scrVmPub_t a
+# different stack size (17184 against 17280); the engine reads neither tail,
+# so only the fields are compared.
+scrVarPub_t~:fieldBuffer,evaluate,error_message,time,timeArrayId,pauseArrayId,levelId,gameId,animId,freeEntList,tempVariable,bInited,checksum,entId,entFieldName,programBuffer,endScriptBuffer
+scrVmPub_t~:localVars,maxstack,function_count,function_frame,top,debugCode,abort_on_error,terminal_error,inparamcount,outparamcount,function_frame_start,stack
+scrCompilePub_t
+scrAnimPub_t
+scrParserPub_t
+# Interface types. RefString (16 here, 8 there) is used only inside the VM.
+VariableUnion
+VariableValue:u,type
+VariableStackBuffer:pos,size,bufLen,localId,time,buf
+VariableValueInternal
+function_stack_t:pos,localId,localVarCount,top,startTop
+function_frame_t:fs,topType
+scr_entref_t:entnum,classnum
+scr_anim_s
