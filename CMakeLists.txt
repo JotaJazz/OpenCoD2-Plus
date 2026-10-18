@@ -92,10 +92,11 @@ endif()
 if(COD2_PLUS_SCRIPT)
   add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
 endif()
-# CoD2rev-Plus's server (src/server) in the dedicated server, on the 32-bit
-# Linux and MinGW builds; the client keeps src/PC/server_mp for its local
-# server. It calls CoD2rev-Plus's script VM, so it needs COD2_PLUS_SCRIPT.
-option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server (src/server) in the dedicated server" ON)
+# CoD2rev-Plus's server and game (src/server, src/game) in the dedicated
+# server, on the 32-bit Linux and MinGW builds; the client keeps
+# src/PC/server_mp, src/PC/game_mp and src/PC/game for its local server. They
+# call CoD2rev-Plus's script VM, so they need COD2_PLUS_SCRIPT.
+option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server and game (src/server, src/game) in the dedicated server" ON)
 if(NOT COD2_PLUS_SCRIPT)
   set(COD2_PLUS_SERVER OFF)
 endif()
@@ -113,10 +114,11 @@ function(cod2_plus_script)
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
-# cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server sources and
-# their bridge to the engine (src/compat/server_*.cpp).
+# cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server and game
+# sources and their bridge to the engine (src/compat/server_*.cpp).
 function(cod2_plus_server)
-  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/compat/server_*.cpp)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
+    ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
@@ -351,7 +353,7 @@ if(COD2_PLUS_SCRIPT)
 endif()
 set(COD2_W32_SERVER_OBJS "")
 if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/server_mp/")
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
 endif()
@@ -566,14 +568,15 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
-# With COD2_PLUS_SERVER the dedicated server links src/server instead of
-# src/PC/server_mp, and the blobs that define the server's globals are
-# compiled for each executable, leaving them to src/server in the dedicated.
+# With COD2_PLUS_SERVER the dedicated server links src/server and src/game
+# instead of src/PC/server_mp, src/PC/game_mp and src/PC/game, and the blobs
+# that define their globals are compiled for each executable, leaving them to
+# CoD2rev-Plus's code in the dedicated.
 set(COD2_SERVER_MP_C "")
 if(COD2_PLUS_SERVER)
   set(COD2_SERVER_MP_C ${ALL_C})
-  list(FILTER COD2_SERVER_MP_C INCLUDE REGEX "^src/PC/server_mp/")
-  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/server_mp/")
+  list(FILTER COD2_SERVER_MP_C INCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
+  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
   list(REMOVE_ITEM ALL_C src/blobs/bss.c)
   list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c)
   list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c)

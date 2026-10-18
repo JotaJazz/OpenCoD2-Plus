@@ -113,5 +113,12 @@ class CustomImports(unittest.TestCase):
         self.assertIn('if ( count > toSizeBytes )', code)
 
 
+class Modules(unittest.TestCase):
+    def test_server_module_includes_game(self):
+        # the game links with the server, so the server's bridge covers it
+        objects = g.MODULES['server']['objects']
+        self.assertTrue(any(o.endswith('src/game/*.o') for o in objects), objects)
+
+
 if __name__ == '__main__':
     unittest.main()
