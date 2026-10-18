@@ -400,7 +400,7 @@ void SV_Init(void)
 
     sv_gametype = Dvar_RegisterString("g_gametype", "dm", 0x1024);
     Dvar_RegisterString("sv_keywords", "", 0x1004);
-    Dvar_RegisterInt("protocol", 0x76, 0x76, 0x76, 0x1044);
+    Dvar_RegisterInt("protocol", COD2_PROTOCOL_VERSION, COD2_PROTOCOL_VERSION, COD2_PROTOCOL_VERSION, 0x1044);
     sv_mapname = Dvar_RegisterString("mapname", "", 0x1044);
     sv_privateClients = Dvar_RegisterInt("sv_privateClients", 0, 0, 0x40, 0x1004);
     sv_maxclients = Dvar_RegisterInt("sv_maxclients", 20, 1, 0x40, 0x1025);

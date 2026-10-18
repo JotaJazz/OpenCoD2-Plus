@@ -7,6 +7,13 @@
   #define COD2_IS_PATCH_13 1
 #endif
 
+/* network protocol of the game version: 115 for 1.0, 118 for 1.3 */
+#if COD2_IS_PATCH_13
+  #define COD2_PROTOCOL_VERSION 118
+#else
+  #define COD2_PROTOCOL_VERSION 115
+#endif
+
 #ifndef COD2_FEATURE_WWW_DOWNLOAD
   #define COD2_FEATURE_WWW_DOWNLOAD COD2_IS_PATCH_13
 #endif

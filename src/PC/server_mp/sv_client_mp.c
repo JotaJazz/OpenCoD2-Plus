@@ -1234,9 +1234,9 @@ void SV_DirectConnect(netadr_t from)
     I_strncpyz(userinfo, SV_Cmd_Argv(1), sizeof(userinfo));
 
     version = atoi(Info_ValueForKey(userinfo, "protocol"));
-    if (version != 0x76) {
+    if (version != COD2_PROTOCOL_VERSION) {
         NET_OutOfBandPrint((netsrc_t)1, from, va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.3"));
-        Com_DPrintf("    rejected connect from protocol version %i (should be %i)\n", version, 0x76);
+        Com_DPrintf("    rejected connect from protocol version %i (should be %i)\n", version, COD2_PROTOCOL_VERSION);
         return;
     }
 
@@ -1721,7 +1721,7 @@ gentity_t *SV_AddTestClient(void)
             return NULL;
     }
 
-    sprintf(userinfo, "connect \"\\cg_predictItems\\1\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%d\\protocol\\%d\"", botport, 0x76);
+    sprintf(userinfo, "connect \"\\cg_predictItems\\1\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%d\\protocol\\%d\"", botport, COD2_PROTOCOL_VERSION);
     SV_Cmd_TokenizeString(userinfo);
 
     memset(&adr, 0, sizeof(adr));

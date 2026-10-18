@@ -207,7 +207,7 @@ void CL_ServerInfoPacket(netadr_t from, msg_t *msg, int time)
     if (*protoStr)
         expectedProt = atoi(protoStr);
     else
-        expectedProt = 0x76;
+        expectedProt = COD2_PROTOCOL_VERSION;
 
     if (prot != expectedProt) {
         Com_DPrintf((const char *)"Different protocol info packet: %s\n", infoString);

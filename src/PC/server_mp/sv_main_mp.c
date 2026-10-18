@@ -592,7 +592,7 @@ void SVC_Info(netadr_t from)
 
     infostring[0] = '\0';
     Info_SetValueForKey(infostring, "challenge", SV_Cmd_Argv(1));
-    Info_SetValueForKey(infostring, "protocol", va("%i", 0x76));
+    Info_SetValueForKey(infostring, "protocol", va("%i", COD2_PROTOCOL_VERSION));
     Info_SetValueForKey(infostring, "hostname", sv_hostname->current.string);
     Info_SetValueForKey(infostring, "mapname", sv_mapname->current.string);
 

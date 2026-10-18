@@ -1833,7 +1833,7 @@ void CL_CheckForResend(void)
     }
 
     I_strncpyz(info, Dvar_InfoString(2), sizeof(info));
-    Info_SetValueForKey(info, (const char *)"protocol", va((const char *)"%i", 0x76));
+    Info_SetValueForKey(info, (const char *)"protocol", va((const char *)"%i", COD2_PROTOCOL_VERSION));
     Info_SetValueForKey(info, (const char *)"challenge", va((const char *)"%i", conn->challenge));
     Info_SetValueForKey(info, (const char *)"qport", va((const char *)"%i", conn->qport));
 
