@@ -441,6 +441,7 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:${COD2_HARDEN_CFLAGS}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_FEATURE_LIST}>"
   "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:${SDL2_CFLAGS_OTHER}>"
   "$<$<COMPILE_LANGUAGE:CXX>:${COD2_OPT_FLAGS}>"

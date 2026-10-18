@@ -52,3 +52,4 @@ src/win32/sdl2/lib/*.pdb
 /third_party/SDL2-*.zip
 build/check-*/
 cod2_crash_*.txt
+.superpowers/
