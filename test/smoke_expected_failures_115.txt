@@ -4,11 +4,6 @@ console log lines have timestamps
 console log rotated
 crash report written
 games_mp.log rotated by size
-g_forceRate applies
 heartbeat sent to sv_master1
 net_strictPort stops on a busy port
-no fake lines in the game log
-no line break in names
-server-only iwd download refused
-stock iwd download refused
 sv_logRcon 0 hides rcon commands

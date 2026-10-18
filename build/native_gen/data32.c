@@ -1458,9 +1458,11 @@ struct _d32_chatField __attribute__((aligned(4))) chatField = {
     (void *)&playerKeys,
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 struct _d32_sv_serverId_value __attribute__((aligned(4))) sv_serverId_value = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* cg_soundRoomTypes: defined by typed C TU (cg_main_mp.c); skipped. */
 /* cg_drawSoundOverlayStrings: defined by typed C TU (cg_main_mp.c); skipped. */
 /* cg_drawFpsNames: defined by typed C TU (cg_main_mp.c); skipped. */
@@ -1571,9 +1573,11 @@ struct _d32_range_00313c60 __attribute__((aligned(4))) range_00313c60 = {
 /* offhandStrings: defined by typed C TU (offhandweapons_mp.c); skipped. */
 /* hintStrings: defined by typed C TU (g_mover_mp.c); skipped. */
 /* actorLocationalMaxs: migrated to home .c (plan 4g); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 struct _d32_actorLocationalMins __attribute__((aligned(4))) actorLocationalMins = {
     { 0, 0, 128, 194, 0, 0, 128, 194, 0, 0, 0, 194, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* modNames: defined by typed C TU; skipped. */
 /* riflePriorityMap: migrated to home .c (plan 4g); skipped. */
 struct _d32_bulletPriorityMap __attribute__((aligned(4))) bulletPriorityMap = {

@@ -383,8 +383,10 @@ unsigned char buffer_00e86a20[1120];
 unsigned char input_viewSensitivity[32];
 unsigned char szServerIPAddress[128];
 unsigned char recursive[96];
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 unsigned char g_sv_skel_memory_start[128];
 unsigned char g_sv_skel_memory[262144];
+#endif
 unsigned char warnCount_00ec7000[128];
 const dvar_t *g_gametype;
 unsigned char g_mapname[64];
@@ -439,7 +441,9 @@ unsigned char string_00f10c60[1056];
 unsigned char bigConfigString[8192];
 BSSINT warnCount_00f13080;
 unsigned char warnCount_00f13084[124];
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 unsigned char botport[128];
+#endif
 unsigned char ui_arenaInfos[256];
 unsigned char ui_numArenas[128];
 unsigned char defineBits[1152];
@@ -564,8 +568,10 @@ BSSINT com_frameTime;
 const dvar_t *com_animCheck;
 const dvar_t *com_recommendedSet;
 const dvar_t *sv_paused;
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 const dvar_t *com_expectedHunkUsage;
 BSSINT nextmap;
+#endif
 const dvar_t *cl_paused;
 const dvar_t *com_introPlayed;
 const dvar_t *shortversion;
@@ -1278,7 +1284,9 @@ const dvar_t *cl_connectTimeout;
 const dvar_t *cl_timeout;
 const dvar_t *cl_noprint;
 const dvar_t *cl_nodelta;
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 qboolean gameInitialized;
+#endif
 const dvar_t *ui_playerProfileNameNew;
 const dvar_t *ui_playerProfileSelected;
 const dvar_t *ui_playerProfileCount;
@@ -1319,6 +1327,7 @@ const dvar_t *net_profile;
 const dvar_t *packetDebug;
 const dvar_t *showdrop;
 const dvar_t *showpackets;
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 const dvar_t *sv_allowedClan2;
 const dvar_t *sv_allowedClan1;
 const dvar_t *sv_referencedIwdNames;
@@ -1357,11 +1366,14 @@ const dvar_t *rcon_password;
 const dvar_t *sv_zombietime;
 const dvar_t *sv_timeout;
 const dvar_t *sv_fps;
+#endif
 /* Typed in every build: 1.0's serverStatic_t is 0xc108 bytes, and the
    41216 once reserved for it let challenges, redirectAddress and tempBans
    run into sv's configstrings. */
+#if !COD2_PLUS_SERVER  /* defined by src/server */
 server_t sv;
 serverStatic_t svs;
+#endif
 const dvar_t *con_restricted;
 const dvar_t *con_miniconlines;
 const dvar_t *con_minicontime;

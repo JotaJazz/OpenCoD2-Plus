@@ -3,14 +3,7 @@ addip refuses the address
 console log lines have timestamps
 console log rotated
 crash report written
-fragmented client message runs
 games_mp.log rotated by size
-g_forceRate applies
 heartbeat sent to sv_master1
 net_strictPort stops on a busy port
-no fake lines in the game log
-no line break in names
-say right after userinfo runs
-server-only iwd download refused
-stock iwd download refused
 sv_logRcon 0 hides rcon commands

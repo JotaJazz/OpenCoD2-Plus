@@ -92,6 +92,13 @@ endif()
 if(COD2_PLUS_SCRIPT)
   add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
 endif()
+# CoD2rev-Plus's server (src/server) in the dedicated server, on the 32-bit
+# Linux and MinGW builds; the client keeps src/PC/server_mp for its local
+# server. It calls CoD2rev-Plus's script VM, so it needs COD2_PLUS_SCRIPT.
+option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server (src/server) in the dedicated server" ON)
+if(NOT COD2_PLUS_SCRIPT)
+  set(COD2_PLUS_SERVER OFF)
+endif()
 if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
@@ -101,9 +108,17 @@ endif()
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
 # the generated bridge in src/compat (scripts/gen_script_bridge.py).
 function(cod2_plus_script)
-  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/*.cpp)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/script_*.cpp)
   add_library(cod2_plus_script OBJECT ${src})
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+endfunction()
+
+# cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server sources and
+# their bridge to the engine (src/compat/server_*.cpp).
+function(cod2_plus_server)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/compat/server_*.cpp)
+  add_library(cod2_plus_server OBJECT ${src})
+  target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
 # cod2_cxx_sources(<out_var> <sources...>): the sources, with the picked C files
@@ -283,6 +298,9 @@ if(COD2_WIN32_CLIENT)
 else()
   add_compile_definitions(DEDICATED)
   set(W32_EXE cod2_win32_ded)
+  if(COD2_PLUS_SERVER)
+    add_compile_definitions(COD2_PLUS_SERVER=1)  # the blobs leave the server's globals to src/server
+  endif()
 endif()
 if(COD2_WIN32_REAL_D3D9)
   add_compile_definitions(GFX_REAL_D3D9)
@@ -331,8 +349,14 @@ if(COD2_PLUS_SCRIPT)
   cod2_plus_script()
   set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
 endif()
+set(COD2_W32_SERVER_OBJS "")
+if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/server_mp/")
+  cod2_plus_server()
+  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
-add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS})
+add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
@@ -542,6 +566,18 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
+# With COD2_PLUS_SERVER the dedicated server links src/server instead of
+# src/PC/server_mp, and the blobs that define the server's globals are
+# compiled for each executable, leaving them to src/server in the dedicated.
+set(COD2_SERVER_MP_C "")
+if(COD2_PLUS_SERVER)
+  set(COD2_SERVER_MP_C ${ALL_C})
+  list(FILTER COD2_SERVER_MP_C INCLUDE REGEX "^src/PC/server_mp/")
+  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/server_mp/")
+  list(REMOVE_ITEM ALL_C src/blobs/bss.c)
+  list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c)
+  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c)
+endif()
 
 # 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat
 # fails with EOVERFLOW on file systems with large inodes (Windows drives under
@@ -557,17 +593,26 @@ endif()
 cod2_cxx_sources(ALL_C ${ALL_C})
 cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
+set(COD2_CLIENT_SERVER_OBJS "")
+set(COD2_DED_SERVER_OBJS "")
+if(COD2_PLUS_SERVER)
+  cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
+  add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
+  cod2_plus_server()
+  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
+  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+endif()
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 
-add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED})
+add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_CLIENT_SERVER_OBJS} ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED}
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
-target_compile_definitions(cod2_lnxded PRIVATE DEDICATED)
+target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})
 target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})
 
