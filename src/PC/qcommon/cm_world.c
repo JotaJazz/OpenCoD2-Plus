@@ -722,15 +722,17 @@ void CM_ClipMoveToEntities(moveclip_t *clip, trace_t *trace)
     CM_ClipMoveToEntities_r(clip, 1, start, end, trace);
 }
 
+/* A sector's entity list holds svEntity numbers plus one (0 ends it), as
+ * CM_UnlinkEntity and the traces above read it. */
 static unsigned short CM_WorldEntityIndex(const svEntity_t *ent)
 {
     server_t *sv = (server_t *)imp_sv;
-    return (unsigned short)(ent - sv->svEntities);
+    return (unsigned short)(ent - sv->svEntities + 1);
 }
 
 static svEntity_t *CM_WorldEntityForIndex(unsigned short entIndex)
 {
-    return &sv.svEntities[(unsigned int)entIndex];
+    return &sv.svEntities[(unsigned int)entIndex - 1];
 }
 
 static unsigned short CM_AllocWorldSector(const vec_t *mins, const vec_t *maxs)
