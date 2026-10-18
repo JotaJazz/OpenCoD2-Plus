@@ -330,6 +330,8 @@ struct VertexProgramStreamState {
     GLsizei mStride;
     const void *mpStream;
 };
+/* bool is 1 byte, as in the original (C++) binary, in the C and the C++ build */
+COD2_ASSERT_SIZE(struct VertexProgramStreamState, 24);
 
 struct _D3DBOX {
     UINT Left;

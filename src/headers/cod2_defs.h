@@ -1220,7 +1220,7 @@ typedef int baseVertex;
 typedef int bb;
 typedef int blens;
 #if !defined(__cplusplus) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L)
-typedef int bool;
+typedef _Bool bool; /* 1 byte, like C++ bool and the original binary's bool */
 #endif
 
 typedef int boolean;

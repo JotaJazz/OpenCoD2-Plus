@@ -437,6 +437,7 @@ struct CTexUnit {
     bool mTexGenEnable[4];
     GLenum mTexGenMode[4];
 };
+COD2_ASSERT_SIZE(struct CTexUnit, 284); /* bool is 1 byte, as in the original (C++) binary */
 
 struct CVAOPacketFixedFunction {
     int _placeholder;
