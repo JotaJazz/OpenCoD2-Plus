@@ -82,8 +82,13 @@ option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script. PROTOCOL_VERSION follows the game version.
-option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" OFF)
+# reconstruction in src/PC/script, on the 32-bit Linux and MinGW builds; MSVC,
+# the web build and the x64 port keep src/PC/script for now. PROTOCOL_VERSION
+# follows the game version.
+option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
+if(COD2_WIN_MSVC OR EMSCRIPTEN OR COD2_X64)
+  set(COD2_PLUS_SCRIPT OFF)
+endif()
 if(COD2_PLUS_SCRIPT)
   add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
 endif()

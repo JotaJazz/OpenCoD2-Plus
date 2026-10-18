@@ -58,13 +58,13 @@ def main():
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
     ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
     ap.add_argument('--c', action='store_true', help='builds C instead of C++ (-DCOD2_CXX_ALL=OFF)')
-    ap.add_argument('--plus-script', action='store_true', help="CoD2rev-Plus's script VM (-DCOD2_PLUS_SCRIPT=ON)")
+    ap.add_argument('--old-script', action='store_true', help='src/PC/script instead of CoD2rev-Plus\'s VM (-DCOD2_PLUS_SCRIPT=OFF)')
     args = ap.parse_args()
 
     variants = list(VARIANTS) if 'all' in args.variants else args.variants
     extra = ['-DCOD2_CXX_DIRS=' + (args.cxx_dirs or '')]
     extra.append('-DCOD2_CXX_ALL=' + ('OFF' if args.c else 'ON'))
-    extra.append('-DCOD2_PLUS_SCRIPT=' + ('ON' if args.plus_script else 'OFF'))
+    extra.append('-DCOD2_PLUS_SCRIPT=' + ('OFF' if args.old_script else 'ON'))
 
     failed = False
     for variant in variants:

@@ -44,6 +44,13 @@ and the third-party libraries (speex, jpeg-6, zlib) stay C. Configure with
 `-DCOD2_CXX_ALL=OFF` to build plain C again. The MSVC build below still
 compiles C.
 
+The script VM is [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus)'s,
+copied unchanged into `src/script/` (with the headers it includes), so its
+commits apply here; `src/compat/` bridges it to the engine's C names
+(`scripts/gen_script_bridge.py` generates that bridge). `-DCOD2_PLUS_SCRIPT=OFF`
+goes back to the reconstruction in `src/PC/script/`, which the MSVC, web and
+x64 builds still use.
+
 ### Linux (primary)
 
 The engine is a 32-bit x86 binary; you need a multilib toolchain and 32-bit libs
@@ -167,6 +174,9 @@ caveats above apply.
 python3 scripts/build_check.py all        # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux   # no C++-mangled engine symbols
 python3 scripts/opencod2_smoke.py /path/to/CoD2 --protocol 118   # 115 for the 1.0 build
+python3 scripts/two_players_test.py /path/to/CoD2 --protocol 118   # two players join, leave, get kicked
+python3 scripts/layout_parity.py                  # types shared with CoD2rev-Plus's VM lay out alike
+python3 scripts/vendor_check.py /path/to/CoD2rev-Plus   # copied files unchanged
 python3 -m unittest discover -s test
 ```
 
