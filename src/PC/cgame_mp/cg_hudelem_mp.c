@@ -1,10 +1,10 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 #include <stdlib.h>
 #include <string.h>
 
-extern float floorf(float x);
 
 extern int CL_GetKeyCatchers(void);
 extern Bool CL_GetDisplayHUDWithKeycatchUI(void);

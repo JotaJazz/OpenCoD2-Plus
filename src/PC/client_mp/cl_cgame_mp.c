@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 
 #ifndef __EMSCRIPTEN__
@@ -12,7 +13,6 @@ extern const dvar_t *cl_showTimeDelta;
 extern const dvar_t *com_statmon;
 extern const dvar_t *com_sv_running;
 
-extern char *getenv(const char *name);
 
 extern refexport_t re;
 
@@ -95,8 +95,6 @@ extern void SetScreenScaling(float scaleX, float scaleY, int x, int y, int w, in
 extern void StatMon_Warning(int type, int threshold, const char *msg);
 extern const char *va(const char *fmt, ...);
 extern unsigned char ColorIndex(unsigned char c);
-extern int atoi(const char *str);
-extern char *strcat(char *dest, const char *src);
 
 static int warnCount;
 static int warnCount_00f13084;

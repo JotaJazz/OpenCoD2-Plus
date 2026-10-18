@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 #include <stdio.h>
@@ -25,7 +27,6 @@ extern void *R_AllocStaticVertexBuffer(IDirect3DVertexBuffer9 **outBuf, int size
 extern void *R_AllocStaticIndexBuffer(IDirect3DIndexBuffer9 **outBuf, int size);
 extern void R_FinishStaticVertexBuffer(IDirect3DVertexBuffer9 *buf);
 extern void R_FinishStaticIndexBuffer(IDirect3DIndexBuffer9 *ib);
-extern int rand(void);
 extern void R_ShutdownRenderTargets(void);
 extern void R_ShutdownStaticModelCache(void);
 extern void R_FreeStaticVertexBuffer(IDirect3DVertexBuffer9 *buf);
@@ -49,8 +50,6 @@ extern GfxDrawGroupGlueBehavior R_EndDrawGroupLoop(GfxDrawGroupType section, int
 extern Bool Sys_IsMainThread(void);
 extern void R_SyncRenderThread(void);
 extern void RB_SetGammaRamp(const GfxGammaRamp *gammaTable);
-extern double pow(double, double);
-extern float floorf(float);
 extern void R_EndDrawGroupSection(int section);
 extern void R_IssueDrawGroups(void);
 extern void R_AddCmdClearScreen(int whichToClear, const vec_t *color, float depth, int stencil);
@@ -696,7 +695,6 @@ extern void R_InitDrawGroups(void);
 extern void R_InitSystems(void);
 extern void FFT_Init(int *fftBitswap, complex_t *fftTrigTable);
 extern void *Direct3DCreate9(int sdkVersion);  /* returns a pointer; `int` truncated it on x64 */
-extern double sin(double);
 static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
 {
     typedef void (*PrintFunc)(int, const char *, ...);

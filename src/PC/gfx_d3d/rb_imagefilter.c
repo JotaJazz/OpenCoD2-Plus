@@ -1,11 +1,10 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 
 UINT32 g_TotalFilterPasses = 0x0;
 
-extern float floorf(float);
 extern float expf(float);
-extern float sqrtf(float);
 
 extern bool g_LastGlowFilter;
 extern UINT32 g_TotalFilterPasses;

@@ -1,10 +1,10 @@
 #include "common_types.h"
+#include <math.h>
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
 #include "bytematch.h"
 extern GfxBackEndData *backEndData;
 
-extern float floorf(float x);
 
 static struct WaterGlob waterGlob;
 

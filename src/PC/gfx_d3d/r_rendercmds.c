@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 #include <stdio.h>
 /* dvar globals */
@@ -20,7 +21,6 @@ extern const dvar_t *r_skinCache;
 extern const dvar_t *r_specularColorScale;
 extern const dvar_t *r_sun_from_dvars;
 
-extern char *getenv(const char *name);
 
 extern refimport_t ri;
 extern DxGlobals dx;
@@ -81,7 +81,6 @@ static void R_X64TraceStretchPic(MaterialHandle material, float x, float y, floa
 extern unsigned char s_backEndData[];
 extern GfxCmdArray *s_cmdList;
 extern struct GfxDebugFrameGlob s_debugFrameGlob;
-extern int printf(const char *, ...);
 
 void R_ShutdownBackendData(void);
 static __attribute_regparm__(3) void R_ProcessFrontendCmdInternal(int type, void *data, int isRenderThread);

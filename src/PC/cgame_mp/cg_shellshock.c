@@ -1,9 +1,9 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 #include <string.h>
 
-extern float floorf(float x);
 
 extern byte *_dvar_shellshock_fadein;
 extern byte *_dvar_shellshock_fadeout;

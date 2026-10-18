@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 #include "imports.h"
 
 extern const dvar_t *snd_errorOnMissing;
@@ -62,8 +64,6 @@ void SND_ShutdownDriver(void);
 void Cmd_RemoveCommand(const char *cmdName);
 int Cmd_Argc(void);
 char *Cmd_Argv(int arg);
-int atoi(const char *str);
-double atof(const char *str);
 const dvar_t *Dvar_RegisterBool(const char *name, int defaultValue, unsigned int flags);
 const dvar_t *Dvar_RegisterInt(const char *name, int defaultValue, int min, int max, unsigned int flags);
 const dvar_t *Dvar_RegisterFloat(const char *name, float defaultValue, float min, float max, unsigned int flags);
@@ -133,7 +133,6 @@ void SND_Update2DChannel(int index, int frametime);
 void SND_Set3DChannelPlaybackRate(int index, int rate);
 void SND_SetStreamChannelPlaybackRate(int index, int rate);
 void SND_Set2DChannelPlaybackRate(int index, int rate);
-float floorf(float x);
 void Com_Error(int level, const char *fmt, ...);
 const snd_alias_t *Com_PickSoundAlias(const char *aliasname);
 const snd_alias_t *Com_PickSoundAliasFromList(snd_alias_list_t *aliasList);

@@ -1,4 +1,5 @@
 #include "common_types.h"
+extern void Com_Printf(const char *fmt, ...);
 #include "imports.h"
 
 #if !defined(__EMSCRIPTEN__) && defined(COD2_ENABLE_NULL_CALL_RECOVERY)

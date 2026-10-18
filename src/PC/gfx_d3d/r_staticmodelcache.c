@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 extern struct DxGlobals dx;
 /* File-scope alias: bound where no local can shadow `dx`, so uses below
    always reach the global even inside functions that declare their own `dx`. */
@@ -647,7 +648,6 @@ extern int RB_DeriveEntityLights(vec4_t *colorForDir, float sunVisibility, const
 extern void R_FatalLockError(HRESULT hr);
 extern void *CColorConverter_GetColorConverter(int mode);
 extern int XSurfaceGetBoneOffset(const XSurface *surf);
-extern float floorf(float x);
 
 void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *skinBuffers)
 {

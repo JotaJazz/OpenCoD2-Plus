@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -10,7 +11,6 @@ extern const dvar_t *cg_chatHeight;
 extern const dvar_t *cg_chatTime;
 extern const dvar_t *cg_thirdPerson;
 
-extern float floorf(float x);
 
 extern const char *CL_GetConfigString(int index);
 extern char *Info_ValueForKey(const char *s, const char *key);

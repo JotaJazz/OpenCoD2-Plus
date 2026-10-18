@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "cod2_feature_config.h"
@@ -33,7 +34,6 @@ extern const dvar_t *m_yaw;
 extern const dvar_t *m_forward;
 extern const dvar_t *m_side;
 extern const dvar_t *m_filter;
-extern int atoi(const char *nptr);
 extern char *Cmd_Argv(int arg);
 extern void Com_Printf(const char *fmt, ...);
 extern void Cmd_AddCommand(const char *cmd, void (*func)(void));
@@ -59,7 +59,6 @@ extern void CL_SyncGpu(void);
 extern void CL_SendCmdInternal(void);
 extern Bool PM_IsBinocularsADS(const playerState_t *ps);
 extern const signed char ClampChar(const int i);
-extern float sqrtf(float x);
 extern qboolean Sys_IsLANAddress(netadr_t adr);
 extern struct clientStatic_t cls;
 extern int com_frameTime;

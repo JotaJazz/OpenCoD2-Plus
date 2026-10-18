@@ -1,11 +1,12 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
 extern refimport_t ri;
 #include "bytematch.h"
 #include <float.h>
 
-extern void qsort(void *base, unsigned int nmemb, unsigned int size, int (*compar)(const void *, const void *));
 
 extern unsigned char smodelLoadGlob[128];
 
@@ -48,7 +49,6 @@ void R_ScaleStaticModelLighting(float directLightScale, float indirectLightScale
 }
 
 extern float RB_GetLightingAtPoint(const GfxLightGrid *lightGrid, const vec_t *samplePos, vec4_t *colorForDir);
-extern float floorf(float x);
 
 void R_GetStaticModelLightingFromGrid(const GfxWorld *world, GfxStaticModelInstance *smodelInst, float *sunVisibility, vec4_t *colorForDir)
 {

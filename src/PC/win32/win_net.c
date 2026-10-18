@@ -39,6 +39,8 @@ extern int WSAStartup(int wVersionRequested, void *lpWSAData);
 extern int WSAGetLastError(void);
 extern int closesocket(int s);
 extern int ioctlsocket(int s, long cmd, unsigned long *argp);
+#else
+extern int ioctl(int fd, unsigned long request, void *arg); /* win32_stubs.c */
 #endif
 extern qboolean I_isdigit(int c);
 extern int I_stricmp(const char *s1, const char *s2);
@@ -227,7 +229,11 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
     int protocol;
     int net_socket;
     int ret;
+#ifdef _WIN32
+    int fromlen;
+#else
     socklen_t fromlen;
+#endif
     struct sockaddr from;
     int err;
 
@@ -243,7 +249,7 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
         }
 
         fromlen = 16;
-        ret = recvfrom(net_socket, net_message->data, net_message->maxsize, 0, &from, &fromlen);
+        ret = recvfrom(net_socket, (char *)net_message->data, net_message->maxsize, 0, &from, &fromlen);
 
         if (ret == -1) {
             err = WSAGetLastError();
@@ -348,7 +354,7 @@ void Sys_SendPacket(int length, const void *data, netadr_t to)
         memcpy(socksBuf + 10, data, length);
         ret = sendto(net_socket, socksBuf, length + 10, 0, (struct sockaddr *)&socksRelayAddr, 16);
     } else {
-        ret = sendto(net_socket, data, length, 0, (struct sockaddr *)&addr, 16);
+        ret = sendto(net_socket, (const char *)data, length, 0, (struct sockaddr *)&addr, 16);
     }
 
     if (ret != -1) {
@@ -415,7 +421,7 @@ void NET_OpenIP(void)
             goto next_check;
         }
 
-        if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, &sock_i, sizeof(sock_i)) == -1) {
+        if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (const char *)&sock_i, sizeof(sock_i)) == -1) {
             Com_Printf("WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", strerror(errno));
             closesocket(newsocket);
             ip_socket = 0;

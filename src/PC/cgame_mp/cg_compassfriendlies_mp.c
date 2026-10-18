@@ -1,11 +1,8 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 
-extern float floorf(float x);
-extern float sinf(float x);
-extern float cosf(float x);
-extern float sqrtf(float x);
 
 extern const dvar_t **dvar_compassSize;
 extern const dvar_t **dvar_compassMinRange;

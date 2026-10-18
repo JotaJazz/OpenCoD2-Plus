@@ -1,4 +1,7 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "imports.h"
 extern struct DxGlobals dx;
 /* File-scope alias: bound where no local can shadow `dx`, so uses below
@@ -9,7 +12,6 @@ extern int alwaysfails;
 /* dvar globals */
 extern const dvar_t *r_testTransform;
 
-extern char *getenv(const char *name);
 
 extern DxGlobals dx;
 extern dvar_t *r_rendererInUse;
@@ -82,7 +84,6 @@ void rdsl_log_null_technique2(void *material, int techType)
     (void)techType;
 }
 
-extern int printf(const char *, ...);
 int rb_drawsurfscmd_count = 0;
 int rb_drawsurfscmd_dxskip = 0;
 
@@ -348,11 +349,6 @@ extern int RB_FogOffset(void);
 extern Glyph *R_GetCharacterGlyph(FontHandle font, int charCode);
 extern void RB_ChangedWorldMatrix(float worldScale);
 extern void RB_SetMatricesForView(const GfxViewParms *viewParms);
-extern float floorf(float x);
-extern float sqrtf(float x);
-extern float sinf(float x);
-extern float cosf(float x);
-extern double pow(double base, double exponent);
 
 static inline void RB_SetVertex2D(char *tessBase, int vertIndex, const dvar_t *renderer,
                                   float px, float py, float s, float t, D3DCOLOR color)

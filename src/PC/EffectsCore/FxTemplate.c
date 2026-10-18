@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 
 extern const FxFlagEntry fxAttributeFlags[26];
@@ -24,8 +25,6 @@ extern void MediaHandles_AddEffect(const MediaHandles *_this, EffectTemplate *fx
 extern EffectTemplate *FX_RegisterEffect(const char *fileName);
 extern int I_stricmp(const char *s1, const char *s2);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
-extern int atoi(const char *s);
-extern double atof(const char *s);
 
 #include <stdarg.h>
 #include <string.h>

@@ -1,14 +1,10 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 extern refimport_t ri;
 #include <string.h>
 
 extern int strnicmp(const char *s1, const char *s2, size_t n);
-extern double acos(double);
-extern double asin(double);
-extern double sin(double);
-extern double tan(double);
-extern double fabs(double);
 
 int R_HashAssetName(const char *name);
 int R_HashString(const char *string);

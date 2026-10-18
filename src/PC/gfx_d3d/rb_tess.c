@@ -33,9 +33,6 @@ extern void Vec3Cross(const vec_t *v0, const vec_t *v1, vec_t *cross);
 extern int VecNCompareCustomEpsilon(const vec_t *v0, const vec_t *v1, float epsilon, int coordCount);
 extern void Vec3RotateTranspose(const vec_t *in, vec3_t *matrix, vec_t *out);
 extern void MakeNormalVectors(const vec_t *forward, vec_t *right, vec_t *up);
-extern float sinf(float x);
-extern float cosf(float x);
-extern float floorf(float x);
 
 static inline char *RB_TessBase(void)
 {

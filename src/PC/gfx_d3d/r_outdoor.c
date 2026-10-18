@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
 
@@ -6,7 +7,6 @@ extern GfxImage * Image_Register(const char *imageName, int semantic, int imageT
 extern void ClearBounds(float *mins, float *maxs);
 extern void ExpandBounds(const vec_t *mins, const vec_t *maxs, vec_t *boundsMin, vec_t *boundsMax);
 extern void MatrixIdentity44(float (*out)[4]);
-extern float floorf(float);
 extern void Image_Generate2D(GfxImage *image, byte *pixels, int width, int height, int imageFormat);
 extern void *Hunk_AllocateTempMemoryInternal(int size);
 extern void Hunk_FreeTempMemory(void *buf);

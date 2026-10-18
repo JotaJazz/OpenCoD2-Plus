@@ -1,13 +1,11 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 
 extern void *Material_Alloc(int size);
 extern void GaussianRandom(float *real, float *imag);
 extern GfxImage * R_CreateWaterMap(char *name, int imageWidth, int imageHeight);
 extern const char *va(const char *fmt, ...);
-extern double exp(double x);
-extern float fabsf(float x);
-extern float sqrtf(float x);
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846

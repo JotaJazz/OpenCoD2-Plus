@@ -1,4 +1,7 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 
@@ -16,7 +19,6 @@ extern const dvar_t *cg_tracerScaleMinDist;
 extern const dvar_t *cg_tracerSpeed;
 extern const dvar_t *cg_tracerWidth;
 extern const char *CL_GetConfigString(int index);
-extern char *getenv(const char *name);
 extern scr_const_t scr_const;
 
 extern vec3_t ejectBrassCasingOrigin;
@@ -55,7 +57,6 @@ extern const char *CG_Argv(int arg);
 extern int BG_GetWeaponSlotForName(const char *pszSlotName);
 extern void CG_MenuShowNotify(int menuToShow);
 extern void CL_SetADS(int ads);
-extern int atoi(const char *nptr);
 extern int BG_GetWeaponIndexForName(const char *name, BG_RegisterWeapon regWeap);
 extern qboolean CG_DObjGetWorldTagPos(const centity_t *cent, struct DObj_s *obj, unsigned int tagName, vec_t *pos);
 extern const char *SL_ConvertToString(unsigned int stringValue);
@@ -69,7 +70,6 @@ extern qboolean BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex);
 extern int FX_GetBoneIndex(const int entNum, unsigned int bone);
 extern void FX_PlayEntityEffect(EffectTemplate *fx, const vec_t *org, vec3_t *axis, const FxBoltInfo *bolt);
 extern void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd);
-extern int strcmp(const char *s1, const char *s2);
 extern struct XAnimTree_s *DObjGetTree(const struct DObj_s *obj);
 extern void Com_SafeClientDObjFree(int handle);
 extern int BG_GetViewmodelWeaponIndex(const playerState_t *ps);
@@ -79,8 +79,6 @@ extern const vec_t Vec3Normalize(vec_t *v);
 extern const vec_t Vec3NormalizeTo(const vec_t *v, vec_t *out);
 extern const vec_t Vec3Distance(const vec_t *v1, const vec_t *v2);
 extern localEntity_t *CG_AllocLocalEntity(void);
-extern int rand(void);
-extern float sqrtf(float x);
 extern int CG_PlaySoundAlias(int entitynum, const vec_t *origin, snd_alias_list_t *aliasList);
 extern void CL_DefaultVertexFrames(int vertCount, GfxWorldVertex *verts);
 extern void CL_AddPolyToScene(MaterialHandle mtlHandle, unsigned short lmapIndex,
@@ -117,7 +115,7 @@ extern void *Hunk_AllocXAnimClient(int size);
 extern itemInfo_t cg_itemsArray[];
 extern weaponInfo_t cg_weaponsArray[];
 extern gitem_t bg_itemlist[];
-static const int iSlotPreferenceOrder[2];
+static const int iSlotPreferenceOrder[2] = { 0 }; /* never filled in; zero, as C left it */
 extern weapSlot_t (*s_barrelTags[4])[64];
 
 COD2_ASSERT_FIELD(WeaponDef, szGunXModel,       0x0c);

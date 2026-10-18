@@ -1,4 +1,4 @@
-const unsigned char declEnd[20] = { 0xff,0,0,0, 0x11,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 };
+extern const unsigned char declEnd[20] = { 0xff,0,0,0, 0x11,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 };
 int g_dip_drawflag_zero;
 int g_dip_gl_draw;
 int g_dip_is_tri;
@@ -119,7 +119,7 @@ void sdl_gl_height(void) {}
 void sdl_gl_width(void) {}
 void sdl_gl_window(void) {}
 #endif
-void ioctl(void) {}
+int ioctl(int fd, unsigned long request, void *arg) { (void)fd; (void)request; (void)arg; return -1; }
 void setjmp(void) {}
 
 void _ZN16CDirect3DTextureD0Ev(void){} void _ZN16CDirect3DTextureD1Ev(void){}

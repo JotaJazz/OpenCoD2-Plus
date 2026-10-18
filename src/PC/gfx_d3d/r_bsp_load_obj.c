@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 
@@ -71,8 +73,6 @@ extern void ExpandBounds(const float *mins, const float *maxs, float *dstMins, f
 extern const char *Com_Parse(const char **text);
 extern void I_strncpyz(char *dest, const char *src, int size);
 extern int I_stricmp(const char *a, const char *b);
-extern double atof(const char *s);
-extern int sscanf(const char *str, const char *fmt, ...);
 extern float ColorNormalize(const float *color, float *out);
 extern void Com_Printf(const char *fmt, ...);
 extern void Com_Memcpy(void *dest, const void *src, int count);

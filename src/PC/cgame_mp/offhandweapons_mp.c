@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -22,8 +23,6 @@ extern int BG_ClipForWeapon(int weaponIndex);
 extern struct DObj_s * Com_GetClientDObj(int handle, int localClientNum);
 extern void CG_MenuShowNotify(int type);
 extern void UI_DrawHandlePic(float x, float y, float w, float h, int horzAlign, int vertAlign, const float *color, MaterialHandle material);
-extern float floorf(float x);
-extern float cosf(float x);
 extern char *va(const char *fmt, ...);
 extern void Com_Printf(const char *fmt, ...);
 

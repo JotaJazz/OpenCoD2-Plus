@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include <stdlib.h>
 #include <string.h>
@@ -33,8 +34,6 @@ void R_ScreenshotCommand(GfxScreenshotType type);
 void R_CapturePendingScreenshotBeforePresent(void);
 int R_HasPendingScreenshot(void);
 
-extern float floorf(float x);
-extern double pow(double base, double exp);
 
 extern void RB_SetRenderTarget(int target);
 extern void R_GammaCorrect(byte *buffer, int bufferSizeInBytes);

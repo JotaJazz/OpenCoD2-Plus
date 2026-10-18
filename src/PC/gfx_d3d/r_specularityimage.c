@@ -1,14 +1,11 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
 #endif
 
-extern double log(double);
-extern double cos(double);
-extern double pow(double, double);
-extern float floorf(float);
 
 void Image_BuildSpecularityMap(float shift, byte *pic)
 {

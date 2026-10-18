@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 /* dvar globals */
 extern const dvar_t *r_showLightGrid;
@@ -7,7 +8,6 @@ extern const dvar_t *r_vc_makelog;
 extern const dvar_t *r_vc_showlog;
 extern GfxBackEndData *backEndData;
 
-extern float floorf(float x);
 
 static vec3_t gridBasisDirs[8];
 static int s_vc_log;

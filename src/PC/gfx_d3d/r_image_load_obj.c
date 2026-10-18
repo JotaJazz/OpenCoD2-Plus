@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "bytematch.h"
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
@@ -10,7 +11,6 @@ extern void Image_UploadData(GfxImage *image, int imageFormat, int face, int mip
 extern void Image_Create2DTexture(GfxImage *image, int width, int height, int depth, int flags, int format, int unused);
 extern const vec_t Vec3NormalizeTo(const vec_t *v, vec_t *out);
 extern const vec_t Vec3Normalize(vec_t *v);
-extern float floorf(float x);
 extern float FresnelTerm(float ior0, float ior1, float cosIncident);
 extern void AxisTransformVector(vec3_t *axes, const vec_t x, const vec_t y, const vec_t z,
                                 vec_t *out);
@@ -661,8 +661,6 @@ Bool Image_LoadRaw(GfxImage *image, const char *filepath, int imageTrack)
 }
 
 extern float acosf(float x);
-extern float floorf(float x);
-extern double atan2(double y, double x);
 extern float Vec2Normalize(float *v);
 
 static void Image_LoadLightmapWeights(GfxImage *image)

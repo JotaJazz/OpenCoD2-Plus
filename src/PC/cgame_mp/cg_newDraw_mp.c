@@ -30,7 +30,7 @@ extern const dvar_t *hud_health_pulserate_critical;
 extern const dvar_t *hud_deathQuoteFadeTime;
 static vec4_t color;
 static char szErrorString[1024];
-static const float pulseMags[4];
+static const float pulseMags[4] = { 0 }; /* never filled in; zero, as C left it */
 static vec4_t color_00302d80;   /* duplicate decl removed (C++ redefinition -> C2086) */
 static const dvar_t *hud_fadeout_speed;
 static const dvar_t *hud_enable;
@@ -68,7 +68,6 @@ extern int BG_ClipForWeapon(int weapon);
 extern int BG_GetAmmoClipSize(int iClipIndex);
 extern Bool BG_DoesWeaponNeedSlot(int weapIndex);
 extern int BG_GetEmptySlotForWeapon(const playerState_t *pPS, int iWeaponIndex);
-extern float sinf(float x);
 extern const char *SEH_LocalizeTextMessage(const char *msg, const char *context, int errType);
 extern const char *UI_ReplaceConversionString(const char *sourceString, const char *replaceString);
 extern const char *UI_SafeTranslateString(const char *ref);

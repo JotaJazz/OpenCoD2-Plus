@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <ctype.h>
 #include "imports.h"
 
 extern void Sys_QueEvent(int time, sysEventType_t type, int value, int value2,
@@ -11,7 +12,6 @@ extern void Com_Printf(const char *fmt, ...);
 #ifdef __EMSCRIPTEN__
 #    include <ctype.h>
 #else
-extern int isprint(int c);
 #endif
 
 #define K_BACKSPACE 0x08

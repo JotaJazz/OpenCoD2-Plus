@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 extern clientStatic_t cls;
 
@@ -28,8 +29,6 @@ extern char *Cmd_Argv(int);
 extern void CL_StopLogo(void);
 extern void SND_FadeAllSounds(float, int);
 extern void CL_LookupColor(int, float *);
-extern float floorf(float);
-extern float ceilf(float);
 
 static Boolean sAspyrIntroPlayed;
 /* The ROQ colour tables are 6-bit fixed point (ROQ_YY_tab[i] == i*64), so a converted

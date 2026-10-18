@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 
 qboolean fxInitialized[1] = { 0x0 };
 
@@ -511,8 +512,6 @@ float FX_GetServerVisibility(const vec_t *start, const vec_t *end)
     return visibility;
 }
 
-extern float sinf(float x);
-extern float cosf(float x);
 extern void RotatePointAroundVector(vec_t *dst, const vec_t *dir, const vec_t *point, const float degrees);
 extern void Vec3Cross(const vec_t *a, const vec_t *b, vec_t *out);
 extern void MakeNormalVectors(const vec_t *forward, vec_t *right, vec_t *up);
@@ -739,7 +738,6 @@ extern void *imp_fx_draw;
 extern void *imp_fx_debug;
 extern void FX_Print(const char *fmt, ...);
 #ifndef _WIN32
-extern void qsort(void *base, int nmemb, int size, void *cmp);
 #endif
 extern int CompareSortedClusters(const void *a, const void *b);
 void FX_DrawAll(void)

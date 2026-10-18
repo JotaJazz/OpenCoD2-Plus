@@ -858,7 +858,6 @@ void Particle_SetAxis(const Particle *_this, vec3_t *ax)
     }
 }
 
-extern float floorf(float x);
 static inline __attribute__((always_inline)) int FloatToByte(float f)
 {
     int v = (int)(f * 255.0f);

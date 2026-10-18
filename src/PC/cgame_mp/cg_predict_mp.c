@@ -1,11 +1,9 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 
-extern float sinf(float x);
-extern float cosf(float x);
-extern float sqrtf(float x);
 
 static pmove_t cg_pmove[1];
 static int cg_numSolidEntities;

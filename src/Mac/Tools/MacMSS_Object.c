@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 
 void StMutexLock_StMutexLock(char *lock, void *mutex);
@@ -8,7 +9,6 @@ void CMutex_CMutex(void *mutex);
 void __ZdlPv(void *ptr);
 float CSoundEngine_GetDefaultMaxDistance(const CSoundEngine *inEngine);
 float CSoundEngine_GetDefaultReferenceDistance(const CSoundEngine *inEngine);
-void free(void *ptr);
 
 #define CSOUNDOBJECT_VTABLE_PTR ((void *)0x332548)
 

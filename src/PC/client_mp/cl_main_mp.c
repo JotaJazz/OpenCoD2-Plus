@@ -1,4 +1,8 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "cod2_feature_config.h"
@@ -142,8 +146,6 @@ extern void Cmd_AddCommand(const char *name, void (*cmd)(void));
 extern void Cmd_RemoveCommand(const char *name);
 extern void Cmd_SetAutoComplete(const char *cmd, const char *dir, const char *ext);
 extern char *Cmd_Args(int start);
-extern int atoi(const char *);
-extern double atof(const char *);
 extern int I_stricmp(const char *a, const char *b);
 extern int I_strncmp(const char *a, const char *b, int n);
 extern void Info_SetValueForKey(char *s, const char *key, const char *value);
@@ -158,7 +160,6 @@ extern Bool NET_OutOfBandData(netsrc_t sock, netadr_t adr, unsigned char *data, 
 extern int Sys_IsLANAddress(netadr_t adr);
 extern int Sys_Milliseconds(void);
 extern int Sys_MillisecondsRaw(void);
-extern void srand(unsigned int seed);
 extern int FS_FileExists(const char *path);
 extern fileHandle_t FS_FOpenFileWrite(const char *filename);
 extern int FS_FOpenFileRead(const char *path, int *file, int uniqueFILE);
@@ -207,9 +208,6 @@ extern int Voice_GetLocalVoiceData(ClientVoicePacket_t *dest);
 extern void Voice_Playback(void);
 extern void SEH_UpdateLanguageInfo(void);
 extern const char *SEH_LocalizeTextMessage(const char *ref, const char *defaultText, int flags);
-extern char *strchr(const char *, int);
-extern float floorf(float);
-extern int puts(const char *);
 
 extern refexport_t re;
 extern const clientActive_t *cl;
@@ -517,8 +515,6 @@ extern int Cmd_Argc(void);
 extern char *Cmd_Argv(int arg);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern void I_strncat(char *dest, int maxlen, const char *src);
-extern int putenv(const char *string);
-extern char *getenv(const char *name);
 void CL_Setenv_f(void)
 {
     char buffer[1024];
@@ -1105,7 +1101,7 @@ void CL_InitOnceForAllClients(void)
         union {
             int i;
             float f;
-        } flt_max = { 0x7f7fffff }, flt_nmax = { 0xff7fffff };
+        } flt_max = { 0x7f7fffff }, flt_nmax = { (int)0xff7fffff };
         cl_yawspeed = Dvar_RegisterFloat("cl_yawspeed", 140.0f, flt_nmax.f, flt_max.f, 0x1001);
         cl_pitchspeed = Dvar_RegisterFloat("cl_pitchspeed", 140.0f, flt_nmax.f, flt_max.f, 0x1001);
         cl_anglespeedkey = Dvar_RegisterFloat("cl_anglespeedkey", 1.5f, 0.0f, flt_max.f, 0);

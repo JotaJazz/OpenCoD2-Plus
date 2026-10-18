@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <string.h>
 #include "imports.h"
 #include <stdio.h>
 
@@ -10,7 +11,6 @@ extern qboolean SEH_GetLanguageIndexForName(const char *name, language_t *lang);
 extern void Com_BeginParseSession(const char *name);
 extern void Com_EndParseSession(void);
 extern const char *Com_Parse(const char **buf);
-extern int strcmp(const char *s1, const char *s2);
 extern char *va(const char *fmt, ...);
 
 static char *localization;

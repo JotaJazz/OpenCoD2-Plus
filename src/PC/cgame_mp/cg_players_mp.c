@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 #include <string.h>
@@ -6,7 +7,6 @@
 extern const dvar_t *cg_debugPosition;
 extern const dvar_t *cg_headIconMinScreenRadius;
 extern scr_const_t scr_const;
-extern float fabsf(float);
 
 COD2_ASSERT_FIELD(WeaponDef, fAnimHorRotateInc, 0x564);
 

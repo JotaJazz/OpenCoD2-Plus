@@ -1,14 +1,12 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 
 #include <string.h>
 
-extern float fabsf(float x);
-extern float sinf(float x);
-extern float cosf(float x);
-extern double atof(const char *s);
 
 static vec4_t color;
 static vec2_t sign[4] = {

@@ -1,11 +1,11 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 
 extern const FxCurve *FxCurve_AllocAndCreateWithKeys(const float *keyArray, int dimensionCount, int keyCount);
 extern void FxRange_SetRange(const FxRange *_this, float min, float max);
 extern float FxRange_GetValPct(const FxRange *_this, float percent);
 extern float flrand(float min, float max);
-extern float cosf(float x);
 
 void FxChannel_CreateDefault(FxChannel *createe, int dimensions, float value1, float value2)
 {

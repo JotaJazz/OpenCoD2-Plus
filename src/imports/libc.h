@@ -260,7 +260,7 @@ int TXNSetTypeAttributes();
 int TXNShowSelection();
 int TickCount();
 long long UpTime(void);
-int UpdateSystemActivity();
+int UpdateSystemActivity(int activity);
 int WaitNextEvent();
 int DefaultRuneLocale();
 int Unwind_Resume();

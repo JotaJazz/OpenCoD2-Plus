@@ -1,4 +1,5 @@
 #include "cod2_feature_config.h"
+#include <stdlib.h>
 #include "common_types.h"
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -45,15 +46,12 @@ extern const char *CG_Argv(int arg);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern int FX_RegisterEffect(const char *name);
 extern void FX_PlaySimpleEffect(int effectIndex, const vec_t *origin);
-extern double atof(const char *str);
 extern int BG_GetViewmodelWeaponIndex(const playerState_t *ps);
 extern int BG_GetNumWeapons(void);
 extern int CL_BeginDelayedDrawing(void);
 extern WeaponDef *BG_GetWeaponDef(int weapIndex);
 extern int BG_IsAimDownSightWeapon(int weapIndex);
 extern float atanf(float x);
-extern float sinf(float x);
-extern double tan(double x);
 extern void CL_ResetSkeletonCache(int level);
 extern void CG_UpdateViewWeaponAnim(playerState_t *ps);
 extern struct DObj_s *Com_GetClientDObj(int handle, int localClientNum);

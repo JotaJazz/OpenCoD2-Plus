@@ -519,8 +519,8 @@ void SDL_GL_SwapWindowDirect(void)
 
         linux_x11_image = XCreateImage(
             linux_x11_display, attrs.visual, attrs.depth, ZPixmap, 0,
-            calloc((size_t)width * height, 4), width, height, 32, 0);
-        linux_gl_pixels = malloc((size_t)width * height * 4);
+            (char *)calloc((size_t)width * height, 4), width, height, 32, 0);
+        linux_gl_pixels = (unsigned char *)malloc((size_t)width * height * 4);
         linux_present_width = width;
         linux_present_height = height;
     }

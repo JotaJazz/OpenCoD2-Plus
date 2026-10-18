@@ -305,8 +305,10 @@ static void SCR_UpdateFrame(void)
         goto end_frame;
     }
 
-    clientConnection_t *clc = *(clientConnection_t **)clc_ptr_195ee8c;
-    int connstate = clc->state;
+    clientConnection_t *clc;
+    int connstate;
+    clc = *(clientConnection_t **)clc_ptr_195ee8c;
+    connstate = clc->state;
     if (connstate != 8 && connstate != 1) {
         re->ClearScreen(1, (const vec_t *)ptr_195f58c, 0.0f, 0);
     }

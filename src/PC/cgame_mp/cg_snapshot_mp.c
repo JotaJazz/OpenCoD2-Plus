@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <string.h>
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
 #include "bytematch.h"
@@ -39,7 +40,6 @@ extern const char *va(const char *fmt, ...);
 extern const char *UI_SafeTranslateString(const char *ref);
 extern void Com_Error(int level, const char *fmt, ...);
 extern void Com_Printf(const char *fmt, ...);
-extern int strcmp(const char *s1, const char *s2);
 extern XAnim *XAnimGetAnims(const XAnimTree *tree);
 extern Bool XAnimIsLooped(const struct XAnim_s *anims, unsigned int animIndex);
 extern int XAnimGetNumChildren(const struct XAnim_s *anims, unsigned int animIndex);

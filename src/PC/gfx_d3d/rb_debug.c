@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 extern materialCommands_t tess;
 /* File-scope alias: bound where no local can shadow `tess`, so uses below
    always reach the global even inside functions that declare their own `tess`. */
@@ -21,7 +22,6 @@ extern void RB_BeginSurface(const Material *material, MaterialTechniqueType tech
 extern void RB_DrawTextInSpace(const char *text, FontHandle font, const vec_t *org, const vec_t *xPixelStep, const vec_t *yPixelStep, D3DCOLOR color);
 extern void R_AddDebugString(DebugGlobals *debugGlobalsEntry, const vec_t *origin, const vec_t *color, float scale, const char *string);
 extern const char *va(const char *fmt, ...);
-extern double sin(double x);
 
 static int RB_AddDebugLine(const vec_t *start, const vec_t *end, const vec_t *color, int depthTest, int vertCount, int vertLimit, GfxPointVertex *verts);
 static void RB_DrawDebugStrings(trDebugString_t *strings, int stringCount);

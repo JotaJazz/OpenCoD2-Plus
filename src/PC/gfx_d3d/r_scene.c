@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 extern dvar_t *r_rendererInUse;
 extern DxGlobals dx;
 #include "imports.h"
@@ -67,7 +69,6 @@ extern r_global_permanent_t rgp;
 extern r_globals_t rg;
 extern refimport_t ri;
 extern const dvar_t *r_dlightLimit;
-extern void qsort(void *base, unsigned int nmemb, unsigned int size, int (*compar)(const void *, const void *));
 
 extern const float *colorWhite;
 
@@ -89,7 +90,6 @@ void InfinitePerspectiveMatrix(float (*mtx)[4], float fov_x, float fov_y, float 
 void MatrixMultiply44(const float (*in1)[4], const float (*in2)[4], float (*out)[4]);
 void MatrixInverse44(const float *mat, float *dst);
 void R_AddCmdClearScreen(int whichToClear, const vec_t *color, float depth, int stencil);
-extern double tan(double);
 
 static int R_CompareDumpSceneEntities(const void *e0, const void *e1);
 static int R_CompareDrawSurfs(const void *drawSurf0, const void *drawSurf1);

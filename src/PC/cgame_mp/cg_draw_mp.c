@@ -1,4 +1,6 @@
 #include "common_types.h"
+extern void Com_Printf(const char *fmt, ...);
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -56,7 +58,6 @@ extern void Con_DrawNotify(int xPos, int yPos, float alpha, msgwnd_mode_t mode);
 extern void Con_DrawSay(int y);
 extern void Con_DrawSubtitles(int xPos, int yPos, int charHeight, float alpha, msgwnd_mode_t mode);
 extern void Menu_PaintAll(displayContextDef_t *dc);
-extern float floorf(float x);
 extern int stricmp(const char *s1, const char *s2);
 
 extern struct lagometer_t lagometer;
@@ -123,8 +124,6 @@ extern Bool Dvar_GetBool(const char *dvarName);
 extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
 extern const vec_t Vec3Distance(const vec_t *v1, const vec_t *v2);
 extern float crandom(void);
-extern double sin(double);
-extern double tan(double);
 extern float fmaxf(float a, float b);
 extern float GetRealWidthFromVirtualWidth(float width);
 extern float GetRealHeightFromVirtualHeight(float height);
@@ -140,9 +139,6 @@ extern void CG_DrawRotatedQuadPic(float x, float y, vec2_t *verts, float angle, 
 extern void CL_DrawQuadPic(vec2_t *verts, const vec_t *color, MaterialHandle material);
 extern const float vectoyaw(const vec_t *vec);
 extern const float AngleNormalize360(const float angle);
-extern float sinf(float);
-extern float cosf(float);
-extern float fabsf(float);
 
 extern const vec_t colorYellow[4];
 extern const vec_t colorRed[4];

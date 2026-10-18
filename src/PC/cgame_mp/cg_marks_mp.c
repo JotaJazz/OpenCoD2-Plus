@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -6,7 +7,6 @@
 extern const dvar_t *cg_marks;
 extern const dvar_t *cg_marksLimit;
 
-extern float floorf(float x);
 
 extern MarkPoly cg_markPolys[1024];
 extern MarkPoly *cg_freeMarkPolys;

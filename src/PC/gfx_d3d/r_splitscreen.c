@@ -1,7 +1,8 @@
 #include "common_types.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "imports.h"
 
-extern char *getenv(const char *name);
 
 extern int R_BeginDelayedDrawing(void);
 extern void R_EndDelayedDrawing(int handle);
@@ -9,7 +10,6 @@ extern void R_IssueDelayedDrawing(int handle);
 
 extern GfxDrawGroupCommands delayedGroup[5];
 extern GfxCmdArray *s_cmdList;
-extern int printf(const char *, ...);
 
 static int R_DrawGroupTraceUsed(void)
 {

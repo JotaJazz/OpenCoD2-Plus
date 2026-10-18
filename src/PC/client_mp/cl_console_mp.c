@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <math.h>
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 /* dvar globals */
@@ -7,8 +9,6 @@ extern const dvar_t *cl_noprint;
 
 float g_console_char_height = 16.0f;
 
-extern float ceilf(float x);
-extern float floorf(float x);
 
 extern clientActive_t clients;
 
@@ -66,7 +66,6 @@ extern int Sys_IsMainThread(void);
 extern int Sys_Milliseconds(void);
 extern void Com_StripExtension(const char *in, char *out);
 #ifndef _WIN32
-extern void qsort(void *base, int nmemb, int size, int (*compar)(const void *, const void *));
 #endif
 extern const char **Cmd_GetAutoCompleteFileList(const char *cmd, int *fileCount, int maxCount);
 extern void FS_FreeFileList(const char **list, int count);

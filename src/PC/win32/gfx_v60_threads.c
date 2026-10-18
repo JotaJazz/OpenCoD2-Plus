@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #if defined(_WIN32) && defined(COD2_GFX_DLL_RETAIL_V60)
 
 typedef void *HANDLE;
@@ -141,7 +142,6 @@ int gfxv60_IsWorker(void)
     return (GetCurrentThreadId() < g_workerId) ? 0 : 1;
 }
 
-extern void *calloc(unsigned, unsigned);
 void *gfxv60_GetThreadData(void)
 {
     void *p;
@@ -207,7 +207,6 @@ void gfxv60_m122(void)
     SetEvent(g_ev[1]);
 }
 
-extern void *malloc(unsigned int);
 extern void Com_Error(int code, const char *fmt, ...);
 static unsigned char *g_v60HiArena;
 static unsigned g_v60HiOff;

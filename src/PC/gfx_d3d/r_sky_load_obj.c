@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <string.h>
 #include "imports.h"
 
 extern char *va(const char *format, ...);
@@ -10,7 +11,6 @@ extern void R_SetSunFromDvars(sunflare_t *sun);
 extern void Com_Printf(const char *fmt, ...);
 extern void Com_Memset(void *dest, const int val, int count);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
-extern char *strchr(const char *s, int c);
 
 extern const char *s_sundvars[21];
 

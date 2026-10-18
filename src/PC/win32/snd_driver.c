@@ -1,9 +1,9 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 #include "bytematch.h"
 extern snd_local_t g_snd;
 
-extern float floorf(float x);
 
 extern void FS_FCloseFile(fileHandle_t f);
 extern int FS_FOpenFileReadStream(const char *filename, long unsigned int *handle, int uniqueFILE);

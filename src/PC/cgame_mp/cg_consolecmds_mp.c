@@ -1,4 +1,5 @@
 #include "cod2_feature_config.h"
+#include <math.h>
 #include "common_types.h"
 #include "imports.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -17,7 +18,6 @@ extern int Cmd_Argc(void);
 extern void CG_SetShellShockParmsFromDvars(shellshock_parms_t *parms);
 extern int CG_LoadShellShockDvars(const char *name);
 extern qboolean CG_SaveShellShockDvars(const char *name);
-extern float floorf(float x);
 extern void Cmd_ArgsBuffer(char *buf, int bufSize);
 extern int Com_sprintf(char *dest, int size, const char *fmt, ...);
 extern void CL_AddReliableCommand(const char *cmd);

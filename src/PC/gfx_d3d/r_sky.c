@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 #include "imports.h"
 /* dvar globals */
 extern const dvar_t *sv_cheats;
@@ -62,8 +63,6 @@ extern MaterialHandle Material_RegisterHandle(const char *name, int lightmapInde
 extern void R_LoadSunThroughDvars(const char *sunName, sunflare_t *sun);
 extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
 extern const char *va(const char *format, ...);
-extern double cos(double);
-extern float floorf(float);
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846

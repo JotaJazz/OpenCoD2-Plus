@@ -1,6 +1,6 @@
 #include "common_types.h"
+#include <stdlib.h>
 
-extern char *getenv(const char *name);
 
 #    include "PC/client_mp/gfx_dll_v60_map.h"
 #    include "PC/gfx_d3d/r_xmodelsurfs_load.h"

@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <math.h>
 static GfxColor bm_color_from_bits(unsigned int b) { GfxColor c; *(unsigned int *)&c = b; return c; }
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
@@ -35,7 +36,6 @@ extern void Vec3Cross(const vec_t *v0, const vec_t *v1, vec_t *cross);
 extern const vec_t Vec3Normalize(vec_t *v);
 extern void RB_SetViewMatrixForWDx7(float w);
 extern void WinSleep(DWORD dwMilliseconds);
-extern float floorf(float x);
 
 int RB_CalcSunSpriteSamples(void);
 static GfxVertex *RB_SetTessQuad(union GfxColor color);

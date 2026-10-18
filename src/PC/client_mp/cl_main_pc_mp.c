@@ -1,4 +1,6 @@
 #include "common_types.h"
+#include <stdlib.h>
+#include <string.h>
 #include "imports.h"
 /* dvar globals */
 extern const dvar_t *cl_serverStatusResendTime;
@@ -24,8 +26,6 @@ extern serverStatusRequest_t cl_serverStatusList[16];
 static Bool s_playerMute[64];
 extern int NET_CompareAdrSigned(netadr_t *a, netadr_t *b);
 extern qboolean NET_CompareAdr(netadr_t a, netadr_t b);
-extern void qsort(void *base, unsigned int nmemb, unsigned int size, int (*compar)(const void *, const void *));
-extern int atoi(const char *nptr);
 extern char *Info_ValueForKey(const char *s, const char *key);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern const char *va(const char *format, ...);
@@ -48,8 +48,6 @@ extern qboolean NET_StringToAdr(const char *s, netadr_t *a);
 extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
 extern int Com_sprintf(char *dest, int size, const char *fmt, ...);
 extern int Sys_Milliseconds(void);
-extern int sscanf(const char *str, const char *format, ...);
-extern char *strchr(const char *s, int c);
 extern Bool Dvar_GetBool(const char *name);
 #include <stdio.h>
 extern void SND_StopSounds(snd_stopsounds_arg_t a);
