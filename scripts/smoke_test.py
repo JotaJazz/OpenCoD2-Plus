@@ -224,7 +224,8 @@ class FakeMaster:
 def check_master(args, check):
     """Internet mode (dedicated 2) against a fake master on 127.0.0.1: the
     heartbeats, the status sent on its own, the replies to the master's
-    queries and the flatline on quit. The real masters and the authorize
+    queries and the flatline when SIGTERM makes it quit, and a console log
+    that can't be opened (warned about once, nothing rotated). The real masters and the authorize
     server are left empty or pointed at an unused local port, so nothing
     leaves the machine."""
     port = free_port()
@@ -235,12 +236,20 @@ def check_master(args, check):
     server = None
     with tempfile.TemporaryDirectory(prefix='cod2rev_master_') as home:
         log_path = os.path.join(home, 'server.log')
+        # a console log that can't be opened, inside a regular file
+        os.makedirs(os.path.join(home, 'main'))
+        not_a_dir = os.path.join(home, 'main', 'notadir')
+        with open(not_a_dir, 'w') as f:
+            f.write('a file\n')
         try:
             with open(log_path, 'wb') as log:
                 server = subprocess.Popen(
                     [args.binary,
                      '+set', 'fs_basepath', os.path.abspath(args.game_dir),
                      '+set', 'fs_homepath', home,
+                     '+set', 'logfile', '1',
+                     '+set', 'logfileName', 'notadir/console.log',
+                     '+set', 'logfileRotate', '2',
                      '+set', 'dedicated', '2',
                      '+set', 'net_port', str(port),
                      '+set', 'sv_hostname', hostname,
@@ -298,6 +307,11 @@ def check_master(args, check):
             log_text = open(log_path, encoding='latin-1').read()
             others = sorted(set(re.findall(r'Sending heartbeat to (\S+)', log_text)) - {f'127.0.0.1:{master.port}'})
             check('no heartbeat to any other master', not others, ', '.join(others))
+            failed = log_text.count("couldn't open logfile notadir/console.log")
+            check('failed console log open reported once', failed == 1 and 'notadir/console.log opened' not in log_text,
+                  f'{failed} warnings')
+            check('failed console log open rotates nothing', open(not_a_dir).read() == 'a file\n'
+                  and not os.path.exists(not_a_dir + '.1'))
         finally:
             master.close()
             if server and server.poll() is None:
