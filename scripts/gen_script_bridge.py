@@ -97,6 +97,24 @@ void cod2x_Scr_ShutdownSystem(int sys, int bComplete)
 
 # Imports written out.
 SCRIPT_IMPORT_CUSTOM = {
+    # CoD2rev-Plus declares Com_Error noreturn, so its callers do not go on
+    # after it. The engine's returns for ERR_SCRIPT and ERR_LOCALIZATION once
+    # the client's UI shows the error (it has cleared com_errorEntered then):
+    # the error becomes a drop, which always unwinds.
+    'Com_Error': '''extern "C" void cod2c_Com_Error(int code, const char *fmt, ...) __asm__(COD2_SYM("Com_Error"));
+void Com_Error(errorParm_t code, const char *fmt, ...)
+{
+    char buf[4096];
+    va_list ap;
+
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    cod2c_Com_Error(code, "%s", buf);
+    cod2c_Com_Error(ERR_DROP, "%s", buf);
+    __builtin_unreachable();
+}
+''',
     # Formatted straight into dest, as CoD2rev-Plus's does: through the
     # 4096-byte buffer of the other variadic imports, a statusResponse or an
     # rcon reply longer than that (both up to 8192 there) was cut.
@@ -192,7 +210,8 @@ int cod2x_SV_SightTrace(int *hitNum, const float *start, const float *mins, cons
     return *hitNum;
 }
 ''',
-    # The engine passes the entity; CoD2rev-Plus's draws the boxes of all.
+    # The engine passes the entity; CoD2rev-Plus's is empty (a dedicated
+    # server draws nothing).
     'SV_XModelDebugBoxes': '''extern "C" void cod2x_SV_XModelDebugBoxes(gentity_s *ent) __asm__(COD2_SYM("SV_XModelDebugBoxes"));
 void cod2x_SV_XModelDebugBoxes(gentity_s *ent)
 {

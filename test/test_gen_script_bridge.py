@@ -65,9 +65,6 @@ class Thunks(unittest.TestCase):
         self.assertIn('unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)', g.EXPORT_CUSTOM['Scr_GetAnim'])
 
 
-if __name__ == '__main__':
-    unittest.main()
-
 
 import engine_abi
 
@@ -105,7 +102,16 @@ class CustomImports(unittest.TestCase):
         self.assertIn('vsnprintf(dest, size, format, ap);', code)
         self.assertNotIn('char buf[4096]', code)
 
+    def test_com_error_never_returns(self):
+        code = g.import_thunk('Com_Error', ['errorParm_t', 'char const*', '...'])
+        self.assertIn('cod2c_Com_Error(ERR_DROP, "%s", buf);', code)
+        self.assertIn('__builtin_unreachable();', code)
+
     def test_server_read_bits_compress_is_bounded(self):
         code = g.import_thunk('MSG_ReadBitsCompress', ['unsigned char const*', 'int', 'unsigned char*', 'int'],
                               cfg=g.MODULES['server'])
         self.assertIn('if ( count > toSizeBytes )', code)
+
+
+if __name__ == '__main__':
+    unittest.main()

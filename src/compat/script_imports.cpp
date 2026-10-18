@@ -10,15 +10,18 @@ decltype(Com_BeginParseSession(std::declval<char const*>())) Com_BeginParseSessi
 extern "C" decltype(Com_EndParseSession()) cod2c_Com_EndParseSession() __asm__(COD2_SYM("Com_EndParseSession"));
 decltype(Com_EndParseSession()) Com_EndParseSession() { return cod2c_Com_EndParseSession(); }
 
-extern "C" decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>())) cod2c_Com_Error(errorParm_t a0, char const* a1, ...) __asm__(COD2_SYM("Com_Error"));
-decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>())) Com_Error(errorParm_t a0, char const* a1, ...)
+extern "C" void cod2c_Com_Error(int code, const char *fmt, ...) __asm__(COD2_SYM("Com_Error"));
+void Com_Error(errorParm_t code, const char *fmt, ...)
 {
     char buf[4096];
     va_list ap;
-    va_start(ap, a1);
-    vsnprintf(buf, sizeof(buf), a1, ap);
+
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    return cod2c_Com_Error(a0, "%s", buf);
+    cod2c_Com_Error(code, "%s", buf);
+    cod2c_Com_Error(ERR_DROP, "%s", buf);
+    __builtin_unreachable();
 }
 
 extern "C" decltype(Com_GetLastTokenPos()) cod2c_Com_GetLastTokenPos() __asm__(COD2_SYM("Com_GetLastTokenPos"));
