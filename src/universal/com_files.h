@@ -164,6 +164,7 @@ void FS_FreeFile(void* buffer);
 fileHandle_t FS_FOpenFileWrite(const char *filename);
 fileHandle_t FS_FOpenTextFileWrite(const char* filename);
 void FS_RotateHomeFile(const char *filename, int count);
+int FS_HomeFileLength(const char *filename);
 fileHandle_t FS_FOpenFileAppend(const char *filename);
 int FS_FOpenFileByMode(const char *qpath, fileHandle_t *f, fsMode_t mode);
 void FS_Printf( fileHandle_t h, const char *fmt, ... );
