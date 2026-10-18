@@ -90,9 +90,10 @@ else()
   set(COD2_PROTOCOL 118)
 endif()
 
-# cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources.
+# cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
+# the generated bridge in src/compat (scripts/gen_script_bridge.py).
 function(cod2_plus_script)
-  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/*.cpp)
   add_library(cod2_plus_script OBJECT ${src})
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()

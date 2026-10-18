@@ -610,6 +610,14 @@ void Hunk_ClearTempMemoryHigh(void)
     hunk_high.temp = hunk_high.permanent;
 }
 
+/* CoD2rev-Plus's script VM resets the high hunk to a mark (scr_evaluate.cpp). */
+void Hunk_ClearHigh(int memory)
+{
+    hunk_high.temp = memory;
+    hunk_high.permanent = memory;
+    Hunk_ClearData();
+}
+
 void *Hunk_AllocLowInternal(int size)
 {
     int aligned;
