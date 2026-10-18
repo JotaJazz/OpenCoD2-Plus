@@ -16,7 +16,7 @@ Código-fonte, obtido por engenharia reversa, do motor de **Call of Duty 2**: o 
 Este repositório é um fork de [opencod2/opencod2](https://github.com/opencod2/opencod2), onde foi feita a reconstrução do motor. Também traz alterações de [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). Aqui só são acrescentadas as alterações descritas em [Alterações deste fork](#alterações-deste-fork). O seu objetivo é tornar-se um único repositório com o cliente e o servidor dedicado, trazendo o servidor do [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) módulo a módulo.
 
 > [!WARNING]
-> **Trabalho em curso — isto ainda não funciona por completo.** O cliente arranca até ao menu principal e o servidor dedicado carrega um mapa e mantém jogadores, mas espere falhas, funcionalidades em falta e outras que não funcionam. É partilhado para os curiosos e para colaboração, não como um port acabado ou jogável.
+> **Trabalho em curso — isto ainda não funciona por completo.** O cliente arranca até ao menu principal e o servidor dedicado, agora o do CoD2rev-Plus, carrega mapas e mantém jogadores na 1.0 e na 1.3, mas espere falhas, funcionalidades em falta e outras que não funcionam. É partilhado para os curiosos e para colaboração, não como um port acabado ou jogável.
 
 > [!IMPORTANT]
 > **Nenhum conteúdo do jogo está incluído — traga os seus próprios dados.** Este repositório contém apenas código-fonte: nenhum executável, arquivo, mapa, modelo, textura, som ou script. Para executar qualquer coisa, é preciso fornecer ficheiros de dados de uma cópia do jogo que **possua legalmente**.
@@ -26,7 +26,7 @@ Este repositório é um fork de [opencod2/opencod2](https://github.com/opencod2/
 - **Quem mantém isto:** sou o JotaJazz. Gosto de jogos antigos e este fork existe por isso: quero continuar a jogar CoD2 com os meus amigos e manter o jogo vivo para a comunidade que ainda o joga, com um projeto aberto.
 - **Como se trabalha aqui:** trabalho com o [Claude Code](https://claude.com/claude-code), o assistente de programação da Anthropic. As alterações deste fork, incluindo este README e as suas traduções, são escritas com a sua ajuda. Os commits feitos assim têm a linha `Co-Authored-By: Claude` na mensagem, pelo que podem ser identificados no histórico com `git log`.
 - **Relação com o original:** a reconstrução é obra dos autores do opencod2 (riicchhaarrd) e do Sipex. Este fork já não traz alterações deles; em vez disso, traz código do CoD2rev-Plus, copiado sem alterações para que os seus commits também se apliquem aqui.
-- **Licença:** o repositório original não tem licença, e este também ainda não tem. O CoD2rev-Plus, cuja VM de scripts já está aqui (`src/script`), é AGPL-3.0. A licença do conjunto está a ser resolvida com os autores originais antes de publicar aqui mais desse código.
+- **Licença:** o repositório original não tem licença, e este também ainda não tem. O CoD2rev-Plus, cuja VM de scripts e cujo servidor já estão aqui (`src/script`, `src/server`), é AGPL-3.0. A licença do conjunto está a ser resolvida com os autores originais antes de publicar aqui mais desse código.
 - **O que não é:** não é um projeto oficial nem está associado à Activision, à Infinity Ward ou aos autores do repositório original. Não inclui nenhum ficheiro do jogo.
 
 ## Alterações deste fork
@@ -34,16 +34,18 @@ Este repositório é um fork de [opencod2/opencod2](https://github.com/opencod2/
 - **Compilações que voltam a funcionar:** as compilações para Linux e MinGW, que deixaram de compilar desde que o original passou a ser compilado só com MSVC, voltam a compilar; `scripts/build_check.py` compila Linux 1.3, Linux 1.0 e MinGW de uma só vez.
 - **Compilado como C++:** no Linux e no MinGW todo o motor compila como C++ (gnu++17), com os cabeçalhos partilhados tornados C++ válido, sem mudar o que faz; verificações protegem os nomes C de que dependem os blobs de dados e a disposição das estruturas do binário original.
 - **A VM de scripts do CoD2rev-Plus:** a máquina virtual GSC é a do CoD2rev-Plus, copiada sem alterações para `src/script`, com uma ponte C/C++ gerada. O servidor mantém agora dois jogadores, desligações, novas ligações e `clientkick`, onde a VM reconstruída falhava assim que o segundo jogador entrava.
-- **Correções:** o servidor respondia na porta errada, não via nenhum `.iwd` em unidades do Windows no WSL e falhava em qualquer kick; anunciava o protocolo 118 na compilação 1.0; a compilação C++ para Linux continua na glibc 2.34; `getAnimLength` e outras três funções de animação já não derrubam o servidor.
-- **Testes:** o smoke test do CoD2rev-Plus, sem alterações, contra este servidor, com a lista das verificações que ainda não passa; um teste com dois jogadores, um teste das funções de animação e verificações da disposição das estruturas, dos nomes C e dos ficheiros copiados do CoD2rev-Plus.
+- **O servidor do CoD2rev-Plus:** o servidor dedicado é compilado com o servidor do CoD2rev-Plus, copiado sem alterações para `src/server`, com uma ponte gerada em que cada chamada entre os dois é verificada contra a ABI do motor. O cliente mantém o servidor reconstruído (`src/PC/server_mp`) para os seus jogos locais. Com ele, o servidor recusa-se a enviar os ficheiros `.iwd` originais e os que são só do servidor.
+- **Um servidor dedicado sem as bibliotecas do cliente:** no Linux o `cod2_lnxded` precisa apenas da libc, da libm, da libz e da libstdc++, não do GL, do X11, do SDL2 nem do curl.
+- **Correções:** o servidor respondia na porta errada, não via nenhum `.iwd` em unidades do Windows no WSL e falhava em qualquer kick; anunciava o protocolo 118 na compilação 1.0; a compilação C++ para Linux continua na glibc 2.34; `getAnimLength` e outras três funções de animação já não derrubam o servidor. O quarto ou quinto carregamento de mapa derrubava o servidor: o script de animações crescia a cada mapa, e o erro que lançava a partir do rcon corrompia a pilha. O servidor 1.0 escrevia por cima das suas próprias configstrings e nenhum cliente 1.0 conseguia entrar. As mensagens fragmentadas usavam os offsets errados nas duas versões, e a porta de um endereço de rede estava onde o Quake III a guarda, não onde o CoD2 a guarda. Os ficheiros `.iwd` da própria pasta do servidor não eram procurados, e as funções que recebem um jogador não o viam com a VM do CoD2rev-Plus.
+- **Testes:** o smoke test do CoD2rev-Plus, sem alterações, contra este servidor, com a lista das verificações que ainda não passa; testes com dois jogadores, de carregamentos de mapa, de um erro drop a partir do rcon e das funções de animação; e verificações da disposição das estruturas, dos nomes C, da ABI da ponte e dos ficheiros copiados do CoD2rev-Plus.
 
 Cada alteração em detalhe está em [docs/CHANGES.md](docs/CHANGES.md) (em inglês).
 
 ## Versões do jogo
 
 - **A versão é escolhida ao compilar.** Por predefinição o motor é compilado como 1.3 (protocolo 118); com `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` é compilado como 1.0 (protocolo 115).
-- **O servidor dedicado 1.3 funciona para testes:** carrega um mapa, responde a `getinfo`, `getstatus` e rcon, e mantém dois jogadores que entram, saem, voltam e são expulsos. Ainda falha no quarto carregamento de mapa.
-- **O servidor dedicado 1.0 ainda não funciona:** carrega um mapa e aceita ligações, mas falha ao enviar o gamestate. O servidor do CoD2rev-Plus, que suporta a 1.0, a 1.3 e a versão do Game Pass, é a próxima parte a chegar.
+- **Os dois servidores dedicados funcionam para testes:** na 1.3 e na 1.0 o servidor carrega, muda e reinicia mapas, responde a `getinfo`, `getstatus` e rcon, e mantém dois jogadores que entram, saem, voltam e são expulsos.
+- **O que o CoD2rev-Plus tem fora do seu servidor ainda não está aqui:** a rotação e as marcas de tempo do registo da consola, `addip`, `net_strictPort`, o heartbeat para o servidor master, a rotação do `games_mp.log` e o seu relatório de falhas estão no seu `qcommon` e no seu `game`, que são os próximos a chegar.
 
 ## Compilar
 
@@ -66,6 +68,8 @@ cmake --build build-native -j
 # -> build-native/cod2_linux    (client)
 # -> build-native/cod2_lnxded   (dedicated server)
 ```
+
+As bibliotecas do cliente são precisas para compilar os dois, mas o `cod2_lnxded` executa apenas com a libc, a libm, a libz e a libstdc++ de 32 bits.
 
 ### Windows (cruzado a partir do Linux com MinGW)
 
@@ -114,6 +118,7 @@ Esta compilação ainda compila C e usa a VM de scripts reconstruída (`src/PC/s
 | `COD2_CXX_ALL` | `ON` | Compila o motor como C++ no Linux e no MinGW. `OFF` compila C. |
 | `COD2_CXX_DIRS` | `""` | Com `COD2_CXX_ALL=OFF`, os módulos ou ficheiros de `src/` que continuam a ser compilados como C++. |
 | `COD2_PLUS_SCRIPT` | `ON` | A VM de scripts do CoD2rev-Plus (`src/script`) no Linux e no MinGW. `OFF` usa a reconstruída (`src/PC/script`), como fazem o MSVC, a compilação web e o x64. |
+| `COD2_PLUS_SERVER` | `ON` | O servidor do CoD2rev-Plus (`src/server`) no servidor dedicado, no Linux e no MinGW; precisa de `COD2_PLUS_SCRIPT`. `OFF` usa o reconstruído (`src/PC/server_mp`), que o cliente usa sempre. |
 | `COD2_FEATURE_CFLAGS` | `""` | Opções de funcionalidades; `-DCOD2_PATCH_10` compila a versão 1.0. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: o cliente SDL2/GL em vez do servidor dedicado. |
 | `COD2_WIN_MSVC` | `OFF` | Compilação nativa com MSVC (definida pelos presets `msvc-client`). |
@@ -151,15 +156,18 @@ python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ name
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/opencod2_smoke.py /path/to/CoD2 --protocol 118
 python3 scripts/two_players_test.py /path/to/CoD2 --protocol 118
+python3 scripts/map_reload_test.py /path/to/CoD2 --protocol 118
+python3 scripts/rcon_drop_test.py /path/to/CoD2 --protocol 118
 python3 scripts/anim_builtins_test.py /path/to/CoD2 --protocol 118
 python3 scripts/vendor_check.py /path/to/CoD2rev-Plus   # files copied from CoD2rev-Plus are unchanged
 python3 -m unittest discover -s test
 ```
 
 - `opencod2_smoke.py` executa o `scripts/smoke_test.py` do CoD2rev-Plus, sem alterações, e compara as suas falhas com `test/smoke_expected_failures_<protocol>.txt`: as verificações que este servidor ainda não passa. Falha perante uma falha nova e perante uma da lista que agora passa, pelo que as listas só diminuem. `--protocol 115` testa a compilação 1.0.
-- `two_players_test.py` liga dois clientes em tdm, faz com que enviem comandos, desliga um e volta a ligá-lo, e expulsa o outro; o servidor deve responder após cada passo.
+- `two_players_test.py` liga dois clientes em tdm, faz com que enviem comandos, desliga um e volta a ligá-lo, e expulsa o outro; o servidor, com `developer 1` para que um erro de script pare o mapa, deve responder após cada passo.
+- `map_reload_test.py` carrega mapas por rcon, alternando `map_restart` e `map` entre dois mapas, e verifica cada carregamento; `rcon_drop_test.py` lança um erro drop a partir do rcon (`error drop`) e verifica que o servidor continua de pé.
 - `anim_builtins_test.py` executa `getAnimLength`, `animHasNotetrack`, `getMoveDelta` e `getAngleDelta` a partir do script de nível de um mod de teste.
-- `scripts/cxx_errors.py` conta os erros de C++ de um módulo (`--return-type` encontra funções não void que podem terminar sem return, o que é indefinido em C++); `scripts/gen_script_bridge.py` regenera a ponte para a VM de scripts.
+- `scripts/cxx_errors.py` conta os erros de C++ de um módulo (`--return-type` encontra funções não void que podem terminar sem return, o que é indefinido em C++); `scripts/gen_script_bridge.py --module script|server` regenera a ponte para a VM de scripts ou para o servidor, e `scripts/engine_abi.py --module server` regista, com o gdb, a ABI do motor contra a qual a ponte verifica (`test/server_abi.txt`).
 
 ## Estrutura do repositório
 
@@ -168,7 +176,8 @@ python3 -m unittest discover -s test
 | `src/PC` | O motor reconstruído: cliente (`client_mp`, `cgame_mp`, `ui_mp`), servidor (`server_mp`), jogo (`game_mp`, `bgame`), renderizador (`gfx_d3d`), código comum (`qcommon`, `universal`), animações (`xanim`) e a VM de scripts reconstruída (`script`). |
 | `src/Mac` | A camada de plataforma do port para Mac de onde veio a reconstrução: OpenGL por trás de uma interface Direct3D, entrada e som. |
 | `src/script` | A VM de scripts do CoD2rev-Plus, copiada sem alterações, com os cabeçalhos de que precisa em `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` e `src/libcod`. |
-| `src/compat` | A ponte entre os nomes C do motor e a VM C++ do CoD2rev-Plus; na maior parte gerada. |
+| `src/server` | O servidor do CoD2rev-Plus, copiado sem alterações; é usado pelo servidor dedicado. |
+| `src/compat` | As pontes entre os nomes C do motor e a VM C++ e o servidor do CoD2rev-Plus; na maior parte geradas. |
 | `src/headers`, `src/imports` | Tipos partilhados, offsets verificados contra o binário original e declarações de funções importadas. |
 | `src/blobs`, `build/native_gen`, `build/win_gen`, `build/gfxdll` | Dados tirados do binário original, ainda usados pelo motor. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Código de plataforma e stubs. |
