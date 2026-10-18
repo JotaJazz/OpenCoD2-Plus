@@ -42,6 +42,7 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - **The bridge (`src/compat`)** connects the engine's C names with the VM's C++ ones:
   - `scripts/gen_script_bridge.py` writes `script_exports.cpp`, 95 thunks whose `__asm__` symbol is the C name the engine calls, one per function in `test/script_interface.txt`.
   - It also writes `script_imports.cpp`: 44 C++ definitions of the engine functions the VM needs, which call the engine's C symbols. Variadic ones format into a 4096-byte buffer, the size of CoD2rev-Plus's own `MAXPRINTMSG`; `Com_sprintf` formats straight into its destination, as CoD2rev-Plus's does, since a `statusResponse` can take 8192 bytes.
+  - `Com_Error` never returns: CoD2rev-Plus declares it `noreturn`, and the engine's returns for `ERR_SCRIPT` and `ERR_LOCALIZATION` once the client's UI shows the error, so the bridge then raises it again as a drop. Before, a script runtime error on the client with `developer 1` ran on into unrelated code.
   - `script_missing.cpp` checks that `PROTOCOL_VERSION`, which CMake derives from `COD2_FEATURE_CFLAGS`, and `COD2_PATCH_10`, which the engine reads wherever it is set, name the same game version.
   - Return types are `decltype` of a call to CoD2rev-Plus's own declarations, so the compiler checks every thunk. Exports must return a scalar or `void`, except the two that return a struct on both sides.
   - Thunks written by hand where the two sides differ:
