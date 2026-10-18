@@ -335,6 +335,34 @@ def check_console_log(path, check):
     check('sv_logRcon 0 hides rcon commands', 'Rcon from' in text and 'smokehidden' not in text)
 
 
+def check_game_log_rotation(path, check):
+    """g_logRotateSize: the oversized games_mp.log was kept as .1 and a new one started."""
+    rotated = path + '.1'
+    check('games_mp.log rotated by size', os.path.exists(rotated)
+          and open(rotated).read(14) == 'old games log\n'
+          and os.path.exists(path) and 'old games log' not in open(path, encoding='latin-1').read())
+
+
+def check_strict_port(args, port, check):
+    """net_strictPort 1: a second server on the busy port stops instead of moving to the next one."""
+    with tempfile.TemporaryDirectory(prefix='cod2rev_strict_') as home:
+        server = subprocess.Popen(
+            [args.binary,
+             '+set', 'fs_basepath', os.path.abspath(args.game_dir),
+             '+set', 'fs_homepath', home,
+             '+set', 'dedicated', '1',
+             '+set', 'net_port', str(port),
+             '+set', 'net_strictPort', '1'],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            out = server.communicate(timeout=30)[0].decode('latin-1')
+        except subprocess.TimeoutExpired:
+            server.kill()
+            out = server.communicate()[0].decode('latin-1')
+        check('net_strictPort stops on a busy port', server.returncode not in (None, 0) and 'net_strictPort' in out,
+              f'exit code {server.returncode}')
+
+
 def free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.bind(('127.0.0.1', 0))
@@ -370,6 +398,10 @@ def main():
         console_log = os.path.join(home, 'main', 'smoke_console.log')
         with open(console_log, 'w') as f:
             f.write('previous run\n')
+        # a games_mp.log over g_logRotateSize, which must move to .1 at the map start
+        game_log = os.path.join(home, 'main', 'games_mp.log')
+        with open(game_log, 'w') as f:
+            f.write('old games log\n' + 'x' * (1024 * 1024) + '\n')
         log_path = os.path.join(home, 'server.log')
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(
@@ -387,6 +419,8 @@ def main():
                  '+set', 'logfileName', 'smoke_console.log',
                  '+set', 'logfileRotate', '2',
                  '+set', 'logTimestamps', '1',
+                 '+set', 'g_logRotate', '2',
+                 '+set', 'g_logRotateSize', '1',
                  '+map', args.map],
                 stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
         try:
@@ -429,6 +463,8 @@ def main():
 
             if info:
                 check_console_log(console_log, check)
+                check_game_log_rotation(game_log, check)
+                check_strict_port(args, port, check)
 
             # a crash must leave its report in crash.log
             if server.poll() is None:
