@@ -118,13 +118,46 @@ function(cod2_plus_script)
   target_compile_definitions(cod2_plus_script_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
-# cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game and
-# bgame sources and their bridge to the engine (src/compat/server_*.cpp).
+# cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
+# bgame, universal, qcommon and platform (src/unix, or src/win32 on Windows)
+# sources and their bridge to the engine (src/compat/server_*.cpp).
 function(cod2_plus_server)
+  if(WIN32)
+    set(platform ${COD2_SRC_DIR}/win32/win_*.cpp)
+  else()
+    set(platform ${COD2_SRC_DIR}/unix/*.cpp)
+  endif()
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
-    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/compat/server_*.cpp)
+    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/universal/*.cpp ${COD2_SRC_DIR}/qcommon/*.cpp ${platform}
+    ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+endfunction()
+
+# cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
+# <list_var> that test/plus_replaces.txt names (a line ending in / names a
+# directory): with COD2_PLUS_SERVER the dedicated server leaves them to
+# CoD2rev-Plus's code, and only the client links them.
+function(cod2_plus_replaced list_var out_var)
+  file(STRINGS ${CMAKE_SOURCE_DIR}/test/plus_replaces.txt entries REGEX "^[^#]")
+  set(keep "")
+  set(moved "")
+  foreach(src ${${list_var}})
+    set(hit FALSE)
+    foreach(entry ${entries})
+      string(FIND "${src}" "${entry}" pos)
+      if(pos EQUAL 0 AND (entry MATCHES "/$" OR src STREQUAL entry))
+        set(hit TRUE)
+      endif()
+    endforeach()
+    if(hit)
+      list(APPEND moved ${src})
+    else()
+      list(APPEND keep ${src})
+    endif()
+  endforeach()
+  set(${list_var} ${keep} PARENT_SCOPE)
+  set(${out_var} ${moved} PARENT_SCOPE)
 endfunction()
 
 # cod2_cxx_sources(<out_var> <sources...>): the sources, with the picked C files
@@ -357,7 +390,7 @@ if(COD2_PLUS_SCRIPT)
 endif()
 set(COD2_W32_SERVER_OBJS "")
 if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game|bgame)/")
+  cod2_plus_replaced(WIN_C replaced)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
 elseif(COD2_PLUS_SCRIPT)
@@ -574,15 +607,15 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
-# With COD2_PLUS_SERVER the dedicated server links src/server, src/game and
-# src/bgame instead of src/PC/server_mp, src/PC/game_mp, src/PC/game and
-# src/PC/bgame, and the blobs that define their globals are compiled for each
-# executable, leaving them to CoD2rev-Plus's code in the dedicated.
+# With COD2_PLUS_SERVER the dedicated server links CoD2rev-Plus's code instead
+# of the sources in test/plus_replaces.txt, which only the client links, and the
+# blobs that define their globals are compiled for each executable, leaving
+# them to CoD2rev-Plus's code in the dedicated.
 set(COD2_SERVER_MP_C "")
 if(COD2_PLUS_SERVER)
-  set(COD2_SERVER_MP_C ${ALL_C})
-  list(FILTER COD2_SERVER_MP_C INCLUDE REGEX "^src/PC/(server_mp|game_mp|game|bgame)/")
-  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game|bgame)/")
+  cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
+  cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
+  list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
   list(REMOVE_ITEM ALL_C src/blobs/bss.c)
   list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
   list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)

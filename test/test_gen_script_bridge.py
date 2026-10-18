@@ -119,6 +119,15 @@ class Modules(unittest.TestCase):
         objects = g.MODULES['server']['objects']
         self.assertTrue(any(o.endswith('src/game/*.o') for o in objects), objects)
 
+    def test_plus_replaces_listed(self):
+        # every source the dedicated server leaves to CoD2rev-Plus exists here
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(root, 'test', 'plus_replaces.txt')) as f:
+            paths = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+        self.assertTrue(paths)
+        missing = [p for p in paths if not os.path.exists(os.path.join(root, p))]
+        self.assertEqual(missing, [])
+
     def test_client_only_imports(self):
         # the dedicated server's game defines Scr_GetFunction in C++, so its
         # thunk to src/PC/game_mp's C function goes only into the client

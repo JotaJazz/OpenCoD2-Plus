@@ -1,0 +1,44 @@
+# Sources of this engine that CoD2rev-Plus's code replaces in the dedicated
+# server (COD2_PLUS_SERVER): the dedicated server leaves them out, and the
+# client keeps them. A line ending in / is a directory. These hold state that
+# CoD2rev-Plus's copy also holds (dvars, hunk, files, commands, network,
+# collision, the clock), so only one copy may be linked.
+# The server, game and bgame (phases 2 and 3a).
+src/PC/server_mp/
+src/PC/game_mp/
+src/PC/game/
+src/PC/bgame/
+# universal
+src/PC/universal/dvar.c
+src/PC/universal/com_memory.c
+src/PC/universal/com_files.c
+# qcommon
+src/PC/qcommon/common.c
+src/PC/qcommon/cmd.c
+src/PC/qcommon/dvar_cmds.c
+src/PC/qcommon/files.c
+src/PC/qcommon/msg_mp.c
+src/PC/qcommon/net_chan_mp.c
+src/PC/qcommon/huffman.c
+src/PC/qcommon/md4.c
+src/PC/qcommon/dobj_management.c
+src/PC/qcommon/cm_load.c
+src/PC/qcommon/cm_load_obj.c
+src/PC/qcommon/cm_mesh.c
+src/PC/qcommon/cm_staticmodel.c
+src/PC/qcommon/cm_staticmodel_load_obj.c
+src/PC/qcommon/cm_test.c
+src/PC/qcommon/cm_tracebox.c
+src/PC/qcommon/cm_trace.c
+src/PC/qcommon/cm_world.c
+src/PC/qcommon/com_bsp_load_obj.c
+src/PC/qcommon/com_fileaccess.c
+# platform (src/unix in Linux, src/win32 in MinGW)
+src/PC/win32/win_net.c
+src/PC/win32/win_threads.c
+src/PC/win32/win_shared.c
+src/Mac/Main/mac_main.c
+src/Mac/Main/mac_common.c
+src/Mac/Main/mac_syscon.c
+src/unix/linux_common.c
+src/unix/linux_net.c
