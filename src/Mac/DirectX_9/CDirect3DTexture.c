@@ -176,7 +176,7 @@ HRESULT CDirect3DTexture_SetAutoGenFilterType(const CDirect3DTexture *_this, D3D
 D3DTEXTUREFILTERTYPE CDirect3DTexture_GetAutoGenFilterType(const CDirect3DTexture *_this)
 {
     (void)_this;
-    return 0;
+    return (D3DTEXTUREFILTERTYPE)0;
 }
 void CDirect3DTexture_GenerateMipSubLevels(const CDirect3DTexture *_this)
 {
@@ -188,7 +188,7 @@ void ZN16CDirect3DTextureD1Ev(void *_this)
     CDirect3DTextureClean *tex = (CDirect3DTextureClean *)_this;
     UINT32 i;
 
-    tex->primaryVtable = vtbl_CDirect3DTexture;
+    tex->primaryVtable = (void**)vtbl_CDirect3DTexture;
     tex->secondaryVtable = vtbl_CDirect3DTexture_secondary;
 
     if (tex->surfaces) {
@@ -201,7 +201,7 @@ void ZN16CDirect3DTextureD1Ev(void *_this)
     }
 
     if (tex->texIDStorage) {
-        glDeleteTextures(1, &tex->texIDStorage);
+        glDeleteTextures(1, (const unsigned int *)&tex->texIDStorage);
         tex->texIDStorage = 0;
     }
 
@@ -232,7 +232,7 @@ void CDirect3DTexture_CDirect3DTexture(const CDirect3DTexture *_this, UINT32 Wid
 
     memset(tex, 0, sizeof(*tex));
 
-    tex->primaryVtable = vtbl_CDirect3DTexture;
+    tex->primaryVtable = (void**)vtbl_CDirect3DTexture;
     tex->secondaryVtable = vtbl_CDirect3DTexture_secondary;
     tex->mpTexID = &tex->texIDStorage;
     tex->mTexWrapS = GL_REPEAT;
@@ -258,7 +258,7 @@ void CDirect3DTexture_CDirect3DTexture(const CDirect3DTexture *_this, UINT32 Wid
 
     MacOpenGLUtils_GetOpenGLTextureType(&createGL, &internalFmt, &glFmt, &glType, Format);
 
-    glGenTextures(1, &tex->texIDStorage);
+    glGenTextures(1, (unsigned int *)&tex->texIDStorage);
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &prevTex);
     glBindTexture(GL_TEXTURE_2D, tex->texIDStorage);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -285,7 +285,7 @@ void CDirect3DTexture_CDirect3DTexture(const CDirect3DTexture *_this, UINT32 Wid
         UINT32 levelH = h ? h : 1;
         UINT32 levelSize = MacOpenGLUtils_GetLevelSizeInBytes(levelW, levelH, 1, &Format);
         void *surf = calloc(1, 128);
-        CDirect3DSurface_CDirect3DSurface((CDirect3DSurface *)surf, 0, 0, i,
+        CDirect3DSurface_CDirect3DSurface((CDirect3DSurface *)surf, (SurfaceType)0, 0, i,
                                           levelW, levelH, Format, tex->pixelData + offset, NULL);
 
         {   /* set surface->owner = tex via typed setter (was surf+40, an x86

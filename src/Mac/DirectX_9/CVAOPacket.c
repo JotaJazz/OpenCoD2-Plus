@@ -135,7 +135,7 @@ void CVAOPacket_CVAOPacket(const CVAOPacket *_this)
 
     packet = (CVAOPacketImpl *)_this;
     COpenGLVAO_COpenGLVAO((const COpenGLVAO *)packet);
-    packet->vtable = vtbl_CVAOPacket;
+    packet->vtable = (void**)vtbl_CVAOPacket;
 }
 
 void ZN10CVAOPacketD2Ev(const CVAOPacket *_this)
@@ -143,7 +143,7 @@ void ZN10CVAOPacketD2Ev(const CVAOPacket *_this)
     CVAOPacketImpl *packet;
 
     packet = (CVAOPacketImpl *)_this;
-    packet->vtable = vtbl_CVAOPacket;
+    packet->vtable = (void**)vtbl_CVAOPacket;
     ZN10COpenGLVAOD2Ev((const COpenGLVAO *)packet);
 }
 
@@ -310,7 +310,7 @@ void CVAOPacket_ReleaseBuffer(const void *p, UINT32 Length)
                 CVAOPacketRbTreeNodeBase *erased;
                 erased = (CVAOPacketRbTreeNodeBase *)__ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_(iter, header);
 
-                ((CVAOPacketImpl *)((unsigned char *)erased + 0x14))->vtable = vtbl_CVAOPacket;
+                ((CVAOPacketImpl *)((unsigned char *)erased + 0x14))->vtable = (void**)vtbl_CVAOPacket;
                 ZN10COpenGLVAOD2Ev((const COpenGLVAO *)((unsigned char *)erased + 0x14));
 
                 __ZdlPv(erased);
@@ -379,7 +379,7 @@ bool CVAOPacket_IsCached(CVAOPacket *v)
                 CVAOPacketRbTreeNodeBase *erased;
                 erased = (CVAOPacketRbTreeNodeBase *)__ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_(iter, header);
 
-                ((CVAOPacketImpl *)((unsigned char *)erased + 0x14))->vtable = vtbl_CVAOPacket;
+                ((CVAOPacketImpl *)((unsigned char *)erased + 0x14))->vtable = (void**)vtbl_CVAOPacket;
                 ZN10COpenGLVAOD2Ev((const COpenGLVAO *)((unsigned char *)erased + 0x14));
 
                 __ZdlPv(erased);
@@ -424,10 +424,10 @@ void CVAOPacket_Cache(CVAOPacket *v)
         fn(CVAOPacket_sAllPackets, InsertBuf);
     }
 
-    insertPacket->vtable = vtbl_CVAOPacket;
+    insertPacket->vtable = (void**)vtbl_CVAOPacket;
     ZN10COpenGLVAOD2Ev((const COpenGLVAO *)insertPacket);
 
-    newPacket->vtable = vtbl_CVAOPacket;
+    newPacket->vtable = (void**)vtbl_CVAOPacket;
     ZN10COpenGLVAOD2Ev((const COpenGLVAO *)newPacket);
 }
 
@@ -454,7 +454,7 @@ void CVAOPacket_Shutdown(void)
 
         {
             CVAOPacketImpl *packet = (CVAOPacketImpl *)((unsigned char *)root + 0x14);
-            packet->vtable = vtbl_CVAOPacket;
+            packet->vtable = (void**)vtbl_CVAOPacket;
             ZN10COpenGLVAOD2Ev((const COpenGLVAO *)packet);
         }
         __ZdlPv(root);

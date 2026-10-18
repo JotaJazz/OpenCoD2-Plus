@@ -60,7 +60,7 @@ static __attribute__((always_inline)) inline void CAE_ThrowIfError(SInt16 status
 void ZN8CAEEventD1Ev(CAEEvent *_this)
 {
     AEDesc *aeDesc = (AEDesc *)(void *)_this;
-    Handle dh = aeDesc->dataHandle;
+    Handle dh = (Handle)aeDesc->dataHandle;
     if (dh) {
         AEDisposeDesc(aeDesc);
     }
@@ -71,7 +71,7 @@ void ZN8CAEEventD1Ev(CAEEvent *_this)
 void ZN9CAETargetD1Ev(CAETarget *_this)
 {
     AEDesc *aeDesc = (AEDesc *)(void *)_this;
-    Handle dh = aeDesc->dataHandle;
+    Handle dh = (Handle)aeDesc->dataHandle;
     if (dh) {
         AEDisposeDesc(aeDesc);
     }
@@ -179,7 +179,7 @@ void CAEEvent_Create(CAEEvent *_this, CAETarget *inTarget, AEEventClass inEventC
 {
 
     AEDesc *aeDesc = (AEDesc *)(void *)_this;
-    Handle dh = aeDesc->dataHandle;
+    Handle dh = (Handle)aeDesc->dataHandle;
     SInt16 status_raw;
     SInt32 status;
 

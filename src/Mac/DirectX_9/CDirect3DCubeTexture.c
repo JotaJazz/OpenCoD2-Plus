@@ -169,7 +169,7 @@ HRESULT CDirect3DCubeTexture_SetAutoGenFilterType(const CDirect3DCubeTexture *_t
 D3DTEXTUREFILTERTYPE CDirect3DCubeTexture_GetAutoGenFilterType(const CDirect3DCubeTexture *_this)
 {
     (void)_this;
-    return 0;
+    return (D3DTEXTUREFILTERTYPE)0;
 }
 void CDirect3DCubeTexture_GenerateMipSubLevels(const CDirect3DCubeTexture *_this)
 {
@@ -195,8 +195,8 @@ void ZN20CDirect3DCubeTextureD1Ev(void *_this)
     CDirect3DCubeTextureClean *tex = (CDirect3DCubeTextureClean *)_this;
     UINT32 i, total;
 
-    tex->primaryVtable = vtbl_CDirect3DCubeTexture;
-    tex->secondaryVtable = vtbl_CDirect3DCubeTexture_secondary;
+    tex->primaryVtable = (void**)vtbl_CDirect3DCubeTexture;
+    tex->secondaryVtable = (void**)vtbl_CDirect3DCubeTexture_secondary;
 
     total = tex->levelCount * 6;
     if (tex->surfaces) {
@@ -208,7 +208,7 @@ void ZN20CDirect3DCubeTextureD1Ev(void *_this)
         tex->surfaces = NULL;
     }
     if (tex->texIDStorage) {
-        glDeleteTextures(1, &tex->texIDStorage);
+        glDeleteTextures(1, (const unsigned int *)&tex->texIDStorage);
         tex->texIDStorage = 0;
     }
     free(tex->pixelData);
@@ -236,8 +236,8 @@ void CDirect3DCubeTexture_CDirect3DCubeTexture(const CDirect3DCubeTexture *_this
     (void)Usage;
     memset(tex, 0, sizeof(*tex));
 
-    tex->primaryVtable = vtbl_CDirect3DCubeTexture;
-    tex->secondaryVtable = vtbl_CDirect3DCubeTexture_secondary;
+    tex->primaryVtable = (void**)vtbl_CDirect3DCubeTexture;
+    tex->secondaryVtable = (void**)vtbl_CDirect3DCubeTexture_secondary;
     tex->mpTexID = &tex->texIDStorage;
     tex->mTexWrapS = GL_REPEAT;
     tex->mTexWrapT = GL_REPEAT;
@@ -260,7 +260,7 @@ void CDirect3DCubeTexture_CDirect3DCubeTexture(const CDirect3DCubeTexture *_this
 
     MacOpenGLUtils_GetOpenGLTextureType(&createGL, NULL, NULL, NULL, Format);
 
-    glGenTextures(1, &tex->texIDStorage);
+    glGenTextures(1, (unsigned int *)&tex->texIDStorage);
     glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &prevTex);
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex->texIDStorage);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -285,7 +285,7 @@ void CDirect3DCubeTexture_CDirect3DCubeTexture(const CDirect3DCubeTexture *_this
         for (face = 0; face < 6; face++) {
             GLenum target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
             void *surf = calloc(1, 128);
-            CDirect3DSurface_CDirect3DSurface((CDirect3DSurface *)surf, 1, target, i,
+            CDirect3DSurface_CDirect3DSurface((CDirect3DSurface *)surf, (SurfaceType)1, target, i,
                                               levelW, levelW, Format, tex->pixelData + offset, NULL);
             tex->surfaces[i * 6 + face] = surf;
             if (createGL)

@@ -7200,6 +7200,7 @@ struct __darwin_pthread_mutex_t {
     char __opaque[40];
 };
 
+#ifndef __cplusplus /* C++: clashes with the DIR typedef of <dirent.h>; unused */
 struct DIR {
     int dd_fd;
     long int dd_loc;
@@ -7212,6 +7213,7 @@ struct DIR {
     struct __darwin_pthread_mutex_t dd_lock;
     _telldir *dd_td;
 };
+#endif
 
 struct __false_type {
     int _placeholder;

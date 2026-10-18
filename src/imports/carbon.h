@@ -6,19 +6,19 @@ extern "C" {
 #endif
 
 
-int AECoerceDesc();
-int AECreateAppleEvent();
-int AECreateDesc();
-int AEDisposeDesc();
-int AEGetDescData();
+int AECoerceDesc(COD2_KR);
+int AECreateAppleEvent(COD2_KR);
+int AECreateDesc(COD2_KR);
+int AEDisposeDesc(COD2_KR);
+int AEGetDescData(COD2_KR);
 int AEGetDescDataSize();
 int AEGetParamDesc();
 int AEGetParamPtr();
 int AEInstallEventHandler();
-int AEPutParamDesc();
+int AEPutParamDesc(COD2_KR);
 int AEPutParamPtr();
-int AESend();
-int CreateObjSpecifier();
+int AESend(COD2_KR);
+int CreateObjSpecifier(COD2_KR);
 
 
 #ifdef __cplusplus

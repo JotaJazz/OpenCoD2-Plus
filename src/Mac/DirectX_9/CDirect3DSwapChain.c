@@ -33,7 +33,7 @@ static ULONG CDirect3DSwapChain_SurfaceRelease(IDirect3DSurface9 *surface)
 
 static void CDirect3DSwapChain_Destroy(CDirect3DSwapChainImpl *swapChain)
 {
-    swapChain->vtable = vtbl_CDirect3DSwapChain;
+    swapChain->vtable = (void**)vtbl_CDirect3DSwapChain;
     if (swapChain->backBuffer) {
         CDirect3DSwapChain_SurfaceRelease(swapChain->backBuffer);
     }
@@ -124,7 +124,7 @@ int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this)
     CDirect3DSwapChainImpl *swapChain;
 
     swapChain = (CDirect3DSwapChainImpl *)_this;
-    swapChain->vtable = vtbl_CDirect3DSwapChain;
+    swapChain->vtable = (void**)vtbl_CDirect3DSwapChain;
     swapChain->backBuffer = NULL;
     swapChain->refCount = 1;
     return (int)_this;

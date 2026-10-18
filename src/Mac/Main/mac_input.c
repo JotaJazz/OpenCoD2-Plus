@@ -439,11 +439,11 @@ void CCallOfDutyEngine_DoMouseWheel(const CCallOfDutyEngine *_this,
                                     UInt32 inModifiers)
 {
     if (inDelta > 0) {
-        Sys_QueEvent(0, 1, K_MWHEELUP, 1, 0, 0);
-        Sys_QueEvent(0, 1, K_MWHEELUP, 0, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, K_MWHEELUP, 1, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, K_MWHEELUP, 0, 0, 0);
     } else {
-        Sys_QueEvent(0, 1, K_MWHEELDOWN, 1, 0, 0);
-        Sys_QueEvent(0, 1, K_MWHEELDOWN, 0, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, K_MWHEELDOWN, 1, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, K_MWHEELDOWN, 0, 0, 0);
     }
 }
 
@@ -453,7 +453,7 @@ void CCallOfDutyEngine_DoTextInput(const CCallOfDutyEngine *_this,
     if (!isprint((UInt16)inUniChar) && inUniChar != 8) {
         return;
     }
-    Sys_QueEvent(((WinVars_t *)imp_g_wv)->sysMsgTime, 2,
+    Sys_QueEvent(((WinVars_t *)imp_g_wv)->sysMsgTime, (sysEventType_t)2,
                  (UInt16)inUniChar, 0, 0, 0);
 }
 
@@ -474,7 +474,7 @@ void CCallOfDutyEngine_DoKeyDown(const CCallOfDutyEngine *_this,
         keysym = 0;
     }
     if (keysym) {
-        Sys_QueEvent(0, 1, keysym, 1, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, keysym, 1, 0, 0);
     }
 }
 
@@ -495,7 +495,7 @@ void CCallOfDutyEngine_DoKeyUp(const CCallOfDutyEngine *_this,
         keysym = 0;
     }
     if (keysym) {
-        Sys_QueEvent(0, 1, keysym, 0, 0, 0);
+        Sys_QueEvent(0, (sysEventType_t)1, keysym, 0, 0, 0);
     }
 }
 
@@ -513,7 +513,7 @@ void CCallOfDutyEngine_DoMouseDown(const CCallOfDutyEngine *_this,
     *mousestate = newmask;
     for (bit = 0; bit < 5; bit++) {
         if ((newmask >> bit) & 1) {
-            Sys_QueEvent(0, 1, K_MOUSE1 + bit, 1, 0, 0);
+            Sys_QueEvent(0, (sysEventType_t)1, K_MOUSE1 + bit, 1, 0, 0);
         }
     }
 }
@@ -531,7 +531,7 @@ void CCallOfDutyEngine_DoMouseUp(const CCallOfDutyEngine *_this,
     *mousestate = newmask;
     for (bit = 0; bit < 5; bit++) {
         if (((newmask >> bit) & 1) == 0) {
-            Sys_QueEvent(0, 1, K_MOUSE1 + bit, 0, 0, 0);
+            Sys_QueEvent(0, (sysEventType_t)1, K_MOUSE1 + bit, 0, 0, 0);
         }
     }
 }

@@ -63,8 +63,8 @@ void ZN21CDirect3DVertexShaderD1Ev(const CDirect3DVertexShader *_this)
     CDirect3DVertexShaderImpl *shader;
 
     shader = (CDirect3DVertexShaderImpl *)_this;
-    shader->vtablePrimary = vtbl_CDirect3DVertexShader;
-    shader->vtableSecondary = vtbl_CDirect3DVertexShader_secondary;
+    shader->vtablePrimary = (void**)vtbl_CDirect3DVertexShader;
+    shader->vtableSecondary = (void**)vtbl_CDirect3DVertexShader_secondary;
 
 }
 
@@ -83,8 +83,8 @@ unsigned char CDirect3DVertexShader_CDirect3DVertexShader(const CDirect3DVertexS
 
     COpenGLVertexProgram_COpenGLVertexProgram(
         (const COpenGLVertexProgram *)shader->baseState, pSrcData);
-    shader->vtablePrimary = vtbl_CDirect3DVertexShader;
-    shader->vtableSecondary = vtbl_CDirect3DVertexShader_secondary;
+    shader->vtablePrimary = (void**)vtbl_CDirect3DVertexShader;
+    shader->vtableSecondary = (void**)vtbl_CDirect3DVertexShader_secondary;
     shader->isBound = 0;
     shader->refCount = 1;
     return 0;
@@ -104,7 +104,7 @@ HRESULT CDirect3DVertexShader_GetFunction(const CDirect3DVertexShader *_this, UI
     return 0;
 }
 
-void ZThn4_N21CDirect3DVertexShaderD0Ev(void *p) { ZN21CDirect3DVertexShaderD0Ev((char *)p - 4); }
-void ZThn4_N21CDirect3DVertexShaderD1Ev(void *p) { ZN21CDirect3DVertexShaderD1Ev((char *)p - 4); }
+void ZThn4_N21CDirect3DVertexShaderD0Ev(void *p) { ZN21CDirect3DVertexShaderD0Ev((const CDirect3DVertexShader *)((char *)p - 4)); }
+void ZThn4_N21CDirect3DVertexShaderD1Ev(void *p) { ZN21CDirect3DVertexShaderD1Ev((const CDirect3DVertexShader *)((char *)p - 4)); }
 fnptr_t vtbl_CDirect3DVertexShader[] = { (fnptr_t)CDirect3DVertexShader_QueryInterface, (fnptr_t)CDirect3DVertexShader_AddRef, (fnptr_t)CDirect3DVertexShader_Release, (fnptr_t)CDirect3DVertexShader_GetDevice, (fnptr_t)CDirect3DVertexShader_GetFunction, (fnptr_t)ZN21CDirect3DVertexShaderD1Ev, (fnptr_t)ZN21CDirect3DVertexShaderD0Ev };
 fnptr_t vtbl_CDirect3DVertexShader_secondary[] = { (fnptr_t)ZThn4_N21CDirect3DVertexShaderD1Ev, (fnptr_t)ZThn4_N21CDirect3DVertexShaderD0Ev };

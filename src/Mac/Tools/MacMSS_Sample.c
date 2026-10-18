@@ -94,7 +94,7 @@ OSStatus CSampleSound_AudioConverterProc(AudioConverterRef inAudioConverter, UIn
     if (!inUserData)
         return -50;
 
-    return CSampleSound_DoConvert(inUserData, ioNumberDataPackets, ioData);
+    return CSampleSound_DoConvert((const CSampleSound*)inUserData, ioNumberDataPackets, ioData);
 }
 
 void CSampleSound_UpdateStreamFormat(const CSampleSound *_this)
@@ -125,7 +125,7 @@ void CSampleSound_ChangedVolume(CSampleSound *_this)
 
     UInt32 busIndex = *(UInt32 *)(p + 0x08);
     CSoundEngine *engine = *(CSoundEngine **)(p + 0x04);
-    AudioUnit mixerUnit = CSoundEngine_GetMixerUnit(engine);
+    AudioUnit mixerUnit = (AudioUnit)CSoundEngine_GetMixerUnit(engine);
 
     AudioUnitSetParameter(mixerUnit, 3 , 1 , busIndex, db, 0);
 
@@ -146,7 +146,7 @@ OSStatus CSampleSound_RenderCallbackProc(void *inRefCon, AudioUnitRenderActionFl
     if (!inRefCon)
         return -50;
 
-    return CSampleSound_DoRender(inRefCon, ioActionFlags, inNumberFrames, ioData);
+    return CSampleSound_DoRender((const CSampleSound*)inRefCon, ioActionFlags, inNumberFrames, ioData);
 }
 
 void CSampleSound_resume_sample(const CSampleSound *_this)

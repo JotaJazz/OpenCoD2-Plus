@@ -69,7 +69,7 @@ HRESULT CDirect3DVolume_GetDesc(const void *_this, D3DVOLUME_DESC *pDesc)
     pDesc->Format = vol->format;
     pDesc->Type = D3DRTYPE_VOLUME;
     pDesc->Usage = 0;
-    pDesc->Pool = 0;
+    pDesc->Pool = (D3DPOOL)0;
     pDesc->Width = vol->width;
     pDesc->Height = vol->height;
     pDesc->Depth = vol->depth;
@@ -319,7 +319,7 @@ HRESULT CDirect3DVolumeTexture_SetAutoGenFilterType(const CDirect3DVolumeTexture
 D3DTEXTUREFILTERTYPE CDirect3DVolumeTexture_GetAutoGenFilterType(const CDirect3DVolumeTexture *_this)
 {
     (void)_this;
-    return 0;
+    return (D3DTEXTUREFILTERTYPE)0;
 }
 void CDirect3DVolumeTexture_GenerateMipSubLevels(const CDirect3DVolumeTexture *_this)
 {
@@ -338,7 +338,7 @@ void ZN22CDirect3DVolumeTextureD1Ev(void *_this)
         tex->volumes = NULL;
     }
     if (tex->texIDStorage) {
-        glDeleteTextures(1, &tex->texIDStorage);
+        glDeleteTextures(1, (const unsigned int *)&tex->texIDStorage);
         tex->texIDStorage = 0;
     }
     free(tex->pixelData);
@@ -390,7 +390,7 @@ void CDirect3DVolumeTexture_CDirect3DVolumeTexture(const CDirect3DVolumeTexture 
 
     MacOpenGLUtils_GetOpenGLTextureType(&createGL, &internalFmt, &glFmt, &glType, Format);
 
-    glGenTextures(1, &tex->texIDStorage);
+    glGenTextures(1, (unsigned int *)&tex->texIDStorage);
     glGetIntegerv(GL_TEXTURE_BINDING_3D, &prevTex);
     glBindTexture(GL_TEXTURE_3D, tex->texIDStorage);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

@@ -268,7 +268,7 @@ void ZN9CDirect3DD0Ev(const void *_this)
 void *Direct3DCreate9(int sdkVersion)
 {
     (void)sdkVersion;
-    sDirect3DInterface.vtable = vtbl_CDirect3D;
+    sDirect3DInterface.vtable = (void**)vtbl_CDirect3D;
     sDirect3DInterface.refCount = 1;
     /* returns a pointer -- was `int`/`(int)(unsigned long)` which truncated the
      * 8-byte CDirect3D address on x64 (int and Win64 long are both 4 bytes). */

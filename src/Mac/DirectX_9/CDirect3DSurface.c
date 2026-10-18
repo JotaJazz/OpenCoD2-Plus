@@ -82,7 +82,7 @@ static IUnknownLikeVTable *CDirect3DSurface_GetIUnknownVTable(void *object)
 
 static void CDirect3DSurface_Destroy(CDirect3DSurfaceImpl *surface)
 {
-    surface->vtable = vtbl_CDirect3DSurface;
+    surface->vtable = (void**)vtbl_CDirect3DSurface;
     if (surface->releaseOwnerOnDestroy && surface->owner) {
         CDirect3DSurface_GetIUnknownVTable(surface->owner)->Release(surface->owner);
     }
@@ -262,7 +262,7 @@ void CDirect3DSurface_CDirect3DSurface(const CDirect3DSurface *_this, SurfaceTyp
 
     (void)pOpenGLTextureInfo;
 
-    surface->vtable = vtbl_CDirect3DSurface;
+    surface->vtable = (void**)vtbl_CDirect3DSurface;
     surface->refCount = 1;
     surface->surfaceType = s;
     surface->cubemapTarget = CubemapID;

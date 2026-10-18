@@ -87,6 +87,11 @@ ControlRef MacBuilder_GetControlRef(WindowRef inWindow, SInt32 inID)
 
 static inflate_blocks_statef ValidationProc(ControlRef inControlRef)
 {
+    {
+        inflate_blocks_statef zero;
+        memset(&zero, 0, sizeof(zero));
+        return zero;
+    }
 }
 
 static OSStatus HandleStandardEvents(EventRef inEvent, inflate_blocks_statef *inUserData)
@@ -101,6 +106,11 @@ static ControlKeyFilterResult KeyFilterProc(ControlRef inControlRef, SInt16 *ioC
 
 inflate_blocks_statef MacBuilder_SetTextObjectFontStyle(WindowRef inWindow, SInt32 inID, int inFontFamilyID, int inFontSize)
 {
+    {
+        inflate_blocks_statef zero;
+        memset(&zero, 0, sizeof(zero));
+        return zero;
+    }
 }
 
 void MacBuilder_GetControlText(WindowRef inWindow, SInt32 inID, int inBufferSize, char *outText)
@@ -259,6 +269,11 @@ void MacBuilder_SetupUserPaneControl(WindowRef inWindow, SInt32 inID, ControlUse
 
 inflate_blocks_statef MacBuilder_SetEditTextHook(WindowRef inWindow, SInt32 inID, MacBuilderEditHookPtr inHookProc, int inCharLimit)
 {
+    {
+        inflate_blocks_statef zero;
+        memset(&zero, 0, sizeof(zero));
+        return zero;
+    }
 }
 
 TXNObject MacBuilder_GetTextObject(WindowRef inWindow, SInt32 inID)

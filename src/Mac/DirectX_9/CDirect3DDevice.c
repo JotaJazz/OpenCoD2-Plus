@@ -1022,7 +1022,7 @@ ULONG CDirect3DDevice_AddRef(const CDirect3DDevice *_this)
 HRESULT CDirect3DDevice_QueryInterface(const CDirect3DDevice *_this, const IID *iid, LPVOID *ppvObj)
 {
     (void)iid;
-    *ppvObj = (void *)_this;
+    *ppvObj = (LPVOID)_this;
     CDirect3DDevice_AddRef(_this);
     return 0;
 }
@@ -1233,7 +1233,7 @@ HRESULT CDirect3DDevice_CreateDepthStencilSurface(const CDirect3DDevice *_this,
 
     glGetIntegerv(0x8069, &currentTexture);
     surf = malloc(((0x3c) + (sizeof(void*)>4 ? 0x100 : 0)));
-    CDirect3DSurface_CDirect3DSurface((const CDirect3DSurface *)surf, 0, 0, 0, Width, Height, Format, surfMem, 0);
+    CDirect3DSurface_CDirect3DSurface((const CDirect3DSurface *)surf, (SurfaceType)0, 0, 0, Width, Height, Format, surfMem, 0);
     *ppSurface = (IDirect3DSurface9 *)surf;
     glBindTexture(0xde1, currentTexture);
     return 0;
@@ -1266,7 +1266,7 @@ HRESULT CDirect3DDevice_CreateRenderTarget(const CDirect3DDevice *_this,
 
     glGetIntegerv(0x8069, &currentTexture);
     surf = malloc(((0x3c) + (sizeof(void*)>4 ? 0x100 : 0)));
-    CDirect3DSurface_CDirect3DSurface((const CDirect3DSurface *)surf, 0, 0, 0, Width, Height, Format, surfMem, 0);
+    CDirect3DSurface_CDirect3DSurface((const CDirect3DSurface *)surf, (SurfaceType)0, 0, 0, Width, Height, Format, surfMem, 0);
     *ppSurface = (IDirect3DSurface9 *)surf;
     glBindTexture(0xde1, currentTexture);
     return 0;
@@ -1319,7 +1319,7 @@ HRESULT CDirect3DDevice_CreateOffscreenPlainSurface(const CDirect3DDevice *_this
     }
 
     surface = (CDirect3DSurface *)malloc(0x80);   /* 0x3c was x86 sizeof(CDirect3DSurfaceImpl); x64 is 0x50 */
-    CDirect3DSurface_CDirect3DSurface(surface, 0, 0, 0, Width, Height, Format, surfaceMemory, 0);
+    CDirect3DSurface_CDirect3DSurface(surface, (SurfaceType)0, 0, 0, Width, Height, Format, surfaceMemory, 0);
 
     if (ppSurface != NULL) {
         *ppSurface = (IDirect3DSurface9 *)surface;
@@ -1364,7 +1364,7 @@ HRESULT CDirect3DDevice_GetDeviceCaps(const CDirect3DDevice *_this, D3DCAPS9 *pC
     (void)dev;
 
     memset(pCaps, 0, sizeof(D3DCAPS9));
-    pCaps->DeviceType = 1;
+    pCaps->DeviceType = (D3DDEVTYPE)1;
     pCaps->AdapterOrdinal = dev->cardType;
     pCaps->Caps = 0;
     pCaps->Caps2 = 0x30020000;
@@ -3205,7 +3205,7 @@ long unsigned int CDirect3DDevice_CDirect3DDevice(const CDirect3DDevice *_this,
     (void)Context;
     (void)pPresentationParameters;
 
-    dev->vtable = vtbl_CDirect3DDevice;
+    dev->vtable = (void**)vtbl_CDirect3DDevice;
     dev->refCount = 1;
 
     return 0;
@@ -3217,7 +3217,7 @@ void CDirect3DDevice_Init(void *device)
     int videoMemory = 0;
     int textureMemory = 0;
     DeviceImpl *dev = (DeviceImpl *)device;
-    dev->vtable = vtbl_CDirect3DDevice;
+    dev->vtable = (void**)vtbl_CDirect3DDevice;
     dev->refCount = 1;
     CDirect3DDevice_LoadIdentityMatrix(dev->worldMatrix);
     CDirect3DDevice_LoadIdentityMatrix(dev->viewMatrix);
@@ -3277,7 +3277,7 @@ void CDirect3DDevice_Init(void *device)
 void ZN15CDirect3DDeviceD1Ev(void *_this)
 {
     DeviceImpl *dev = (DeviceImpl *)_this;
-    dev->vtable = vtbl_CDirect3DDevice;
+    dev->vtable = (void**)vtbl_CDirect3DDevice;
 
     if (dev->context) {
         MacDisplay_ReleaseContext(&dev->context);

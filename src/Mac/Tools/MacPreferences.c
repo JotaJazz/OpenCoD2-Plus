@@ -81,7 +81,7 @@ void MacPreferences_PutString(const char *inKey, const char *inString)
     {
         FILE *out = fopen(tmppath, "w");
         if (!out)
-            return 0;
+            return;
 
         f = fopen(prefs_path, "r");
         if (f) {
@@ -103,7 +103,7 @@ void MacPreferences_PutString(const char *inKey, const char *inString)
     }
 
     rename(tmppath, prefs_path);
-    return 1;
+    return;
 }
 
 int MacPreferences_GetInteger(const char *inKey, int inDefault)

@@ -50,7 +50,7 @@ UINT32 CD3DXBuffer_GetBufferSize(const void *_this)
 void ZN11CD3DXBufferD1Ev(const void *_this)
 {
     CD3DXBufferImpl *buf = (CD3DXBufferImpl *)_this;
-    buf->vtable = vtbl_CD3DXBuffer;
+    buf->vtable = (void**)vtbl_CD3DXBuffer;
     free(buf->data);
     buf->data = NULL;
 }
@@ -64,7 +64,7 @@ void ZN11CD3DXBufferD0Ev(const void *_this)
 static CD3DXBufferImpl *CD3DXBuffer_Create(const void *data, UINT32 size)
 {
     CD3DXBufferImpl *buf = (CD3DXBufferImpl *)calloc(1, sizeof(CD3DXBufferImpl));
-    buf->vtable = vtbl_CD3DXBuffer;
+    buf->vtable = (void**)vtbl_CD3DXBuffer;
     buf->refCount = 1;
     buf->size = size;
     if (size && data) {
@@ -294,7 +294,7 @@ HRESULT CD3DXConstantTable_SetMatrixTransposePointerArray(const void *_this, voi
 void ZN18CD3DXConstantTableD1Ev(const void *_this)
 {
     CD3DXConstantTableImpl *ct = (CD3DXConstantTableImpl *)_this;
-    ct->vtable = vtbl_CD3DXConstantTable;
+    ct->vtable = (void**)vtbl_CD3DXConstantTable;
     free(ct->data);
     ct->data = NULL;
 }
@@ -597,7 +597,7 @@ HRESULT D3DXCompileShader(
 
     if (ppConstantTable) {
         CD3DXConstantTableImpl *ct = (CD3DXConstantTableImpl *)calloc(1, sizeof(CD3DXConstantTableImpl));
-        ct->vtable = vtbl_CD3DXConstantTable;
+        ct->vtable = (void**)vtbl_CD3DXConstantTable;
         ct->refCount = 1;
         *ppConstantTable = ct;
     }

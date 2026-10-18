@@ -346,10 +346,10 @@ static void __static_initialization_and_destruction_0(int __initialize_p, int __
     }
 
     if (__initialize_p == 1) {
-        CColorConverter_SetVTable(sStdConverterARGB, vtbl_StdConverterARGB);
-        CColorConverter_SetVTable(sStdConverterABGR, vtbl_StdConverterABGR);
-        CColorConverter_SetVTable(sATI4CompsConverterARGB, vtbl_ATI4CompsConverterARGB);
-        CColorConverter_SetVTable(sATI4CompsConverterABGR, vtbl_ATI4CompsConverterABGR);
+        CColorConverter_SetVTable(sStdConverterARGB, (void**)vtbl_StdConverterARGB);
+        CColorConverter_SetVTable(sStdConverterABGR, (void**)vtbl_StdConverterABGR);
+        CColorConverter_SetVTable(sATI4CompsConverterARGB, (void**)vtbl_ATI4CompsConverterARGB);
+        CColorConverter_SetVTable(sATI4CompsConverterABGR, (void**)vtbl_ATI4CompsConverterABGR);
     }
 }
 
@@ -435,7 +435,7 @@ ConverterType StdConverterABGR_GetType(const StdConverterABGR *_this)
 
 void ZN16StdConverterARGBD1Ev(StdConverterARGB *_this)
 {
-    CColorConverter_SetVTable(_this, vtbl_StdConverterARGB);
+    CColorConverter_SetVTable(_this, (void**)vtbl_StdConverterARGB);
     CColorConverter_SetVTable(_this, CColorConverter_GetBaseVTable());
 }
 
@@ -447,7 +447,7 @@ void ZN16StdConverterARGBD0Ev(StdConverterARGB *_this)
 
 void ZN16StdConverterABGRD1Ev(StdConverterABGR *_this)
 {
-    CColorConverter_SetVTable(_this, vtbl_StdConverterABGR);
+    CColorConverter_SetVTable(_this, (void**)vtbl_StdConverterABGR);
     CColorConverter_SetVTable(_this, CColorConverter_GetBaseVTable());
 }
 
@@ -459,7 +459,7 @@ void ZN16StdConverterABGRD0Ev(StdConverterABGR *_this)
 
 void ZN22ATI4CompsConverterARGBD1Ev(ATI4CompsConverterARGB *_this)
 {
-    CColorConverter_SetVTable(_this, vtbl_ATI4CompsConverterARGB);
+    CColorConverter_SetVTable(_this, (void**)vtbl_ATI4CompsConverterARGB);
     CColorConverter_SetVTable(_this, CColorConverter_GetBaseVTable());
 }
 
@@ -471,7 +471,7 @@ void ZN22ATI4CompsConverterARGBD0Ev(ATI4CompsConverterARGB *_this)
 
 void ZN22ATI4CompsConverterABGRD1Ev(ATI4CompsConverterABGR *_this)
 {
-    CColorConverter_SetVTable(_this, vtbl_ATI4CompsConverterABGR);
+    CColorConverter_SetVTable(_this, (void**)vtbl_ATI4CompsConverterABGR);
     CColorConverter_SetVTable(_this, CColorConverter_GetBaseVTable());
 }
 

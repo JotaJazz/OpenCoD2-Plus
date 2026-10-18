@@ -9,14 +9,14 @@ extern "C" {
 int aglChoosePixelFormat();
 int aglCreateContext();
 int aglDescribePixelFormat();
-int aglDestroyContext();
+int aglDestroyContext(COD2_KR);
 int aglDestroyPixelFormat();
 int aglGetDrawable();
-int aglSetCurrentContext();
-int aglSetDrawable();
+int aglSetCurrentContext(COD2_KR);
+int aglSetDrawable(COD2_KR);
 int aglSetFullScreen();
 int aglSetInteger();
-int aglSwapBuffers();
+int aglSwapBuffers(COD2_KR);
 
 
 #ifdef __cplusplus

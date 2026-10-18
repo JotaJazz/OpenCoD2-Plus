@@ -139,7 +139,9 @@ struct D3DXFLOAT16;
 struct D3DXMATRIX;
 struct D3DXVECTOR3;
 struct D3DXVECTOR4;
+#ifndef __cplusplus /* C++: clashes with the DIR typedef of <dirent.h>; unused */
 struct DIR;
+#endif
 struct DInfo;
 struct DObjAnimMat_s;
 struct DObjModel_s;

@@ -31,6 +31,17 @@ extern "C" {
 #define COD2_WIN_ALIGN8
 #endif
 
+/* An empty parameter list, int f(), declares a function without a prototype
+ * in C but one that takes no arguments in C++. COD2_KR keeps the C meaning in
+ * C++: the call passes the same arguments with the same default promotions. */
+#ifndef COD2_KR
+#ifdef __cplusplus
+#define COD2_KR ...
+#else
+#define COD2_KR
+#endif
+#endif
+
 /* C++ has no forward-declared enums without an underlying type, which GNU C
  * accepts: COD2_ENUM_DECL(X) declares enum X ahead of its definition in C++,
  * and COD2_ENUM_INT gives that definition the matching int base (the size the

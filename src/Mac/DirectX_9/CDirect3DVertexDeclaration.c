@@ -117,7 +117,7 @@ void ZN26CDirect3DVertexDeclarationD1Ev(const CDirect3DVertexDeclaration *_this)
     CDirect3DVertexDeclarationImpl *declaration;
 
     declaration = (CDirect3DVertexDeclarationImpl *)_this;
-    declaration->vtable = vtbl_CDirect3DVertexDeclaration;
+    declaration->vtable = (void**)vtbl_CDirect3DVertexDeclaration;
     if (declaration->elements) {
         free(declaration->elements);
     }
@@ -135,7 +135,7 @@ HRESULT CDirect3DVertexDeclaration_GetDeclaration(const CDirect3DVertexDeclarati
 
     declaration = (CDirect3DVertexDeclarationImpl *)_this;
     if (pElement && declaration->elementCount) {
-        memcpy(pElement, declaration->elements,
+        memcpy((void*)pElement, declaration->elements,
                declaration->elementCount * sizeof(D3DVERTEXELEMENT9));
     }
 
@@ -220,7 +220,7 @@ int CDirect3DVertexDeclaration_CDirect3DVertexDeclaration(const CDirect3DVertexD
     UINT32 count;
 
     declaration = (CDirect3DVertexDeclarationImpl *)_this;
-    declaration->vtable = vtbl_CDirect3DVertexDeclaration;
+    declaration->vtable = (void**)vtbl_CDirect3DVertexDeclaration;
     declaration->elementCount = 0;
     declaration->elements = NULL;
     declaration->refCount = 1;

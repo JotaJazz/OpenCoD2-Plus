@@ -6,7 +6,7 @@ int g_sound_recordVolume;
 int g_sound_channels;
 char g_recording_initialized;
 char g_currently_recording;
-extern int (*current_audioCallback)();
+extern int (*current_audioCallback)(COD2_KR);
 static recordingSample_t s_recordingSamples[65];
 static recordingSample_t *s_recordingSamplePtr;
 static recordingSample_t *g_current_sample;
@@ -105,7 +105,7 @@ int DSOUNDRecord_Init(void)
 
     recorder = __Znwm(0x78);
     CAudioRecorder_CAudioRecorder(recorder, (double)g_sound_recordFrequency, g_sound_channels, 16);
-    sAudioRecorder = recorder;
+    sAudioRecorder = (CAudioRecorder*)recorder;
 
     if (!CAudioRecorder_Initialize(recorder)) {
         if (sAudioRecorder) {
@@ -149,7 +149,7 @@ void DSOUNDRecord_Frame(void)
     if (!g_current_sample)
         return;
 
-    buffer = CAudioRecorder_GetBuffer(sAudioRecorder, &size);
+    buffer = CAudioRecorder_GetBuffer(sAudioRecorder, (int *)&size);
     if (!buffer)
         return;
     if (!size)
@@ -162,7 +162,7 @@ void DSOUNDRecord_Frame(void)
     audioSample.channels = g_sound_channels;
     audioSample.lengthInSamples = size / (g_sound_channels * 2);
     audioSample.lengthInBytes = size;
-    audioSample.buffer = buffer;
+    audioSample.buffer = (unsigned char*)buffer;
 
     current_audioCallback(&audioSample);
 }

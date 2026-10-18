@@ -26,7 +26,7 @@ void Sys_DetectVideoCard(int descLimit, char *description)
     const char *renderer = "Linux OpenGL";
     strncpy(description, renderer, descLimit);
     description[descLimit - 1] = '\0';
-    return 0;
+    return;
 }
 
 bool Sys_SupportsSSE(void)

@@ -190,7 +190,7 @@ long int AIL_digital_CPU_percent(HDIGDRIVER dig)
 
 HSAMPLE AIL_allocate_sample_handle(HDIGDRIVER dig)
 {
-    return CSoundEngine_NewSampleSound(sSoundEngine);
+    return (HSAMPLE)CSoundEngine_NewSampleSound(sSoundEngine);
 }
 
 void AIL_release_sample_handle(HSAMPLE S)
@@ -511,7 +511,7 @@ void AIL_set_3D_stream_position(HSTREAM S, float X, float Y, float Z)
 
 void AIL_set_file_callbacks(AIL_file_open_callback opencb, AIL_file_close_callback closecb, AIL_file_seek_callback seekcb, AIL_file_read_callback readcb)
 {
-    CSoundObject_set_file_callbacks(opencb, closecb, seekcb, readcb);
+    CSoundObject_set_file_callbacks((void*)opencb, (void*)closecb, (void*)seekcb, (void*)readcb);
 }
 
 long int AIL_size_processed_digital_audio(long unsigned int dest_rate, long unsigned int dest_format, long int num_srcs, const AILMIXINFO *src)

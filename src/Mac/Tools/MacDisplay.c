@@ -183,6 +183,7 @@ short unsigned int MacDisplay_CenterRectInDisplay(MacRect *ioRect)
     *((int *)&gdRect + 1) = b;
 
     MacTools_CenterRect(ioRect, &gdRect);
+    return 0;
 }
 
 static short unsigned int MacDisplay_FadeIn_orig(float inInterval)
@@ -223,6 +224,7 @@ short unsigned int MacDisplay_GetCurrentDimensions(int *outWidth, int *outHeight
 
     *outWidth = CGDisplayPixelsWide(sDisplayID);
     *outHeight = CGDisplayPixelsHigh(sDisplayID);
+    return 0;
 }
 
 int MacDisplay_GetCurrentDepth(void)
@@ -237,10 +239,11 @@ int MacDisplay_GetCurrentDepth(void)
 short unsigned int MacDisplay_SwapContext(ContextRef inContextRef)
 {
     if (*(unsigned char *)&sEnableSwap == 0)
-        return;
+        return 0;
 
     aglSwapBuffers(*(void **)inContextRef);
     sSwapCount++;
+    return 0;
 }
 
 short unsigned int MacDisplay_StopCapture(void)
@@ -260,6 +263,7 @@ short unsigned int MacDisplay_StopCapture(void)
 
     CloseMovieFile((short)sCaptureRefNum);
     sCaptureMovie = 0;
+    return 0;
 }
 
 static short unsigned int CenterWindowOnDisplay(void)
@@ -286,6 +290,7 @@ short unsigned int MacDisplay_GetNthMode(int inIndex, int *outWidth, int *outHei
     *outHeight = *(int *)(mode + 4);
     *outDepth = *(int *)(mode + 8);
     *outRefreshRate = *(int *)(mode + 12);
+    return 0;
 }
 
 int MacDisplay_GetCardType(void)
@@ -345,6 +350,7 @@ short unsigned int MacDisplay_GetAntiAliasingMultiSampleInfo(int *outMaxSampleBu
     *outDoesSuperSampling = *(unsigned char *)(di + 0x60);
     *outDoesMultiSampling = *(unsigned char *)(di + 0x61);
     *outDoesAlphaSampling = *(unsigned char *)(di + 0x62);
+    return 0;
 }
 
 UInt32 MacDisplay_GetPCPixelShaderVersion(void)
@@ -407,6 +413,7 @@ short unsigned int MacDisplay_SetGammaRamp(const _D3DGAMMARAMP *inRamp)
         __ZdaPv(greenTable);
     if (redTable)
         __ZdaPv(redTable);
+    return 0;
 }
 
 short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
@@ -419,6 +426,7 @@ short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
         port = GetWindowPort(sMainWindow);
 
     QDLocalToGlobalPoint(port, ioPoint);
+    return 0;
 }
 
 short unsigned int MacDisplay_GlobalToLocal(Point *ioPoint)
@@ -431,6 +439,7 @@ short unsigned int MacDisplay_GlobalToLocal(Point *ioPoint)
         port = GetWindowPort(sMainWindow);
 
     QDGlobalToLocalPoint(port, ioPoint);
+    return 0;
 }
 
 int MacDisplay_GetNumModes(void)
@@ -474,7 +483,7 @@ short unsigned int MacDisplay_ReleaseContext(int *ioContextRef)
 {
     int ctx = *ioContextRef;
 
-    if (ctx == sScreenContext)
+    if (ctx == (int)(intptr_t)sScreenContext)
         sScreenContext = 0;
 
     if (ctx) {
@@ -482,6 +491,7 @@ short unsigned int MacDisplay_ReleaseContext(int *ioContextRef)
         __ZdlPv((void *)ctx);
     }
     *ioContextRef = 0;
+    return 0;
 }
 
 void MacDisplay_ReleaseDisplay(void)
@@ -560,6 +570,7 @@ short unsigned int MacDisplay_GetCurrentMode(int *outWidth, int *outHeight, int 
         }
     }
     *outRefreshRate = sDisplayRefreshRate;
+    return 0;
 }
 
 short unsigned int MacDisplay_SetMode(int inWidth, int inHeight, int inDepth, int inRefreshRate)

@@ -1,6 +1,17 @@
 #ifndef IMPORTS_H
 #define IMPORTS_H
 
+/* An empty parameter list, int f(), declares a function without a prototype
+ * in C but one that takes no arguments in C++. COD2_KR keeps the C meaning in
+ * C++: the call passes the same arguments with the same default promotions. */
+#ifndef COD2_KR
+#ifdef __cplusplus
+#define COD2_KR ...
+#else
+#define COD2_KR
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -63,10 +63,10 @@ HRESULT CDirect3DVertexBuffer_Unlock(const CDirect3DVertexBuffer *_this)
 HRESULT CDirect3DVertexBuffer_GetDesc(const CDirect3DVertexBuffer *_this, D3DVERTEXBUFFER_DESC *pDesc)
 {
     CDirect3DVertexBufferClean *vb = (CDirect3DVertexBufferClean *)_this;
-    pDesc->Format = 0;
+    pDesc->Format = (D3DFORMAT)0;
     pDesc->Type = D3DRTYPE_VERTEXBUFFER;
     pDesc->Usage = vb->usage;
-    pDesc->Pool = 0;
+    pDesc->Pool = (D3DPOOL)0;
     pDesc->Size = vb->lengthBytes;
     pDesc->FVF = 0;
     return 0;
@@ -75,7 +75,7 @@ HRESULT CDirect3DVertexBuffer_GetDesc(const CDirect3DVertexBuffer *_this, D3DVER
 void ZN21CDirect3DVertexBufferD1Ev(void *_this)
 {
     CDirect3DVertexBufferClean *vb = (CDirect3DVertexBufferClean *)_this;
-    vb->vtable = vtbl_CDirect3DVertexBuffer;
+    vb->vtable = (void**)vtbl_CDirect3DVertexBuffer;
     free(vb->data);
     vb->data = NULL;
 }
@@ -95,7 +95,7 @@ void CDirect3DVertexBuffer_CDirect3DVertexBuffer(const CDirect3DVertexBuffer *_t
 {
     CDirect3DVertexBufferClean *vb = (CDirect3DVertexBufferClean *)_this;
     (void)Pool;
-    vb->vtable = vtbl_CDirect3DVertexBuffer;
+    vb->vtable = (void**)vtbl_CDirect3DVertexBuffer;
     vb->refCount = 1;
     vb->lengthBytes = Length;
     vb->data = (byte *)calloc(1, Length);

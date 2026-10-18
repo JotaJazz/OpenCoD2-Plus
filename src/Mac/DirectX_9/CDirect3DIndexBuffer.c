@@ -48,7 +48,7 @@ ULONG CDirect3DIndexBuffer_Release(const CDirect3DIndexBuffer *_this)
 void ZN20CDirect3DIndexBufferD1Ev(const CDirect3DIndexBuffer *_this)
 {
     CDirect3DIndexBufferClean *ib = (CDirect3DIndexBufferClean *)_this;
-    ib->vtable = vtbl_CDirect3DIndexBuffer;
+    ib->vtable = (void**)vtbl_CDirect3DIndexBuffer;
     free(ib->data);
     ib->data = NULL;
 }
@@ -82,7 +82,7 @@ HRESULT CDirect3DIndexBuffer_GetDesc(const CDirect3DIndexBuffer *_this, D3DINDEX
     pDesc->Format = ib->indexSizeBytes == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32;
     pDesc->Type = D3DRTYPE_INDEXBUFFER;
     pDesc->Usage = ib->usage;
-    pDesc->Pool = 0;
+    pDesc->Pool = (D3DPOOL)0;
     pDesc->Size = ib->lengthBytes;
     return 0;
 }
@@ -91,7 +91,7 @@ void CDirect3DIndexBuffer_CDirect3DIndexBuffer(const CDirect3DIndexBuffer *_this
 {
     CDirect3DIndexBufferClean *ib = (CDirect3DIndexBufferClean *)_this;
     (void)Pool;
-    ib->vtable = vtbl_CDirect3DIndexBuffer;
+    ib->vtable = (void**)vtbl_CDirect3DIndexBuffer;
     ib->refCount = 1;
     ib->lengthBytes = (Length + 3) & ~3U;
     ib->data = (byte *)calloc(1, ib->lengthBytes);

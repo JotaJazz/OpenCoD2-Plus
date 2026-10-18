@@ -176,7 +176,7 @@ LPVOID VirtualAlloc(LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWO
 {
     if (lpAddress != NULL)
         return lpAddress;
-    return calloc(1, dwSize);
+    return (LPVOID)calloc(1, dwSize);
 }
 
 BOOL VirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)

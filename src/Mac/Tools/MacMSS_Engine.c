@@ -6,7 +6,7 @@ void *__Znwm(unsigned long size);
 void __ZdlPv(void *ptr);
 void __ZdaPv(void *ptr);
 
-void CStreamSound_CStreamSound();
+void CStreamSound_CStreamSound(COD2_KR);
 void CStreamSound_UpdateAllStreams(void);
 void StThreadLock_StThreadLock();
 void ZN12StThreadLockD1Ev();
