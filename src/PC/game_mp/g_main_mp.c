@@ -609,6 +609,12 @@ void G_InitGame(int levelTime, int randomSeed, qboolean restart, qboolean savepe
     GScr_LoadScripts(1);
     DBG_PrintFreeVars(str_dbg_load);
     Scr_PostCompileScripts();
+#if COD2_PLUS_SCRIPT
+    {
+        extern void GScr_PostLoadScripts(void);
+        GScr_PostLoadScripts();
+    }
+#endif
     Scr_EndLoadScripts();
     DBG_PrintFreeVars(str_dbg_endload);
 
@@ -895,6 +901,12 @@ void G_InitGame(int levelTime, int randomSeed, qboolean restart, qboolean savepe
     GScr_LoadScripts(1);
     DBG_PrintFreeVars(str_dbg_load);
     Scr_PostCompileScripts();
+#if COD2_PLUS_SCRIPT
+    {
+        extern void GScr_PostLoadScripts(void);
+        GScr_PostLoadScripts();
+    }
+#endif
     Scr_EndLoadScripts();
     DBG_PrintFreeVars(str_dbg_endload);
 

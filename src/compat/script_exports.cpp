@@ -109,8 +109,24 @@ decltype(Scr_FreeEntityList()) cod2x_Scr_FreeEntityList() { return Scr_FreeEntit
 extern "C" decltype(Scr_FreeEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_FreeEntityNum(int a0, int a1) __asm__(COD2_SYM("Scr_FreeEntityNum"));
 decltype(Scr_FreeEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_FreeEntityNum(int a0, int a1) { return Scr_FreeEntityNum(a0, a1); }
 
-extern "C" decltype(Scr_FreeScripts()) cod2x_Scr_FreeScripts() __asm__(COD2_SYM("Scr_FreeScripts"));
-decltype(Scr_FreeScripts()) cod2x_Scr_FreeScripts() { return Scr_FreeScripts(); }
+extern "C" void cod2x_Scr_FreeScripts(int sys) __asm__(COD2_SYM("Scr_FreeScripts"));
+void cod2x_Scr_FreeScripts(int sys)
+{
+    // src/PC/script freed the scripts only for system 0; G_InitGame passes 1
+    // right after loading them, which only ends the loading.
+    if (sys == 0) {
+        Scr_FreeScripts();
+        return;
+    }
+    if (scrCompilePub.script_loading) {
+        scrCompilePub.script_loading = 0;
+        Scr_EndLoadScripts();
+    }
+    if (scrAnimPub.animtree_loading) {
+        scrAnimPub.animtree_loading = 0;
+        Scr_EndLoadAnimTrees();
+    }
+}
 
 extern "C" decltype(Scr_FreeThread(std::declval<unsigned short>())) cod2x_Scr_FreeThread(unsigned short a0) __asm__(COD2_SYM("Scr_FreeThread"));
 decltype(Scr_FreeThread(std::declval<unsigned short>())) cod2x_Scr_FreeThread(unsigned short a0) { return Scr_FreeThread(a0); }
@@ -250,8 +266,12 @@ decltype(Scr_Shutdown()) cod2x_Scr_Shutdown() { return Scr_Shutdown(); }
 extern "C" decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() __asm__(COD2_SYM("Scr_ShutdownGameStrings"));
 decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() { return Scr_ShutdownGameStrings(); }
 
-extern "C" decltype(Scr_ShutdownSystem(std::declval<int>())) cod2x_Scr_ShutdownSystem(int a0) __asm__(COD2_SYM("Scr_ShutdownSystem"));
-decltype(Scr_ShutdownSystem(std::declval<int>())) cod2x_Scr_ShutdownSystem(int a0) { return Scr_ShutdownSystem(a0); }
+extern "C" void cod2x_Scr_ShutdownSystem(int sys, int bComplete) __asm__(COD2_SYM("Scr_ShutdownSystem"));
+void cod2x_Scr_ShutdownSystem(int sys, int bComplete)
+{
+    (void)sys;  // ignored by src/PC/script too
+    Scr_ShutdownSystem(bComplete);
+}
 
 extern "C" decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) __asm__(COD2_SYM("SetAnimCheck"));
 decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) { return SetAnimCheck(a0); }

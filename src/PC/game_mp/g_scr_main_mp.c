@@ -4416,6 +4416,8 @@ void GScr_LoadGameTypeScript(void)
     g_scr_data.gametype.playerkilled = GScr_LoadScriptFunction(callbackSetup, "CodeCallback_PlayerKilled", 1);
 }
 
+void GScr_PostLoadScripts(void);
+
 void GScr_LoadScripts(int inst)
 {
     extern scr_func_t Scr_GetFunctionHandle(const char *file, const char *func);
@@ -4449,12 +4451,27 @@ void GScr_LoadScripts(int inst)
         }
     }
 
+#if !COD2_PLUS_SCRIPT
+    GScr_PostLoadScripts();
+#endif
+}
+
+/* The class maps and entity fields. CoD2rev-Plus's VM needs them after
+ * Scr_PostCompileScripts, which claims the compiled program's hunk: added
+ * earlier, they are written over it (G_InitGame calls this then). */
+void GScr_PostLoadScripts(void)
+{
+    extern void Scr_SetClassMap(int classnum);
+    extern void GScr_AddFieldsForEntity(void);
+    extern void GScr_AddFieldsForHudElems(void);
+    extern void GScr_AddFieldsForRadiant(void);
+    int i;
+
     for (i = 0; i <= 3; i++)
         Scr_SetClassMap(i);
     GScr_AddFieldsForEntity();
     GScr_AddFieldsForHudElems();
     GScr_AddFieldsForRadiant();
-    return;
 }
 
 /* functions: script builtin dispatch table (was the ILP32 data blob symbol

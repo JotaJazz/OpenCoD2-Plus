@@ -49,6 +49,10 @@ class Thunks(unittest.TestCase):
     def test_provided_by_hand(self):
         self.assertIn('Q_rint', g.PROVIDED)
 
+    def test_custom_export(self):
+        self.assertIn('void cod2x_Scr_FreeScripts(int sys)', g.EXPORT_CUSTOM['Scr_FreeScripts'])
+        self.assertIn('Scr_ShutdownSystem(bComplete);', g.EXPORT_CUSTOM['Scr_ShutdownSystem'])
+
 
 if __name__ == '__main__':
     unittest.main()
