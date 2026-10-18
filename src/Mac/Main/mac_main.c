@@ -502,7 +502,7 @@ sysEvent_t Sys_GetEvent(void)
 
     MSG_Init(&netmsg, sys_packetReceived, 0x4000);
     if (NET_GetPacket(&adr, &netmsg)) {
-        /* the whole netadr_t, port included (it sits at 0x12), then the data */
+        /* the whole netadr_t, port included, then the data */
         len = netmsg.cursize - netmsg.readcount + (int)sizeof(netadr_t);
         byte *buf = (byte *)Z_MallocInternal(len);
         memcpy(buf, &adr, sizeof(netadr_t));
