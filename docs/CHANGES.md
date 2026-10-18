@@ -41,7 +41,8 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - **The GSC virtual machine is CoD2rev-Plus's.** `src/script` and the 24 headers it includes come byte for byte from CoD2rev-Plus `ec884b8`, at the same paths, so its later commits apply with `git am` (`COD2_PLUS_SCRIPT`, on by default on Linux and MinGW; MSVC, the web build and x64 keep `src/PC/script`). With it the server holds two players, disconnects, reconnects and `clientkick`; the reconstructed VM crashed as soon as a second player joined.
 - **The bridge (`src/compat`)** connects the engine's C names with the VM's C++ ones:
   - `scripts/gen_script_bridge.py` writes `script_exports.cpp`, 95 thunks whose `__asm__` symbol is the C name the engine calls, one per function in `test/script_interface.txt`.
-  - It also writes `script_imports.cpp`: 44 C++ definitions of the engine functions the VM needs, which call the engine's C symbols. Variadic ones format into a 4096-byte buffer.
+  - It also writes `script_imports.cpp`: 44 C++ definitions of the engine functions the VM needs, which call the engine's C symbols. Variadic ones format into a 4096-byte buffer, the size of CoD2rev-Plus's own `MAXPRINTMSG`; `Com_sprintf` formats straight into its destination, as CoD2rev-Plus's does, since a `statusResponse` can take 8192 bytes.
+  - `script_missing.cpp` checks that `PROTOCOL_VERSION`, which CMake derives from `COD2_FEATURE_CFLAGS`, and `COD2_PATCH_10`, which the engine reads wherever it is set, name the same game version.
   - Return types are `decltype` of a call to CoD2rev-Plus's own declarations, so the compiler checks every thunk. Exports must return a scalar or `void`, except the two that return a struct on both sides.
   - Thunks written by hand where the two sides differ:
     - `Scr_FreeScripts(sys)` and `Scr_ShutdownSystem(sys, bComplete)` take the client binary's script system id;

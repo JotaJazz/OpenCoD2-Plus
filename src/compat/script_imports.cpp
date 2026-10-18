@@ -44,15 +44,16 @@ decltype(Com_Printf(std::declval<char const*>())) Com_Printf(char const* a0, ...
     return cod2c_Com_Printf("%s", buf);
 }
 
-extern "C" decltype(Com_sprintf(std::declval<char*>(), std::declval<unsigned int>(), std::declval<char const*>())) cod2c_Com_sprintf(char* a0, unsigned int a1, char const* a2, ...) __asm__(COD2_SYM("Com_sprintf"));
-decltype(Com_sprintf(std::declval<char*>(), std::declval<unsigned int>(), std::declval<char const*>())) Com_sprintf(char* a0, unsigned int a1, char const* a2, ...)
+int Com_sprintf(char *dest, size_t size, const char *format, ...)
 {
-    char buf[4096];
+    int result;
     va_list ap;
-    va_start(ap, a2);
-    vsnprintf(buf, sizeof(buf), a2, ap);
+
+    va_start(ap, format);
+    result = vsnprintf(dest, size, format, ap);
     va_end(ap);
-    return cod2c_Com_sprintf(a0, a1, "%s", buf);
+    dest[size - 1] = '\0';
+    return result;
 }
 
 extern "C" decltype(FS_FCloseFile(std::declval<int>())) cod2c_FS_FCloseFile(int a0) __asm__(COD2_SYM("FS_FCloseFile"));

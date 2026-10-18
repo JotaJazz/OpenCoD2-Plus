@@ -60,3 +60,9 @@ const char cod2x_str_int[] = "int";
 static_assert(COD2_VAR_DEAD_ENTITY == VAR_DEAD_ENTITY && COD2_VAR_ENTITY == VAR_ENTITY
 	&& COD2_VAR_ARRAY == VAR_ARRAY && COD2_VAR_DEAD_THREAD == VAR_DEAD_THREAD,
 	"src/headers/scr_vartypes.h does not match CoD2rev-Plus's VAR_ types");
+
+// CMake derives PROTOCOL_VERSION from COD2_FEATURE_CFLAGS; the engine reads
+// COD2_PATCH_10 wherever it is set. Both must name the same game version.
+#include "../headers/cod2_feature_config.h"
+static_assert(PROTOCOL_VERSION == COD2_PROTOCOL_VERSION,
+	"PROTOCOL_VERSION and COD2_PATCH_10 name different game versions; set COD2_PATCH_10 through COD2_FEATURE_CFLAGS");

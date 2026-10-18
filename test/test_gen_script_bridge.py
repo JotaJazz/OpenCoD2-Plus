@@ -97,3 +97,15 @@ class Abi(unittest.TestCase):
     def test_export_widened(self):
         code = g.export_thunk('SV_IsLocalClient', ['int'], abi=('i', 4, [4], False))
         self.assertIn('extern "C" cod2_abi_int<decltype(SV_IsLocalClient(std::declval<int>())), 4> cod2x_SV_IsLocalClient(int a0)', code)
+
+
+class CustomImports(unittest.TestCase):
+    def test_com_sprintf_formats_into_dest(self):
+        code = g.import_thunk('Com_sprintf', ['char*', 'unsigned int', 'char const*', '...'])
+        self.assertIn('vsnprintf(dest, size, format, ap);', code)
+        self.assertNotIn('char buf[4096]', code)
+
+    def test_server_read_bits_compress_is_bounded(self):
+        code = g.import_thunk('MSG_ReadBitsCompress', ['unsigned char const*', 'int', 'unsigned char*', 'int'],
+                              cfg=g.MODULES['server'])
+        self.assertIn('if ( count > toSizeBytes )', code)

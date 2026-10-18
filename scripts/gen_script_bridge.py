@@ -95,6 +95,25 @@ void cod2x_Scr_ShutdownSystem(int sys, int bComplete)
 ''',
 }
 
+# Imports written out.
+SCRIPT_IMPORT_CUSTOM = {
+    # Formatted straight into dest, as CoD2rev-Plus's does: through the
+    # 4096-byte buffer of the other variadic imports, a statusResponse or an
+    # rcon reply longer than that (both up to 8192 there) was cut.
+    'Com_sprintf': '''int Com_sprintf(char *dest, size_t size, const char *format, ...)
+{
+    int result;
+    va_list ap;
+
+    va_start(ap, format);
+    result = vsnprintf(dest, size, format, ap);
+    va_end(ap);
+    dest[size - 1] = '\\0';
+    return result;
+}
+''',
+}
+
 # Exports that return a struct by value on both sides (engine and VM agree on
 # the hidden-pointer convention). Every other export must return a scalar or
 # void: a struct returned to a caller that expects a scalar breaks the ABI.
@@ -193,7 +212,7 @@ SERVER_STRUCT_RETURN_OK = set()
 MODULES = {
     'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=[], header=SCRIPT_HEADER,
                    overloads=OVERLOADS, extra_args=EXTRA_ARGS, renamed=RENAMED, provided=PROVIDED,
-                   export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK),
+                   export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM),
     'server': dict(objects=['cod2_plus_server.dir/src/server/*.o', 'cod2_plus_server.dir/src/compat/server_missing.cpp.o'],
                    others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o'],
                    header=SERVER_HEADER, overloads=SERVER_OVERLOADS, extra_args=SERVER_EXTRA_ARGS,
