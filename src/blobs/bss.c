@@ -1357,17 +1357,11 @@ const dvar_t *rcon_password;
 const dvar_t *sv_zombietime;
 const dvar_t *sv_timeout;
 const dvar_t *sv_fps;
-#if defined(__x86_64__) || defined(_M_X64)
-
+/* Typed in every build: 1.0's serverStatic_t is 0xc108 bytes, and the
+   41216 once reserved for it let challenges, redirectAddress and tempBans
+   run into sv's configstrings. */
 server_t sv;
 serverStatic_t svs;
-#elif COD2_IS_PATCH_13
-server_t sv;
-serverStatic_t svs;
-#else
-unsigned char sv[390528];
-unsigned char svs[41216];
-#endif
 const dvar_t *con_restricted;
 const dvar_t *con_miniconlines;
 const dvar_t *con_minicontime;
