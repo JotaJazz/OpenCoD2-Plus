@@ -1521,7 +1521,7 @@ int G_XModelBad(int index);
 const char *vtos( const vec3_t v );
 const char *vtosf( const vec3_t v );
 
-void G_LogPrintf( const char *fmt, ... );
+void G_LogPrintf( const char *fmt, ... ) Q_PRINTF_FORMAT(1, 2);
 
 int IsItemRegistered(int iItemIndex);
 void RegisterItem( int iItemIndex, qboolean bUpdateCS );

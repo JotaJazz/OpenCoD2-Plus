@@ -27,6 +27,14 @@
 // for windows fastcall option
 #define	QDECL
 
+#ifdef __GNUC__
+#define	Q_NORETURN					__attribute__((noreturn))
+#define	Q_PRINTF_FORMAT( fmt, args )	__attribute__((format(printf, fmt, args)))
+#else
+#define	Q_NORETURN
+#define	Q_PRINTF_FORMAT( fmt, args )
+#endif
+
 //======================= WIN32 DEFINES =================================
 
 #ifdef WIN32
@@ -404,7 +412,7 @@ char *I_strlwr( char *s1 );
 char *I_strupr( char *s1 );
 void I_strncat( char *dest, int size, const char *src );
 
-int Com_sprintf(char *dest, size_t size, const char *format, ...);
+int Com_sprintf(char *dest, size_t size, const char *format, ...) Q_PRINTF_FORMAT(3, 4);
 
 float GetLeanFraction(const float fFrac);
 float UnGetLeanFraction(const float fFrac);
@@ -481,7 +489,7 @@ enum csParseFieldType_t
 
 const char* Com_SurfaceTypeToName(int iTypeIndex);
 
-char *va(const char *format, ...);
+char *va(const char *format, ...) Q_PRINTF_FORMAT(1, 2);
 void Info_RemoveKey( char *s, const char *key );
 void Info_RemoveKey_Big( char *s, const char *key );
 void Info_SetValueForKey( char *s, const char *key, const char *value );

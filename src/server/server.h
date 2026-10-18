@@ -365,7 +365,7 @@ void SV_Netchan_Decode( client_t *client, byte *data, int remaining );
 void SV_AddServerCommand(client_t *client, int type, const char *cmd);
 void SV_DelayDropClient(client_t *client, const char *dropmsg);
 char *SV_ExpandNewlines( char *in );
-void SV_SendServerCommand( client_t *cl, int type, const char *fmt, ... );
+void SV_SendServerCommand( client_t *cl, int type, const char *fmt, ... ) Q_PRINTF_FORMAT(3, 4);
 void SV_SetConfig(int start, int max, unsigned short bit);
 void SV_SetConfigValueForKey(int start, int max, const char *key, const char *value);
 void SV_SetConfigstring(unsigned int index, const char *val);

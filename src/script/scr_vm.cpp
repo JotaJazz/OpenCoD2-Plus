@@ -353,7 +353,7 @@ int Scr_GetPointerType( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -379,7 +379,7 @@ const char* Scr_GetTypeName( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return NULL;
 	}
 
@@ -398,7 +398,7 @@ int Scr_GetType( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -417,7 +417,7 @@ unsigned int Scr_GetObject( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -450,7 +450,7 @@ scr_entref_t Scr_GetEntityRef( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return entref;
 	}
 
@@ -486,7 +486,7 @@ unsigned int Scr_GetFunc( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -513,7 +513,7 @@ void Scr_GetVector( unsigned long index, vec3_t vectorValue )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return;
 	}
 
@@ -540,7 +540,7 @@ unsigned int Scr_GetConstIString( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -567,7 +567,7 @@ float Scr_GetFloat( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -600,7 +600,7 @@ int Scr_GetInt( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -626,7 +626,7 @@ long int Scr_GetInt64( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -840,7 +840,7 @@ scr_animtree_t Scr_GetAnimTree( unsigned long index ) // untested
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 
 		tree.anims = NULL;
 		return tree;
@@ -892,7 +892,7 @@ scr_anim_s Scr_GetAnim( unsigned long index, XAnimTree_s *tree )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 
 		anim.index = 0;
 		anim.tree = 0;
@@ -973,7 +973,7 @@ unsigned int Scr_GetConstLowercaseString( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -1018,7 +1018,7 @@ unsigned int Scr_GetConstString( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 
@@ -1076,7 +1076,7 @@ const char* Scr_GetDebugString( unsigned long index )
 
 	if ( index >= scrVmPub.outparamcount )
 	{
-		Scr_Error(va("parameter %d does not exist", index + 1));
+		Scr_Error(va("parameter %lu does not exist", index + 1));
 		return 0;
 	}
 

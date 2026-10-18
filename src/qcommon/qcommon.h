@@ -72,7 +72,7 @@ sysEvent_t Sys_GetEvent( void );
 void Sys_Print( const char *msg );
 const char *Sys_GetCurrentUser( void );
 
-void Sys_Error( const char *error, ...);
+Q_NORETURN void Sys_Error( const char *error, ...) Q_PRINTF_FORMAT(1, 2);
 void Sys_Quit(void);
 char *Sys_GetClipboardData( void );
 
@@ -439,9 +439,9 @@ int Com_HashKey( const char *string, int maxlen );
 void Com_InitDvars();
 void Com_StartupVariable( const char *match );
 void Com_PrintMessage( conChannel_t channel, const char *msg );
-void Com_Printf( const char *fmt, ...);
-void Com_DPrintf( const char *fmt, ...);
-void Com_Error(errorParm_t code, const char *fmt, ...);
+void Com_Printf( const char *fmt, ...) Q_PRINTF_FORMAT(1, 2);
+void Com_DPrintf( const char *fmt, ...) Q_PRINTF_FORMAT(1, 2);
+Q_NORETURN void Com_Error(errorParm_t code, const char *fmt, ...) Q_PRINTF_FORMAT(2, 3);
 void Com_WriteConfigToFile(const char *contents);
 
 qboolean Com_SafeMode( void );
