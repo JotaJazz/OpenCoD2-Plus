@@ -84,6 +84,9 @@ set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
 # reconstruction in src/PC/script. PROTOCOL_VERSION follows the game version.
 option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" OFF)
+if(COD2_PLUS_SCRIPT)
+  add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
+endif()
 if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
@@ -317,14 +320,17 @@ endforeach()
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
+set(COD2_SCRIPT_OBJS "")
+if(COD2_PLUS_SCRIPT)
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/script/")
+  cod2_plus_script()
+  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
+endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
-add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN})
+add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
-if(COD2_PLUS_SCRIPT)
-  cod2_plus_script()
-endif()
 target_link_options(${W32_EXE} PRIVATE ${COD2_WIN_LINK})
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
@@ -532,21 +538,24 @@ list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
 # WSL), and no .iwd is found.
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
+set(COD2_SCRIPT_OBJS "")
+if(COD2_PLUS_SCRIPT)
+  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/script/")
+  cod2_plus_script()
+  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
+endif()
 cod2_cxx_sources(ALL_C ${ALL_C})
 cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
-if(COD2_PLUS_SCRIPT)
-  cod2_plus_script()
-endif()
 
-add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_GUARDED})
+add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_GUARDED})
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED})
 target_compile_definitions(cod2_lnxded PRIVATE DEDICATED)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_LIBS})
 target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})

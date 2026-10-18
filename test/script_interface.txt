@@ -1,16 +1,6 @@
-# Script VM symbols the engine (outside src/PC/script) uses and CoD2rev-Plus's
-# src/script defines; scripts/gen_script_bridge.py makes a C thunk for each function.
 MT_Alloc
 MT_DumpTree
 MT_Free
-SL_AddRefToString
-SL_ConvertToString
-SL_FindString
-SL_GetString
-SL_GetStringOfLen
-SL_GetString_
-SL_RemoveRefToString
-SL_RemoveRefToStringOfLen
 Scr_Abort
 Scr_AddArray
 Scr_AddArrayStringIndexed
@@ -55,8 +45,8 @@ Scr_GetDebugString
 Scr_GetEntityRef
 Scr_GetFloat
 Scr_GetFunctionHandle
-Scr_GetIString
 Scr_GetInt
+Scr_GetIString
 Scr_GetNumParam
 Scr_GetNumScriptThreads
 Scr_GetNumScriptVars
@@ -69,6 +59,7 @@ Scr_GetType
 Scr_GetTypeName
 Scr_GetVector
 Scr_IncTime
+Scr_Init
 Scr_InitSystem
 Scr_IsSystemActive
 Scr_LoadScript
@@ -86,8 +77,19 @@ Scr_SetDynamicEntityField
 Scr_SetLoading
 Scr_SetString
 Scr_SetStructField
+Scr_Settings
+Scr_Shutdown
 Scr_ShutdownGameStrings
 Scr_ShutdownSystem
+SetAnimCheck
+SL_AddRefToString
+SL_ConvertToString
+SL_FindString
+SL_GetString
+SL_GetString_
+SL_GetStringOfLen
+SL_RemoveRefToString
+SL_RemoveRefToStringOfLen
 TempMalloc
 TempMemoryReset
 var_typename

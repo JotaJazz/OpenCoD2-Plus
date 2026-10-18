@@ -38,3 +38,19 @@ void Sys_UnimplementedFunctionInternal(const char *function)
 {
 	Com_Printf("FUNCTION NOT IMPLEMENTED!!! (%s)\n", function);
 }
+
+// The data blobs refer to VM_Execute by the original binary's C++ name, whose
+// third argument is unsigned int; CoD2rev-Plus's takes unsigned long. The
+// label is the raw assembler name, as src/PC/script had it: MinGW's --defsym
+// list (build/win_gen/cxx_defsyms_c.txt) aliases the prefixed one to it.
+extern "C" unsigned int cod2x_VM_Execute_orig(unsigned int localId, const char *pos, unsigned int numArgs)
+	__asm__("_Z10VM_ExecutejPKcj");
+unsigned int cod2x_VM_Execute_orig(unsigned int localId, const char *pos, unsigned int numArgs)
+{
+	return VM_Execute(localId, pos, (unsigned long)numArgs);
+}
+
+// MinGW's data blob (build/win_gen/data.win.S, the _functions table of
+// script builtins) names "int" through a string src/PC/script defined.
+extern "C" const char cod2x_str_int[] __asm__(COD2_SYM("str_0021d27c"));
+const char cod2x_str_int[] = "int";

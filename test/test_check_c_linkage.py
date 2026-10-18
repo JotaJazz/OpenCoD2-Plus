@@ -49,6 +49,15 @@ class CheckCLinkage(unittest.TestCase):
             f.write('re:^_Z3fo+v$\n')
         self.assertEqual(self.run_check('--allowlist', allow).returncode, 0)
 
+    def test_cxx_target_skipped(self):
+        sub = os.path.join(self.dir, 'cod2_plus_script.dir')
+        os.makedirs(sub)
+        src = os.path.join(sub, 'foo.cpp')
+        with open(src, 'w') as f:
+            f.write('int foo(void){return 0;}\n')
+        subprocess.run(['g++', '-m32', '-c', src, '-o', os.path.join(sub, 'foo.o')], check=True)
+        self.assertEqual(self.run_check().returncode, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

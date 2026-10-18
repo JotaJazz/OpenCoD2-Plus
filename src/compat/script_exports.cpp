@@ -13,30 +13,6 @@ decltype(MT_DumpTree()) cod2x_MT_DumpTree() { return MT_DumpTree(); }
 extern "C" decltype(MT_Free(std::declval<void*>(), std::declval<int>())) cod2x_MT_Free(void* a0, int a1) __asm__(COD2_SYM("MT_Free"));
 decltype(MT_Free(std::declval<void*>(), std::declval<int>())) cod2x_MT_Free(void* a0, int a1) { return MT_Free(a0, a1); }
 
-extern "C" decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) __asm__(COD2_SYM("SL_AddRefToString"));
-decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) { return SL_AddRefToString(a0); }
-
-extern "C" decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) __asm__(COD2_SYM("SL_ConvertToString"));
-decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) { return SL_ConvertToString(a0); }
-
-extern "C" decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) __asm__(COD2_SYM("SL_FindString"));
-decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) { return SL_FindString(a0); }
-
-extern "C" decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString"));
-decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) { return SL_GetString(a0, a1); }
-
-extern "C" decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("SL_GetStringOfLen"));
-decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) { return SL_GetStringOfLen(a0, a1, a2); }
-
-extern "C" decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString_"));
-decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) { return SL_GetString_(a0, a1); }
-
-extern "C" decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) __asm__(COD2_SYM("SL_RemoveRefToString"));
-decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) { return SL_RemoveRefToString(a0); }
-
-extern "C" decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) __asm__(COD2_SYM("SL_RemoveRefToStringOfLen"));
-decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) { return SL_RemoveRefToStringOfLen(a0, a1); }
-
 extern "C" decltype(Scr_Abort()) cod2x_Scr_Abort() __asm__(COD2_SYM("Scr_Abort"));
 decltype(Scr_Abort()) cod2x_Scr_Abort() { return Scr_Abort(); }
 
@@ -169,11 +145,11 @@ decltype(Scr_GetFloat(std::declval<unsigned long>())) cod2x_Scr_GetFloat(unsigne
 extern "C" decltype(Scr_GetFunctionHandle(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_GetFunctionHandle(char const* a0, char const* a1) __asm__(COD2_SYM("Scr_GetFunctionHandle"));
 decltype(Scr_GetFunctionHandle(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_GetFunctionHandle(char const* a0, char const* a1) { return Scr_GetFunctionHandle(a0, a1); }
 
-extern "C" decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) __asm__(COD2_SYM("Scr_GetIString"));
-decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) { return Scr_GetIString(a0); }
-
 extern "C" decltype(Scr_GetInt(std::declval<unsigned long>())) cod2x_Scr_GetInt(unsigned long a0) __asm__(COD2_SYM("Scr_GetInt"));
 decltype(Scr_GetInt(std::declval<unsigned long>())) cod2x_Scr_GetInt(unsigned long a0) { return Scr_GetInt(a0); }
+
+extern "C" decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) __asm__(COD2_SYM("Scr_GetIString"));
+decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) { return Scr_GetIString(a0); }
 
 extern "C" decltype(Scr_GetNumParam()) cod2x_Scr_GetNumParam() __asm__(COD2_SYM("Scr_GetNumParam"));
 decltype(Scr_GetNumParam()) cod2x_Scr_GetNumParam() { return Scr_GetNumParam(); }
@@ -210,6 +186,9 @@ decltype(Scr_GetVector(std::declval<unsigned long>(), std::declval<float*>())) c
 
 extern "C" decltype(Scr_IncTime()) cod2x_Scr_IncTime() __asm__(COD2_SYM("Scr_IncTime"));
 decltype(Scr_IncTime()) cod2x_Scr_IncTime() { return Scr_IncTime(); }
+
+extern "C" decltype(Scr_Init()) cod2x_Scr_Init() __asm__(COD2_SYM("Scr_Init"));
+decltype(Scr_Init()) cod2x_Scr_Init() { return Scr_Init(); }
 
 extern "C" decltype(Scr_InitSystem()) cod2x_Scr_InitSystem() __asm__(COD2_SYM("Scr_InitSystem"));
 decltype(Scr_InitSystem()) cod2x_Scr_InitSystem() { return Scr_InitSystem(); }
@@ -262,11 +241,44 @@ decltype(Scr_SetString(std::declval<unsigned short*>(), std::declval<unsigned in
 extern "C" decltype(Scr_SetStructField(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_Scr_SetStructField(unsigned int a0, unsigned int a1) __asm__(COD2_SYM("Scr_SetStructField"));
 decltype(Scr_SetStructField(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_Scr_SetStructField(unsigned int a0, unsigned int a1) { return Scr_SetStructField(a0, a1); }
 
+extern "C" decltype(Scr_Settings(std::declval<int>(), std::declval<int>(), std::declval<int>())) cod2x_Scr_Settings(int a0, int a1, int a2) __asm__(COD2_SYM("Scr_Settings"));
+decltype(Scr_Settings(std::declval<int>(), std::declval<int>(), std::declval<int>())) cod2x_Scr_Settings(int a0, int a1, int a2) { return Scr_Settings(a0, a1, a2); }
+
+extern "C" decltype(Scr_Shutdown()) cod2x_Scr_Shutdown() __asm__(COD2_SYM("Scr_Shutdown"));
+decltype(Scr_Shutdown()) cod2x_Scr_Shutdown() { return Scr_Shutdown(); }
+
 extern "C" decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() __asm__(COD2_SYM("Scr_ShutdownGameStrings"));
 decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() { return Scr_ShutdownGameStrings(); }
 
 extern "C" decltype(Scr_ShutdownSystem(std::declval<int>())) cod2x_Scr_ShutdownSystem(int a0) __asm__(COD2_SYM("Scr_ShutdownSystem"));
 decltype(Scr_ShutdownSystem(std::declval<int>())) cod2x_Scr_ShutdownSystem(int a0) { return Scr_ShutdownSystem(a0); }
+
+extern "C" decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) __asm__(COD2_SYM("SetAnimCheck"));
+decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) { return SetAnimCheck(a0); }
+
+extern "C" decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) __asm__(COD2_SYM("SL_AddRefToString"));
+decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) { return SL_AddRefToString(a0); }
+
+extern "C" decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) __asm__(COD2_SYM("SL_ConvertToString"));
+decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) { return SL_ConvertToString(a0); }
+
+extern "C" decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) __asm__(COD2_SYM("SL_FindString"));
+decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) { return SL_FindString(a0); }
+
+extern "C" decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString"));
+decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) { return SL_GetString(a0, a1); }
+
+extern "C" decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString_"));
+decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) { return SL_GetString_(a0, a1); }
+
+extern "C" decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("SL_GetStringOfLen"));
+decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) { return SL_GetStringOfLen(a0, a1, a2); }
+
+extern "C" decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) __asm__(COD2_SYM("SL_RemoveRefToString"));
+decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) { return SL_RemoveRefToString(a0); }
+
+extern "C" decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) __asm__(COD2_SYM("SL_RemoveRefToStringOfLen"));
+decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) { return SL_RemoveRefToStringOfLen(a0, a1); }
 
 extern "C" decltype(TempMalloc(std::declval<int>())) cod2x_TempMalloc(int a0) __asm__(COD2_SYM("TempMalloc"));
 decltype(TempMalloc(std::declval<int>())) cod2x_TempMalloc(int a0) { return TempMalloc(a0); }

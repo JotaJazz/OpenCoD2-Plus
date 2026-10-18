@@ -1339,9 +1339,11 @@ struct _d32_g_rendererExists __attribute__((aligned(4))) g_rendererExists = {
 struct _d32_bg_iNumWeapons __attribute__((aligned(4))) bg_iNumWeapons = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_g_EndPos __attribute__((aligned(4))) g_EndPos = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* var_typename: defined by typed C TU; skipped. */
 /* g_classMap: migrated to home .c (plan 4g); skipped. */
 /* propertyNames: dead global (file-local static shadow in scr_animtree.c); dropped. */
@@ -1403,15 +1405,21 @@ struct _d32_g_LastGlowFilter __attribute__((aligned(4))) g_LastGlowFilter = {
 };
 /* extendedVirtualKeyConvert: defined by typed C TU; skipped. */
 /* virtualKeyConvert: defined by typed C TU; skipped. */
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_yyout __attribute__((aligned(4))) yyout = {
     { 0, 0, 0, 0 }
 };
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_yyin __attribute__((aligned(4))) yyin = {
     { 0, 0, 0, 0 }
 };
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_yy_init __attribute__((aligned(4))) yy_init = {
     { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* kHighQualityKey: defined by typed C TU; skipped. */
 struct _d32___ZN10CVAOPacket14sCurrentPacketE __attribute__((aligned(4))) __ZN10CVAOPacket14sCurrentPacketE = {
     { 0, 0, 0, 0 }

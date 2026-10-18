@@ -119,8 +119,12 @@ unsigned char g_notifyListSize[32];
 unsigned char g_notifyList[1536];
 unsigned char g_end[5];
 unsigned char g_anim_developer[91];
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrStringGlob[65664];
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrMemTreeGlob[525184];
+#endif
 unsigned char info6[8192];
 unsigned char info8[8192];
 unsigned char info5[8192];
@@ -173,13 +177,21 @@ unsigned char bg_iNumSharedAmmoCaps[32];
 unsigned char bg_sharedAmmoCaps[512];
 unsigned char bg_iNumWeapClips[32];
 unsigned char bg_weapClips[544];
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrVmGlob[8320];
+#endif
 #if defined(_M_X64) || defined(__x86_64__)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrCompileGlob_t scrCompileGlob;   /* x86 was unsigned char[512]; x64 struct is ~920B (value_start[32] grows) -> blob overflowed */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrCompileGlob[512];
 #endif
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrAnimGlob_t scrAnimGlob;
+#endif
 BSSINT jump_height;
 BSSINT jump_spreadAdd;
 BSSINT jump_slowdownEnable;
@@ -218,7 +230,9 @@ short unsigned int vq8[262144];
 unsigned char sAspyrIntroPlayed[32];
 unsigned char g_testLods[128];
 unsigned char szReference[1024];
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int currentPos;
+#endif
 unsigned char bg_defaultWeaponDefs[1568];
 unsigned char g_playerAnimTypeNames[256];
 unsigned char g_playerAnimTypeNamesCount[96];
@@ -302,20 +316,48 @@ unsigned char mtlLoadGlob[128];
 unsigned char smodelLoadGlob[128];
 unsigned char outdoorGlob[128];
 unsigned char sOldButtonState[128];
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 sval_t yaccResult;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 BSSINT yy_start;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 YY_BUFFER_STATE yy_current_buffer;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 char ch_buf[16388];
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 sval_t g_dummyVal;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char g_parse_user;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned int g_sourcePos;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned int g_out_pos;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 char yy_hold_char;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 char *yy_c_buf_p;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 BSSINT yy_n_chars;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 BSSINT yy_did_buffer_switch_on_eof;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 char *yy_last_accepting_cpos;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 yy_state_type yy_last_accepting_state;
+#endif
 BSSINT sSoundEngine;
 unsigned char sHighQualityEngine[124];
 unsigned char comBspGlob[128];
@@ -686,33 +728,61 @@ struct WeaponDef *bg_weaponDefs[128];
    deref in BG_FindWeaponIndexForName during script precache on mp_breakout/mp_rhine.
    Retype so the compiler sizes it for the arch. BSS, so binary-compatible on x86. */
 #if defined(COD2_X64) || defined(__x86_64__)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrVmPub_t scrVmPub;
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrVmPub[17184];
 #endif
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int g_script_error_level;
+#endif
 #if defined(COD2_X64) || defined(__x86_64__)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 jmp_buf g_script_error[33];   /* x86 blob 2400 (72B jmp_buf); x64 sizeof jmp_buf 256 -> 8448; setjmp/longjmp(g_script_error[level]) overflowed the blob at nesting >=9 */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 jmp_buf g_script_error[33];
 #endif
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrVarPub[262240];
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrVarGlob[1048608];
+#endif
 #if defined(__x86_64__) || defined(_M_X64)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrCompilePub_t scrCompilePub;   /* typed so the x64-wider func_table (intptr_t) is sized correctly */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrCompilePub_t scrCompilePub;
 #endif
+#endif
 #if defined(COD2_X64) || defined(__x86_64__)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 scrParserPub_t scrParserPub;   /* x86 blob 28; x64 sizeof(scrParserPub_t)=32 -> overflow */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrParserPub_t scrParserPub;
 #endif
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrParserGlob_t scrParserGlob;
+#endif
 #if defined(__x86_64__) || defined(_M_X64)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrAnimPub_t scrAnimPub;   /* typed: xanim_lookup[2][128] of scr_animtree_t grows on x64 (blob was x86-sized 1152) */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrAnimPub_t scrAnimPub;
+#endif
 #endif
 #if defined(__x86_64__) || defined(_M_X64)
 
@@ -943,15 +1013,27 @@ const dvar_t *r_sunflare_min_size;
 const dvar_t *r_sunflare_shader;
 const dvar_t *r_sunsprite_size;
 const dvar_t *r_sunsprite_shader;
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 char *yytext;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 BSSINT yyleng;
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 BSSINT yynerrs;
+#endif
 #if defined(COD2_X64) || defined(__x86_64__)
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 stype_t yylval;   /* x86 blob 8; x64 sizeof(stype_t)=16 -> overflow */
+#endif
 #else
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 stype_t yylval;
 #endif
+#endif
+#if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int yychar;
+#endif
 const dvar_t *ui_playerProfileAlreadyChosen;
 const dvar_t *com_playerProfile;
 unsigned char __ZN10CVAOPacket14sGenericPacketE[688];
