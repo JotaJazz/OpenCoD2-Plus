@@ -67,3 +67,33 @@ class Thunks(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+import engine_abi
+
+
+class Abi(unittest.TestCase):
+    def test_parse(self):
+        abi = engine_abi.parse('# c\nMSG_WriteByte v0 4,4\nCom_Printf v0 4 ...\nSV_Gone missing\nNET_Port i2 -\n')
+        self.assertEqual(abi['MSG_WriteByte'], ('v', 0, [4, 4], False))
+        self.assertEqual(abi['Com_Printf'], ('v', 0, [4], True))
+        self.assertIsNone(abi['SV_Gone'])
+        self.assertEqual(abi['NET_Port'], ('i', 2, [], False))
+
+    def test_import_asserts(self):
+        code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=('v', 0, [4, 4], False))
+        self.assertIn("cod2_abi_class<decltype(MSG_WriteByte(std::declval<msg_t*>(), std::declval<int>()))>() == 'v'", code)
+        self.assertIn('static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteByte: parameter 1 differs from the engine");', code)
+
+    def test_parameter_count(self):
+        code = g.import_thunk('Cmd_Argv', ['int'], abi=('i', 4, [4, 4], False))
+        self.assertIn('"Cmd_Argv: 1 parameters, the engine has 2"', code)
+
+    def test_widened_return(self):
+        code = g.import_thunk('SV_Loaded', [], abi=('i', 4, [], False))
+        self.assertIn('extern "C" cod2_abi_int<decltype(SV_Loaded()), 4> cod2c_SV_Loaded()', code)
+        self.assertIn('return (decltype(SV_Loaded()))cod2c_SV_Loaded();', code)
+
+    def test_export_widened(self):
+        code = g.export_thunk('SV_IsLocalClient', ['int'], abi=('i', 4, [4], False))
+        self.assertIn('extern "C" cod2_abi_int<decltype(SV_IsLocalClient(std::declval<int>())), 4> cod2x_SV_IsLocalClient(int a0)', code)
