@@ -674,9 +674,9 @@ Bool Netchan_TransmitNextFragment(netchan_t *chan)
             fragmentLength = 0x514;
         }
 
-        /* 1.3 sends the server's fragment offsets as longs; 1.0 sends
-           shorts both ways. */
-        if (COD2_IS_PATCH_13 && chan->sock == 1) {
+        /* Fragment offsets are longs both ways in 1.3 (CoD2MP_s.exe 1.3
+           writes the DWORD whatever the socket) and shorts in 1.0. */
+        if (COD2_IS_PATCH_13) {
             MSG_WriteLong(&send, fragStart);
         } else {
             MSG_WriteShort(&send, fragStart);
@@ -818,7 +818,7 @@ qboolean Netchan_Process(netchan_t *chan, msg_t *msg)
 
     if (fragmented) {
 
-        if (COD2_IS_PATCH_13 && chan->sock == 0) {
+        if (COD2_IS_PATCH_13) {
             fragmentStart = MSG_ReadLong(msg);
         } else {
             fragmentStart = MSG_ReadShort(msg);
