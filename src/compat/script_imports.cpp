@@ -101,18 +101,6 @@ decltype(Hunk_SetMark()) Hunk_SetMark() { return cod2c_Hunk_SetMark(); }
 extern "C" decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) cod2c_I_stricmp(char const* a0, char const* a1) __asm__(COD2_SYM("I_stricmp"));
 decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) I_stricmp(char const* a0, char const* a1) { return cod2c_I_stricmp(a0, a1); }
 
-extern "C" decltype(Scr_GetFunction(std::declval<char const**>(), std::declval<int*>())) cod2c_Scr_GetFunction(char const** a0, int* a1) __asm__(COD2_SYM("Scr_GetFunction"));
-decltype(Scr_GetFunction(std::declval<char const**>(), std::declval<int*>())) Scr_GetFunction(char const** a0, int* a1) { return cod2c_Scr_GetFunction(a0, a1); }
-
-extern "C" decltype(Scr_GetMethod(std::declval<char const**>(), std::declval<int*>())) cod2c_Scr_GetMethod(char const** a0, int* a1) __asm__(COD2_SYM("Scr_GetMethod"));
-decltype(Scr_GetMethod(std::declval<char const**>(), std::declval<int*>())) Scr_GetMethod(char const** a0, int* a1) { return cod2c_Scr_GetMethod(a0, a1); }
-
-extern "C" decltype(Scr_GetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) cod2c_Scr_GetObjectField(unsigned int a0, int a1, int a2) __asm__(COD2_SYM("Scr_GetObjectField"));
-decltype(Scr_GetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) Scr_GetObjectField(unsigned int a0, int a1, int a2) { return cod2c_Scr_GetObjectField(a0, a1, a2); }
-
-extern "C" decltype(Scr_SetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) cod2c_Scr_SetObjectField(unsigned int a0, int a1, int a2) __asm__(COD2_SYM("Scr_SetObjectField"));
-decltype(Scr_SetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) Scr_SetObjectField(unsigned int a0, int a1, int a2) { return cod2c_Scr_SetObjectField(a0, a1, a2); }
-
 extern "C" decltype(Sys_Milliseconds()) cod2c_Sys_Milliseconds() __asm__(COD2_SYM("Sys_Milliseconds"));
 decltype(Sys_Milliseconds()) Sys_Milliseconds() { return cod2c_Sys_Milliseconds(); }
 

@@ -219,6 +219,24 @@ void cod2x_SV_XModelDebugBoxes(gentity_s *ent)
     SV_XModelDebugBoxes();
 }
 ''',
+    # src/PC/game_mp returned 0 (the blobs call it through imp_); CoD2rev-Plus's
+    # returns nothing.
+    'G_AnimScriptSound': '''extern "C" int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList) __asm__(COD2_SYM("G_AnimScriptSound"));
+int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList)
+{
+    G_AnimScriptSound(client, aliasList);
+    return 0;
+}
+''',
+    # src/PC/game_mp's returned nothing (the engine takes its address in
+    # stubs/link_stubs.c and imp_G_RegisterWeapon);
+    # CoD2rev-Plus's returns the weapon index.
+    'G_RegisterWeapon': '''extern "C" void cod2x_G_RegisterWeapon(int weapIndex) __asm__(COD2_SYM("G_RegisterWeapon"));
+void cod2x_G_RegisterWeapon(int weapIndex)
+{
+    G_RegisterWeapon(weapIndex);
+}
+''',
 }
 # Exports CoD2rev-Plus defines under another name.
 SERVER_EXPORT_RENAMED = {'SV_GetClientPositionAtTime': 'SV_GetClientPositionsAtTime'}
@@ -227,11 +245,14 @@ SERVER_STRUCT_RETURN_OK = set()
 # objects: the module's objects (globs in CMakeFiles), whose imports the bridge
 # defines; others: objects whose definitions the module may use directly. The
 # module's own generated bridge is in neither, so regenerating it keeps every
-# import.
+# import. client_only: objects only the dedicated server links; the imports they
+# define go to src/compat/client_<module>_imports.cpp, which only the client
+# links (it calls src/PC's C functions the dedicated server does not have).
 MODULES = {
     'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=[], header=SCRIPT_HEADER,
                    overloads=OVERLOADS, extra_args=EXTRA_ARGS, renamed=RENAMED, provided=PROVIDED,
-                   export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM),
+                   export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM,
+                   client_only=['cod2_plus_server.dir/src/game/*.o']),
     'server': dict(objects=['cod2_plus_server.dir/src/server/*.o', 'cod2_plus_server.dir/src/game/*.o',
                             'cod2_plus_server.dir/src/compat/server_missing.cpp.o'],
                    others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o'],
@@ -418,6 +439,23 @@ def read_module(module, builds):
     return defined, exports, imports, interface
 
 
+def split_imports(imports, client_only):
+    """(imports both executables need, imports only the client needs): the
+    latter are the names in client_only."""
+    return ({k: v for k, v in imports.items() if k not in client_only},
+            {k: v for k, v in imports.items() if k in client_only})
+
+
+def client_only_names(module, builds):
+    """The function names the module's client_only objects define."""
+    names = set()
+    for build in builds:
+        objects = sorted(o for g in MODULES[module].get('client_only', []) for p in (g, g[:-2] + '.obj')
+                         for o in glob.glob(os.path.join(build, 'CMakeFiles', p)))
+        names |= set(signatures([s for s in nm(['-g', '--defined-only'], objects) if s.startswith('_Z')]))
+    return names
+
+
 def crossing_names(module, build):
     """(import names, export names) of a module, for scripts/engine_abi.py."""
     _, exports, imports, interface = read_module(module, build)
@@ -459,11 +497,15 @@ def main():
     with open(os.path.join(ROOT, 'src', 'compat', f'{args.module}_exports.cpp'), 'w') as f:
         f.write('\n'.join(out))
 
-    out = [cfg['header']]
-    for name in sorted(imports):
-        out.append(import_thunk(name, choose_overload(name, imports[name], cfg), cfg, abi.get(name)))
-    with open(os.path.join(ROOT, 'src', 'compat', f'{args.module}_imports.cpp'), 'w') as f:
-        f.write('\n'.join(out))
+    shared, client = split_imports(imports, client_only_names(args.module, args.build))
+    for path, part in ((f'{args.module}_imports.cpp', shared), (f'client_{args.module}_imports.cpp', client)):
+        if not part and 'client_only' not in cfg:
+            continue
+        out = [cfg['header']]
+        for name in sorted(part):
+            out.append(import_thunk(name, choose_overload(name, part[name], cfg), cfg, abi.get(name)))
+        with open(os.path.join(ROOT, 'src', 'compat', path), 'w') as f:
+            f.write('\n'.join(out))
 
     print(f'{len(interface) - len(missing)} exports, {len(imports)} imports')
     if missing:

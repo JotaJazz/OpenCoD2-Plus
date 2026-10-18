@@ -14,17 +14,363 @@ static_assert(cod2_abi_slot<float>() == 4, "AddLeanToPosition: parameter 4 diffe
 extern "C" decltype(AddLeanToPosition(std::declval<float*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2c_AddLeanToPosition(float* a0, float a1, float a2, float a3, float a4) __asm__(COD2_SYM("AddLeanToPosition"));
 decltype(AddLeanToPosition(std::declval<float*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) AddLeanToPosition(float* a0, float a1, float a2, float a3, float a4) { return cod2c_AddLeanToPosition(a0, a1, a2, a3, a4); }
 
+static_assert(cod2_abi_class<decltype(AddPointToBounds(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "AddPointToBounds: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "AddPointToBounds: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AddPointToBounds: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AddPointToBounds: parameter 2 differs from the engine");
+extern "C" decltype(AddPointToBounds(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>())) cod2c_AddPointToBounds(float const* a0, float* a1, float* a2) __asm__(COD2_SYM("AddPointToBounds"));
+decltype(AddPointToBounds(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>())) AddPointToBounds(float const* a0, float* a1, float* a2) { return cod2c_AddPointToBounds(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(AngleDelta(std::declval<float>(), std::declval<float>()))>() == 'f', "AngleDelta: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(AngleDelta(std::declval<float>(), std::declval<float>()))>() == 4, "AngleDelta: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleDelta: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleDelta: parameter 1 differs from the engine");
+extern "C" decltype(AngleDelta(std::declval<float>(), std::declval<float>())) cod2c_AngleDelta(float a0, float a1) __asm__(COD2_SYM("AngleDelta"));
+decltype(AngleDelta(std::declval<float>(), std::declval<float>())) AngleDelta(float a0, float a1) { return cod2c_AngleDelta(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(AngleNormalize180(std::declval<float>()))>() == 'f', "AngleNormalize180: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(AngleNormalize180(std::declval<float>()))>() == 4, "AngleNormalize180: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleNormalize180: parameter 0 differs from the engine");
+extern "C" decltype(AngleNormalize180(std::declval<float>())) cod2c_AngleNormalize180(float a0) __asm__(COD2_SYM("AngleNormalize180"));
+decltype(AngleNormalize180(std::declval<float>())) AngleNormalize180(float a0) { return cod2c_AngleNormalize180(a0); }
+
+static_assert(cod2_abi_class<decltype(AngleNormalize360(std::declval<float>()))>() == 'f', "AngleNormalize360: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(AngleNormalize360(std::declval<float>()))>() == 4, "AngleNormalize360: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleNormalize360: parameter 0 differs from the engine");
+extern "C" decltype(AngleNormalize360(std::declval<float>())) cod2c_AngleNormalize360(float a0) __asm__(COD2_SYM("AngleNormalize360"));
+decltype(AngleNormalize360(std::declval<float>())) AngleNormalize360(float a0) { return cod2c_AngleNormalize360(a0); }
+
+static_assert(cod2_abi_class<decltype(AngleNormalize360Accurate(std::declval<float>()))>() == 'f', "AngleNormalize360Accurate: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(AngleNormalize360Accurate(std::declval<float>()))>() == 4, "AngleNormalize360Accurate: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleNormalize360Accurate: parameter 0 differs from the engine");
+extern "C" decltype(AngleNormalize360Accurate(std::declval<float>())) cod2c_AngleNormalize360Accurate(float a0) __asm__(COD2_SYM("AngleNormalize360Accurate"));
+decltype(AngleNormalize360Accurate(std::declval<float>())) AngleNormalize360Accurate(float a0) { return cod2c_AngleNormalize360Accurate(a0); }
+
+static_assert(cod2_abi_class<decltype(AngleSubtract(std::declval<float>(), std::declval<float>()))>() == 'f', "AngleSubtract: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(AngleSubtract(std::declval<float>(), std::declval<float>()))>() == 4, "AngleSubtract: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleSubtract: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "AngleSubtract: parameter 1 differs from the engine");
+extern "C" decltype(AngleSubtract(std::declval<float>(), std::declval<float>())) cod2c_AngleSubtract(float a0, float a1) __asm__(COD2_SYM("AngleSubtract"));
+decltype(AngleSubtract(std::declval<float>(), std::declval<float>())) AngleSubtract(float a0, float a1) { return cod2c_AngleSubtract(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(AngleVectors(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "AngleVectors: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "AngleVectors: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AngleVectors: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AngleVectors: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AngleVectors: parameter 3 differs from the engine");
+extern "C" decltype(AngleVectors(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) cod2c_AngleVectors(float const* a0, float* a1, float* a2, float* a3) __asm__(COD2_SYM("AngleVectors"));
+decltype(AngleVectors(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) AngleVectors(float const* a0, float* a1, float* a2, float* a3) { return cod2c_AngleVectors(a0, a1, a2, a3); }
+
 static_assert(cod2_abi_class<decltype(AnglesToAxis(std::declval<float const*>(), std::declval<float (*) [3]>()))>() == 'v', "AnglesToAxis: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "AnglesToAxis: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<float (*) [3]>() == 4, "AnglesToAxis: parameter 1 differs from the engine");
 extern "C" decltype(AnglesToAxis(std::declval<float const*>(), std::declval<float (*) [3]>())) cod2c_AnglesToAxis(float const* a0, float (*a1) [3]) __asm__(COD2_SYM("AnglesToAxis"));
 decltype(AnglesToAxis(std::declval<float const*>(), std::declval<float (*) [3]>())) AnglesToAxis(float const* a0, float (*a1) [3]) { return cod2c_AnglesToAxis(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(AxisToAngles(std::declval<float (*) [3]>(), std::declval<float*>()))>() == 'v', "AxisToAngles: return class differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "AxisToAngles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AxisToAngles: parameter 1 differs from the engine");
+extern "C" decltype(AxisToAngles(std::declval<float (*) [3]>(), std::declval<float*>())) cod2c_AxisToAngles(float (*a0) [3], float* a1) __asm__(COD2_SYM("AxisToAngles"));
+decltype(AxisToAngles(std::declval<float (*) [3]>(), std::declval<float*>())) AxisToAngles(float (*a0) [3], float* a1) { return cod2c_AxisToAngles(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>()))>() == 'v', "BG_AddPredictableEventToPlayerstate: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 2 differs from the engine");
+extern "C" decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>())) cod2c_BG_AddPredictableEventToPlayerstate(int a0, int a1, playerState_s* a2) __asm__(COD2_SYM("BG_AddPredictableEventToPlayerstate"));
+decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>())) BG_AddPredictableEventToPlayerstate(int a0, int a1, playerState_s* a2) { return cod2c_BG_AddPredictableEventToPlayerstate(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_AmmoForWeapon(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_AmmoForWeapon(std::declval<int>()))>() == 'v', "BG_AmmoForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AmmoForWeapon: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_AmmoForWeapon(std::declval<int>())), 4> cod2c_BG_AmmoForWeapon(int a0) __asm__(COD2_SYM("BG_AmmoForWeapon"));
+decltype(BG_AmmoForWeapon(std::declval<int>())) BG_AmmoForWeapon(int a0) { return (decltype(BG_AmmoForWeapon(std::declval<int>())))cod2c_BG_AmmoForWeapon(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_AnimScriptEvent(std::declval<playerState_s*>(), std::declval<scriptAnimEventTypes_t>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_AnimScriptEvent(std::declval<playerState_s*>(), std::declval<scriptAnimEventTypes_t>(), std::declval<int>(), std::declval<int>()))>() == 'v', "BG_AnimScriptEvent: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_AnimScriptEvent: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<scriptAnimEventTypes_t>() == 4, "BG_AnimScriptEvent: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AnimScriptEvent: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AnimScriptEvent: parameter 3 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_AnimScriptEvent(std::declval<playerState_s*>(), std::declval<scriptAnimEventTypes_t>(), std::declval<int>(), std::declval<int>())), 4> cod2c_BG_AnimScriptEvent(playerState_s* a0, scriptAnimEventTypes_t a1, int a2, int a3) __asm__(COD2_SYM("BG_AnimScriptEvent"));
+decltype(BG_AnimScriptEvent(std::declval<playerState_s*>(), std::declval<scriptAnimEventTypes_t>(), std::declval<int>(), std::declval<int>())) BG_AnimScriptEvent(playerState_s* a0, scriptAnimEventTypes_t a1, int a2, int a3) { return (decltype(BG_AnimScriptEvent(std::declval<playerState_s*>(), std::declval<scriptAnimEventTypes_t>(), std::declval<int>(), std::declval<int>())))cod2c_BG_AnimScriptEvent(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>()))>() == 'v', "BG_CalculateViewAngles: return class differs from the engine");
+static_assert(cod2_abi_slot<viewState_t*>() == 4, "BG_CalculateViewAngles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateViewAngles: parameter 1 differs from the engine");
+extern "C" decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>())) cod2c_BG_CalculateViewAngles(viewState_t* a0, float* a1) __asm__(COD2_SYM("BG_CalculateViewAngles"));
+decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>())) BG_CalculateViewAngles(viewState_t* a0, float* a1) { return cod2c_BG_CalculateViewAngles(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>()))>() == 'v', "BG_CalculateWeaponAngles: return class differs from the engine");
+static_assert(cod2_abi_slot<weaponState_t*>() == 4, "BG_CalculateWeaponAngles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponAngles: parameter 1 differs from the engine");
+extern "C" decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) cod2c_BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) __asm__(COD2_SYM("BG_CalculateWeaponAngles"));
+decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) { return cod2c_BG_CalculateWeaponAngles(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>() == 'v', "BG_CalculateWeaponPosition_Sway: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 4 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 5 differs from the engine");
+extern "C" decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2c_BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) __asm__(COD2_SYM("BG_CalculateWeaponPosition_Sway"));
+decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) { return cod2c_BG_CalculateWeaponPosition_Sway(a0, a1, a2, a3, a4, a5); }
+
+static_assert(cod2_abi_class<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>() == 'v', "BG_CanItemBeGrabbed: return class differs from the engine");
+static_assert(cod2_abi_slot<entityState_s const*>() == 4, "BG_CanItemBeGrabbed: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_CanItemBeGrabbed: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_CanItemBeGrabbed: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2c_BG_CanItemBeGrabbed(entityState_s const* a0, playerState_s const* a1, int a2) __asm__(COD2_SYM("BG_CanItemBeGrabbed"));
+decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())) BG_CanItemBeGrabbed(entityState_s const* a0, playerState_s const* a1, int a2) { return (decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())))cod2c_BG_CanItemBeGrabbed(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_ClearWeaponDef())>() == 'v', "BG_ClearWeaponDef: return class differs from the engine");
+extern "C" decltype(BG_ClearWeaponDef()) cod2c_BG_ClearWeaponDef() __asm__(COD2_SYM("BG_ClearWeaponDef"));
+decltype(BG_ClearWeaponDef()) BG_ClearWeaponDef() { return cod2c_BG_ClearWeaponDef(); }
+
+static_assert(cod2_abi_class<decltype(BG_ClipForWeapon(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_ClipForWeapon(std::declval<int>()))>() == 'v', "BG_ClipForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_ClipForWeapon: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_ClipForWeapon(std::declval<int>())), 4> cod2c_BG_ClipForWeapon(int a0) __asm__(COD2_SYM("BG_ClipForWeapon"));
+decltype(BG_ClipForWeapon(std::declval<int>())) BG_ClipForWeapon(int a0) { return (decltype(BG_ClipForWeapon(std::declval<int>())))cod2c_BG_ClipForWeapon(a0); }
+
+extern "C" decltype(BG_CreateRotationMatrix(std::declval<float const*>(), std::declval<float (*) [3]>())) cod2c_BG_CreateRotationMatrix(float const* a0, float (*a1) [3]) __asm__(COD2_SYM("BG_CreateRotationMatrix"));
+decltype(BG_CreateRotationMatrix(std::declval<float const*>(), std::declval<float (*) [3]>())) BG_CreateRotationMatrix(float const* a0, float (*a1) [3]) { return cod2c_BG_CreateRotationMatrix(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_DoesWeaponNeedSlot(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_DoesWeaponNeedSlot(std::declval<int>()))>() == 'v', "BG_DoesWeaponNeedSlot: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_DoesWeaponNeedSlot: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_DoesWeaponNeedSlot(std::declval<int>())), 1> cod2c_BG_DoesWeaponNeedSlot(int a0) __asm__(COD2_SYM("BG_DoesWeaponNeedSlot"));
+decltype(BG_DoesWeaponNeedSlot(std::declval<int>())) BG_DoesWeaponNeedSlot(int a0) { return (decltype(BG_DoesWeaponNeedSlot(std::declval<int>())))cod2c_BG_DoesWeaponNeedSlot(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_DoesWeaponRequireSlot(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_DoesWeaponRequireSlot(std::declval<int>()))>() == 'v', "BG_DoesWeaponRequireSlot: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_DoesWeaponRequireSlot: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_DoesWeaponRequireSlot(std::declval<int>())), 1> cod2c_BG_DoesWeaponRequireSlot(int a0) __asm__(COD2_SYM("BG_DoesWeaponRequireSlot"));
+decltype(BG_DoesWeaponRequireSlot(std::declval<int>())) BG_DoesWeaponRequireSlot(int a0) { return (decltype(BG_DoesWeaponRequireSlot(std::declval<int>())))cod2c_BG_DoesWeaponRequireSlot(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>()))>() == 'v', "BG_EvaluateTrajectory: return class differs from the engine");
+static_assert(cod2_abi_slot<trajectory_t const*>() == 4, "BG_EvaluateTrajectory: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_EvaluateTrajectory: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_EvaluateTrajectory: parameter 2 differs from the engine");
+extern "C" decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) cod2c_BG_EvaluateTrajectory(trajectory_t const* a0, int a1, float* a2) __asm__(COD2_SYM("BG_EvaluateTrajectory"));
+decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) BG_EvaluateTrajectory(trajectory_t const* a0, int a1, float* a2) { return cod2c_BG_EvaluateTrajectory(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_EvaluateTrajectoryDelta(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>()))>() == 'v', "BG_EvaluateTrajectoryDelta: return class differs from the engine");
+static_assert(cod2_abi_slot<trajectory_t const*>() == 4, "BG_EvaluateTrajectoryDelta: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_EvaluateTrajectoryDelta: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_EvaluateTrajectoryDelta: parameter 2 differs from the engine");
+extern "C" decltype(BG_EvaluateTrajectoryDelta(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) cod2c_BG_EvaluateTrajectoryDelta(trajectory_t const* a0, int a1, float* a2) __asm__(COD2_SYM("BG_EvaluateTrajectoryDelta"));
+decltype(BG_EvaluateTrajectoryDelta(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) BG_EvaluateTrajectoryDelta(trajectory_t const* a0, int a1, float* a2) { return cod2c_BG_EvaluateTrajectoryDelta(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>()))>() == 'v', "BG_FillInAmmoItems: return class differs from the engine");
+static_assert(cod2_abi_slot<int (*)(int)>() == 4, "BG_FillInAmmoItems: parameter 0 differs from the engine");
+extern "C" decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>())) cod2c_BG_FillInAmmoItems(int (*a0)(int)) __asm__(COD2_SYM("BG_FillInAmmoItems"));
+decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>())) BG_FillInAmmoItems(int (*a0)(int)) { return cod2c_BG_FillInAmmoItems(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_FindItemForWeapon(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_FindItemForWeapon(std::declval<int>()))>() == 'v', "BG_FindItemForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_FindItemForWeapon: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_FindItemForWeapon(std::declval<int>())), 4> cod2c_BG_FindItemForWeapon(int a0) __asm__(COD2_SYM("BG_FindItemForWeapon"));
+decltype(BG_FindItemForWeapon(std::declval<int>())) BG_FindItemForWeapon(int a0) { return (decltype(BG_FindItemForWeapon(std::declval<int>())))cod2c_BG_FindItemForWeapon(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_FindWeaponIndexForName(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(BG_FindWeaponIndexForName(std::declval<char const*>()))>() == 'v', "BG_FindWeaponIndexForName: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "BG_FindWeaponIndexForName: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_FindWeaponIndexForName(std::declval<char const*>())), 4> cod2c_BG_FindWeaponIndexForName(char const* a0) __asm__(COD2_SYM("BG_FindWeaponIndexForName"));
+decltype(BG_FindWeaponIndexForName(std::declval<char const*>())) BG_FindWeaponIndexForName(char const* a0) { return (decltype(BG_FindWeaponIndexForName(std::declval<char const*>())))cod2c_BG_FindWeaponIndexForName(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetAmmoClipSize(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetAmmoClipSize(std::declval<int>()))>() == 'v', "BG_GetAmmoClipSize: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetAmmoClipSize: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetAmmoClipSize(std::declval<int>())), 4> cod2c_BG_GetAmmoClipSize(int a0) __asm__(COD2_SYM("BG_GetAmmoClipSize"));
+decltype(BG_GetAmmoClipSize(std::declval<int>())) BG_GetAmmoClipSize(int a0) { return (decltype(BG_GetAmmoClipSize(std::declval<int>())))cod2c_BG_GetAmmoClipSize(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetAmmoTypeMax(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetAmmoTypeMax(std::declval<int>()))>() == 'v', "BG_GetAmmoTypeMax: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetAmmoTypeMax: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetAmmoTypeMax(std::declval<int>())), 4> cod2c_BG_GetAmmoTypeMax(int a0) __asm__(COD2_SYM("BG_GetAmmoTypeMax"));
+decltype(BG_GetAmmoTypeMax(std::declval<int>())) BG_GetAmmoTypeMax(int a0) { return (decltype(BG_GetAmmoTypeMax(std::declval<int>())))cod2c_BG_GetAmmoTypeMax(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetBobCycle(std::declval<playerState_s const*>()))>() == 'f', "BG_GetBobCycle: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(BG_GetBobCycle(std::declval<playerState_s const*>()))>() == 4, "BG_GetBobCycle: return size differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetBobCycle: parameter 0 differs from the engine");
+extern "C" decltype(BG_GetBobCycle(std::declval<playerState_s const*>())) cod2c_BG_GetBobCycle(playerState_s const* a0) __asm__(COD2_SYM("BG_GetBobCycle"));
+decltype(BG_GetBobCycle(std::declval<playerState_s const*>())) BG_GetBobCycle(playerState_s const* a0) { return cod2c_BG_GetBobCycle(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>()))>() == 'v', "BG_GetEmptySlotForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_GetEmptySlotForWeapon: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetEmptySlotForWeapon: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())), 4> cod2c_BG_GetEmptySlotForWeapon(playerState_s* a0, int a1) __asm__(COD2_SYM("BG_GetEmptySlotForWeapon"));
+decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())) BG_GetEmptySlotForWeapon(playerState_s* a0, int a1) { return (decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())))cod2c_BG_GetEmptySlotForWeapon(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'v', "BG_GetFirstAvailableOffhand: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetFirstAvailableOffhand: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetFirstAvailableOffhand: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2c_BG_GetFirstAvailableOffhand(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetFirstAvailableOffhand"));
+decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())) BG_GetFirstAvailableOffhand(playerState_s const* a0, int a1) { return (decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())))cod2c_BG_GetFirstAvailableOffhand(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 'f', "BG_GetHorizontalBobFactor: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 4, "BG_GetHorizontalBobFactor: return size differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetHorizontalBobFactor: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 3 differs from the engine");
+extern "C" decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2c_BG_GetHorizontalBobFactor(playerState_s const* a0, float a1, float a2, float a3) __asm__(COD2_SYM("BG_GetHorizontalBobFactor"));
+decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) BG_GetHorizontalBobFactor(playerState_s const* a0, float a1, float a2, float a3) { return cod2c_BG_GetHorizontalBobFactor(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_GetMaxPickupableAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetMaxPickupableAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'v', "BG_GetMaxPickupableAmmo: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetMaxPickupableAmmo: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetMaxPickupableAmmo: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetMaxPickupableAmmo(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2c_BG_GetMaxPickupableAmmo(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetMaxPickupableAmmo"));
+decltype(BG_GetMaxPickupableAmmo(std::declval<playerState_s const*>(), std::declval<int>())) BG_GetMaxPickupableAmmo(playerState_s const* a0, int a1) { return (decltype(BG_GetMaxPickupableAmmo(std::declval<playerState_s const*>(), std::declval<int>())))cod2c_BG_GetMaxPickupableAmmo(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_GetNumWeapons())>() == 'i' || cod2_abi_class<decltype(BG_GetNumWeapons())>() == 'v', "BG_GetNumWeapons: return class differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetNumWeapons()), 4> cod2c_BG_GetNumWeapons() __asm__(COD2_SYM("BG_GetNumWeapons"));
+decltype(BG_GetNumWeapons()) BG_GetNumWeapons() { return (decltype(BG_GetNumWeapons()))cod2c_BG_GetNumWeapons(); }
+
+static_assert(cod2_abi_class<decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'f', "BG_GetSpeed: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>()))>() == 4, "BG_GetSpeed: return size differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetSpeed: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetSpeed: parameter 1 differs from the engine");
+extern "C" decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>())) cod2c_BG_GetSpeed(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetSpeed"));
+decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>())) BG_GetSpeed(playerState_s const* a0, int a1) { return cod2c_BG_GetSpeed(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "BG_GetSpreadForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetSpreadForWeapon: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetSpreadForWeapon: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_GetSpreadForWeapon: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_GetSpreadForWeapon: parameter 3 differs from the engine");
+extern "C" decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>())) cod2c_BG_GetSpreadForWeapon(playerState_s const* a0, int a1, float* a2, float* a3) __asm__(COD2_SYM("BG_GetSpreadForWeapon"));
+decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>())) BG_GetSpreadForWeapon(playerState_s const* a0, int a1, float* a2, float* a3) { return cod2c_BG_GetSpreadForWeapon(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>()))>() == 'v', "BG_GetStackSlotForWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetStackSlotForWeapon: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetStackSlotForWeapon: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "BG_GetStackSlotForWeapon: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())), 4> cod2c_BG_GetStackSlotForWeapon(playerState_s const* a0, int a1, unsigned int a2) __asm__(COD2_SYM("BG_GetStackSlotForWeapon"));
+decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())) BG_GetStackSlotForWeapon(playerState_s const* a0, int a1, unsigned int a2) { return (decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())))cod2c_BG_GetStackSlotForWeapon(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 'f', "BG_GetVerticalBobFactor: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 4, "BG_GetVerticalBobFactor: return size differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetVerticalBobFactor: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 3 differs from the engine");
+extern "C" decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2c_BG_GetVerticalBobFactor(playerState_s const* a0, float a1, float a2, float a3) __asm__(COD2_SYM("BG_GetVerticalBobFactor"));
+decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) BG_GetVerticalBobFactor(playerState_s const* a0, float a1, float a2, float a3) { return cod2c_BG_GetVerticalBobFactor(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_GetWeaponDef(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetWeaponDef(std::declval<int>()))>() == 'v', "BG_GetWeaponDef: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetWeaponDef: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponDef(std::declval<int>())), 4> cod2c_BG_GetWeaponDef(int a0) __asm__(COD2_SYM("BG_GetWeaponDef"));
+decltype(BG_GetWeaponDef(std::declval<int>())) BG_GetWeaponDef(int a0) { return (decltype(BG_GetWeaponDef(std::declval<int>())))cod2c_BG_GetWeaponDef(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>()))>() == 'i' || cod2_abi_class<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>()))>() == 'v', "BG_GetWeaponIndexForName: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "BG_GetWeaponIndexForName: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int (*)(int)>() == 4, "BG_GetWeaponIndexForName: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())), 4> cod2c_BG_GetWeaponIndexForName(char const* a0, int (*a1)(int)) __asm__(COD2_SYM("BG_GetWeaponIndexForName"));
+decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())) BG_GetWeaponIndexForName(char const* a0, int (*a1)(int)) { return (decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())))cod2c_BG_GetWeaponIndexForName(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_GetWeaponSlotForName(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(BG_GetWeaponSlotForName(std::declval<char const*>()))>() == 'v', "BG_GetWeaponSlotForName: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "BG_GetWeaponSlotForName: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponSlotForName(std::declval<char const*>())), 4> cod2c_BG_GetWeaponSlotForName(char const* a0) __asm__(COD2_SYM("BG_GetWeaponSlotForName"));
+decltype(BG_GetWeaponSlotForName(std::declval<char const*>())) BG_GetWeaponSlotForName(char const* a0) { return (decltype(BG_GetWeaponSlotForName(std::declval<char const*>())))cod2c_BG_GetWeaponSlotForName(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_GetWeaponSlotNameForIndex(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_GetWeaponSlotNameForIndex(std::declval<int>()))>() == 'v', "BG_GetWeaponSlotNameForIndex: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetWeaponSlotNameForIndex: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponSlotNameForIndex(std::declval<int>())), 4> cod2c_BG_GetWeaponSlotNameForIndex(int a0) __asm__(COD2_SYM("BG_GetWeaponSlotNameForIndex"));
+decltype(BG_GetWeaponSlotNameForIndex(std::declval<int>())) BG_GetWeaponSlotNameForIndex(int a0) { return (decltype(BG_GetWeaponSlotNameForIndex(std::declval<int>())))cod2c_BG_GetWeaponSlotNameForIndex(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_IsAimDownSightWeapon(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_IsAimDownSightWeapon(std::declval<int>()))>() == 'v', "BG_IsAimDownSightWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsAimDownSightWeapon: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_IsAimDownSightWeapon(std::declval<int>())), 4> cod2c_BG_IsAimDownSightWeapon(int a0) __asm__(COD2_SYM("BG_IsAimDownSightWeapon"));
+decltype(BG_IsAimDownSightWeapon(std::declval<int>())) BG_IsAimDownSightWeapon(int a0) { return (decltype(BG_IsAimDownSightWeapon(std::declval<int>())))cod2c_BG_IsAimDownSightWeapon(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_IsAnyEmptyPrimaryWeaponSlot(std::declval<playerState_s const*>()))>() == 'i' || cod2_abi_class<decltype(BG_IsAnyEmptyPrimaryWeaponSlot(std::declval<playerState_s const*>()))>() == 'v', "BG_IsAnyEmptyPrimaryWeaponSlot: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_IsAnyEmptyPrimaryWeaponSlot: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_IsAnyEmptyPrimaryWeaponSlot(std::declval<playerState_s const*>())), 4> cod2c_BG_IsAnyEmptyPrimaryWeaponSlot(playerState_s const* a0) __asm__(COD2_SYM("BG_IsAnyEmptyPrimaryWeaponSlot"));
+decltype(BG_IsAnyEmptyPrimaryWeaponSlot(std::declval<playerState_s const*>())) BG_IsAnyEmptyPrimaryWeaponSlot(playerState_s const* a0) { return (decltype(BG_IsAnyEmptyPrimaryWeaponSlot(std::declval<playerState_s const*>())))cod2c_BG_IsAnyEmptyPrimaryWeaponSlot(a0); }
+
+static_assert(cod2_abi_class<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "BG_IsPlayerWeaponInSlot: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_IsPlayerWeaponInSlot: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsPlayerWeaponInSlot: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsPlayerWeaponInSlot: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())), 4> cod2c_BG_IsPlayerWeaponInSlot(playerState_s* a0, int a1, int a2) __asm__(COD2_SYM("BG_IsPlayerWeaponInSlot"));
+decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())) BG_IsPlayerWeaponInSlot(playerState_s* a0, int a1, int a2) { return (decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())))cod2c_BG_IsPlayerWeaponInSlot(a0, a1, a2); }
+
 static_assert(cod2_abi_class<decltype(BG_IsWeaponValid(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_IsWeaponValid(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'v', "BG_IsWeaponValid: return class differs from the engine");
 static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_IsWeaponValid: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "BG_IsWeaponValid: parameter 1 differs from the engine");
 extern "C" cod2_abi_int<decltype(BG_IsWeaponValid(std::declval<playerState_s const*>(), std::declval<int>())), 1> cod2c_BG_IsWeaponValid(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_IsWeaponValid"));
 decltype(BG_IsWeaponValid(std::declval<playerState_s const*>(), std::declval<int>())) BG_IsWeaponValid(playerState_s const* a0, int a1) { return (decltype(BG_IsWeaponValid(std::declval<playerState_s const*>(), std::declval<int>())))cod2c_BG_IsWeaponValid(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_LoadAnim())>() == 'v', "BG_LoadAnim: return class differs from the engine");
+extern "C" decltype(BG_LoadAnim()) cod2c_BG_LoadAnim() __asm__(COD2_SYM("BG_LoadAnim"));
+decltype(BG_LoadAnim()) BG_LoadAnim() { return cod2c_BG_LoadAnim(); }
+
+static_assert(cod2_abi_class<decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>()))>() == 'v', "BG_PlayerAnimation: return class differs from the engine");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "BG_PlayerAnimation: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_PlayerAnimation: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_PlayerAnimation: parameter 2 differs from the engine");
+extern "C" decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>())) cod2c_BG_PlayerAnimation(DObj_s const* a0, entityState_s* a1, clientInfo_s* a2) __asm__(COD2_SYM("BG_PlayerAnimation"));
+decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>())) BG_PlayerAnimation(DObj_s const* a0, entityState_s* a1, clientInfo_s* a2) { return cod2c_BG_PlayerAnimation(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>()))>() == 'v', "BG_PlayerStateToEntityState: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_PlayerStateToEntityState: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_PlayerStateToEntityState: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_PlayerStateToEntityState: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<unsigned char>() == 4, "BG_PlayerStateToEntityState: parameter 3 differs from the engine");
+extern "C" decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>())) cod2c_BG_PlayerStateToEntityState(playerState_s* a0, entityState_s* a1, int a2, unsigned char a3) __asm__(COD2_SYM("BG_PlayerStateToEntityState"));
+decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>())) BG_PlayerStateToEntityState(playerState_s* a0, entityState_s* a1, int a2, unsigned char a3) { return cod2c_BG_PlayerStateToEntityState(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>()))>() == 'v', "BG_PlayerTouchesItem: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_PlayerTouchesItem: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<entityState_s const*>() == 4, "BG_PlayerTouchesItem: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_PlayerTouchesItem: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())), 4> cod2c_BG_PlayerTouchesItem(playerState_s const* a0, entityState_s const* a1, int a2) __asm__(COD2_SYM("BG_PlayerTouchesItem"));
+decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())) BG_PlayerTouchesItem(playerState_s const* a0, entityState_s const* a1, int a2) { return (decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())))cod2c_BG_PlayerTouchesItem(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>() == 'v', "BG_Player_DoControllers: return class differs from the engine");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "BG_Player_DoControllers: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<gentity_s const*>() == 4, "BG_Player_DoControllers: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int*>() == 4, "BG_Player_DoControllers: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_Player_DoControllers: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_Player_DoControllers: parameter 4 differs from the engine");
+extern "C" decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2c_BG_Player_DoControllers(DObj_s* a0, gentity_s const* a1, int* a2, clientInfo_s* a3, int a4) __asm__(COD2_SYM("BG_Player_DoControllers"));
+decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>())) BG_Player_DoControllers(DObj_s* a0, gentity_s const* a1, int* a2, clientInfo_s* a3, int a4) { return cod2c_BG_Player_DoControllers(a0, a1, a2, a3, a4); }
+
+static_assert(cod2_abi_class<decltype(BG_RegisterDvars())>() == 'v', "BG_RegisterDvars: return class differs from the engine");
+extern "C" decltype(BG_RegisterDvars()) cod2c_BG_RegisterDvars() __asm__(COD2_SYM("BG_RegisterDvars"));
+decltype(BG_RegisterDvars()) BG_RegisterDvars() { return cod2c_BG_RegisterDvars(); }
+
+extern "C" decltype(BG_RotatePoint(std::declval<float*>(), std::declval<float const (*) [3]>())) cod2c_BG_RotatePoint(float* a0, float const (*a1) [3]) __asm__(COD2_SYM("BG_RotatePoint"));
+decltype(BG_RotatePoint(std::declval<float*>(), std::declval<float const (*) [3]>())) BG_RotatePoint(float* a0, float const (*a1) [3]) { return cod2c_BG_RotatePoint(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_TakePlayerWeapon(std::declval<playerState_s*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_TakePlayerWeapon(std::declval<playerState_s*>(), std::declval<int>()))>() == 'v', "BG_TakePlayerWeapon: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_TakePlayerWeapon: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_TakePlayerWeapon: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_TakePlayerWeapon(std::declval<playerState_s*>(), std::declval<int>())), 4> cod2c_BG_TakePlayerWeapon(playerState_s* a0, int a1) __asm__(COD2_SYM("BG_TakePlayerWeapon"));
+decltype(BG_TakePlayerWeapon(std::declval<playerState_s*>(), std::declval<int>())) BG_TakePlayerWeapon(playerState_s* a0, int a1) { return (decltype(BG_TakePlayerWeapon(std::declval<playerState_s*>(), std::declval<int>())))cod2c_BG_TakePlayerWeapon(a0, a1); }
+
+extern "C" decltype(BG_TransposeMatrix(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) cod2c_BG_TransposeMatrix(float const (*a0) [3], float (*a1) [3]) __asm__(COD2_SYM("BG_TransposeMatrix"));
+decltype(BG_TransposeMatrix(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) BG_TransposeMatrix(float const (*a0) [3], float (*a1) [3]) { return cod2c_BG_TransposeMatrix(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>() == 'v', "BG_UpdatePlayerDObj: return class differs from the engine");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "BG_UpdatePlayerDObj: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_UpdatePlayerDObj: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_UpdatePlayerDObj: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_UpdatePlayerDObj: parameter 3 differs from the engine");
+extern "C" decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2c_BG_UpdatePlayerDObj(DObj_s* a0, entityState_s* a1, clientInfo_s* a2, int a3) __asm__(COD2_SYM("BG_UpdatePlayerDObj"));
+decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>())) BG_UpdatePlayerDObj(DObj_s* a0, entityState_s* a1, clientInfo_s* a2, int a3) { return cod2c_BG_UpdatePlayerDObj(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'v', "BG_WeaponAmmo: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_WeaponAmmo: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_WeaponAmmo: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2c_BG_WeaponAmmo(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_WeaponAmmo"));
+decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())) BG_WeaponAmmo(playerState_s const* a0, int a1) { return (decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())))cod2c_BG_WeaponAmmo(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "BG_WeaponFireRecoil: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_WeaponFireRecoil: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_WeaponFireRecoil: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_WeaponFireRecoil: parameter 2 differs from the engine");
+extern "C" decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>())) cod2c_BG_WeaponFireRecoil(playerState_s* a0, float* a1, float* a2) __asm__(COD2_SYM("BG_WeaponFireRecoil"));
+decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>())) BG_WeaponFireRecoil(playerState_s* a0, float* a1, float* a2) { return cod2c_BG_WeaponFireRecoil(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(BG_WeaponIsClipOnly(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(BG_WeaponIsClipOnly(std::declval<int>()))>() == 'v', "BG_WeaponIsClipOnly: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "BG_WeaponIsClipOnly: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(BG_WeaponIsClipOnly(std::declval<int>())), 4> cod2c_BG_WeaponIsClipOnly(int a0) __asm__(COD2_SYM("BG_WeaponIsClipOnly"));
+decltype(BG_WeaponIsClipOnly(std::declval<int>())) BG_WeaponIsClipOnly(int a0) { return (decltype(BG_WeaponIsClipOnly(std::declval<int>())))cod2c_BG_WeaponIsClipOnly(a0); }
 
 static_assert(cod2_abi_class<decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>()))>() == 'i' || cod2_abi_class<decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>()))>() == 'v', "BoxDistSqrdExceeds: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "BoxDistSqrdExceeds: parameter 0 differs from the engine");
@@ -244,37 +590,6 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Cbuf_ExecuteText: parameter 1 
 extern "C" decltype(Cbuf_ExecuteText(std::declval<int>(), std::declval<char const*>())) cod2c_Cbuf_ExecuteText(int a0, char const* a1) __asm__(COD2_SYM("Cbuf_ExecuteText"));
 decltype(Cbuf_ExecuteText(std::declval<int>(), std::declval<char const*>())) Cbuf_ExecuteText(int a0, char const* a1) { return cod2c_Cbuf_ExecuteText(a0, a1); }
 
-static_assert(cod2_abi_class<decltype(ClientBegin(std::declval<int>()))>() == 'v', "ClientBegin: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientBegin: parameter 0 differs from the engine");
-extern "C" decltype(ClientBegin(std::declval<int>())) cod2c_ClientBegin(int a0) __asm__(COD2_SYM("ClientBegin"));
-decltype(ClientBegin(std::declval<int>())) ClientBegin(int a0) { return cod2c_ClientBegin(a0); }
-
-static_assert(cod2_abi_class<decltype(ClientCommand(std::declval<int>()))>() == 'v', "ClientCommand: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientCommand: parameter 0 differs from the engine");
-extern "C" decltype(ClientCommand(std::declval<int>())) cod2c_ClientCommand(int a0) __asm__(COD2_SYM("ClientCommand"));
-decltype(ClientCommand(std::declval<int>())) ClientCommand(int a0) { return cod2c_ClientCommand(a0); }
-
-static_assert(cod2_abi_class<decltype(ClientConnect(std::declval<int>(), std::declval<unsigned short>()))>() == 'i' || cod2_abi_class<decltype(ClientConnect(std::declval<int>(), std::declval<unsigned short>()))>() == 'v', "ClientConnect: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientConnect: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<unsigned short>() == 4, "ClientConnect: parameter 1 differs from the engine");
-extern "C" cod2_abi_int<decltype(ClientConnect(std::declval<int>(), std::declval<unsigned short>())), 4> cod2c_ClientConnect(int a0, unsigned short a1) __asm__(COD2_SYM("ClientConnect"));
-decltype(ClientConnect(std::declval<int>(), std::declval<unsigned short>())) ClientConnect(int a0, unsigned short a1) { return (decltype(ClientConnect(std::declval<int>(), std::declval<unsigned short>())))cod2c_ClientConnect(a0, a1); }
-
-static_assert(cod2_abi_class<decltype(ClientDisconnect(std::declval<int>()))>() == 'v', "ClientDisconnect: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientDisconnect: parameter 0 differs from the engine");
-extern "C" decltype(ClientDisconnect(std::declval<int>())) cod2c_ClientDisconnect(int a0) __asm__(COD2_SYM("ClientDisconnect"));
-decltype(ClientDisconnect(std::declval<int>())) ClientDisconnect(int a0) { return cod2c_ClientDisconnect(a0); }
-
-static_assert(cod2_abi_class<decltype(ClientThink(std::declval<int>()))>() == 'v', "ClientThink: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientThink: parameter 0 differs from the engine");
-extern "C" decltype(ClientThink(std::declval<int>())) cod2c_ClientThink(int a0) __asm__(COD2_SYM("ClientThink"));
-decltype(ClientThink(std::declval<int>())) ClientThink(int a0) { return cod2c_ClientThink(a0); }
-
-static_assert(cod2_abi_class<decltype(ClientUserinfoChanged(std::declval<int>()))>() == 'v', "ClientUserinfoChanged: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "ClientUserinfoChanged: parameter 0 differs from the engine");
-extern "C" decltype(ClientUserinfoChanged(std::declval<int>())) cod2c_ClientUserinfoChanged(int a0) __asm__(COD2_SYM("ClientUserinfoChanged"));
-decltype(ClientUserinfoChanged(std::declval<int>())) ClientUserinfoChanged(int a0) { return cod2c_ClientUserinfoChanged(a0); }
-
 static_assert(cod2_abi_class<decltype(Cmd_AddCommand(std::declval<char const*>(), std::declval<void (*)()>()))>() == 'v', "Cmd_AddCommand: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_AddCommand: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<void (*)()>() == 4, "Cmd_AddCommand: parameter 1 differs from the engine");
@@ -294,6 +609,13 @@ static_assert(cod2_abi_class<decltype(Cmd_Argv(std::declval<int>()))>() == 'i' |
 static_assert(cod2_abi_slot<int>() == 4, "Cmd_Argv: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Cmd_Argv(std::declval<int>())), 4> cod2c_Cmd_Argv(int a0) __asm__(COD2_SYM("Cmd_Argv"));
 decltype(Cmd_Argv(std::declval<int>())) Cmd_Argv(int a0) { return (decltype(Cmd_Argv(std::declval<int>())))cod2c_Cmd_Argv(a0); }
+
+static_assert(cod2_abi_class<decltype(Cmd_ArgvBuffer(std::declval<int>(), std::declval<char*>(), std::declval<int>()))>() == 'v', "Cmd_ArgvBuffer: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Cmd_ArgvBuffer: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char*>() == 4, "Cmd_ArgvBuffer: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Cmd_ArgvBuffer: parameter 2 differs from the engine");
+extern "C" decltype(Cmd_ArgvBuffer(std::declval<int>(), std::declval<char*>(), std::declval<int>())) cod2c_Cmd_ArgvBuffer(int a0, char* a1, int a2) __asm__(COD2_SYM("Cmd_ArgvBuffer"));
+decltype(Cmd_ArgvBuffer(std::declval<int>(), std::declval<char*>(), std::declval<int>())) Cmd_ArgvBuffer(int a0, char* a1, int a2) { return cod2c_Cmd_ArgvBuffer(a0, a1, a2); }
 
 static_assert(cod2_abi_class<decltype(Cmd_ExecuteString(std::declval<char const*>()))>() == 'v', "Cmd_ExecuteString: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_ExecuteString: parameter 0 differs from the engine");
@@ -317,6 +639,11 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_TokenizeString: parameter 
 extern "C" decltype(Cmd_TokenizeString(std::declval<char const*>())) cod2c_Cmd_TokenizeString(char const* a0) __asm__(COD2_SYM("Cmd_TokenizeString"));
 decltype(Cmd_TokenizeString(std::declval<char const*>())) Cmd_TokenizeString(char const* a0) { return cod2c_Cmd_TokenizeString(a0); }
 
+static_assert(cod2_abi_class<decltype(ColorIndex(std::declval<unsigned char>()))>() == 'i' || cod2_abi_class<decltype(ColorIndex(std::declval<unsigned char>()))>() == 'v', "ColorIndex: return class differs from the engine");
+static_assert(cod2_abi_slot<unsigned char>() == 4, "ColorIndex: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(ColorIndex(std::declval<unsigned char>())), 4> cod2c_ColorIndex(unsigned char a0) __asm__(COD2_SYM("ColorIndex"));
+decltype(ColorIndex(std::declval<unsigned char>())) ColorIndex(unsigned char a0) { return (decltype(ColorIndex(std::declval<unsigned char>())))cod2c_ColorIndex(a0); }
+
 static_assert(cod2_abi_class<decltype(Com_AbortDObj())>() == 'v', "Com_AbortDObj: return class differs from the engine");
 extern "C" decltype(Com_AbortDObj()) cod2c_Com_AbortDObj() __asm__(COD2_SYM("Com_AbortDObj"));
 decltype(Com_AbortDObj()) Com_AbortDObj() { return cod2c_Com_AbortDObj(); }
@@ -336,6 +663,15 @@ static_assert(cod2_abi_slot<int>() == 4, "Com_BeginRedirect: parameter 1 differs
 static_assert(cod2_abi_slot<void (*)(char*)>() == 4, "Com_BeginRedirect: parameter 2 differs from the engine");
 extern "C" decltype(Com_BeginRedirect(std::declval<char*>(), std::declval<int>(), std::declval<void (*)(char*)>())) cod2c_Com_BeginRedirect(char* a0, int a1, void (*a2)(char*)) __asm__(COD2_SYM("Com_BeginRedirect"));
 decltype(Com_BeginRedirect(std::declval<char*>(), std::declval<int>(), std::declval<void (*)(char*)>())) Com_BeginRedirect(char* a0, int a1, void (*a2)(char*)) { return cod2c_Com_BeginRedirect(a0, a1, a2); }
+
+extern "C" decltype(Com_BitCheck(std::declval<int const*>(), std::declval<int>())) cod2c_Com_BitCheck(int const* a0, int a1) __asm__(COD2_SYM("Com_BitCheck"));
+decltype(Com_BitCheck(std::declval<int const*>(), std::declval<int>())) Com_BitCheck(int const* a0, int a1) { return cod2c_Com_BitCheck(a0, a1); }
+
+extern "C" decltype(Com_BitClear(std::declval<int*>(), std::declval<int>())) cod2c_Com_BitClear(int* a0, int a1) __asm__(COD2_SYM("Com_BitClear"));
+decltype(Com_BitClear(std::declval<int*>(), std::declval<int>())) Com_BitClear(int* a0, int a1) { return cod2c_Com_BitClear(a0, a1); }
+
+extern "C" decltype(Com_BitSet(std::declval<int*>(), std::declval<int>())) cod2c_Com_BitSet(int* a0, int a1) __asm__(COD2_SYM("Com_BitSet"));
+decltype(Com_BitSet(std::declval<int*>(), std::declval<int>())) Com_BitSet(int* a0, int a1) { return cod2c_Com_BitSet(a0, a1); }
 
 static_assert(cod2_abi_class<decltype(Com_DPrintf(std::declval<char const*>()))>() == 'v', "Com_DPrintf: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_DPrintf: parameter 0 differs from the engine");
@@ -359,10 +695,20 @@ static_assert(cod2_abi_class<decltype(Com_EndRedirect())>() == 'v', "Com_EndRedi
 extern "C" decltype(Com_EndRedirect()) cod2c_Com_EndRedirect() __asm__(COD2_SYM("Com_EndRedirect"));
 decltype(Com_EndRedirect()) Com_EndRedirect() { return cod2c_Com_EndRedirect(); }
 
+static_assert(cod2_abi_class<decltype(Com_FindSoundAlias(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Com_FindSoundAlias(std::declval<char const*>()))>() == 'v', "Com_FindSoundAlias: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Com_FindSoundAlias: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Com_FindSoundAlias(std::declval<char const*>())), 4> cod2c_Com_FindSoundAlias(char const* a0) __asm__(COD2_SYM("Com_FindSoundAlias"));
+decltype(Com_FindSoundAlias(std::declval<char const*>())) Com_FindSoundAlias(char const* a0) { return (decltype(Com_FindSoundAlias(std::declval<char const*>())))cod2c_Com_FindSoundAlias(a0); }
+
 static_assert(cod2_abi_class<decltype(Com_FreeWeaponInfoMemory(std::declval<int>()))>() == 'v', "Com_FreeWeaponInfoMemory: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Com_FreeWeaponInfoMemory: parameter 0 differs from the engine");
 extern "C" decltype(Com_FreeWeaponInfoMemory(std::declval<int>())) cod2c_Com_FreeWeaponInfoMemory(int a0) __asm__(COD2_SYM("Com_FreeWeaponInfoMemory"));
 decltype(Com_FreeWeaponInfoMemory(std::declval<int>())) Com_FreeWeaponInfoMemory(int a0) { return cod2c_Com_FreeWeaponInfoMemory(a0); }
+
+static_assert(cod2_abi_class<decltype(Com_GetArgCountOnLine(std::declval<char const**>()))>() == 'i' || cod2_abi_class<decltype(Com_GetArgCountOnLine(std::declval<char const**>()))>() == 'v', "Com_GetArgCountOnLine: return class differs from the engine");
+static_assert(cod2_abi_slot<char const**>() == 4, "Com_GetArgCountOnLine: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Com_GetArgCountOnLine(std::declval<char const**>())), 4> cod2c_Com_GetArgCountOnLine(char const** a0) __asm__(COD2_SYM("Com_GetArgCountOnLine"));
+decltype(Com_GetArgCountOnLine(std::declval<char const**>())) Com_GetArgCountOnLine(char const** a0) { return (decltype(Com_GetArgCountOnLine(std::declval<char const**>())))cod2c_Com_GetArgCountOnLine(a0); }
 
 static_assert(cod2_abi_class<decltype(Com_GetServerDObj(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Com_GetServerDObj(std::declval<int>()))>() == 'v', "Com_GetServerDObj: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Com_GetServerDObj: parameter 0 differs from the engine");
@@ -384,9 +730,39 @@ static_assert(cod2_abi_class<decltype(Com_Milliseconds())>() == 'i' || cod2_abi_
 extern "C" cod2_abi_int<decltype(Com_Milliseconds()), 4> cod2c_Com_Milliseconds() __asm__(COD2_SYM("Com_Milliseconds"));
 decltype(Com_Milliseconds()) Com_Milliseconds() { return (decltype(Com_Milliseconds()))cod2c_Com_Milliseconds(); }
 
+static_assert(cod2_abi_class<decltype(Com_ParseReturnToMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>()))>() == 'v', "Com_ParseReturnToMark: return class differs from the engine");
+static_assert(cod2_abi_slot<char const**>() == 4, "Com_ParseReturnToMark: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<com_parse_mark_t*>() == 4, "Com_ParseReturnToMark: parameter 1 differs from the engine");
+extern "C" decltype(Com_ParseReturnToMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>())) cod2c_Com_ParseReturnToMark(char const** a0, com_parse_mark_t* a1) __asm__(COD2_SYM("Com_ParseReturnToMark"));
+decltype(Com_ParseReturnToMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>())) Com_ParseReturnToMark(char const** a0, com_parse_mark_t* a1) { return cod2c_Com_ParseReturnToMark(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(Com_ParseSetMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>()))>() == 'v', "Com_ParseSetMark: return class differs from the engine");
+static_assert(cod2_abi_slot<char const**>() == 4, "Com_ParseSetMark: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<com_parse_mark_t*>() == 4, "Com_ParseSetMark: parameter 1 differs from the engine");
+extern "C" decltype(Com_ParseSetMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>())) cod2c_Com_ParseSetMark(char const** a0, com_parse_mark_t* a1) __asm__(COD2_SYM("Com_ParseSetMark"));
+decltype(Com_ParseSetMark(std::declval<char const**>(), std::declval<com_parse_mark_t*>())) Com_ParseSetMark(char const** a0, com_parse_mark_t* a1) { return cod2c_Com_ParseSetMark(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(Com_Restart())>() == 'v', "Com_Restart: return class differs from the engine");
 extern "C" decltype(Com_Restart()) cod2c_Com_Restart() __asm__(COD2_SYM("Com_Restart"));
 decltype(Com_Restart()) Com_Restart() { return cod2c_Com_Restart(); }
+
+static_assert(cod2_abi_class<decltype(Com_SafeServerDObjFree(std::declval<int>()))>() == 'v', "Com_SafeServerDObjFree: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Com_SafeServerDObjFree: parameter 0 differs from the engine");
+extern "C" decltype(Com_SafeServerDObjFree(std::declval<int>())) cod2c_Com_SafeServerDObjFree(int a0) __asm__(COD2_SYM("Com_SafeServerDObjFree"));
+decltype(Com_SafeServerDObjFree(std::declval<int>())) Com_SafeServerDObjFree(int a0) { return cod2c_Com_SafeServerDObjFree(a0); }
+
+static_assert(cod2_abi_class<decltype(Com_ServerDObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned short>(), std::declval<XAnimTree_s*>(), std::declval<int>()))>() == 'v', "Com_ServerDObjCreate: return class differs from the engine");
+static_assert(cod2_abi_slot<DObjModel_s*>() == 4, "Com_ServerDObjCreate: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned short>() == 4, "Com_ServerDObjCreate: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "Com_ServerDObjCreate: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Com_ServerDObjCreate: parameter 3 differs from the engine");
+extern "C" decltype(Com_ServerDObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned short>(), std::declval<XAnimTree_s*>(), std::declval<int>())) cod2c_Com_ServerDObjCreate(DObjModel_s* a0, unsigned short a1, XAnimTree_s* a2, int a3) __asm__(COD2_SYM("Com_ServerDObjCreate"));
+decltype(Com_ServerDObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned short>(), std::declval<XAnimTree_s*>(), std::declval<int>())) Com_ServerDObjCreate(DObjModel_s* a0, unsigned short a1, XAnimTree_s* a2, int a3) { return cod2c_Com_ServerDObjCreate(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(Com_SetCSV(std::declval<int>()))>() == 'v', "Com_SetCSV: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Com_SetCSV: parameter 0 differs from the engine");
+extern "C" decltype(Com_SetCSV(std::declval<int>())) cod2c_Com_SetCSV(int a0) __asm__(COD2_SYM("Com_SetCSV"));
+decltype(Com_SetCSV(std::declval<int>())) Com_SetCSV(int a0) { return cod2c_Com_SetCSV(a0); }
 
 static_assert(cod2_abi_class<decltype(Com_SetWeaponInfoMemory(std::declval<int>()))>() == 'v', "Com_SetWeaponInfoMemory: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Com_SetWeaponInfoMemory: parameter 0 differs from the engine");
@@ -403,6 +779,11 @@ static_assert(cod2_abi_slot<char const**>() == 4, "Com_SkipRestOfLine: parameter
 extern "C" decltype(Com_SkipRestOfLine(std::declval<char const**>())) cod2c_Com_SkipRestOfLine(char const** a0) __asm__(COD2_SYM("Com_SkipRestOfLine"));
 decltype(Com_SkipRestOfLine(std::declval<char const**>())) Com_SkipRestOfLine(char const** a0) { return cod2c_Com_SkipRestOfLine(a0); }
 
+static_assert(cod2_abi_class<decltype(Com_SurfaceTypeToName(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Com_SurfaceTypeToName(std::declval<int>()))>() == 'v', "Com_SurfaceTypeToName: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Com_SurfaceTypeToName: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Com_SurfaceTypeToName(std::declval<int>())), 4> cod2c_Com_SurfaceTypeToName(int a0) __asm__(COD2_SYM("Com_SurfaceTypeToName"));
+decltype(Com_SurfaceTypeToName(std::declval<int>())) Com_SurfaceTypeToName(int a0) { return (decltype(Com_SurfaceTypeToName(std::declval<int>())))cod2c_Com_SurfaceTypeToName(a0); }
+
 static_assert(cod2_abi_class<decltype(Com_UnloadBsp())>() == 'v', "Com_UnloadBsp: return class differs from the engine");
 extern "C" decltype(Com_UnloadBsp()) cod2c_Com_UnloadBsp() __asm__(COD2_SYM("Com_UnloadBsp"));
 decltype(Com_UnloadBsp()) Com_UnloadBsp() { return cod2c_Com_UnloadBsp(); }
@@ -412,9 +793,11 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Com_ValidXModelName: parameter
 extern "C" cod2_abi_int<decltype(Com_ValidXModelName(std::declval<char const*>())), 4> cod2c_Com_ValidXModelName(char const* a0) __asm__(COD2_SYM("Com_ValidXModelName"));
 decltype(Com_ValidXModelName(std::declval<char const*>())) Com_ValidXModelName(char const* a0) { return (decltype(Com_ValidXModelName(std::declval<char const*>())))cod2c_Com_ValidXModelName(a0); }
 
-static_assert(cod2_abi_class<decltype(ConsoleCommand())>() == 'i' || cod2_abi_class<decltype(ConsoleCommand())>() == 'v', "ConsoleCommand: return class differs from the engine");
-extern "C" cod2_abi_int<decltype(ConsoleCommand()), 4> cod2c_ConsoleCommand() __asm__(COD2_SYM("ConsoleCommand"));
-decltype(ConsoleCommand()) ConsoleCommand() { return (decltype(ConsoleCommand()))cod2c_ConsoleCommand(); }
+static_assert(cod2_abi_class<decltype(ConvertQuatToMat(std::declval<DObjAnimMat const*>(), std::declval<float (*) [3]>()))>() == 'v', "ConvertQuatToMat: return class differs from the engine");
+static_assert(cod2_abi_slot<DObjAnimMat const*>() == 4, "ConvertQuatToMat: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "ConvertQuatToMat: parameter 1 differs from the engine");
+extern "C" decltype(ConvertQuatToMat(std::declval<DObjAnimMat const*>(), std::declval<float (*) [3]>())) cod2c_ConvertQuatToMat(DObjAnimMat const* a0, float (*a1) [3]) __asm__(COD2_SYM("ConvertQuatToMat"));
+decltype(ConvertQuatToMat(std::declval<DObjAnimMat const*>(), std::declval<float (*) [3]>())) ConvertQuatToMat(DObjAnimMat const* a0, float (*a1) [3]) { return cod2c_ConvertQuatToMat(a0, a1); }
 
 static_assert(cod2_abi_class<decltype(CopyStringInternal(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(CopyStringInternal(std::declval<char const*>()))>() == 'v', "CopyStringInternal: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "CopyStringInternal: parameter 0 differs from the engine");
@@ -515,6 +898,14 @@ static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjNumBones: parameter 0 di
 extern "C" cod2_abi_int<decltype(DObjNumBones(std::declval<DObj_s const*>())), 4> cod2c_DObjNumBones(DObj_s const* a0) __asm__(COD2_SYM("DObjNumBones"));
 decltype(DObjNumBones(std::declval<DObj_s const*>())) DObjNumBones(DObj_s const* a0) { return (decltype(DObjNumBones(std::declval<DObj_s const*>())))cod2c_DObjNumBones(a0); }
 
+static_assert(cod2_abi_class<decltype(DObjSetControlTagAngles(std::declval<DObj_s const*>(), std::declval<int*>(), std::declval<unsigned int>(), std::declval<float const*>()))>() == 'i' || cod2_abi_class<decltype(DObjSetControlTagAngles(std::declval<DObj_s const*>(), std::declval<int*>(), std::declval<unsigned int>(), std::declval<float const*>()))>() == 'v', "DObjSetControlTagAngles: return class differs from the engine");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjSetControlTagAngles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjSetControlTagAngles: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "DObjSetControlTagAngles: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "DObjSetControlTagAngles: parameter 3 differs from the engine");
+extern "C" cod2_abi_int<decltype(DObjSetControlTagAngles(std::declval<DObj_s const*>(), std::declval<int*>(), std::declval<unsigned int>(), std::declval<float const*>())), 4> cod2c_DObjSetControlTagAngles(DObj_s const* a0, int* a1, unsigned int a2, float const* a3) __asm__(COD2_SYM("DObjSetControlTagAngles"));
+decltype(DObjSetControlTagAngles(std::declval<DObj_s const*>(), std::declval<int*>(), std::declval<unsigned int>(), std::declval<float const*>())) DObjSetControlTagAngles(DObj_s const* a0, int* a1, unsigned int a2, float const* a3) { return (decltype(DObjSetControlTagAngles(std::declval<DObj_s const*>(), std::declval<int*>(), std::declval<unsigned int>(), std::declval<float const*>())))cod2c_DObjSetControlTagAngles(a0, a1, a2, a3); }
+
 static_assert(cod2_abi_class<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>()))>() == 'i' || cod2_abi_class<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>()))>() == 'v', "DObjSkelAreBonesUpToDate: return class differs from the engine");
 static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjSkelAreBonesUpToDate: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<int*>() == 4, "DObjSkelAreBonesUpToDate: parameter 1 differs from the engine");
@@ -549,10 +940,26 @@ static_assert(cod2_abi_slot<int>() == 4, "DObjUpdateServerInfo: parameter 2 diff
 extern "C" cod2_abi_int<decltype(DObjUpdateServerInfo(std::declval<DObj_s*>(), std::declval<float>(), std::declval<int>())), 4> cod2c_DObjUpdateServerInfo(DObj_s* a0, float a1, int a2) __asm__(COD2_SYM("DObjUpdateServerInfo"));
 decltype(DObjUpdateServerInfo(std::declval<DObj_s*>(), std::declval<float>(), std::declval<int>())) DObjUpdateServerInfo(DObj_s* a0, float a1, int a2) { return (decltype(DObjUpdateServerInfo(std::declval<DObj_s*>(), std::declval<float>(), std::declval<int>())))cod2c_DObjUpdateServerInfo(a0, a1, a2); }
 
+static_assert(cod2_abi_class<decltype(DirToByte(std::declval<float const*>()))>() == 'i' || cod2_abi_class<decltype(DirToByte(std::declval<float const*>()))>() == 'v', "DirToByte: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "DirToByte: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(DirToByte(std::declval<float const*>())), 1> cod2c_DirToByte(float const* a0) __asm__(COD2_SYM("DirToByte"));
+decltype(DirToByte(std::declval<float const*>())) DirToByte(float const* a0) { return (decltype(DirToByte(std::declval<float const*>())))cod2c_DirToByte(a0); }
+
+static_assert(cod2_abi_class<decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>()))>() == 'v', "Dvar_AddFlags: return class differs from the engine");
+static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_AddFlags: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Dvar_AddFlags: parameter 1 differs from the engine");
+extern "C" decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>())) cod2c_Dvar_AddFlags(dvar_s* a0, int a1) __asm__(COD2_SYM("Dvar_AddFlags"));
+decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>())) Dvar_AddFlags(dvar_s* a0, int a1) { return cod2c_Dvar_AddFlags(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(Dvar_ClearModified(std::declval<dvar_s*>()))>() == 'v', "Dvar_ClearModified: return class differs from the engine");
 static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_ClearModified: parameter 0 differs from the engine");
 extern "C" decltype(Dvar_ClearModified(std::declval<dvar_s*>())) cod2c_Dvar_ClearModified(dvar_s* a0) __asm__(COD2_SYM("Dvar_ClearModified"));
 decltype(Dvar_ClearModified(std::declval<dvar_s*>())) Dvar_ClearModified(dvar_s* a0) { return cod2c_Dvar_ClearModified(a0); }
+
+static_assert(cod2_abi_class<decltype(Dvar_FindVar(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Dvar_FindVar(std::declval<char const*>()))>() == 'v', "Dvar_FindVar: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_FindVar: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Dvar_FindVar(std::declval<char const*>())), 4> cod2c_Dvar_FindVar(char const* a0) __asm__(COD2_SYM("Dvar_FindVar"));
+decltype(Dvar_FindVar(std::declval<char const*>())) Dvar_FindVar(char const* a0) { return (decltype(Dvar_FindVar(std::declval<char const*>())))cod2c_Dvar_FindVar(a0); }
 
 static_assert(cod2_abi_class<decltype(Dvar_GetBool(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Dvar_GetBool(std::declval<char const*>()))>() == 'v', "Dvar_GetBool: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_GetBool: parameter 0 differs from the engine");
@@ -569,6 +976,11 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_GetString: parameter 0 di
 extern "C" cod2_abi_int<decltype(Dvar_GetString(std::declval<char const*>())), 4> cod2c_Dvar_GetString(char const* a0) __asm__(COD2_SYM("Dvar_GetString"));
 decltype(Dvar_GetString(std::declval<char const*>())) Dvar_GetString(char const* a0) { return (decltype(Dvar_GetString(std::declval<char const*>())))cod2c_Dvar_GetString(a0); }
 
+static_assert(cod2_abi_class<decltype(Dvar_GetVariantString(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Dvar_GetVariantString(std::declval<char const*>()))>() == 'v', "Dvar_GetVariantString: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_GetVariantString: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Dvar_GetVariantString(std::declval<char const*>())), 4> cod2c_Dvar_GetVariantString(char const* a0) __asm__(COD2_SYM("Dvar_GetVariantString"));
+decltype(Dvar_GetVariantString(std::declval<char const*>())) Dvar_GetVariantString(char const* a0) { return (decltype(Dvar_GetVariantString(std::declval<char const*>())))cod2c_Dvar_GetVariantString(a0); }
+
 static_assert(cod2_abi_class<decltype(Dvar_InfoString(std::declval<unsigned short>()))>() == 'i' || cod2_abi_class<decltype(Dvar_InfoString(std::declval<unsigned short>()))>() == 'v', "Dvar_InfoString: return class differs from the engine");
 static_assert(cod2_abi_slot<unsigned short>() == 4, "Dvar_InfoString: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Dvar_InfoString(std::declval<unsigned short>())), 4> cod2c_Dvar_InfoString(unsigned short a0) __asm__(COD2_SYM("Dvar_InfoString"));
@@ -579,12 +991,27 @@ static_assert(cod2_abi_slot<unsigned short>() == 4, "Dvar_InfoString_Big: parame
 extern "C" cod2_abi_int<decltype(Dvar_InfoString_Big(std::declval<unsigned short>())), 4> cod2c_Dvar_InfoString_Big(unsigned short a0) __asm__(COD2_SYM("Dvar_InfoString_Big"));
 decltype(Dvar_InfoString_Big(std::declval<unsigned short>())) Dvar_InfoString_Big(unsigned short a0) { return (decltype(Dvar_InfoString_Big(std::declval<unsigned short>())))cod2c_Dvar_InfoString_Big(a0); }
 
+static_assert(cod2_abi_class<decltype(Dvar_IsValidName(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Dvar_IsValidName(std::declval<char const*>()))>() == 'v', "Dvar_IsValidName: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_IsValidName: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Dvar_IsValidName(std::declval<char const*>())), 1> cod2c_Dvar_IsValidName(char const* a0) __asm__(COD2_SYM("Dvar_IsValidName"));
+decltype(Dvar_IsValidName(std::declval<char const*>())) Dvar_IsValidName(char const* a0) { return (decltype(Dvar_IsValidName(std::declval<char const*>())))cod2c_Dvar_IsValidName(a0); }
+
 static_assert(cod2_abi_class<decltype(Dvar_RegisterBool(std::declval<char const*>(), std::declval<bool>(), std::declval<unsigned short>()))>() == 'i' || cod2_abi_class<decltype(Dvar_RegisterBool(std::declval<char const*>(), std::declval<bool>(), std::declval<unsigned short>()))>() == 'v', "Dvar_RegisterBool: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_RegisterBool: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<bool>() == 4, "Dvar_RegisterBool: parameter 1 differs from the engine");
 static_assert(cod2_abi_slot<unsigned short>() == 4, "Dvar_RegisterBool: parameter 2 differs from the engine");
 extern "C" cod2_abi_int<decltype(Dvar_RegisterBool(std::declval<char const*>(), std::declval<bool>(), std::declval<unsigned short>())), 4> cod2c_Dvar_RegisterBool(char const* a0, bool a1, unsigned short a2) __asm__(COD2_SYM("Dvar_RegisterBool"));
 decltype(Dvar_RegisterBool(std::declval<char const*>(), std::declval<bool>(), std::declval<unsigned short>())) Dvar_RegisterBool(char const* a0, bool a1, unsigned short a2) { return (decltype(Dvar_RegisterBool(std::declval<char const*>(), std::declval<bool>(), std::declval<unsigned short>())))cod2c_Dvar_RegisterBool(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(Dvar_RegisterColor(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>()))>() == 'i' || cod2_abi_class<decltype(Dvar_RegisterColor(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>()))>() == 'v', "Dvar_RegisterColor: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_RegisterColor: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Dvar_RegisterColor: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Dvar_RegisterColor: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Dvar_RegisterColor: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Dvar_RegisterColor: parameter 4 differs from the engine");
+static_assert(cod2_abi_slot<unsigned short>() == 4, "Dvar_RegisterColor: parameter 5 differs from the engine");
+extern "C" cod2_abi_int<decltype(Dvar_RegisterColor(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>())), 4> cod2c_Dvar_RegisterColor(char const* a0, float a1, float a2, float a3, float a4, unsigned short a5) __asm__(COD2_SYM("Dvar_RegisterColor"));
+decltype(Dvar_RegisterColor(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>())) Dvar_RegisterColor(char const* a0, float a1, float a2, float a3, float a4, unsigned short a5) { return (decltype(Dvar_RegisterColor(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>())))cod2c_Dvar_RegisterColor(a0, a1, a2, a3, a4, a5); }
 
 static_assert(cod2_abi_class<decltype(Dvar_RegisterFloat(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>()))>() == 'i' || cod2_abi_class<decltype(Dvar_RegisterFloat(std::declval<char const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned short>()))>() == 'v', "Dvar_RegisterFloat: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_RegisterFloat: parameter 0 differs from the engine");
@@ -621,6 +1048,18 @@ static_assert(cod2_abi_slot<bool>() == 4, "Dvar_SetBool: parameter 1 differs fro
 extern "C" decltype(Dvar_SetBool(std::declval<dvar_s*>(), std::declval<bool>())) cod2c_Dvar_SetBool(dvar_s* a0, bool a1) __asm__(COD2_SYM("Dvar_SetBool"));
 decltype(Dvar_SetBool(std::declval<dvar_s*>(), std::declval<bool>())) Dvar_SetBool(dvar_s* a0, bool a1) { return cod2c_Dvar_SetBool(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(Dvar_SetFloat(std::declval<dvar_s*>(), std::declval<float>()))>() == 'v', "Dvar_SetFloat: return class differs from the engine");
+static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_SetFloat: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Dvar_SetFloat: parameter 1 differs from the engine");
+extern "C" decltype(Dvar_SetFloat(std::declval<dvar_s*>(), std::declval<float>())) cod2c_Dvar_SetFloat(dvar_s* a0, float a1) __asm__(COD2_SYM("Dvar_SetFloat"));
+decltype(Dvar_SetFloat(std::declval<dvar_s*>(), std::declval<float>())) Dvar_SetFloat(dvar_s* a0, float a1) { return cod2c_Dvar_SetFloat(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(Dvar_SetFromStringByName(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "Dvar_SetFromStringByName: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_SetFromStringByName: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_SetFromStringByName: parameter 1 differs from the engine");
+extern "C" decltype(Dvar_SetFromStringByName(std::declval<char const*>(), std::declval<char const*>())) cod2c_Dvar_SetFromStringByName(char const* a0, char const* a1) __asm__(COD2_SYM("Dvar_SetFromStringByName"));
+decltype(Dvar_SetFromStringByName(std::declval<char const*>(), std::declval<char const*>())) Dvar_SetFromStringByName(char const* a0, char const* a1) { return cod2c_Dvar_SetFromStringByName(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(Dvar_SetInt(std::declval<dvar_s*>(), std::declval<int>()))>() == 'v', "Dvar_SetInt: return class differs from the engine");
 static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_SetInt: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Dvar_SetInt: parameter 1 differs from the engine");
@@ -639,6 +1078,12 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_SetStringByName: paramete
 extern "C" decltype(Dvar_SetStringByName(std::declval<char const*>(), std::declval<char const*>())) cod2c_Dvar_SetStringByName(char const* a0, char const* a1) __asm__(COD2_SYM("Dvar_SetStringByName"));
 decltype(Dvar_SetStringByName(std::declval<char const*>(), std::declval<char const*>())) Dvar_SetStringByName(char const* a0, char const* a1) { return cod2c_Dvar_SetStringByName(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(ExpandBoundsToWidth(std::declval<float*>(), std::declval<float*>()))>() == 'v', "ExpandBoundsToWidth: return class differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "ExpandBoundsToWidth: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "ExpandBoundsToWidth: parameter 1 differs from the engine");
+extern "C" decltype(ExpandBoundsToWidth(std::declval<float*>(), std::declval<float*>())) cod2c_ExpandBoundsToWidth(float* a0, float* a1) __asm__(COD2_SYM("ExpandBoundsToWidth"));
+decltype(ExpandBoundsToWidth(std::declval<float*>(), std::declval<float*>())) ExpandBoundsToWidth(float* a0, float* a1) { return cod2c_ExpandBoundsToWidth(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(FS_ClearIwdReferences())>() == 'v', "FS_ClearIwdReferences: return class differs from the engine");
 extern "C" decltype(FS_ClearIwdReferences()) cod2c_FS_ClearIwdReferences() __asm__(COD2_SYM("FS_ClearIwdReferences"));
 decltype(FS_ClearIwdReferences()) FS_ClearIwdReferences() { return cod2c_FS_ClearIwdReferences(); }
@@ -653,10 +1098,22 @@ static_assert(cod2_abi_slot<void*>() == 4, "FS_FreeFile: parameter 0 differs fro
 extern "C" decltype(FS_FreeFile(std::declval<void*>())) cod2c_FS_FreeFile(void* a0) __asm__(COD2_SYM("FS_FreeFile"));
 decltype(FS_FreeFile(std::declval<void*>())) FS_FreeFile(void* a0) { return cod2c_FS_FreeFile(a0); }
 
+static_assert(cod2_abi_class<decltype(FS_GetFileList(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<char*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(FS_GetFileList(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<char*>(), std::declval<int>()))>() == 'v', "FS_GetFileList: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "FS_GetFileList: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "FS_GetFileList: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<FsListBehavior>() == 4, "FS_GetFileList: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<char*>() == 4, "FS_GetFileList: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "FS_GetFileList: parameter 4 differs from the engine");
+extern "C" cod2_abi_int<decltype(FS_GetFileList(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<char*>(), std::declval<int>())), 4> cod2c_FS_GetFileList(char const* a0, char const* a1, FsListBehavior a2, char* a3, int a4) __asm__(COD2_SYM("FS_GetFileList"));
+decltype(FS_GetFileList(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<char*>(), std::declval<int>())) FS_GetFileList(char const* a0, char const* a1, FsListBehavior a2, char* a3, int a4) { return (decltype(FS_GetFileList(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<char*>(), std::declval<int>())))cod2c_FS_GetFileList(a0, a1, a2, a3, a4); }
+
 static_assert(cod2_abi_class<decltype(FS_GetMapBaseName(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(FS_GetMapBaseName(std::declval<char const*>()))>() == 'v', "FS_GetMapBaseName: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_GetMapBaseName: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(FS_GetMapBaseName(std::declval<char const*>())), 4> cod2c_FS_GetMapBaseName(char const* a0) __asm__(COD2_SYM("FS_GetMapBaseName"));
 decltype(FS_GetMapBaseName(std::declval<char const*>())) FS_GetMapBaseName(char const* a0) { return (decltype(FS_GetMapBaseName(std::declval<char const*>())))cod2c_FS_GetMapBaseName(a0); }
+
+extern "C" decltype(FS_HomeFileLength(std::declval<char const*>())) cod2c_FS_HomeFileLength(char const* a0) __asm__(COD2_SYM("FS_HomeFileLength"));
+decltype(FS_HomeFileLength(std::declval<char const*>())) FS_HomeFileLength(char const* a0) { return cod2c_FS_HomeFileLength(a0); }
 
 static_assert(cod2_abi_class<decltype(FS_LoadedIwdChecksums())>() == 'i' || cod2_abi_class<decltype(FS_LoadedIwdChecksums())>() == 'v', "FS_LoadedIwdChecksums: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(FS_LoadedIwdChecksums()), 4> cod2c_FS_LoadedIwdChecksums() __asm__(COD2_SYM("FS_LoadedIwdChecksums"));
@@ -703,6 +1160,9 @@ static_assert(cod2_abi_slot<int>() == 4, "FS_Restart: parameter 0 differs from t
 extern "C" decltype(FS_Restart(std::declval<int>())) cod2c_FS_Restart(int a0) __asm__(COD2_SYM("FS_Restart"));
 decltype(FS_Restart(std::declval<int>())) FS_Restart(int a0) { return cod2c_FS_Restart(a0); }
 
+extern "C" decltype(FS_RotateHomeFile(std::declval<char const*>(), std::declval<int>())) cod2c_FS_RotateHomeFile(char const* a0, int a1) __asm__(COD2_SYM("FS_RotateHomeFile"));
+decltype(FS_RotateHomeFile(std::declval<char const*>(), std::declval<int>())) FS_RotateHomeFile(char const* a0, int a1) { return cod2c_FS_RotateHomeFile(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(FS_SV_FOpenFileRead(std::declval<char const*>(), std::declval<int*>()))>() == 'i' || cod2_abi_class<decltype(FS_SV_FOpenFileRead(std::declval<char const*>(), std::declval<int*>()))>() == 'v', "FS_SV_FOpenFileRead: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_SV_FOpenFileRead: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<int*>() == 4, "FS_SV_FOpenFileRead: parameter 1 differs from the engine");
@@ -713,6 +1173,13 @@ static_assert(cod2_abi_class<decltype(FS_Shutdown())>() == 'v', "FS_Shutdown: re
 static_assert(cod2_abi_slot<int>() == 4, "FS_Shutdown: parameter 0 differs from the engine");
 extern "C" decltype(FS_Shutdown()) cod2c_FS_Shutdown(int a0) __asm__(COD2_SYM("FS_Shutdown"));
 decltype(FS_Shutdown()) FS_Shutdown() { return cod2c_FS_Shutdown(1); }
+
+static_assert(cod2_abi_class<decltype(FS_Write(std::declval<void const*>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(FS_Write(std::declval<void const*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "FS_Write: return class differs from the engine");
+static_assert(cod2_abi_slot<void const*>() == 4, "FS_Write: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "FS_Write: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "FS_Write: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(FS_Write(std::declval<void const*>(), std::declval<int>(), std::declval<int>())), 4> cod2c_FS_Write(void const* a0, int a1, int a2) __asm__(COD2_SYM("FS_Write"));
+decltype(FS_Write(std::declval<void const*>(), std::declval<int>(), std::declval<int>())) FS_Write(void const* a0, int a1, int a2) { return (decltype(FS_Write(std::declval<void const*>(), std::declval<int>(), std::declval<int>())))cod2c_FS_Write(a0, a1, a2); }
 
 static_assert(cod2_abi_class<decltype(FS_WriteFile(std::declval<char const*>(), std::declval<void const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(FS_WriteFile(std::declval<char const*>(), std::declval<void const*>(), std::declval<int>()))>() == 'v', "FS_WriteFile: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_WriteFile: parameter 0 differs from the engine");
@@ -727,85 +1194,14 @@ static_assert(cod2_abi_slot<char const*>() == 4, "FS_iwIwd: parameter 1 differs 
 extern "C" cod2_abi_int<decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())), 4> cod2c_FS_iwIwd(char* a0, char const* a1) __asm__(COD2_SYM("FS_iwIwd"));
 decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())) FS_iwIwd(char* a0, char const* a1) { return (decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())))cod2c_FS_iwIwd(a0, a1); }
 
-static_assert(cod2_abi_class<decltype(G_BroadcastVoice(std::declval<gentity_s*>(), std::declval<VoicePacket_t*>()))>() == 'v', "G_BroadcastVoice: return class differs from the engine");
-static_assert(cod2_abi_slot<gentity_s*>() == 4, "G_BroadcastVoice: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<VoicePacket_t*>() == 4, "G_BroadcastVoice: parameter 1 differs from the engine");
-extern "C" decltype(G_BroadcastVoice(std::declval<gentity_s*>(), std::declval<VoicePacket_t*>())) cod2c_G_BroadcastVoice(gentity_s* a0, VoicePacket_t* a1) __asm__(COD2_SYM("G_BroadcastVoice"));
-decltype(G_BroadcastVoice(std::declval<gentity_s*>(), std::declval<VoicePacket_t*>())) G_BroadcastVoice(gentity_s* a0, VoicePacket_t* a1) { return cod2c_G_BroadcastVoice(a0, a1); }
-
-static_assert(cod2_abi_class<decltype(G_DObjCalcPose(std::declval<gentity_s*>()))>() == 'i' || cod2_abi_class<decltype(G_DObjCalcPose(std::declval<gentity_s*>()))>() == 'v', "G_DObjCalcPose: return class differs from the engine");
-static_assert(cod2_abi_slot<gentity_s*>() == 4, "G_DObjCalcPose: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(G_DObjCalcPose(std::declval<gentity_s*>())), 4> cod2c_G_DObjCalcPose(gentity_s* a0) __asm__(COD2_SYM("G_DObjCalcPose"));
-decltype(G_DObjCalcPose(std::declval<gentity_s*>())) G_DObjCalcPose(gentity_s* a0) { return (decltype(G_DObjCalcPose(std::declval<gentity_s*>())))cod2c_G_DObjCalcPose(a0); }
-
-static_assert(cod2_abi_class<decltype(G_GetClientArchiveTime(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(G_GetClientArchiveTime(std::declval<int>()))>() == 'v', "G_GetClientArchiveTime: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_GetClientArchiveTime: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(G_GetClientArchiveTime(std::declval<int>())), 4> cod2c_G_GetClientArchiveTime(int a0) __asm__(COD2_SYM("G_GetClientArchiveTime"));
-decltype(G_GetClientArchiveTime(std::declval<int>())) G_GetClientArchiveTime(int a0) { return (decltype(G_GetClientArchiveTime(std::declval<int>())))cod2c_G_GetClientArchiveTime(a0); }
-
-static_assert(cod2_abi_class<decltype(G_GetClientScore(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(G_GetClientScore(std::declval<int>()))>() == 'v', "G_GetClientScore: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_GetClientScore: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(G_GetClientScore(std::declval<int>())), 4> cod2c_G_GetClientScore(int a0) __asm__(COD2_SYM("G_GetClientScore"));
-decltype(G_GetClientScore(std::declval<int>())) G_GetClientScore(int a0) { return (decltype(G_GetClientScore(std::declval<int>())))cod2c_G_GetClientScore(a0); }
-
-static_assert(cod2_abi_class<decltype(G_GetClientState(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(G_GetClientState(std::declval<int>()))>() == 'v', "G_GetClientState: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_GetClientState: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(G_GetClientState(std::declval<int>())), 4> cod2c_G_GetClientState(int a0) __asm__(COD2_SYM("G_GetClientState"));
-decltype(G_GetClientState(std::declval<int>())) G_GetClientState(int a0) { return (decltype(G_GetClientState(std::declval<int>())))cod2c_G_GetClientState(a0); }
-
-static_assert(cod2_abi_class<decltype(G_GetFogOpaqueDistSqrd())>() == 'f', "G_GetFogOpaqueDistSqrd: return class differs from the engine");
-static_assert(cod2_abi_size<decltype(G_GetFogOpaqueDistSqrd())>() == 4, "G_GetFogOpaqueDistSqrd: return size differs from the engine");
-extern "C" decltype(G_GetFogOpaqueDistSqrd()) cod2c_G_GetFogOpaqueDistSqrd() __asm__(COD2_SYM("G_GetFogOpaqueDistSqrd"));
-decltype(G_GetFogOpaqueDistSqrd()) G_GetFogOpaqueDistSqrd() { return cod2c_G_GetFogOpaqueDistSqrd(); }
-
-static_assert(cod2_abi_class<decltype(G_GetSavePersist())>() == 'i' || cod2_abi_class<decltype(G_GetSavePersist())>() == 'v', "G_GetSavePersist: return class differs from the engine");
-extern "C" cod2_abi_int<decltype(G_GetSavePersist()), 4> cod2c_G_GetSavePersist() __asm__(COD2_SYM("G_GetSavePersist"));
-decltype(G_GetSavePersist()) G_GetSavePersist() { return (decltype(G_GetSavePersist()))cod2c_G_GetSavePersist(); }
-
-static_assert(cod2_abi_class<decltype(G_InitGame(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>() == 'v', "G_InitGame: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_InitGame: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_InitGame: parameter 1 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_InitGame: parameter 2 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_InitGame: parameter 3 differs from the engine");
-extern "C" decltype(G_InitGame(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<int>())) cod2c_G_InitGame(int a0, int a1, int a2, int a3) __asm__(COD2_SYM("G_InitGame"));
-decltype(G_InitGame(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<int>())) G_InitGame(int a0, int a1, int a2, int a3) { return cod2c_G_InitGame(a0, a1, a2, a3); }
-
-static_assert(cod2_abi_class<decltype(G_RunFrame(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(G_RunFrame(std::declval<int>()))>() == 'v', "G_RunFrame: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_RunFrame: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(G_RunFrame(std::declval<int>())), 4> cod2c_G_RunFrame(int a0) __asm__(COD2_SYM("G_RunFrame"));
-decltype(G_RunFrame(std::declval<int>())) G_RunFrame(int a0) { return (decltype(G_RunFrame(std::declval<int>())))cod2c_G_RunFrame(a0); }
-
-static_assert(cod2_abi_class<decltype(G_SetClientArchiveTime(std::declval<int>(), std::declval<int>()))>() == 'v', "G_SetClientArchiveTime: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_SetClientArchiveTime: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_SetClientArchiveTime: parameter 1 differs from the engine");
-extern "C" decltype(G_SetClientArchiveTime(std::declval<int>(), std::declval<int>())) cod2c_G_SetClientArchiveTime(int a0, int a1) __asm__(COD2_SYM("G_SetClientArchiveTime"));
-decltype(G_SetClientArchiveTime(std::declval<int>(), std::declval<int>())) G_SetClientArchiveTime(int a0, int a1) { return cod2c_G_SetClientArchiveTime(a0, a1); }
-
-static_assert(cod2_abi_class<decltype(G_SetLastServerTime(std::declval<int>(), std::declval<int>()))>() == 'v', "G_SetLastServerTime: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_SetLastServerTime: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_SetLastServerTime: parameter 1 differs from the engine");
-extern "C" decltype(G_SetLastServerTime(std::declval<int>(), std::declval<int>())) cod2c_G_SetLastServerTime(int a0, int a1) __asm__(COD2_SYM("G_SetLastServerTime"));
-decltype(G_SetLastServerTime(std::declval<int>(), std::declval<int>())) G_SetLastServerTime(int a0, int a1) { return cod2c_G_SetLastServerTime(a0, a1); }
-
-static_assert(cod2_abi_class<decltype(G_SetSavePersist(std::declval<int>()))>() == 'v', "G_SetSavePersist: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_SetSavePersist: parameter 0 differs from the engine");
-extern "C" decltype(G_SetSavePersist(std::declval<int>())) cod2c_G_SetSavePersist(int a0) __asm__(COD2_SYM("G_SetSavePersist"));
-decltype(G_SetSavePersist(std::declval<int>())) G_SetSavePersist(int a0) { return cod2c_G_SetSavePersist(a0); }
-
-static_assert(cod2_abi_class<decltype(G_ShutdownGame(std::declval<int>()))>() == 'v', "G_ShutdownGame: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "G_ShutdownGame: parameter 0 differs from the engine");
-extern "C" decltype(G_ShutdownGame(std::declval<int>())) cod2c_G_ShutdownGame(int a0) __asm__(COD2_SYM("G_ShutdownGame"));
-decltype(G_ShutdownGame(std::declval<int>())) G_ShutdownGame(int a0) { return cod2c_G_ShutdownGame(a0); }
+static_assert(cod2_abi_class<decltype(G_FindItem(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(G_FindItem(std::declval<char const*>()))>() == 'v', "G_FindItem: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "G_FindItem: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(G_FindItem(std::declval<char const*>())), 4> cod2c_G_FindItem(char const* a0) __asm__(COD2_SYM("G_FindItem"));
+decltype(G_FindItem(std::declval<char const*>())) G_FindItem(char const* a0) { return (decltype(G_FindItem(std::declval<char const*>())))cod2c_G_FindItem(a0); }
 
 static_assert(cod2_abi_class<decltype(GetBspExtension())>() == 'i' || cod2_abi_class<decltype(GetBspExtension())>() == 'v', "GetBspExtension: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(GetBspExtension()), 4> cod2c_GetBspExtension() __asm__(COD2_SYM("GetBspExtension"));
 decltype(GetBspExtension()) GetBspExtension() { return (decltype(GetBspExtension()))cod2c_GetBspExtension(); }
-
-static_assert(cod2_abi_class<decltype(GetFollowPlayerState(std::declval<int>(), std::declval<playerState_s*>()))>() == 'i' || cod2_abi_class<decltype(GetFollowPlayerState(std::declval<int>(), std::declval<playerState_s*>()))>() == 'v', "GetFollowPlayerState: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "GetFollowPlayerState: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<playerState_s*>() == 4, "GetFollowPlayerState: parameter 1 differs from the engine");
-extern "C" cod2_abi_int<decltype(GetFollowPlayerState(std::declval<int>(), std::declval<playerState_s*>())), 4> cod2c_GetFollowPlayerState(int a0, playerState_s* a1) __asm__(COD2_SYM("GetFollowPlayerState"));
-decltype(GetFollowPlayerState(std::declval<int>(), std::declval<playerState_s*>())) GetFollowPlayerState(int a0, playerState_s* a1) { return (decltype(GetFollowPlayerState(std::declval<int>(), std::declval<playerState_s*>())))cod2c_GetFollowPlayerState(a0, a1); }
 
 static_assert(cod2_abi_class<decltype(Hunk_AllocAlignInternal(std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Hunk_AllocAlignInternal(std::declval<int>(), std::declval<int>()))>() == 'v', "Hunk_AllocAlignInternal: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Hunk_AllocAlignInternal: parameter 0 differs from the engine");
@@ -813,15 +1209,31 @@ static_assert(cod2_abi_slot<int>() == 4, "Hunk_AllocAlignInternal: parameter 1 d
 extern "C" cod2_abi_int<decltype(Hunk_AllocAlignInternal(std::declval<int>(), std::declval<int>())), 4> cod2c_Hunk_AllocAlignInternal(int a0, int a1) __asm__(COD2_SYM("Hunk_AllocAlignInternal"));
 decltype(Hunk_AllocAlignInternal(std::declval<int>(), std::declval<int>())) Hunk_AllocAlignInternal(int a0, int a1) { return (decltype(Hunk_AllocAlignInternal(std::declval<int>(), std::declval<int>())))cod2c_Hunk_AllocAlignInternal(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(Hunk_AllocLowAlignInternal(std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Hunk_AllocLowAlignInternal(std::declval<int>(), std::declval<int>()))>() == 'v', "Hunk_AllocLowAlignInternal: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Hunk_AllocLowAlignInternal: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Hunk_AllocLowAlignInternal: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(Hunk_AllocLowAlignInternal(std::declval<int>(), std::declval<int>())), 4> cod2c_Hunk_AllocLowAlignInternal(int a0, int a1) __asm__(COD2_SYM("Hunk_AllocLowAlignInternal"));
+decltype(Hunk_AllocLowAlignInternal(std::declval<int>(), std::declval<int>())) Hunk_AllocLowAlignInternal(int a0, int a1) { return (decltype(Hunk_AllocLowAlignInternal(std::declval<int>(), std::declval<int>())))cod2c_Hunk_AllocLowAlignInternal(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(Hunk_AllocateTempMemoryInternal(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Hunk_AllocateTempMemoryInternal(std::declval<int>()))>() == 'v', "Hunk_AllocateTempMemoryInternal: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Hunk_AllocateTempMemoryInternal: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Hunk_AllocateTempMemoryInternal(std::declval<int>())), 4> cod2c_Hunk_AllocateTempMemoryInternal(int a0) __asm__(COD2_SYM("Hunk_AllocateTempMemoryInternal"));
 decltype(Hunk_AllocateTempMemoryInternal(std::declval<int>())) Hunk_AllocateTempMemoryInternal(int a0) { return (decltype(Hunk_AllocateTempMemoryInternal(std::declval<int>())))cod2c_Hunk_AllocateTempMemoryInternal(a0); }
 
+extern "C" decltype(Hunk_ClearLow(std::declval<int>())) cod2c_Hunk_ClearLow(int a0) __asm__(COD2_SYM("Hunk_ClearLow"));
+decltype(Hunk_ClearLow(std::declval<int>())) Hunk_ClearLow(int a0) { return cod2c_Hunk_ClearLow(a0); }
+
 static_assert(cod2_abi_class<decltype(Hunk_FreeTempMemory(std::declval<void*>()))>() == 'v', "Hunk_FreeTempMemory: return class differs from the engine");
 static_assert(cod2_abi_slot<void*>() == 4, "Hunk_FreeTempMemory: parameter 0 differs from the engine");
 extern "C" decltype(Hunk_FreeTempMemory(std::declval<void*>())) cod2c_Hunk_FreeTempMemory(void* a0) __asm__(COD2_SYM("Hunk_FreeTempMemory"));
 decltype(Hunk_FreeTempMemory(std::declval<void*>())) Hunk_FreeTempMemory(void* a0) { return cod2c_Hunk_FreeTempMemory(a0); }
+
+static_assert(cod2_abi_class<decltype(Hunk_OverrideDataForFile(std::declval<int>(), std::declval<char const*>(), std::declval<void*>()))>() == 'v', "Hunk_OverrideDataForFile: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Hunk_OverrideDataForFile: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Hunk_OverrideDataForFile: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<void*>() == 4, "Hunk_OverrideDataForFile: parameter 2 differs from the engine");
+extern "C" decltype(Hunk_OverrideDataForFile(std::declval<int>(), std::declval<char const*>(), std::declval<void*>())) cod2c_Hunk_OverrideDataForFile(int a0, char const* a1, void* a2) __asm__(COD2_SYM("Hunk_OverrideDataForFile"));
+decltype(Hunk_OverrideDataForFile(std::declval<int>(), std::declval<char const*>(), std::declval<void*>())) Hunk_OverrideDataForFile(int a0, char const* a1, void* a2) { return cod2c_Hunk_OverrideDataForFile(a0, a1, a2); }
 
 static_assert(cod2_abi_class<decltype(I_CleanChar(std::declval<char>()))>() == 'i' || cod2_abi_class<decltype(I_CleanChar(std::declval<char>()))>() == 'v', "I_CleanChar: return class differs from the engine");
 static_assert(cod2_abi_slot<char>() == 4, "I_CleanChar: parameter 0 differs from the engine");
@@ -882,6 +1294,11 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Info_SetValueForKey: parameter
 static_assert(cod2_abi_slot<char const*>() == 4, "Info_SetValueForKey: parameter 2 differs from the engine");
 extern "C" decltype(Info_SetValueForKey(std::declval<char*>(), std::declval<char const*>(), std::declval<char const*>())) cod2c_Info_SetValueForKey(char* a0, char const* a1, char const* a2) __asm__(COD2_SYM("Info_SetValueForKey"));
 decltype(Info_SetValueForKey(std::declval<char*>(), std::declval<char const*>(), std::declval<char const*>())) Info_SetValueForKey(char* a0, char const* a1, char const* a2) { return cod2c_Info_SetValueForKey(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(Info_Validate(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Info_Validate(std::declval<char const*>()))>() == 'v', "Info_Validate: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Info_Validate: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Info_Validate(std::declval<char const*>())), 4> cod2c_Info_Validate(char const* a0) __asm__(COD2_SYM("Info_Validate"));
+decltype(Info_Validate(std::declval<char const*>())) Info_Validate(char const* a0) { return (decltype(Info_Validate(std::declval<char const*>())))cod2c_Info_Validate(a0); }
 
 static_assert(cod2_abi_class<decltype(Info_ValueForKey(std::declval<char const*>(), std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Info_ValueForKey(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "Info_ValueForKey: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Info_ValueForKey: parameter 0 differs from the engine");
@@ -1091,12 +1508,54 @@ static_assert(cod2_abi_slot<char const*>() == 4, "MSG_WriteString: parameter 1 d
 extern "C" decltype(MSG_WriteString(std::declval<msg_t*>(), std::declval<char const*>())) cod2c_MSG_WriteString(msg_t* a0, char const* a1) __asm__(COD2_SYM("MSG_WriteString"));
 decltype(MSG_WriteString(std::declval<msg_t*>(), std::declval<char const*>())) MSG_WriteString(msg_t* a0, char const* a1) { return cod2c_MSG_WriteString(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>()))>() == 'v', "Mantle_CreateAnims: return class differs from the engine");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "Mantle_CreateAnims: parameter 0 differs from the engine");
+extern "C" decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>())) cod2c_Mantle_CreateAnims(void* (*a0)(int)) __asm__(COD2_SYM("Mantle_CreateAnims"));
+decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>())) Mantle_CreateAnims(void* (*a0)(int)) { return cod2c_Mantle_CreateAnims(a0); }
+
+static_assert(cod2_abi_class<decltype(Mantle_ShutdownAnims())>() == 'v', "Mantle_ShutdownAnims: return class differs from the engine");
+extern "C" decltype(Mantle_ShutdownAnims()) cod2c_Mantle_ShutdownAnims() __asm__(COD2_SYM("Mantle_ShutdownAnims"));
+decltype(Mantle_ShutdownAnims()) Mantle_ShutdownAnims() { return cod2c_Mantle_ShutdownAnims(); }
+
+static_assert(cod2_abi_class<decltype(MatrixInverseOrthogonal43(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>()))>() == 'v', "MatrixInverseOrthogonal43: return class differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixInverseOrthogonal43: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "MatrixInverseOrthogonal43: parameter 1 differs from the engine");
+extern "C" decltype(MatrixInverseOrthogonal43(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) cod2c_MatrixInverseOrthogonal43(float const (*a0) [3], float (*a1) [3]) __asm__(COD2_SYM("MatrixInverseOrthogonal43"));
+decltype(MatrixInverseOrthogonal43(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) MatrixInverseOrthogonal43(float const (*a0) [3], float (*a1) [3]) { return cod2c_MatrixInverseOrthogonal43(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(MatrixMultiply(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>()))>() == 'v', "MatrixMultiply: return class differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixMultiply: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixMultiply: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "MatrixMultiply: parameter 2 differs from the engine");
+extern "C" decltype(MatrixMultiply(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) cod2c_MatrixMultiply(float const (*a0) [3], float const (*a1) [3], float (*a2) [3]) __asm__(COD2_SYM("MatrixMultiply"));
+decltype(MatrixMultiply(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) MatrixMultiply(float const (*a0) [3], float const (*a1) [3], float (*a2) [3]) { return cod2c_MatrixMultiply(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(MatrixMultiply43(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>()))>() == 'v', "MatrixMultiply43: return class differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixMultiply43: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixMultiply43: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "MatrixMultiply43: parameter 2 differs from the engine");
+extern "C" decltype(MatrixMultiply43(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) cod2c_MatrixMultiply43(float const (*a0) [3], float const (*a1) [3], float (*a2) [3]) __asm__(COD2_SYM("MatrixMultiply43"));
+decltype(MatrixMultiply43(std::declval<float const (*) [3]>(), std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) MatrixMultiply43(float const (*a0) [3], float const (*a1) [3], float (*a2) [3]) { return cod2c_MatrixMultiply43(a0, a1, a2); }
+
 static_assert(cod2_abi_class<decltype(MatrixTransformVector(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>()))>() == 'v', "MatrixTransformVector: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "MatrixTransformVector: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixTransformVector: parameter 1 differs from the engine");
 static_assert(cod2_abi_slot<float*>() == 4, "MatrixTransformVector: parameter 2 differs from the engine");
 extern "C" decltype(MatrixTransformVector(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>())) cod2c_MatrixTransformVector(float const* a0, float const (*a1) [3], float* a2) __asm__(COD2_SYM("MatrixTransformVector"));
 decltype(MatrixTransformVector(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>())) MatrixTransformVector(float const* a0, float const (*a1) [3], float* a2) { return cod2c_MatrixTransformVector(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(MatrixTransformVector43(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>()))>() == 'v', "MatrixTransformVector43: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "MatrixTransformVector43: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixTransformVector43: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "MatrixTransformVector43: parameter 2 differs from the engine");
+extern "C" decltype(MatrixTransformVector43(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>())) cod2c_MatrixTransformVector43(float const* a0, float const (*a1) [3], float* a2) __asm__(COD2_SYM("MatrixTransformVector43"));
+decltype(MatrixTransformVector43(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>())) MatrixTransformVector43(float const* a0, float const (*a1) [3], float* a2) { return cod2c_MatrixTransformVector43(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(MatrixTranspose(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>()))>() == 'v', "MatrixTranspose: return class differs from the engine");
+static_assert(cod2_abi_slot<float const (*) [3]>() == 4, "MatrixTranspose: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "MatrixTranspose: parameter 1 differs from the engine");
+extern "C" decltype(MatrixTranspose(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) cod2c_MatrixTranspose(float const (*a0) [3], float (*a1) [3]) __asm__(COD2_SYM("MatrixTranspose"));
+decltype(MatrixTranspose(std::declval<float const (*) [3]>(), std::declval<float (*) [3]>())) MatrixTranspose(float const (*a0) [3], float (*a1) [3]) { return cod2c_MatrixTranspose(a0, a1); }
 
 static_assert(cod2_abi_class<decltype(MatrixTransposeTransformVector43(std::declval<float const*>(), std::declval<float const (*) [3]>(), std::declval<float*>()))>() == 'v', "MatrixTransposeTransformVector43: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "MatrixTransposeTransformVector43: parameter 0 differs from the engine");
@@ -1204,6 +1663,47 @@ static_assert(cod2_abi_slot<netchan_t*>() == 4, "Netchan_TransmitNextFragment: p
 extern "C" cod2_abi_int<decltype(Netchan_TransmitNextFragment(std::declval<netchan_t*>())), 1> cod2c_Netchan_TransmitNextFragment(netchan_t* a0) __asm__(COD2_SYM("Netchan_TransmitNextFragment"));
 decltype(Netchan_TransmitNextFragment(std::declval<netchan_t*>())) Netchan_TransmitNextFragment(netchan_t* a0) { return (decltype(Netchan_TransmitNextFragment(std::declval<netchan_t*>())))cod2c_Netchan_TransmitNextFragment(a0); }
 
+static_assert(cod2_abi_class<decltype(PM_GetEffectiveStance(std::declval<playerState_s const*>()))>() == 'i' || cod2_abi_class<decltype(PM_GetEffectiveStance(std::declval<playerState_s const*>()))>() == 'v', "PM_GetEffectiveStance: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "PM_GetEffectiveStance: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(PM_GetEffectiveStance(std::declval<playerState_s const*>())), 4> cod2c_PM_GetEffectiveStance(playerState_s const* a0) __asm__(COD2_SYM("PM_GetEffectiveStance"));
+decltype(PM_GetEffectiveStance(std::declval<playerState_s const*>())) PM_GetEffectiveStance(playerState_s const* a0) { return (decltype(PM_GetEffectiveStance(std::declval<playerState_s const*>())))cod2c_PM_GetEffectiveStance(a0); }
+
+static_assert(cod2_abi_class<decltype(PM_GetViewHeightLerpTime(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(PM_GetViewHeightLerpTime(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "PM_GetViewHeightLerpTime: return class differs from the engine");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "PM_GetViewHeightLerpTime: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "PM_GetViewHeightLerpTime: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "PM_GetViewHeightLerpTime: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(PM_GetViewHeightLerpTime(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<int>())), 4> cod2c_PM_GetViewHeightLerpTime(playerState_s const* a0, int a1, int a2) __asm__(COD2_SYM("PM_GetViewHeightLerpTime"));
+decltype(PM_GetViewHeightLerpTime(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<int>())) PM_GetViewHeightLerpTime(playerState_s const* a0, int a1, int a2) { return (decltype(PM_GetViewHeightLerpTime(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<int>())))cod2c_PM_GetViewHeightLerpTime(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(ParseConfigStringToStruct(std::declval<unsigned char*>(), std::declval<cspField_t const*>(), std::declval<int>(), std::declval<char const*>(), std::declval<int>(), std::declval<int (*)(unsigned char*, char const*, int)>(), std::declval<void (*)(unsigned char*, char const*)>()))>() == 'i' || cod2_abi_class<decltype(ParseConfigStringToStruct(std::declval<unsigned char*>(), std::declval<cspField_t const*>(), std::declval<int>(), std::declval<char const*>(), std::declval<int>(), std::declval<int (*)(unsigned char*, char const*, int)>(), std::declval<void (*)(unsigned char*, char const*)>()))>() == 'v', "ParseConfigStringToStruct: return class differs from the engine");
+static_assert(cod2_abi_slot<unsigned char*>() == 4, "ParseConfigStringToStruct: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<cspField_t const*>() == 4, "ParseConfigStringToStruct: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "ParseConfigStringToStruct: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "ParseConfigStringToStruct: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "ParseConfigStringToStruct: parameter 4 differs from the engine");
+static_assert(cod2_abi_slot<int (*)(unsigned char*, char const*, int)>() == 4, "ParseConfigStringToStruct: parameter 5 differs from the engine");
+static_assert(cod2_abi_slot<void (*)(unsigned char*, char const*)>() == 4, "ParseConfigStringToStruct: parameter 6 differs from the engine");
+extern "C" cod2_abi_int<decltype(ParseConfigStringToStruct(std::declval<unsigned char*>(), std::declval<cspField_t const*>(), std::declval<int>(), std::declval<char const*>(), std::declval<int>(), std::declval<int (*)(unsigned char*, char const*, int)>(), std::declval<void (*)(unsigned char*, char const*)>())), 4> cod2c_ParseConfigStringToStruct(unsigned char* a0, cspField_t const* a1, int a2, char const* a3, int a4, int (*a5)(unsigned char*, char const*, int), void (*a6)(unsigned char*, char const*)) __asm__(COD2_SYM("ParseConfigStringToStruct"));
+decltype(ParseConfigStringToStruct(std::declval<unsigned char*>(), std::declval<cspField_t const*>(), std::declval<int>(), std::declval<char const*>(), std::declval<int>(), std::declval<int (*)(unsigned char*, char const*, int)>(), std::declval<void (*)(unsigned char*, char const*)>())) ParseConfigStringToStruct(unsigned char* a0, cspField_t const* a1, int a2, char const* a3, int a4, int (*a5)(unsigned char*, char const*, int), void (*a6)(unsigned char*, char const*)) { return (decltype(ParseConfigStringToStruct(std::declval<unsigned char*>(), std::declval<cspField_t const*>(), std::declval<int>(), std::declval<char const*>(), std::declval<int>(), std::declval<int (*)(unsigned char*, char const*, int)>(), std::declval<void (*)(unsigned char*, char const*)>())))cod2c_ParseConfigStringToStruct(a0, a1, a2, a3, a4, a5, a6); }
+
+static_assert(cod2_abi_class<decltype(PitchForYawOnNormal(std::declval<float>(), std::declval<float const*>()))>() == 'f', "PitchForYawOnNormal: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(PitchForYawOnNormal(std::declval<float>(), std::declval<float const*>()))>() == 4, "PitchForYawOnNormal: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "PitchForYawOnNormal: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "PitchForYawOnNormal: parameter 1 differs from the engine");
+extern "C" decltype(PitchForYawOnNormal(std::declval<float>(), std::declval<float const*>())) cod2c_PitchForYawOnNormal(float a0, float const* a1) __asm__(COD2_SYM("PitchForYawOnNormal"));
+decltype(PitchForYawOnNormal(std::declval<float>(), std::declval<float const*>())) PitchForYawOnNormal(float a0, float const* a1) { return cod2c_PitchForYawOnNormal(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(Pmove(std::declval<pmove_t*>()))>() == 'v', "Pmove: return class differs from the engine");
+static_assert(cod2_abi_slot<pmove_t*>() == 4, "Pmove: parameter 0 differs from the engine");
+extern "C" decltype(Pmove(std::declval<pmove_t*>())) cod2c_Pmove(pmove_t* a0) __asm__(COD2_SYM("Pmove"));
+decltype(Pmove(std::declval<pmove_t*>())) Pmove(pmove_t* a0) { return cod2c_Pmove(a0); }
+
+static_assert(cod2_abi_class<decltype(Q_acos(std::declval<float>()))>() == 'f', "Q_acos: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Q_acos(std::declval<float>()))>() == 4, "Q_acos: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "Q_acos: parameter 0 differs from the engine");
+extern "C" decltype(Q_acos(std::declval<float>())) cod2c_Q_acos(float a0) __asm__(COD2_SYM("Q_acos"));
+decltype(Q_acos(std::declval<float>())) Q_acos(float a0) { return cod2c_Q_acos(a0); }
+
 static_assert(cod2_abi_class<decltype(RadiusFromBounds(std::declval<float const*>(), std::declval<float const*>()))>() == 'f', "RadiusFromBounds: return class differs from the engine");
 static_assert(cod2_abi_size<decltype(RadiusFromBounds(std::declval<float const*>(), std::declval<float const*>()))>() == 4, "RadiusFromBounds: return size differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "RadiusFromBounds: parameter 0 differs from the engine");
@@ -1218,6 +1718,20 @@ static_assert(cod2_abi_slot<float const*>() == 4, "RadiusFromBounds2D: parameter
 extern "C" decltype(RadiusFromBounds2D(std::declval<float const*>(), std::declval<float const*>())) cod2c_RadiusFromBounds2D(float const* a0, float const* a1) __asm__(COD2_SYM("RadiusFromBounds2D"));
 decltype(RadiusFromBounds2D(std::declval<float const*>(), std::declval<float const*>())) RadiusFromBounds2D(float const* a0, float const* a1) { return cod2c_RadiusFromBounds2D(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(Rand_Init(std::declval<int>()))>() == 'v', "Rand_Init: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Rand_Init: parameter 0 differs from the engine");
+extern "C" decltype(Rand_Init(std::declval<int>())) cod2c_Rand_Init(int a0) __asm__(COD2_SYM("Rand_Init"));
+decltype(Rand_Init(std::declval<int>())) Rand_Init(int a0) { return cod2c_Rand_Init(a0); }
+
+static_assert(cod2_abi_class<decltype(RotationToYaw(std::declval<float const*>()))>() == 'f', "RotationToYaw: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(RotationToYaw(std::declval<float const*>()))>() == 4, "RotationToYaw: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "RotationToYaw: parameter 0 differs from the engine");
+extern "C" decltype(RotationToYaw(std::declval<float const*>())) cod2c_RotationToYaw(float const* a0) __asm__(COD2_SYM("RotationToYaw"));
+decltype(RotationToYaw(std::declval<float const*>())) RotationToYaw(float const* a0) { return cod2c_RotationToYaw(a0); }
+
+extern "C" decltype(RoundFloatArray(std::declval<float*>(), std::declval<float*>())) cod2c_RoundFloatArray(float* a0, float* a1) __asm__(COD2_SYM("RoundFloatArray"));
+decltype(RoundFloatArray(std::declval<float*>(), std::declval<float*>())) RoundFloatArray(float* a0, float* a1) { return cod2c_RoundFloatArray(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(SV_SetConfig(std::declval<int>(), std::declval<int>(), std::declval<unsigned short>()))>() == 'v', "SV_SetConfig: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfig: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfig: parameter 1 differs from the engine");
@@ -1225,14 +1739,15 @@ static_assert(cod2_abi_slot<unsigned short>() == 4, "SV_SetConfig: parameter 2 d
 extern "C" decltype(SV_SetConfig(std::declval<int>(), std::declval<int>(), std::declval<unsigned short>())) cod2c_SV_SetConfig(int a0, int a1, unsigned short a2) __asm__(COD2_SYM("SV_SetConfig"));
 decltype(SV_SetConfig(std::declval<int>(), std::declval<int>(), std::declval<unsigned short>())) SV_SetConfig(int a0, int a1, unsigned short a2) { return cod2c_SV_SetConfig(a0, a1, a2); }
 
-static_assert(cod2_abi_class<decltype(Scr_IsValidGameType(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Scr_IsValidGameType(std::declval<char const*>()))>() == 'v', "Scr_IsValidGameType: return class differs from the engine");
-static_assert(cod2_abi_slot<char const*>() == 4, "Scr_IsValidGameType: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(Scr_IsValidGameType(std::declval<char const*>())), 4> cod2c_Scr_IsValidGameType(char const* a0) __asm__(COD2_SYM("Scr_IsValidGameType"));
-decltype(Scr_IsValidGameType(std::declval<char const*>())) Scr_IsValidGameType(char const* a0) { return (decltype(Scr_IsValidGameType(std::declval<char const*>())))cod2c_Scr_IsValidGameType(a0); }
+static_assert(cod2_abi_class<decltype(ShrinkBoundsToHeight(std::declval<float*>(), std::declval<float*>()))>() == 'v', "ShrinkBoundsToHeight: return class differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "ShrinkBoundsToHeight: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "ShrinkBoundsToHeight: parameter 1 differs from the engine");
+extern "C" decltype(ShrinkBoundsToHeight(std::declval<float*>(), std::declval<float*>())) cod2c_ShrinkBoundsToHeight(float* a0, float* a1) __asm__(COD2_SYM("ShrinkBoundsToHeight"));
+decltype(ShrinkBoundsToHeight(std::declval<float*>(), std::declval<float*>())) ShrinkBoundsToHeight(float* a0, float* a1) { return cod2c_ShrinkBoundsToHeight(a0, a1); }
 
-static_assert(cod2_abi_class<decltype(Scr_ParseGameTypeList())>() == 'v', "Scr_ParseGameTypeList: return class differs from the engine");
-extern "C" decltype(Scr_ParseGameTypeList()) cod2c_Scr_ParseGameTypeList() __asm__(COD2_SYM("Scr_ParseGameTypeList"));
-decltype(Scr_ParseGameTypeList()) Scr_ParseGameTypeList() { return cod2c_Scr_ParseGameTypeList(); }
+static_assert(cod2_abi_class<decltype(Swap_Init())>() == 'v', "Swap_Init: return class differs from the engine");
+extern "C" decltype(Swap_Init()) cod2c_Swap_Init() __asm__(COD2_SYM("Swap_Init"));
+decltype(Swap_Init()) Swap_Init() { return cod2c_Swap_Init(); }
 
 static_assert(cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>()))>() == 'i' || cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>()))>() == 'v', "Sys_IsLANAddress: return class differs from the engine");
 static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLANAddress: parameter 0 differs from the engine");
@@ -1246,9 +1761,194 @@ static_assert(cod2_abi_slot<float const*>() == 4, "Vec2DistanceSq: parameter 1 d
 extern "C" decltype(Vec2DistanceSq(std::declval<float const*>(), std::declval<float const*>())) cod2c_Vec2DistanceSq(float const* a0, float const* a1) __asm__(COD2_SYM("Vec2DistanceSq"));
 decltype(Vec2DistanceSq(std::declval<float const*>(), std::declval<float const*>())) Vec2DistanceSq(float const* a0, float const* a1) { return cod2c_Vec2DistanceSq(a0, a1); }
 
+extern "C" decltype(Vec2Length(std::declval<float const*>())) cod2c_Vec2Length(float const* a0) __asm__(COD2_SYM("Vec2Length"));
+decltype(Vec2Length(std::declval<float const*>())) Vec2Length(float const* a0) { return cod2c_Vec2Length(a0); }
+
+extern "C" decltype(Vec2LengthSq(std::declval<float const*>())) cod2c_Vec2LengthSq(float const* a0) __asm__(COD2_SYM("Vec2LengthSq"));
+decltype(Vec2LengthSq(std::declval<float const*>())) Vec2LengthSq(float const* a0) { return cod2c_Vec2LengthSq(a0); }
+
+static_assert(cod2_abi_class<decltype(Vec2Normalize(std::declval<float*>()))>() == 'f', "Vec2Normalize: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Vec2Normalize(std::declval<float*>()))>() == 4, "Vec2Normalize: return size differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "Vec2Normalize: parameter 0 differs from the engine");
+extern "C" decltype(Vec2Normalize(std::declval<float*>())) cod2c_Vec2Normalize(float* a0) __asm__(COD2_SYM("Vec2Normalize"));
+decltype(Vec2Normalize(std::declval<float*>())) Vec2Normalize(float* a0) { return cod2c_Vec2Normalize(a0); }
+
+static_assert(cod2_abi_class<decltype(Vec3Cross(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>()))>() == 'v', "Vec3Cross: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3Cross: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3Cross: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "Vec3Cross: parameter 2 differs from the engine");
+extern "C" decltype(Vec3Cross(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>())) cod2c_Vec3Cross(float const* a0, float const* a1, float* a2) __asm__(COD2_SYM("Vec3Cross"));
+decltype(Vec3Cross(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>())) Vec3Cross(float const* a0, float const* a1, float* a2) { return cod2c_Vec3Cross(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(Vec3Distance(std::declval<float const*>(), std::declval<float const*>()))>() == 'f', "Vec3Distance: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Vec3Distance(std::declval<float const*>(), std::declval<float const*>()))>() == 4, "Vec3Distance: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3Distance: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3Distance: parameter 1 differs from the engine");
+extern "C" decltype(Vec3Distance(std::declval<float const*>(), std::declval<float const*>())) cod2c_Vec3Distance(float const* a0, float const* a1) __asm__(COD2_SYM("Vec3Distance"));
+decltype(Vec3Distance(std::declval<float const*>(), std::declval<float const*>())) Vec3Distance(float const* a0, float const* a1) { return cod2c_Vec3Distance(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(Vec3DistanceSq(std::declval<float const*>(), std::declval<float const*>()))>() == 'f', "Vec3DistanceSq: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Vec3DistanceSq(std::declval<float const*>(), std::declval<float const*>()))>() == 4, "Vec3DistanceSq: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3DistanceSq: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3DistanceSq: parameter 1 differs from the engine");
+extern "C" decltype(Vec3DistanceSq(std::declval<float const*>(), std::declval<float const*>())) cod2c_Vec3DistanceSq(float const* a0, float const* a1) __asm__(COD2_SYM("Vec3DistanceSq"));
+decltype(Vec3DistanceSq(std::declval<float const*>(), std::declval<float const*>())) Vec3DistanceSq(float const* a0, float const* a1) { return cod2c_Vec3DistanceSq(a0, a1); }
+
+extern "C" decltype(Vec3Lerp(std::declval<float const*>(), std::declval<float const*>(), std::declval<float>(), std::declval<float*>())) cod2c_Vec3Lerp(float const* a0, float const* a1, float a2, float* a3) __asm__(COD2_SYM("Vec3Lerp"));
+decltype(Vec3Lerp(std::declval<float const*>(), std::declval<float const*>(), std::declval<float>(), std::declval<float*>())) Vec3Lerp(float const* a0, float const* a1, float a2, float* a3) { return cod2c_Vec3Lerp(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(Vec3Normalize(std::declval<float*>()))>() == 'f', "Vec3Normalize: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Vec3Normalize(std::declval<float*>()))>() == 4, "Vec3Normalize: return size differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "Vec3Normalize: parameter 0 differs from the engine");
+extern "C" decltype(Vec3Normalize(std::declval<float*>())) cod2c_Vec3Normalize(float* a0) __asm__(COD2_SYM("Vec3Normalize"));
+decltype(Vec3Normalize(std::declval<float*>())) Vec3Normalize(float* a0) { return cod2c_Vec3Normalize(a0); }
+
+static_assert(cod2_abi_class<decltype(Vec3NormalizeTo(std::declval<float const*>(), std::declval<float*>()))>() == 'f', "Vec3NormalizeTo: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(Vec3NormalizeTo(std::declval<float const*>(), std::declval<float*>()))>() == 4, "Vec3NormalizeTo: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "Vec3NormalizeTo: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "Vec3NormalizeTo: parameter 1 differs from the engine");
+extern "C" decltype(Vec3NormalizeTo(std::declval<float const*>(), std::declval<float*>())) cod2c_Vec3NormalizeTo(float const* a0, float* a1) __asm__(COD2_SYM("Vec3NormalizeTo"));
+decltype(Vec3NormalizeTo(std::declval<float const*>(), std::declval<float*>())) Vec3NormalizeTo(float const* a0, float* a1) { return cod2c_Vec3NormalizeTo(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(VectorAngleMultiply(std::declval<float*>(), std::declval<float>()))>() == 'v', "VectorAngleMultiply: return class differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "VectorAngleMultiply: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "VectorAngleMultiply: parameter 1 differs from the engine");
+extern "C" decltype(VectorAngleMultiply(std::declval<float*>(), std::declval<float>())) cod2c_VectorAngleMultiply(float* a0, float a1) __asm__(COD2_SYM("VectorAngleMultiply"));
+decltype(VectorAngleMultiply(std::declval<float*>(), std::declval<float>())) VectorAngleMultiply(float* a0, float a1) { return cod2c_VectorAngleMultiply(a0, a1); }
+
+extern "C" decltype(VectorLength(std::declval<float const*>())) cod2c_VectorLength(float const* a0) __asm__(COD2_SYM("VectorLength"));
+decltype(VectorLength(std::declval<float const*>())) VectorLength(float const* a0) { return cod2c_VectorLength(a0); }
+
+extern "C" decltype(VectorLengthSquared(std::declval<float const*>())) cod2c_VectorLengthSquared(float const* a0) __asm__(COD2_SYM("VectorLengthSquared"));
+decltype(VectorLengthSquared(std::declval<float const*>())) VectorLengthSquared(float const* a0) { return cod2c_VectorLengthSquared(a0); }
+
 static_assert(cod2_abi_class<decltype(XAnimAbort())>() == 'v', "XAnimAbort: return class differs from the engine");
 extern "C" decltype(XAnimAbort()) cod2c_XAnimAbort() __asm__(COD2_SYM("XAnimAbort"));
 decltype(XAnimAbort()) XAnimAbort() { return cod2c_XAnimAbort(); }
+
+static_assert(cod2_abi_class<decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "XAnimCalcAbsDelta: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimCalcAbsDelta: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimCalcAbsDelta: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcAbsDelta: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcAbsDelta: parameter 3 differs from the engine");
+extern "C" decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>())) cod2c_XAnimCalcAbsDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3) __asm__(COD2_SYM("XAnimCalcAbsDelta"));
+decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>())) XAnimCalcAbsDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3) { return cod2c_XAnimCalcAbsDelta(a0, a1, a2, a3); }
+
+static_assert(cod2_abi_class<decltype(XAnimCalcDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<bool>()))>() == 'v', "XAnimCalcDelta: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimCalcDelta: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimCalcDelta: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcDelta: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcDelta: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<bool>() == 4, "XAnimCalcDelta: parameter 4 differs from the engine");
+extern "C" decltype(XAnimCalcDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<bool>())) cod2c_XAnimCalcDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3, bool a4) __asm__(COD2_SYM("XAnimCalcDelta"));
+decltype(XAnimCalcDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<bool>())) XAnimCalcDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3, bool a4) { return cod2c_XAnimCalcDelta(a0, a1, a2, a3, a4); }
+
+static_assert(cod2_abi_class<decltype(XAnimClearTree(std::declval<XAnimTree_s*>()))>() == 'v', "XAnimClearTree: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimClearTree: parameter 0 differs from the engine");
+extern "C" decltype(XAnimClearTree(std::declval<XAnimTree_s*>())) cod2c_XAnimClearTree(XAnimTree_s* a0) __asm__(COD2_SYM("XAnimClearTree"));
+decltype(XAnimClearTree(std::declval<XAnimTree_s*>())) XAnimClearTree(XAnimTree_s* a0) { return cod2c_XAnimClearTree(a0); }
+
+static_assert(cod2_abi_class<decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>() == 'v', "XAnimClearTreeGoalWeightsStrict: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 2 differs from the engine");
+extern "C" decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2c_XAnimClearTreeGoalWeightsStrict(XAnimTree_s* a0, unsigned int a1, float a2) __asm__(COD2_SYM("XAnimClearTreeGoalWeightsStrict"));
+decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) XAnimClearTreeGoalWeightsStrict(XAnimTree_s* a0, unsigned int a1, float a2) { return cod2c_XAnimClearTreeGoalWeightsStrict(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>()))>() == 'v', "XAnimCloneAnimTree: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s const*>() == 4, "XAnimCloneAnimTree: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimCloneAnimTree: parameter 1 differs from the engine");
+extern "C" decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>())) cod2c_XAnimCloneAnimTree(XAnimTree_s const* a0, XAnimTree_s* a1) __asm__(COD2_SYM("XAnimCloneAnimTree"));
+decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>())) XAnimCloneAnimTree(XAnimTree_s const* a0, XAnimTree_s* a1) { return cod2c_XAnimCloneAnimTree(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>()))>() == 'i' || cod2_abi_class<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>()))>() == 'v', "XAnimCreateTree: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s*>() == 4, "XAnimCreateTree: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XAnimCreateTree: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())), 4> cod2c_XAnimCreateTree(XAnim_s* a0, void* (*a1)(int)) __asm__(COD2_SYM("XAnimCreateTree"));
+decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())) XAnimCreateTree(XAnim_s* a0, void* (*a1)(int)) { return (decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())))cod2c_XAnimCreateTree(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>()))>() == 'v', "XAnimFreeTree: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimFreeTree: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<void (*)(void*, int)>() == 4, "XAnimFreeTree: parameter 1 differs from the engine");
+extern "C" decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>())) cod2c_XAnimFreeTree(XAnimTree_s* a0, void (*a1)(void*, int)) __asm__(COD2_SYM("XAnimFreeTree"));
+decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>())) XAnimFreeTree(XAnimTree_s* a0, void (*a1)(void*, int)) { return cod2c_XAnimFreeTree(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'i' || cod2_abi_class<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'v', "XAnimGetChildAt: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetChildAt: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetChildAt: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetChildAt: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())), 4> cod2c_XAnimGetChildAt(XAnim_s const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("XAnimGetChildAt"));
+decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) XAnimGetChildAt(XAnim_s const* a0, unsigned int a1, unsigned int a2) { return (decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())))cod2c_XAnimGetChildAt(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(XAnimGetLength(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'f', "XAnimGetLength: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(XAnimGetLength(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 4, "XAnimGetLength: return size differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetLength: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetLength: parameter 1 differs from the engine");
+extern "C" decltype(XAnimGetLength(std::declval<XAnim_s const*>(), std::declval<unsigned int>())) cod2c_XAnimGetLength(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetLength"));
+decltype(XAnimGetLength(std::declval<XAnim_s const*>(), std::declval<unsigned int>())) XAnimGetLength(XAnim_s const* a0, unsigned int a1) { return cod2c_XAnimGetLength(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'i' || cod2_abi_class<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'v', "XAnimGetNumChildren: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetNumChildren: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetNumChildren: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2c_XAnimGetNumChildren(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetNumChildren"));
+decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())) XAnimGetNumChildren(XAnim_s const* a0, unsigned int a1) { return (decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())))cod2c_XAnimGetNumChildren(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimGetRelDelta(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<float>()))>() == 'v', "XAnimGetRelDelta: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetRelDelta: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetRelDelta: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimGetRelDelta: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimGetRelDelta: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimGetRelDelta: parameter 4 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimGetRelDelta: parameter 5 differs from the engine");
+extern "C" decltype(XAnimGetRelDelta(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<float>())) cod2c_XAnimGetRelDelta(XAnim_s const* a0, unsigned int a1, float* a2, float* a3, float a4, float a5) __asm__(COD2_SYM("XAnimGetRelDelta"));
+decltype(XAnimGetRelDelta(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<float>())) XAnimGetRelDelta(XAnim_s const* a0, unsigned int a1, float* a2, float* a3, float a4, float a5) { return cod2c_XAnimGetRelDelta(a0, a1, a2, a3, a4, a5); }
+
+static_assert(cod2_abi_class<decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>()))>() == 'f', "XAnimGetWeight: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>()))>() == 4, "XAnimGetWeight: return size differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s const*>() == 4, "XAnimGetWeight: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetWeight: parameter 1 differs from the engine");
+extern "C" decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>())) cod2c_XAnimGetWeight(XAnimTree_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetWeight"));
+decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>())) XAnimGetWeight(XAnimTree_s const* a0, unsigned int a1) { return cod2c_XAnimGetWeight(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimIsPrimitive(std::declval<XAnim_s*>(), std::declval<unsigned int>()))>() == 'i' || cod2_abi_class<decltype(XAnimIsPrimitive(std::declval<XAnim_s*>(), std::declval<unsigned int>()))>() == 'v', "XAnimIsPrimitive: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s*>() == 4, "XAnimIsPrimitive: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimIsPrimitive: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimIsPrimitive(std::declval<XAnim_s*>(), std::declval<unsigned int>())), 1> cod2c_XAnimIsPrimitive(XAnim_s* a0, unsigned int a1) __asm__(COD2_SYM("XAnimIsPrimitive"));
+decltype(XAnimIsPrimitive(std::declval<XAnim_s*>(), std::declval<unsigned int>())) XAnimIsPrimitive(XAnim_s* a0, unsigned int a1) { return (decltype(XAnimIsPrimitive(std::declval<XAnim_s*>(), std::declval<unsigned int>())))cod2c_XAnimIsPrimitive(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(XAnimNotetrackExists(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'i' || cod2_abi_class<decltype(XAnimNotetrackExists(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'v', "XAnimNotetrackExists: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimNotetrackExists: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimNotetrackExists: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimNotetrackExists: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimNotetrackExists(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())), 4> cod2c_XAnimNotetrackExists(XAnim_s const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("XAnimNotetrackExists"));
+decltype(XAnimNotetrackExists(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) XAnimNotetrackExists(XAnim_s const* a0, unsigned int a1, unsigned int a2) { return (decltype(XAnimNotetrackExists(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())))cod2c_XAnimNotetrackExists(a0, a1, a2); }
+
+static_assert(cod2_abi_class<decltype(XAnimSetGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(XAnimSetGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>()))>() == 'v', "XAnimSetGoalWeight: return class differs from the engine");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimSetGoalWeight: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetGoalWeight: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetGoalWeight: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetGoalWeight: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetGoalWeight: parameter 4 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetGoalWeight: parameter 5 differs from the engine");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetGoalWeight: parameter 6 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "XAnimSetGoalWeight: parameter 7 differs from the engine");
+extern "C" cod2_abi_int<decltype(XAnimSetGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>())), 4> cod2c_XAnimSetGoalWeight(XAnimTree_s* a0, unsigned int a1, float a2, float a3, float a4, unsigned int a5, unsigned int a6, int a7) __asm__(COD2_SYM("XAnimSetGoalWeight"));
+decltype(XAnimSetGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>())) XAnimSetGoalWeight(XAnimTree_s* a0, unsigned int a1, float a2, float a3, float a4, unsigned int a5, unsigned int a6, int a7) { return (decltype(XAnimSetGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>())))cod2c_XAnimSetGoalWeight(a0, a1, a2, a3, a4, a5, a6, a7); }
+
+static_assert(cod2_abi_class<decltype(XModelBad(std::declval<XModel const*>()))>() == 'i' || cod2_abi_class<decltype(XModelBad(std::declval<XModel const*>()))>() == 'v', "XModelBad: return class differs from the engine");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelBad: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(XModelBad(std::declval<XModel const*>())), 4> cod2c_XModelBad(XModel const* a0) __asm__(COD2_SYM("XModelBad"));
+decltype(XModelBad(std::declval<XModel const*>())) XModelBad(XModel const* a0) { return (decltype(XModelBad(std::declval<XModel const*>())))cod2c_XModelBad(a0); }
+
+static_assert(cod2_abi_class<decltype(XModelBoneNames(std::declval<XModel*>()))>() == 'i' || cod2_abi_class<decltype(XModelBoneNames(std::declval<XModel*>()))>() == 'v', "XModelBoneNames: return class differs from the engine");
+static_assert(cod2_abi_slot<XModel*>() == 4, "XModelBoneNames: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(XModelBoneNames(std::declval<XModel*>())), 4> cod2c_XModelBoneNames(XModel* a0) __asm__(COD2_SYM("XModelBoneNames"));
+decltype(XModelBoneNames(std::declval<XModel*>())) XModelBoneNames(XModel* a0) { return (decltype(XModelBoneNames(std::declval<XModel*>())))cod2c_XModelBoneNames(a0); }
+
+static_assert(cod2_abi_class<decltype(XModelNumBones(std::declval<XModel const*>()))>() == 'i' || cod2_abi_class<decltype(XModelNumBones(std::declval<XModel const*>()))>() == 'v', "XModelNumBones: return class differs from the engine");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelNumBones: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(XModelNumBones(std::declval<XModel const*>())), 4> cod2c_XModelNumBones(XModel const* a0) __asm__(COD2_SYM("XModelNumBones"));
+decltype(XModelNumBones(std::declval<XModel const*>())) XModelNumBones(XModel const* a0) { return (decltype(XModelNumBones(std::declval<XModel const*>())))cod2c_XModelNumBones(a0); }
 
 static_assert(cod2_abi_class<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>()))>() == 'i' || cod2_abi_class<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>()))>() == 'v', "XModelPrecache: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "XModelPrecache: parameter 0 differs from the engine");
@@ -1257,12 +1957,56 @@ static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XModelPrecache: parameter 2
 extern "C" cod2_abi_int<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())), 4> cod2c_XModelPrecache(char const* a0, void* (*a1)(int), void* (*a2)(int)) __asm__(COD2_SYM("XModelPrecache"));
 decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())) XModelPrecache(char const* a0, void* (*a1)(int), void* (*a2)(int)) { return (decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())))cod2c_XModelPrecache(a0, a1, a2); }
 
+static_assert(cod2_abi_class<decltype(YawToAxis(std::declval<float>(), std::declval<float (*) [3]>()))>() == 'v', "YawToAxis: return class differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "YawToAxis: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float (*) [3]>() == 4, "YawToAxis: parameter 1 differs from the engine");
+extern "C" decltype(YawToAxis(std::declval<float>(), std::declval<float (*) [3]>())) cod2c_YawToAxis(float a0, float (*a1) [3]) __asm__(COD2_SYM("YawToAxis"));
+decltype(YawToAxis(std::declval<float>(), std::declval<float (*) [3]>())) YawToAxis(float a0, float (*a1) [3]) { return cod2c_YawToAxis(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(YawVectors(std::declval<float>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "YawVectors: return class differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "YawVectors: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "YawVectors: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "YawVectors: parameter 2 differs from the engine");
+extern "C" decltype(YawVectors(std::declval<float>(), std::declval<float*>(), std::declval<float*>())) cod2c_YawVectors(float a0, float* a1, float* a2) __asm__(COD2_SYM("YawVectors"));
+decltype(YawVectors(std::declval<float>(), std::declval<float*>(), std::declval<float*>())) YawVectors(float a0, float* a1, float* a2) { return cod2c_YawVectors(a0, a1, a2); }
+
 static_assert(cod2_abi_class<decltype(crandom())>() == 'f', "crandom: return class differs from the engine");
 static_assert(cod2_abi_size<decltype(crandom())>() == 4, "crandom: return size differs from the engine");
 extern "C" decltype(crandom()) cod2c_crandom() __asm__(COD2_SYM("crandom"));
 decltype(crandom()) crandom() { return cod2c_crandom(); }
 
+static_assert(cod2_abi_class<decltype(flrand(std::declval<float>(), std::declval<float>()))>() == 'f', "flrand: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(flrand(std::declval<float>(), std::declval<float>()))>() == 4, "flrand: return size differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "flrand: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float>() == 4, "flrand: parameter 1 differs from the engine");
+extern "C" decltype(flrand(std::declval<float>(), std::declval<float>())) cod2c_flrand(float a0, float a1) __asm__(COD2_SYM("flrand"));
+decltype(flrand(std::declval<float>(), std::declval<float>())) flrand(float a0, float a1) { return cod2c_flrand(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(irand(std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(irand(std::declval<int>(), std::declval<int>()))>() == 'v', "irand: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "irand: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "irand: parameter 1 differs from the engine");
+extern "C" cod2_abi_int<decltype(irand(std::declval<int>(), std::declval<int>())), 4> cod2c_irand(int a0, int a1) __asm__(COD2_SYM("irand"));
+decltype(irand(std::declval<int>(), std::declval<int>())) irand(int a0, int a1) { return (decltype(irand(std::declval<int>(), std::declval<int>())))cod2c_irand(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(randomf())>() == 'f', "randomf: return class differs from the engine");
 static_assert(cod2_abi_size<decltype(randomf())>() == 4, "randomf: return size differs from the engine");
 extern "C" decltype(randomf()) cod2c_randomf() __asm__(COD2_SYM("randomf"));
 decltype(randomf()) randomf() { return cod2c_randomf(); }
+
+static_assert(cod2_abi_class<decltype(vectoangles(std::declval<float const*>(), std::declval<float*>()))>() == 'v', "vectoangles: return class differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "vectoangles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "vectoangles: parameter 1 differs from the engine");
+extern "C" decltype(vectoangles(std::declval<float const*>(), std::declval<float*>())) cod2c_vectoangles(float const* a0, float* a1) __asm__(COD2_SYM("vectoangles"));
+decltype(vectoangles(std::declval<float const*>(), std::declval<float*>())) vectoangles(float const* a0, float* a1) { return cod2c_vectoangles(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(vectosignedyaw(std::declval<float*>()))>() == 'f', "vectosignedyaw: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(vectosignedyaw(std::declval<float*>()))>() == 4, "vectosignedyaw: return size differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "vectosignedyaw: parameter 0 differs from the engine");
+extern "C" decltype(vectosignedyaw(std::declval<float*>())) cod2c_vectosignedyaw(float* a0) __asm__(COD2_SYM("vectosignedyaw"));
+decltype(vectosignedyaw(std::declval<float*>())) vectosignedyaw(float* a0) { return cod2c_vectosignedyaw(a0); }
+
+static_assert(cod2_abi_class<decltype(vectoyaw(std::declval<float const*>()))>() == 'f', "vectoyaw: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(vectoyaw(std::declval<float const*>()))>() == 4, "vectoyaw: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "vectoyaw: parameter 0 differs from the engine");
+extern "C" decltype(vectoyaw(std::declval<float const*>())) cod2c_vectoyaw(float const* a0) __asm__(COD2_SYM("vectoyaw"));
+decltype(vectoyaw(std::declval<float const*>())) vectoyaw(float const* a0) { return cod2c_vectoyaw(a0); }

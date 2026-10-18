@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 # Functions the binary defines but whose debug information gdb does not read
 # back (it reports '<unknown return type> (void)'), from their definitions.
 BY_HAND = {
+    'AngleNormalize360': 'f4 4',                # src/PC/universal/com_math.c
     'Com_AbortDObj': 'v0 -',                    # src/PC/qcommon/dobj_management.c
     'MatrixTransformVector': 'v0 4,4,4',        # src/PC/universal/com_math.c
 }

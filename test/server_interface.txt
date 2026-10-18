@@ -67,3 +67,15 @@ SV_TracePassed
 SV_UnlinkEntity
 SV_XModelDebugBoxes
 SV_XModelGet
+# Functions of the game that the engine calls by their C names: the ones
+# src/PC/game_mp and src/PC/game define and the dedicated server's other
+# objects reference (bgame, cgame_mp, stubs/link_stubs.c and the imp_
+# pointers of build/native_gen/import_pointers_native.c).
+GScr_LoadConsts
+G_AnimScriptSound
+G_FreeEntity
+G_GetWeaponIndexForName
+G_ParseWeaponAccurayGraphs
+G_PlayerEvent
+G_RegisterWeapon
+G_TraceCapsule

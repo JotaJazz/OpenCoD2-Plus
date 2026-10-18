@@ -465,3 +465,58 @@ static_assert(cod2_abi_class<decltype(SV_XModelGet(std::declval<char const*>()))
 static_assert(cod2_abi_slot<char const*>() == 4, "SV_XModelGet: parameter 0 differs from src/PC/server_mp");
 extern "C" cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4> cod2x_SV_XModelGet(char const* a0) __asm__(COD2_SYM("SV_XModelGet"));
 cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4> cod2x_SV_XModelGet(char const* a0) { return (cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4>)SV_XModelGet(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(GScr_LoadConsts())>::value, "GScr_LoadConsts returns a struct");
+static_assert(cod2_abi_class<decltype(GScr_LoadConsts())>() == 'v', "GScr_LoadConsts: return class differs from src/PC/server_mp");
+extern "C" decltype(GScr_LoadConsts()) cod2x_GScr_LoadConsts() __asm__(COD2_SYM("GScr_LoadConsts"));
+decltype(GScr_LoadConsts()) cod2x_GScr_LoadConsts() { return GScr_LoadConsts(); }
+
+extern "C" int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList) __asm__(COD2_SYM("G_AnimScriptSound"));
+int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList)
+{
+    G_AnimScriptSound(client, aliasList);
+    return 0;
+}
+
+static_assert(cod2_bridge_returns_scalar<decltype(G_FreeEntity(std::declval<gentity_s*>()))>::value, "G_FreeEntity returns a struct");
+static_assert(cod2_abi_class<decltype(G_FreeEntity(std::declval<gentity_s*>()))>() == 'v', "G_FreeEntity: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<gentity_s*>() == 4, "G_FreeEntity: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(G_FreeEntity(std::declval<gentity_s*>())) cod2x_G_FreeEntity(gentity_s* a0) __asm__(COD2_SYM("G_FreeEntity"));
+decltype(G_FreeEntity(std::declval<gentity_s*>())) cod2x_G_FreeEntity(gentity_s* a0) { return G_FreeEntity(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(G_GetWeaponIndexForName(std::declval<char const*>()))>::value, "G_GetWeaponIndexForName returns a struct");
+static_assert(cod2_abi_class<decltype(G_GetWeaponIndexForName(std::declval<char const*>()))>() == 'i', "G_GetWeaponIndexForName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "G_GetWeaponIndexForName: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4> cod2x_G_GetWeaponIndexForName(char const* a0) __asm__(COD2_SYM("G_GetWeaponIndexForName"));
+cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4> cod2x_G_GetWeaponIndexForName(char const* a0) { return (cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4>)G_GetWeaponIndexForName(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>()))>::value, "G_ParseWeaponAccurayGraphs returns a struct");
+static_assert(cod2_abi_class<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>()))>() == 'i', "G_ParseWeaponAccurayGraphs: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<WeaponDef*>() == 4, "G_ParseWeaponAccurayGraphs: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1> cod2x_G_ParseWeaponAccurayGraphs(WeaponDef* a0) __asm__(COD2_SYM("G_ParseWeaponAccurayGraphs"));
+cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1> cod2x_G_ParseWeaponAccurayGraphs(WeaponDef* a0) { return (cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1>)G_ParseWeaponAccurayGraphs(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>()))>::value, "G_PlayerEvent returns a struct");
+static_assert(cod2_abi_class<decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>()))>() == 'v', "G_PlayerEvent: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>())) cod2x_G_PlayerEvent(int a0, int a1) __asm__(COD2_SYM("G_PlayerEvent"));
+decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>())) cod2x_G_PlayerEvent(int a0, int a1) { return G_PlayerEvent(a0, a1); }
+
+extern "C" void cod2x_G_RegisterWeapon(int weapIndex) __asm__(COD2_SYM("G_RegisterWeapon"));
+void cod2x_G_RegisterWeapon(int weapIndex)
+{
+    G_RegisterWeapon(weapIndex);
+}
+
+static_assert(cod2_bridge_returns_scalar<decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>::value, "G_TraceCapsule returns a struct");
+static_assert(cod2_abi_class<decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "G_TraceCapsule: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<trace_t*>() == 4, "G_TraceCapsule: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 4 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 5 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 6 differs from src/PC/server_mp");
+extern "C" decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) __asm__(COD2_SYM("G_TraceCapsule"));
+decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) { return G_TraceCapsule(a0, a1, a2, a3, a4, a5, a6); }

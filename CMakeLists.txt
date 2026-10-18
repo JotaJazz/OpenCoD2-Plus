@@ -107,11 +107,15 @@ else()
 endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
-# the generated bridge in src/compat (scripts/gen_script_bridge.py).
+# the generated bridge in src/compat (scripts/gen_script_bridge.py), and
+# cod2_plus_script_client with the bridge's calls into src/PC/game_mp, for the
+# executables without CoD2rev-Plus's game (src/compat/client_script_imports.cpp).
 function(cod2_plus_script)
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/script_*.cpp)
   add_library(cod2_plus_script OBJECT ${src})
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  add_library(cod2_plus_script_client OBJECT ${COD2_SRC_DIR}/compat/client_script_imports.cpp)
+  target_compile_definitions(cod2_plus_script_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server and game
@@ -356,6 +360,8 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
   list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+elseif(COD2_PLUS_SCRIPT)
+  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
@@ -598,11 +604,15 @@ cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 set(COD2_CLIENT_SERVER_OBJS "")
 set(COD2_DED_SERVER_OBJS "")
+if(COD2_PLUS_SCRIPT)
+  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
+  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
+endif()
 if(COD2_PLUS_SERVER)
   cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
   add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
   cod2_plus_server()
-  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
+  list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
 endif()
 

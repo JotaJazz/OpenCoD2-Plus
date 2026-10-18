@@ -119,6 +119,23 @@ class Modules(unittest.TestCase):
         objects = g.MODULES['server']['objects']
         self.assertTrue(any(o.endswith('src/game/*.o') for o in objects), objects)
 
+    def test_client_only_imports(self):
+        # the dedicated server's game defines Scr_GetFunction in C++, so its
+        # thunk to src/PC/game_mp's C function goes only into the client
+        shared, client = g.split_imports({'Scr_GetFunction': ['a'], 'Com_Printf': ['b']}, {'Scr_GetFunction'})
+        self.assertEqual(shared, {'Com_Printf': ['b']})
+        self.assertEqual(client, {'Scr_GetFunction': ['a']})
+
+    def test_game_exports_keep_the_engine_returns(self):
+        # src/PC/game_mp returned 0 from G_AnimScriptSound and nothing from
+        # G_RegisterWeapon; CoD2rev-Plus's return nothing and an int
+        custom = g.MODULES['server']['export_custom']
+        self.assertIn('return 0;', custom['G_AnimScriptSound'])
+        self.assertRegex(custom['G_RegisterWeapon'], r'void cod2x_G_RegisterWeapon\(int weapIndex\)\n\{\n\s+G_RegisterWeapon\(weapIndex\);\n\}')
+
+    def test_script_module_splits_on_game(self):
+        self.assertEqual(g.MODULES['script']['client_only'], ['cod2_plus_server.dir/src/game/*.o'])
+
 
 if __name__ == '__main__':
     unittest.main()
