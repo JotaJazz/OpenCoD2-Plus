@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include "scr_vartypes.h"
 #include "imports.h"
 #include "bytematch.h"
 extern char *getenv(const char *name);
@@ -1177,12 +1178,12 @@ void PlayerCmd_finishPlayerDamage(scr_entref_t entref)
     if (damage <= 0)
         return;
 
-    if (Scr_GetType(0) && Scr_GetPointerType(0) == 0x15)
+    if (Scr_GetType(0) && Scr_GetPointerType(0) == COD2_VAR_ENTITY)
         inflictor = Scr_GetEntity(1);
     else
         inflictor = world;
 
-    if (Scr_GetType(1) && Scr_GetPointerType(1) == 0x15)
+    if (Scr_GetType(1) && Scr_GetPointerType(1) == COD2_VAR_ENTITY)
         attacker = Scr_GetEntity(1);
     else
         attacker = world;

@@ -3,11 +3,12 @@
 
     python3 scripts/two_players_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH]
 
-Starts the server in LAN mode on tdm with a temporary home folder, joins two
+Starts the server in LAN mode on tdm with developer 1, which makes a script
+error stop the map, and a temporary home folder, joins two
 clients of cod2client.py, has both send commands, disconnects the first one
 and joins it again, and kicks the second one with rcon. After every step the
 server must still answer getinfo; at the end its log must hold no crash
-report. Exits with 0 when all of that holds.
+report or script error. Exits with 0 when all of that holds.
 """
 import argparse, os, re, subprocess, sys, tempfile, time
 
@@ -92,7 +93,7 @@ def main():
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(
                 [binary, '+set', 'fs_basepath', os.path.abspath(args.game_dir), '+set', 'fs_homepath', home,
-                 '+set', 'dedicated', '1', '+set', 'net_port', str(port), '+set', 'sv_cracked', '1',
+                 '+set', 'dedicated', '1', '+set', 'developer', '1', '+set', 'net_port', str(port), '+set', 'sv_cracked', '1',
                  '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'tdm', '+map', args.map],
                 stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=home)
         run = Run(port, args.protocol, server)
@@ -111,6 +112,7 @@ def main():
                     server.kill()
         text = open(log_path, encoding='latin-1').read()
         run.check('no crash report', 'CRASH REPORT' not in text)
+        run.check('no script error', 'script runtime error' not in text)
         if run.failures:
             print('\n--- last lines of the server log ---')
             print('\n'.join(l for l in text.splitlines()[-40:] if not l.startswith(('[ckpt]', '[scan'))))

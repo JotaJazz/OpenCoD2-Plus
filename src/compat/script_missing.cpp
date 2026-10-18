@@ -54,3 +54,9 @@ unsigned int cod2x_VM_Execute_orig(unsigned int localId, const char *pos, unsign
 // script builtins) names "int" through a string src/PC/script defined.
 extern "C" const char cod2x_str_int[] __asm__(COD2_SYM("str_0021d27c"));
 const char cod2x_str_int[] = "int";
+
+// The engine's game code compares Scr_GetPointerType with these.
+#include "../headers/scr_vartypes.h"
+static_assert(COD2_VAR_DEAD_ENTITY == VAR_DEAD_ENTITY && COD2_VAR_ENTITY == VAR_ENTITY
+	&& COD2_VAR_ARRAY == VAR_ARRAY && COD2_VAR_DEAD_THREAD == VAR_DEAD_THREAD,
+	"src/headers/scr_vartypes.h does not match CoD2rev-Plus's VAR_ types");

@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include "scr_vartypes.h"
 #include "imports.h"
 #include "bytematch.h"
 #include <stdlib.h>
@@ -708,7 +709,7 @@ void GScr_IsDefined(void)
 
     if (type == 1) {
         int ptype = Scr_GetPointerType(0);
-        if (ptype > 0x16 || ptype == 0x14) {
+        if (ptype >= COD2_VAR_DEAD_THREAD || ptype == COD2_VAR_DEAD_ENTITY) {
             result = 0;
         } else {
             result = 1;
@@ -727,7 +728,7 @@ unsigned int GScr_IsString(void)
 
 void GScr_IsAlive(void)
 {
-    if (Scr_GetType(0) == 1 && Scr_GetPointerType(0) == 0x15) {
+    if (Scr_GetType(0) == 1 && Scr_GetPointerType(0) == COD2_VAR_ENTITY) {
         gentity_t *ent = Scr_GetEntity(0);
         int health = ent->health;
         if (health > 0) {
@@ -1022,7 +1023,7 @@ void GScr_Obituary(void)
     pEnt = G_TempEntity(*(vec3_t *)imp_vec3_origin, 0xc6);
     pEnt->s.otherEntityNum = pOtherEnt->s.number;
 
-    if (Scr_GetType(1) == 1 && Scr_GetPointerType(1) == 0x15)
+    if (Scr_GetType(1) == 1 && Scr_GetPointerType(1) == COD2_VAR_ENTITY)
         pEnt->s.attackerEntityNum = Scr_GetEntity(1)->s.number;
     else
         pEnt->s.attackerEntityNum = 0x3fe;
@@ -1196,7 +1197,7 @@ void Scr_BulletTracePassed(void)
     Scr_GetVector(1, vEnd);
     iClipMask = Scr_GetInt(2) ? 0x02802831 : 0x00802831;
 
-    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == 0x15)
+    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == COD2_VAR_ENTITY)
         entityNum = Scr_GetEntity(3)->s.number;
 
     Scr_AddBool(G_LocationalTracePassed(vStart, vEnd, entityNum, iClipMask));
@@ -1215,7 +1216,7 @@ void Scr_SightTracePassed(void)
     Scr_GetVector(1, vEnd);
     iClipMask = Scr_GetInt(2) ? 0x02801803 : 0x00801803;
 
-    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == 0x15)
+    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == COD2_VAR_ENTITY)
         entityNum = Scr_GetEntity(3)->s.number;
 
     G_SightTrace(&hitNum, vStart, vEnd, entityNum, iClipMask);
@@ -1832,7 +1833,7 @@ void Scr_SetExponentialFog(void)
 
 void GScr_IsPlayer(void)
 {
-    if (Scr_GetType(0) == 1 && Scr_GetPointerType(0) == 0x15) {
+    if (Scr_GetType(0) == 1 && Scr_GetPointerType(0) == COD2_VAR_ENTITY) {
         gentity_t *ent = Scr_GetEntity(0);
         struct gclient_s *client = ent->client;
         if (client) {
@@ -2954,7 +2955,7 @@ void Scr_BulletTrace(void)
     Scr_GetVector(1, vEnd);
     iClipMask = Scr_GetInt(2) ? 0x02802831 : 0x00802831;
 
-    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == 0x15)
+    if (Scr_GetType(3) == 1 && Scr_GetPointerType(3) == COD2_VAR_ENTITY)
         entityNum = Scr_GetEntity(3)->s.number;
     else
         entityNum = 0x3ff;
@@ -3245,7 +3246,7 @@ unsigned int Scr_ConstructMessageString(int firstParmIndex, int lastParmIndex, c
             continue;
         }
 
-        if (type == 1 && Scr_GetPointerType(parmIndex) == 0x15) {
+        if (type == 1 && Scr_GetPointerType(parmIndex) == COD2_VAR_ENTITY) {
             gentity_t *ent = Scr_GetEntity(parmIndex);
 
             if (!ent->client)
@@ -3678,7 +3679,7 @@ void ScrCmd_LinkTo(scr_entref_t entref)
     vec3_t originOffset;
     vec3_t anglesOffset;
 
-    if (Scr_GetType(0) != 1 || Scr_GetPointerType(0) != 0x15)
+    if (Scr_GetType(0) != 1 || Scr_GetPointerType(0) != COD2_VAR_ENTITY)
         Scr_ParamError(0, "not an entity");
 
     if (!(ent->flags & 0x1000))
