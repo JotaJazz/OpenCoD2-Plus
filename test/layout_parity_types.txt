@@ -56,3 +56,8 @@ entityHandler_t
 # bgs_t is not compared: its animation_s is 104 bytes here (the Windows
 # layout) and 96 there (packed, as cod2_lnxded), so level_bgs stays inside
 # CoD2rev-Plus's game and bgame, which come together into the dedicated server.
+# Types of CoD2rev-Plus's core whose globals the engine still reads in the
+# dedicated server: g_traceThreadInfo (q_shared.c gives a thread its trace
+# info through Sys_SetValue). The engine's other readers take dvar_t pointers
+# (only the fields compared above) or addresses.
+TraceThreadInfo
