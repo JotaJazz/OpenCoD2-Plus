@@ -81,6 +81,22 @@ set(COD2_CXX_DIRS "" CACHE STRING "With COD2_CXX_ALL=OFF: src/ subdirectories or
 option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
+# CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
+# reconstruction in src/PC/script. PROTOCOL_VERSION follows the game version.
+option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" OFF)
+if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
+  set(COD2_PROTOCOL 115)
+else()
+  set(COD2_PROTOCOL 118)
+endif()
+
+# cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources.
+function(cod2_plus_script)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp)
+  add_library(cod2_plus_script OBJECT ${src})
+  target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+endfunction()
+
 # cod2_cxx_sources(<out_var> <sources...>): the sources, with the picked C files
 # replaced by their wrappers under ${CMAKE_BINARY_DIR}/cxx_wrap/.
 function(cod2_cxx_sources out)
@@ -305,6 +321,9 @@ add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
+if(COD2_PLUS_SCRIPT)
+  cod2_plus_script()
+endif()
 target_link_options(${W32_EXE} PRIVATE ${COD2_WIN_LINK})
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
@@ -518,6 +537,9 @@ add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
+if(COD2_PLUS_SCRIPT)
+  cod2_plus_script()
+endif()
 
 add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
