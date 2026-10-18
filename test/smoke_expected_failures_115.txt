@@ -1,7 +1,12 @@
 # Fallos esperados de smoke_test.py con el servidor de opencod2; solo se achica.
-client receives the gamestate
+addip refuses the address
 console log lines have timestamps
 console log rotated
+crash report written
+g_forceRate applies
 heartbeat sent to sv_master1
-server still running
+no fake lines in the game log
+no line break in names
+server-only iwd download refused
+stock iwd download refused
 sv_logRcon 0 hides rcon commands
