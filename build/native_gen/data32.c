@@ -1304,10 +1304,12 @@ struct _d32_TheStringPackage __attribute__((aligned(4))) TheStringPackage = {
 };
 /* bg_itemlist: defined by typed C TU (g_scr_main_mp.c); skipped. */
 /* snd_roomStrings: defined by typed C TU (snd.c); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/qcommon */
 struct _d32_cmd_text __attribute__((aligned(4))) cmd_text = {
     (void *)&cmd_texts,
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* dvarOnOffStrings: defined by typed C TU (dvar.c); skipped. */
 /* fxInitialized: migrated to home .c (plan 4g); skipped. */
 struct _d32_theFxHelper __attribute__((aligned(4))) theFxHelper = {
@@ -1513,9 +1515,11 @@ struct _d32_updateScreenCalled __attribute__((aligned(4))) updateScreenCalled = 
 /* msg_hData: migrated to home .c (plan 4g); skipped. */
 /* hudElemFields: migrated to home .c (plan 4g); skipped. */
 /* objectiveFields: migrated to home .c (plan 4g); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/qcommon */
 struct _d32_kbitmask __attribute__((aligned(4))) kbitmask = {
     { 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 7, 0, 0, 0, 15, 0, 0, 0, 31, 0, 0, 0, 63, 0, 0, 0, 127, 0, 0, 0, 255, 0, 0, 0, 255, 1, 0, 0, 255, 3, 0, 0, 255, 7, 0, 0, 255, 15, 0, 0, 255, 63, 0, 0, 255, 127, 0, 0, 255, 255, 0, 0, 255, 255, 1, 0, 255, 255, 3, 0, 255, 255, 7, 0, 255, 255, 15, 0, 255, 255, 31, 0, 255, 255, 63, 0, 255, 255, 127, 0, 255, 255, 255, 0, 255, 255, 255, 1, 255, 255, 255, 3, 255, 255, 255, 7, 255, 255, 255, 15, 255, 255, 255, 31, 255, 255, 255, 63, 255, 255, 255, 127, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* ucmds: migrated to home .c (plan 4g); skipped. */
 struct _d32_bgs __attribute__((aligned(4))) bgs = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }

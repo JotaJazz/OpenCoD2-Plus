@@ -352,7 +352,8 @@ MODULES = {
     'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=[], header=SCRIPT_HEADER,
                    overloads=OVERLOADS, extra_args=EXTRA_ARGS, renamed=RENAMED, provided=PROVIDED,
                    export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM,
-                   client_only=['cod2_plus_server.dir/src/game/*.o']),
+                   client_only=['cod2_plus_server.dir/src/' + d + '/*.o'
+                                for d in ('game', 'universal', 'qcommon', 'stringed', 'unix', 'win32')]),
     'server': dict(objects=['cod2_plus_server.dir/src/server/*.o', 'cod2_plus_server.dir/src/game/*.o',
                             'cod2_plus_server.dir/src/bgame/*.o', 'cod2_plus_server.dir/src/universal/*.o',
                             'cod2_plus_server.dir/src/qcommon/*.o', 'cod2_plus_server.dir/src/stringed/*.o',
@@ -451,6 +452,11 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
                 f'{w} cod2x_{name}({sig}) {{ return ({w}){target}({args}); }}\n')
     return (guard + f'extern "C" {r} cod2x_{name}({sig}) __asm__(COD2_SYM("{name}"));\n'
             f'{r} cod2x_{name}({sig}) {{ return {target}({args}); }}\n')
+
+
+def export_names(interface, fatal):
+    """The names to export: the interface's, then the fatal ones it lacks."""
+    return list(interface) + sorted(set(fatal) - set(interface))
 
 
 def fatal_export(name):
@@ -607,7 +613,7 @@ def main():
 
     out = [cfg['header']]
     missing = []
-    for name in interface:
+    for name in export_names(interface, cfg.get('export_fatal', ())):
         target = cfg.get('export_renamed', {}).get(name, name)
         if name in cfg['export_custom']:
             out.append(cfg['export_custom'][name])

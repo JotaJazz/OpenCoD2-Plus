@@ -126,3 +126,6 @@ src/win32/resource.h
 src/win32/win_local.h
 src/ui/keycodes.h
 src/stringed/stringed_hooks.cpp
+src/zlib/unzip.c
+src/zlib/ioapi.c
+src/zlib/crypt.h

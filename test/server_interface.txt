@@ -258,7 +258,6 @@ FS_Seek
 FS_TouchFile
 FS_Write
 FS_WriteFile
-Field_Clear
 GetBspExtension
 Hunk_AddData
 Hunk_AllocAlignInternal
@@ -336,3 +335,4 @@ Sys_ShowIP
 Sys_StreamedRead
 Z_FreeInternal
 Z_MallocInternal
+Com_SurfaceTypeToName

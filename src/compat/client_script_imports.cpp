@@ -4,6 +4,103 @@
 #include "script_bridge.h"
 #include "script_decls.h"
 
+extern "C" decltype(Com_BeginParseSession(std::declval<char const*>())) cod2c_Com_BeginParseSession(char const* a0) __asm__(COD2_SYM("Com_BeginParseSession"));
+decltype(Com_BeginParseSession(std::declval<char const*>())) Com_BeginParseSession(char const* a0) { return cod2c_Com_BeginParseSession(a0); }
+
+extern "C" decltype(Com_EndParseSession()) cod2c_Com_EndParseSession() __asm__(COD2_SYM("Com_EndParseSession"));
+decltype(Com_EndParseSession()) Com_EndParseSession() { return cod2c_Com_EndParseSession(); }
+
+extern "C" void cod2c_Com_Error(int code, const char *fmt, ...) __asm__(COD2_SYM("Com_Error"));
+void Com_Error(errorParm_t code, const char *fmt, ...)
+{
+    char buf[4096];
+    va_list ap;
+
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    cod2c_Com_Error(code, "%s", buf);
+    cod2c_Com_Error(ERR_DROP, "%s", buf);
+    __builtin_unreachable();
+}
+
+extern "C" decltype(Com_GetLastTokenPos()) cod2c_Com_GetLastTokenPos() __asm__(COD2_SYM("Com_GetLastTokenPos"));
+decltype(Com_GetLastTokenPos()) Com_GetLastTokenPos() { return cod2c_Com_GetLastTokenPos(); }
+
+extern "C" decltype(Com_Parse(std::declval<char const**>())) cod2c_Com_Parse(char const** a0) __asm__(COD2_SYM("Com_Parse"));
+decltype(Com_Parse(std::declval<char const**>())) Com_Parse(char const** a0) { return cod2c_Com_Parse(a0); }
+
+extern "C" decltype(Com_ParseOnLine(std::declval<char const**>())) cod2c_Com_ParseOnLine(char const** a0) __asm__(COD2_SYM("Com_ParseOnLine"));
+decltype(Com_ParseOnLine(std::declval<char const**>())) Com_ParseOnLine(char const** a0) { return cod2c_Com_ParseOnLine(a0); }
+
+extern "C" decltype(Com_PrintMessage(std::declval<conChannel_t>(), std::declval<char const*>())) cod2c_Com_PrintMessage(conChannel_t a0, char const* a1) __asm__(COD2_SYM("Com_PrintMessage"));
+decltype(Com_PrintMessage(std::declval<conChannel_t>(), std::declval<char const*>())) Com_PrintMessage(conChannel_t a0, char const* a1) { return cod2c_Com_PrintMessage(a0, a1); }
+
+extern "C" decltype(Com_Printf(std::declval<char const*>())) cod2c_Com_Printf(char const* a0, ...) __asm__(COD2_SYM("Com_Printf"));
+decltype(Com_Printf(std::declval<char const*>())) Com_Printf(char const* a0, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a0);
+    vsnprintf(buf, sizeof(buf), a0, ap);
+    va_end(ap);
+    return cod2c_Com_Printf("%s", buf);
+}
+
+int Com_sprintf(char *dest, size_t size, const char *format, ...)
+{
+    int result;
+    va_list ap;
+
+    va_start(ap, format);
+    result = vsnprintf(dest, size, format, ap);
+    va_end(ap);
+    dest[size - 1] = '\0';
+    return result;
+}
+
+extern "C" decltype(FS_FCloseFile(std::declval<int>())) cod2c_FS_FCloseFile(int a0) __asm__(COD2_SYM("FS_FCloseFile"));
+decltype(FS_FCloseFile(std::declval<int>())) FS_FCloseFile(int a0) { return cod2c_FS_FCloseFile(a0); }
+
+extern "C" decltype(FS_FOpenFileByMode(std::declval<char const*>(), std::declval<int*>(), std::declval<fsMode_t>())) cod2c_FS_FOpenFileByMode(char const* a0, int* a1, fsMode_t a2) __asm__(COD2_SYM("FS_FOpenFileByMode"));
+decltype(FS_FOpenFileByMode(std::declval<char const*>(), std::declval<int*>(), std::declval<fsMode_t>())) FS_FOpenFileByMode(char const* a0, int* a1, fsMode_t a2) { return cod2c_FS_FOpenFileByMode(a0, a1, a2); }
+
+extern "C" decltype(FS_FreeFileList(std::declval<char**>())) cod2c_FS_FreeFileList(char** a0, int a1) __asm__(COD2_SYM("FS_FreeFileList"));
+decltype(FS_FreeFileList(std::declval<char**>())) FS_FreeFileList(char** a0) { return cod2c_FS_FreeFileList(a0, 10); }
+
+extern "C" decltype(FS_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<int*>())) cod2c_FS_ListFiles(char const* a0, char const* a1, FsListBehavior a2, int* a3, int a4) __asm__(COD2_SYM("FS_ListFiles"));
+decltype(FS_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<FsListBehavior>(), std::declval<int*>())) FS_ListFiles(char const* a0, char const* a1, FsListBehavior a2, int* a3) { return cod2c_FS_ListFiles(a0, a1, a2, a3, 10); }
+
+extern "C" decltype(FS_Read(std::declval<void*>(), std::declval<int>(), std::declval<int>())) cod2c_FS_Read(void* a0, int a1, int a2) __asm__(COD2_SYM("FS_Read"));
+decltype(FS_Read(std::declval<void*>(), std::declval<int>(), std::declval<int>())) FS_Read(void* a0, int a1, int a2) { return cod2c_FS_Read(a0, a1, a2); }
+
+extern "C" decltype(Hunk_AllocInternal(std::declval<int>())) cod2c_Hunk_AllocInternal(int a0) __asm__(COD2_SYM("Hunk_AllocInternal"));
+decltype(Hunk_AllocInternal(std::declval<int>())) Hunk_AllocInternal(int a0) { return cod2c_Hunk_AllocInternal(a0); }
+
+extern "C" decltype(Hunk_AllocLowInternal(std::declval<int>())) cod2c_Hunk_AllocLowInternal(int a0) __asm__(COD2_SYM("Hunk_AllocLowInternal"));
+decltype(Hunk_AllocLowInternal(std::declval<int>())) Hunk_AllocLowInternal(int a0) { return cod2c_Hunk_AllocLowInternal(a0); }
+
+extern "C" decltype(Hunk_AllocateTempMemoryHighInternal(std::declval<int>())) cod2c_Hunk_AllocateTempMemoryHighInternal(int a0) __asm__(COD2_SYM("Hunk_AllocateTempMemoryHighInternal"));
+decltype(Hunk_AllocateTempMemoryHighInternal(std::declval<int>())) Hunk_AllocateTempMemoryHighInternal(int a0) { return cod2c_Hunk_AllocateTempMemoryHighInternal(a0); }
+
+extern "C" decltype(Hunk_ClearHigh(std::declval<int>())) cod2c_Hunk_ClearHigh(int a0) __asm__(COD2_SYM("Hunk_ClearHigh"));
+decltype(Hunk_ClearHigh(std::declval<int>())) Hunk_ClearHigh(int a0) { return cod2c_Hunk_ClearHigh(a0); }
+
+extern "C" decltype(Hunk_ClearTempMemoryHighInternal()) cod2c_Hunk_ClearTempMemoryHighInternal() __asm__(COD2_SYM("Hunk_ClearTempMemoryHigh"));
+decltype(Hunk_ClearTempMemoryHighInternal()) Hunk_ClearTempMemoryHighInternal() { return cod2c_Hunk_ClearTempMemoryHighInternal(); }
+
+extern "C" decltype(Hunk_ConvertTempToPermLowInternal()) cod2c_Hunk_ConvertTempToPermLowInternal() __asm__(COD2_SYM("Hunk_ConvertTempToPermLowInternal"));
+decltype(Hunk_ConvertTempToPermLowInternal()) Hunk_ConvertTempToPermLowInternal() { return cod2c_Hunk_ConvertTempToPermLowInternal(); }
+
+extern "C" decltype(Hunk_ReallocateTempMemoryInternal(std::declval<int>())) cod2c_Hunk_ReallocateTempMemoryInternal(int a0) __asm__(COD2_SYM("Hunk_ReallocateTempMemoryInternal"));
+decltype(Hunk_ReallocateTempMemoryInternal(std::declval<int>())) Hunk_ReallocateTempMemoryInternal(int a0) { return cod2c_Hunk_ReallocateTempMemoryInternal(a0); }
+
+extern "C" decltype(Hunk_SetMark()) cod2c_Hunk_SetMark() __asm__(COD2_SYM("Hunk_SetMark"));
+decltype(Hunk_SetMark()) Hunk_SetMark() { return cod2c_Hunk_SetMark(); }
+
+extern "C" decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) cod2c_I_stricmp(char const* a0, char const* a1) __asm__(COD2_SYM("I_stricmp"));
+decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) I_stricmp(char const* a0, char const* a1) { return cod2c_I_stricmp(a0, a1); }
+
 extern "C" decltype(Scr_GetFunction(std::declval<char const**>(), std::declval<int*>())) cod2c_Scr_GetFunction(char const** a0, int* a1) __asm__(COD2_SYM("Scr_GetFunction"));
 decltype(Scr_GetFunction(std::declval<char const**>(), std::declval<int*>())) Scr_GetFunction(char const** a0, int* a1) { return cod2c_Scr_GetFunction(a0, a1); }
 
@@ -15,3 +112,23 @@ decltype(Scr_GetObjectField(std::declval<unsigned int>(), std::declval<int>(), s
 
 extern "C" decltype(Scr_SetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) cod2c_Scr_SetObjectField(unsigned int a0, int a1, int a2) __asm__(COD2_SYM("Scr_SetObjectField"));
 decltype(Scr_SetObjectField(std::declval<unsigned int>(), std::declval<int>(), std::declval<int>())) Scr_SetObjectField(unsigned int a0, int a1, int a2) { return cod2c_Scr_SetObjectField(a0, a1, a2); }
+
+extern "C" decltype(Sys_Milliseconds()) cod2c_Sys_Milliseconds() __asm__(COD2_SYM("Sys_Milliseconds"));
+decltype(Sys_Milliseconds()) Sys_Milliseconds() { return cod2c_Sys_Milliseconds(); }
+
+extern "C" decltype(Z_FreeInternal(std::declval<void*>())) cod2c_Z_FreeInternal(void* a0) __asm__(COD2_SYM("Z_FreeInternal"));
+decltype(Z_FreeInternal(std::declval<void*>())) Z_FreeInternal(void* a0) { return cod2c_Z_FreeInternal(a0); }
+
+extern "C" decltype(Z_MallocInternal(std::declval<int>())) cod2c_Z_MallocInternal(int a0) __asm__(COD2_SYM("Z_MallocInternal"));
+decltype(Z_MallocInternal(std::declval<int>())) Z_MallocInternal(int a0) { return cod2c_Z_MallocInternal(a0); }
+
+extern "C" decltype(va(std::declval<char const*>())) cod2c_va(char const* a0, ...) __asm__(COD2_SYM("va"));
+decltype(va(std::declval<char const*>())) va(char const* a0, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a0);
+    vsnprintf(buf, sizeof(buf), a0, ap);
+    va_end(ap);
+    return cod2c_va("%s", buf);
+}

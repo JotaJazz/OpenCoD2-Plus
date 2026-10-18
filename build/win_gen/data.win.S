@@ -34,21 +34,27 @@ _g_InhibitOpenGLErrors:
 _sEnableSwap:
     .byte 0x01, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kDisplayRectKey
 .align 4
 _kDisplayRectKey:
     .long _str_00215810
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kDisplayIndexKey
 .align 4
 _kDisplayIndexKey:
     .long _str_00215824
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kFirstTimeKey
 .align 4
 _kFirstTimeKey:
     .long _str_00215838
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _sResult
 .align 4
@@ -83,6 +89,7 @@ __ZZN9WinCursorC4EvE11sNextHandle:
     .byte 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _sGerman_ISO_VK_Map
 .align 4
 _sGerman_ISO_VK_Map:
@@ -96,7 +103,9 @@ _sGerman_ISO_VK_Map:
     .byte 0x74, 0x75, 0x76, 0x72, 0x77, 0x78, 0x00, 0x7a, 0x00, 0x7c, 0x7f, 0x7d, 0x00, 0x79, 0x00, 0x7b
     .byte 0x00, 0x7e, 0x2d, 0x24, 0x21, 0x2e, 0x73, 0x23, 0x71, 0x22, 0x70, 0x25
     .long _str_00262598+655
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _sFrench_ISO_VK_Map
 .align 4
 _sFrench_ISO_VK_Map:
@@ -110,7 +119,9 @@ _sFrench_ISO_VK_Map:
     .byte 0x74, 0x75, 0x76, 0x72, 0x77, 0x78, 0x00, 0x7a, 0x00, 0x7c, 0x00, 0x7d, 0x00, 0x79, 0x00, 0x7b
     .byte 0x00, 0x7e, 0x2d, 0x24, 0x21, 0x2e, 0x73, 0x23, 0x71, 0x22, 0x70, 0x25
     .long _str_00262598+655
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _sANSI_VK_Map
 .align 4
 _sANSI_VK_Map:
@@ -124,6 +135,7 @@ _sANSI_VK_Map:
     .byte 0x74, 0x75, 0x76, 0x72, 0x77, 0x78, 0x00, 0x7a, 0x00, 0x7c, 0x00, 0x7d, 0x00, 0x79, 0x00, 0x7b
     .byte 0x00, 0x7e, 0x2d, 0x24, 0x21, 0x2e, 0x73, 0x23, 0x71, 0x22, 0x70, 0x25
     .long _str_00262598+655
+#endif
 
 .globl _g_CurrentGenericPacket
 .align 4
@@ -252,18 +264,23 @@ _sD3DTextureOpToOpenGL:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kBuildTag
 .align 4
 _kBuildTag:
     .long _str_00215cf8
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kProductTag
 .align 4
 _kProductTag:
     .long _str_00215d08
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _bytedirs
 .align 4
 _bytedirs:
@@ -389,17 +406,21 @@ _bytedirs:
     .byte 0x14, 0x79, 0x16, 0xbf, 0x33, 0xc4, 0xd9, 0xbe, 0x49, 0x2d, 0x30, 0xbf, 0x14, 0x79, 0x16, 0xbf
     .byte 0x14, 0x79, 0x16, 0xbf, 0x33, 0xc4, 0xd9, 0xbe, 0x49, 0x2d, 0x30, 0xbf, 0x49, 0x2d, 0x30, 0xbf
     .byte 0x14, 0x79, 0x16, 0xbf, 0x33, 0xc4, 0xd9, 0xbe
+#endif
 
 .globl _holdrand
 .align 4
 _holdrand:
     .byte 0xef, 0xcd, 0xab, 0x89, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _cl_cdkeychecksum
 .align 4
 _cl_cdkeychecksum:
     .byte 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _cl_cdkey
 .align 4
 _cl_cdkey:
@@ -407,7 +428,9 @@ _cl_cdkey:
     .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _noticeErrors
 .align 4
 _noticeErrors:
@@ -419,7 +442,9 @@ _noticeErrors:
     .long _str_00216004
     .long _str_0021601c
     .long 0
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_languages
 .align 4
 _g_languages:
@@ -452,16 +477,21 @@ _g_languages:
     .long _str_00216a0c
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _fs_numServerIwds
 .align 4
 _fs_numServerIwds:
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _fs_packFiles
 .align 4
 _fs_packFiles:
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _fs_searchpaths
 .align 4
@@ -475,7 +505,7 @@ _TheStringPackage:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _bg_itemlist
 .align 4
 _bg_itemlist:
@@ -1923,6 +1953,7 @@ _bg_itemlist:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _snd_roomStrings
 .align 4
 _snd_roomStrings:
@@ -1954,14 +1985,18 @@ _snd_roomStrings:
     .long _str_00218f0c
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _cmd_text
 .align 4
 _cmd_text:
     .long _cmd_texts
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _dvarOnOffStrings
 .align 4
 _dvarOnOffStrings:
@@ -1969,6 +2004,7 @@ _dvarOnOffStrings:
     .long _str_00219528
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _fxInitialized
 .align 4
@@ -2013,7 +2049,7 @@ _g_rendererExists:
     .byte 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _eventnames
 .align 4
 _eventnames:
@@ -2219,7 +2255,7 @@ _eventnames:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _pmoveHandlers
 .align 4
 _pmoveHandlers:
@@ -2232,7 +2268,7 @@ _pmoveHandlers:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _viewLerp_CrouchStand
 .align 4
 _viewLerp_CrouchStand:
@@ -2246,7 +2282,7 @@ _viewLerp_CrouchStand:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _viewLerp_ProneCrouch
 .align 4
 _viewLerp_ProneCrouch:
@@ -2258,7 +2294,7 @@ _viewLerp_ProneCrouch:
     .byte 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _viewLerp_StandCrouch
 .align 4
 _viewLerp_StandCrouch:
@@ -2272,7 +2308,7 @@ _viewLerp_StandCrouch:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _viewLerp_CrouchProne
 .align 4
 _viewLerp_CrouchProne:
@@ -2288,7 +2324,7 @@ _viewLerp_CrouchProne:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _bg_iNumWeapons
 .align 4
 _bg_iNumWeapons:
@@ -2297,14 +2333,17 @@ _bg_iNumWeapons:
 #endif
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_EndPos
 .align 4
 _g_EndPos:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _var_typename
 .align 4
 _var_typename:
@@ -2333,6 +2372,7 @@ _var_typename:
     .long _str_0021d30c
     .long _str_0021d314
 #endif
+#endif
 
 #if !COD2_PLUS_SCRIPT /* src/PC/script's class map; CoD2rev-Plus has scrClassMap */
 .globl _g_classMap
@@ -2350,6 +2390,7 @@ _g_classMap:
 #endif
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _propertyNames
 .align 4
 _propertyNames:
@@ -2358,6 +2399,7 @@ _propertyNames:
     .long _str_0021dd7c
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 #endif
 
 .globl _s_mantleTrans
@@ -2370,6 +2412,7 @@ _s_mantleTrans:
     .byte 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd8, 0x41, 0x07, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0xa8, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _s_mantleAnimNames
 .align 4
 _s_mantleAnimNames:
@@ -2386,6 +2429,7 @@ _s_mantleAnimNames:
     .long _str_0021e04c
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl __ZN11FxBoltFrame12g_mFrameListE
 .align 4
@@ -3626,6 +3670,7 @@ _legacyHacks:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _g_pszSndAliasKeyNames
 .align 4
 _g_pszSndAliasKeyNames:
@@ -3653,7 +3698,9 @@ _g_pszSndAliasKeyNames:
     .long _str_0021ebc4
     .long _str_0021ebd0
     .long _str_0021ebd8
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _g_pszChannelNames
 .align 4
 _g_pszChannelNames:
@@ -3670,7 +3717,9 @@ _g_pszChannelNames:
     .long _str_002182a8
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _infoParms
 .align 4
 _infoParms:
@@ -3827,8 +3876,9 @@ _infoParms:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _weaponDefFields
 .align 4
 _weaponDefFields:
@@ -4566,7 +4616,7 @@ _weaponDefFields:
     .byte 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _offhandClassNames
 .align 4
 _offhandClassNames:
@@ -4575,7 +4625,7 @@ _offhandClassNames:
     .long _str_00221b58
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szProjectileExplosionNames
 .align 4
 _szProjectileExplosionNames:
@@ -4584,7 +4634,7 @@ _szProjectileExplosionNames:
     .long _str_00218298
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szWeapStanceNames
 .align 4
 _szWeapStanceNames:
@@ -4593,7 +4643,7 @@ _szWeapStanceNames:
     .long _str_00221b88
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szWeapSlotNames
 .align 4
 _szWeapSlotNames:
@@ -4602,7 +4652,7 @@ _szWeapSlotNames:
     .long _str_00221b98
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szWeapOverlayReticleNames
 .align 4
 _szWeapOverlayReticleNames:
@@ -4615,7 +4665,7 @@ _szWeapOverlayReticleNames:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szWeapClassNames
 .align 4
 _szWeapClassNames:
@@ -4631,7 +4681,7 @@ _szWeapClassNames:
     .long _str_0021ec08
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _szWeapTypeNames
 .align 4
 _szWeapTypeNames:
@@ -4821,6 +4871,7 @@ _s_entitySurface:
     .byte 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _s_aspectRatioNames
 .align 4
 _s_aspectRatioNames:
@@ -4829,7 +4880,9 @@ _s_aspectRatioNames:
     .long _str_00222ed8
     .long _str_00222ee4
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _s_technologyNames
 .align 4
 _s_technologyNames:
@@ -4837,7 +4890,9 @@ _s_technologyNames:
     .long _str_00222ef0
     .long _str_00222ef4
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _r_forceLodNames
 .align 4
 _r_forceLodNames:
@@ -4847,7 +4902,9 @@ _r_forceLodNames:
     .long _str_00222f0c
     .long _str_00218298
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _fbColorDebugNames
 .align 4
 _fbColorDebugNames:
@@ -4855,7 +4912,9 @@ _fbColorDebugNames:
     .long _str_00222f14
     .long _str_00222f1c
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _s_aaAlphaNames
 .align 4
 _s_aaAlphaNames:
@@ -4863,7 +4922,9 @@ _s_aaAlphaNames:
     .long _str_00222f28
     .long _str_00222f38
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _xdebugNames
 .align 4
 _xdebugNames:
@@ -4872,14 +4933,18 @@ _xdebugNames:
     .long _str_00222f54
     .long _str_00222f5c
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _normalMapNames
 .align 4
 _normalMapNames:
     .long _str_00222f64
     .long _str_00222f70
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _colorMapNames
 .align 4
 _colorMapNames:
@@ -4887,7 +4952,9 @@ _colorMapNames:
     .long _str_00222f78
     .long _str_00222f80
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _gpuSyncNames
 .align 4
 _gpuSyncNames:
@@ -4896,7 +4963,9 @@ _gpuSyncNames:
     .long _str_00222f94
     .long _str_00222fa4
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _debugShaderNames
 .align 4
 _debugShaderNames:
@@ -4906,7 +4975,9 @@ _debugShaderNames:
     .long _str_00222fc8
     .long _str_00222fd8
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _textureModeNames
 .align 4
 _textureModeNames:
@@ -4917,6 +4988,7 @@ _textureModeNames:
     .long _str_00223004
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _alwaysfails
 .align 4
@@ -4924,6 +4996,7 @@ _alwaysfails:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _g_platform_name
 .align 4
 _g_platform_name:
@@ -4931,7 +5004,9 @@ _g_platform_name:
     .long _str_00225110
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _imageTypeName
 .align 4
 _imageTypeName:
@@ -4947,7 +5022,9 @@ _imageTypeName:
     .long _str_00225160
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _g_imageProgNames
 .align 4
 _g_imageProgNames:
@@ -4964,7 +5041,9 @@ _g_imageProgNames:
     .long _str_002251fc
     .long _str_00224568
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _s_sundvars
 .align 4
 _s_sundvars:
@@ -4990,6 +5069,7 @@ _s_sundvars:
     .long _str_002265a0
     .long _str_002265b4
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _R_BoundsForDrawSurfTable
 .align 4
@@ -5056,31 +5136,39 @@ _virtualKeyConvert:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _yyout
 .align 4
 _yyout:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _yyin
 .align 4
 _yyin:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _yy_init
 .align 4
 _yy_init:
     .byte 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _kHighQualityKey
 .align 4
 _kHighQualityKey:
     .long _str_00228dbc
+#endif
 
 .globl __ZN10CVAOPacket14sCurrentPacketE
 .align 4
@@ -5114,6 +5202,7 @@ __ZN12CSoundObject13sOpenCallbackE:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _frenchNumberKeysMap
 .align 4
 _frenchNumberKeysMap:
@@ -5129,6 +5218,7 @@ _frenchNumberKeysMap:
     .long _str_002a6804
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _keynames_localized
 .align 4
@@ -5559,13 +5649,16 @@ _chatField:
     .byte 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _sv_serverId_value
 .align 4
 _sv_serverId_value:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _cg_soundRoomTypes
 .align 4
 _cg_soundRoomTypes:
@@ -5596,7 +5689,9 @@ _cg_soundRoomTypes:
     .long _str_00218f04
     .long _str_00218f0c
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _cg_drawSoundOverlayStrings
 .align 4
 _cg_drawSoundOverlayStrings:
@@ -5605,7 +5700,9 @@ _cg_drawSoundOverlayStrings:
     .long _str_002a7524
     .long _str_002a752c
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _cg_drawFpsNames
 .align 4
 _cg_drawFpsNames:
@@ -5614,6 +5711,7 @@ _cg_drawFpsNames:
     .long _str_002a753c
     .long _str_002a7544
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _cl_shownet
 .align 4
@@ -5789,11 +5887,14 @@ _dlText:
     .long _scrMemTreeGlob+517961
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_qport
 .align 4
 _g_qport:
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _netsrcString
 .align 4
 _netsrcString:
@@ -5801,6 +5902,7 @@ _netsrcString:
     .long _str_002ab030
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _g_console_char_height
 .align 4
@@ -6016,6 +6118,7 @@ _g_bindings:
 _updateScreenCalled:
     .byte 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _szShotName
 .align 4
 _szShotName:
@@ -6026,6 +6129,7 @@ _szShotName:
     .long _str_002acd10
     .long _str_002acd14
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _msg_hData
 .align 4
@@ -6063,6 +6167,7 @@ _msg_hData:
     .long 1355, 768, 1040, 745, 952, 805, 1073, 740
     .long 1013, 805, 1008, 796, 996, 1057, 11457, 13504
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _hudElemFields
 .align 4
 _hudElemFields:
@@ -6130,7 +6235,9 @@ _hudElemFields:
     .byte 0x6c, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00
     .long _str_002aced4
     .byte 0x7c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _objectiveFields
 .align 4
 _objectiveFields:
@@ -6147,7 +6254,9 @@ _objectiveFields:
     .long _str_002acf14
     .byte 0x14, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _kbitmask
 .align 4
 _kbitmask:
@@ -6169,6 +6278,7 @@ _kbitmask:
     .byte 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 #if !COD2_PLUS_SERVER /* the client commands of src/PC/server_mp; src/server has its own */
 .globl _ucmds
@@ -6205,7 +6315,7 @@ _bgs:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _animEventTypesStr
 .align 4
 _animEventTypesStr:
@@ -6249,7 +6359,7 @@ _animEventTypesStr:
     .byte 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _animMoveTypesStr
 .align 4
 _animMoveTypesStr:
@@ -6338,7 +6448,7 @@ _animMoveTypesStr:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _animStateStr
 .align 4
 _animStateStr:
@@ -6354,7 +6464,7 @@ _animStateStr:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animConditionsTable
 .align 4
 _animConditionsTable:
@@ -6375,7 +6485,7 @@ _animConditionsTable:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animStrafeStateStr
 .align 4
 _animStrafeStateStr:
@@ -6387,7 +6497,7 @@ _animStrafeStateStr:
     .byte 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animWeaponPositionStr
 .align 4
 _animWeaponPositionStr:
@@ -6397,7 +6507,7 @@ _animWeaponPositionStr:
     .byte 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animConditionMountedStr
 .align 4
 _animConditionMountedStr:
@@ -6408,7 +6518,7 @@ _animConditionMountedStr:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animWeaponClassStr
 .align 4
 _animWeaponClassStr:
@@ -6435,7 +6545,7 @@ _animWeaponClassStr:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animConditionsStr
 .align 4
 _animConditionsStr:
@@ -6460,7 +6570,7 @@ _animConditionsStr:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* it points into src/PC/game_mp or src/PC/bgame */
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _animParseModesStr
 .align 4
 _animParseModesStr:
@@ -6481,7 +6591,7 @@ _animParseModesStr:
 _globalFilename:
     .long _str_002aee58
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _controller_names
 .align 4
 _controller_names:
@@ -6495,7 +6605,7 @@ _controller_names:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _animBodyPartsStr
 .align 4
 _animBodyPartsStr:
@@ -6525,14 +6635,14 @@ _staticNULL:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _playerMaxs
 .align 4
 _playerMaxs:
     .byte 0x00, 0x00, 0x70, 0x41, 0x00, 0x00, 0x70, 0x41, 0x00, 0x00, 0x8c, 0x42
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _playerMins
 .align 4
 _playerMins:
@@ -6555,7 +6665,7 @@ _pm_str_endparty:
     .asciz "endparty"
     .align 4
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _functions
 .align 4
 _functions:
@@ -6996,7 +7106,7 @@ _functions:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _methods_003138c0
 .globl _methods
 .align 4
@@ -7182,7 +7292,7 @@ _methods_003138c0:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _spawns
 .align 4
 _spawns:
@@ -7238,6 +7348,7 @@ _range_00313c60:
     .byte 0x00, 0x00, 0x20, 0x42, 0x00, 0x00, 0x20, 0x42, 0x00, 0x00, 0x50, 0x42, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _gc_orders
 .align 4
 _gc_orders:
@@ -7249,6 +7360,7 @@ _gc_orders:
     .long _str_002b35d8
     .long _str_002b35f0
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _itemParseKeywords
 .align 4
@@ -7552,7 +7664,7 @@ _menuParseKeywords:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _entityHandlers
 .align 4
 _entityHandlers:
@@ -7642,7 +7754,7 @@ _entityHandlers:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_he_vertalign
 .align 4
 _g_he_vertalign:
@@ -7656,7 +7768,7 @@ _g_he_vertalign:
     .long _str_002b4d08
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_he_horzalign
 .align 4
 _g_he_horzalign:
@@ -7670,7 +7782,7 @@ _g_he_horzalign:
     .long _str_002b4d08
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_he_aligny
 .align 4
 _g_he_aligny:
@@ -7679,7 +7791,7 @@ _g_he_aligny:
     .long _str_002b4cec
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_he_alignx
 .align 4
 _g_he_alignx:
@@ -7688,7 +7800,7 @@ _g_he_alignx:
     .long _str_002b4d28
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_he_font
 .align 4
 _g_he_font:
@@ -7699,6 +7811,7 @@ _g_he_font:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _offhandStrings
 .align 4
 _offhandStrings:
@@ -7707,8 +7820,9 @@ _offhandStrings:
     .long _str_002b51d0
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
+#endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _hintStrings
 .align 4
 _hintStrings:
@@ -7721,21 +7835,25 @@ _hintStrings:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _actorLocationalMaxs
 .align 4
 _actorLocationalMaxs:
     .byte 0x00, 0x00, 0x80, 0x42, 0x00, 0x00, 0x80, 0x42, 0x00, 0x00, 0x90, 0x42
 #endif
+#endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _actorLocationalMins
 .align 4
 _actorLocationalMins:
     .byte 0x00, 0x00, 0x80, 0xc2, 0x00, 0x00, 0x80, 0xc2, 0x00, 0x00, 0x00, 0xc2, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
+#endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _modNames
 .align 4
 _modNames:
@@ -7756,7 +7874,7 @@ _modNames:
     .long _str_002b65c0
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _riflePriorityMap
 .align 4
 _riflePriorityMap:
@@ -7764,7 +7882,7 @@ _riflePriorityMap:
     .byte 0x03, 0x03, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _bulletPriorityMap
 .align 4
 _bulletPriorityMap:
@@ -7774,7 +7892,7 @@ _bulletPriorityMap:
     .byte 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _g_HitLocNames
 .align 4
 _g_HitLocNames:
@@ -7818,6 +7936,7 @@ _mins:
     .byte 0x00, 0x00, 0x80, 0xc0, 0x00, 0x00, 0x80, 0xc0, 0x00, 0x00, 0x80, 0xc0, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _svc_strings
 .align 4
 _svc_strings:
@@ -7891,7 +8010,9 @@ _svc_strings:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
+#if !COD2_PLUS_SERVER /* it points into code CoD2rev-Plus replaces */
 .globl _cg_shock_dvar_names
 .align 4
 _cg_shock_dvar_names:
@@ -7926,6 +8047,7 @@ _cg_shock_dvar_names:
     .long _str_002a8868
     .long _str_002a8888
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#endif
 
 .globl _s_barrelTags
 .align 4
@@ -7948,7 +8070,7 @@ _cg_localEntities:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/game or src/bgame defines it */
+#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
 .globl _accuracyDirName
 .align 4
 _accuracyDirName:

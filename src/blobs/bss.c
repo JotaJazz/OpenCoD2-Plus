@@ -68,28 +68,38 @@ unsigned char sDirect3DInterface[128];
 unsigned char sPointScale[128];
 BSSINT sEventTargetRef;
 unsigned char sSystemCursorVisible_00334e84[124];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char g_threadValues[20];
+#endif
 unsigned char threadId[108];
 unsigned char value1[16384];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char g_com_error[96];
 unsigned char va_info[2052];
+#endif
 BSSINT LittleFloatWrite;
 BSSINT LittleFloatRead;
 BSSINT LittleLong64;
 BSSINT LittleLong;
 BSSINT LittleShort;
 unsigned char valueindex[8];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 BSSINT iWeaponInfoSource;
+#endif
 BSSINT logfile;
 unsigned char errorcode[120];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char com_errorMessage[4096];
 BSSINT com_lastFrameTime;
 BSSINT com_codeTimeScale;
 unsigned char com_fullyInitialized[120];
+#endif
 unsigned char com_pushedEvents[6144];
 BSSINT com_pushedEventsTail;
 BSSINT com_pushedEventsHead;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 BSSINT com_safemode;
+#endif
 BSSINT rd_flush;
 BSSINT rd_buffersize;
 BSSINT rd_buffer;
@@ -141,14 +151,18 @@ unsigned char cmd_argv[2048];
 unsigned char cmd_argc[128];
 unsigned char cmd_tokenized[8704];
 unsigned char cmd_args1[1024];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char cmd_text_buf[65536];
+#endif
 unsigned char info2_00495f00[8192];
 unsigned char info1[1024];
 unsigned char dvarHashTable[1024];
 unsigned char dvarVectorPool[48];
 BSSINT dvarVectorIndex;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char dvar_cheats[12];
 unsigned char dvarPool[46080];
+#endif
 unsigned char isDvarSystemActive[1];
 unsigned char isLoadingAutoExecGlobalFlag[63];
 unsigned char milesGlob[384];
@@ -159,6 +173,7 @@ unsigned char visibleEffectsBolt[14400];
 unsigned char visibleEffectsNonBolt[14400];
 unsigned char effectTemplateArrayCount[32];
 unsigned char effectTemplateArray[1120];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 BSSINT g_bDObjInited;
 unsigned char com_lastDObjIndex[124];
 unsigned char serverObjMap[2048];
@@ -166,6 +181,7 @@ unsigned char clientObjMap[2304];
 unsigned char objFreeCount[128];
 unsigned char objAlloced[2048];
 unsigned char objBuf[204800];
+#endif
 unsigned char g_empty[128];
 unsigned char localization[32];
 unsigned char language_buffer[4192];
@@ -214,7 +230,9 @@ unsigned char token_004ed380[1024];
 unsigned char statCount[32];
 unsigned char stats[96];
 unsigned char initialized[128];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char cm_world[24704];
+#endif
 #if defined(COD2_X64) || defined(__x86_64__)
 cin_cache cinTable[16];   /* x86 blob 7360 (460*16); x64 cin_cache=496 -> 7936 > 7360 overflow */
 #else
@@ -245,9 +263,11 @@ unsigned char bg_defaultWeaponDefs[1568];
 unsigned char g_playerAnimTypeNames[256];
 unsigned char g_playerAnimTypeNamesCount[96];
 unsigned char sys_info[544];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char eventQue[6144];
 BSSINT eventTail;
 BSSINT eventHead;
+#endif
 BSSINT sys_configSum;
 BSSINT sys_gpu;
 BSSINT sys_sysMB;
@@ -368,7 +388,9 @@ yy_state_type yy_last_accepting_state;
 #endif
 BSSINT sSoundEngine;
 unsigned char sHighQualityEngine[124];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char comBspGlob[128];
+#endif
 unsigned char __ZGVZ16GetMacGameEnginevE13theGameEngine[32];
 unsigned char theGameEngine[96];
 unsigned char sDeviceName[128];
@@ -413,8 +435,10 @@ unsigned char info_00ecf960[1024];
 BSSINT numTimeOuts;
 BSSINT numFound;
 unsigned char tleIndex[24];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 loopback_t loopbacks[2];
 unsigned char net_iProfilingOn[16];
+#endif
 unsigned char s[96];
 unsigned char string_00edae00[1024];
 unsigned char con[151588];
@@ -524,7 +548,9 @@ unsigned char cg_triggerEntities[1024];
 unsigned char cg_numSolidEntities[128];
 unsigned char cg_solidEntities[1024];
 localEntity_t cg_eachClientLocalEntities[128];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 BSSINT ip_socket;
+#endif
 unsigned char winsockInitialized[28];
 unsigned char winsockdata[400];
 BSSINT net_socksPassword;
@@ -541,7 +567,9 @@ unsigned char usingSocks[28];
 unsigned char localIP[64];
 unsigned char numIP[32];
 unsigned char socksBuf[4096];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char ipx_socket[32];
+#endif
 unsigned char hackSize[128];
 BSSINT currentRecordingSample;
 unsigned char recording[28];
@@ -565,12 +593,15 @@ unsigned char g_NoTextureID[127];
 unsigned char __ZN6CFence15sUnusedFenceIDsE[128];
 unsigned char __ZN13CMemoryBuffer20sDelayedFreeRequestsE[128];
 unsigned char __ZN7COpenGL7sOpenGLE[4096];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64) || defined(__x86_64__)
 TraceThreadInfo g_traceThreadInfo[1];   /* x86 blob 28; x64 sizeof 48 (pointer fields grow) */
 #else
 unsigned char g_traceThreadInfo[28];
 #endif
+#endif
 /* consumer char *com_consoleLines[32]: x86-sized pointer-array blob, too small on x64 */
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64) || defined(__x86_64__)
 char *com_consoleLines[32];
 #else
@@ -584,23 +615,31 @@ BSSINT com_errorEntered;
 BSSINT com_frameNumber;
 BSSINT com_frameTime;
 const dvar_t *com_animCheck;
+#endif
 const dvar_t *com_recommendedSet;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *sv_paused;
+#endif
 #if !COD2_PLUS_SERVER  /* defined by src/server */
 const dvar_t *com_expectedHunkUsage;
 BSSINT nextmap;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *cl_paused;
 const dvar_t *com_introPlayed;
+#endif
 const dvar_t *shortversion;
 BSSINT version_00ff3f60;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *com_logfile;
 const dvar_t *com_sv_running;
 const dvar_t *com_maxfps;
 const dvar_t *com_fixedtime;
 float com_timescaleValue;
 const dvar_t *com_timescale;
+#endif
 const dvar_t *com_statmon;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *com_developer_script;
 const dvar_t *com_developer;
 const dvar_t *com_viewlog;
@@ -611,21 +650,28 @@ const dvar_t *loc_forceEnglish;
 const dvar_t *loc_language;
 char lastValidGame[256];
 char lastValidBase[256];
+#endif
 /* consumer char *fs_serverReferencedIwdNames[1024]: x86-sized pointer-array blob, too small on x64 */
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64) || defined(__x86_64__)
 char *fs_serverReferencedIwdNames[1024];
 #else
 char *fs_serverReferencedIwdNames[1024];
 #endif
+#endif
 unsigned char fs_serverReferencedIwds[4096];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 int fs_numServerReferencedIwds;
+#endif
 /* consumer char *fs_serverIwdNames[1024]: x86-sized pointer-array blob, too small on x64 */
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64) || defined(__x86_64__)
 char *fs_serverIwdNames[1024];
 #else
 char *fs_serverIwdNames[1024];
 #endif
 int fs_serverIwds[1024];
+#endif
 #if defined(__x86_64__) || defined(_M_X64)
 
 fileHandleData_t fsh[74];
@@ -633,6 +679,7 @@ fileHandleData_t fsh[74];
 fileHandleData_t fsh[74];
 #endif
 BSSINT fs_checksumFeed;
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 BSSINT fs_fakeChkSum;
 const dvar_t *fs_ignoreLocalized;
 const dvar_t *fs_restrict;
@@ -644,10 +691,13 @@ const dvar_t *fs_basegame;
 const dvar_t *fs_basepath;
 const dvar_t *fs_homepath;
 const dvar_t *fs_debug;
+#endif
 char fs_gamedir[256];
 BSSINT fs_loadStack;
 unsigned char com_fileAccessed[96];
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 dvar_t *com_dedicated;   /* dvar pointer-blob retype */
+#endif
 struct scrMemTreePub_t scrMemTreePub;
 struct XModelDefault g_default;
 const dvar_t *snd_touchStreamFilesOnLoad;
@@ -672,10 +722,12 @@ cmd_t cmd_texts[1];   /* x86 blob 12; x64 sizeof 16 (cmd_t data pointer grows) *
 #else
 unsigned char cmd_texts[12];
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 int cmd_wait;
 BSSINT dvarCount;
 BSSINT dvar_modifiedFlags;
 dvar_t *sortedDvars;   /* was unsigned char[116] blob; consumer uses it as dvar_t* (dvar=sortedDvars) -- pointer retype */
+#endif
 BSSINT mss_q3fs;
 const dvar_t *mss_3d_provider;   /* dvar pointer-blob retype */
 BSSINT visibleEffectCountBolt;
@@ -730,6 +782,7 @@ const dvar_t *bg_foliagesnd_slowinterval;
 const dvar_t *bg_foliagesnd_maxspeed;
 const dvar_t *bg_foliagesnd_minspeed;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64)
 /* x86 sizeof(clipMap_t)=384; on x64 its many pointer fields grow so the struct is
    larger -> the byte blob put nodes/planes/leafs at wrong offsets and overflowed
@@ -737,6 +790,7 @@ const dvar_t *bg_foliagesnd_minspeed;
 clipMap_t cm;
 #else
 struct clipMap_t cm;
+#endif
 #endif
 /* Consumer is `WeaponDef *bg_weaponDefs[128]` (bg_weapons.c). As a fixed 608-byte
    blob that holds only 76 pointers on x64 (8 bytes each), high weapon indices read
@@ -818,7 +872,9 @@ struct g_sa_type g_sa;
 #else
 struct g_sa_type g_sa;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 int sys_timeBase;
+#endif
 unsigned char legacyHacksArray[1792];
 struct saLoadObjGlob_type saLoadObjGlob;
 int giFilesFound;
@@ -835,7 +891,9 @@ WinVars_t g_wv;   /* x86 blob 32; x64 sizeof(WinVars_t)=48 -> overflow */
 #else
 unsigned char g_wv[32];
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char sys_packetReceived[16480];
+#endif
 #if defined(COD2_X64)
 /* x86 sizeof(GfxScene)=124292; on x64 the GfxEntity/GfxSceneEntity arrays + pointer
    fields grow so the struct is larger -> the byte blob put def.entityCount / sceneEnts /
@@ -1343,12 +1401,14 @@ sharedUiInfo_t sharedUiInfo;   /* x86 blob 115392; x64 sizeof(sharedUiInfo_t)=12
 #else
 sharedUiInfo_t sharedUiInfo;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *net_lanauthorize;
 const dvar_t *net_showprofile;
 const dvar_t *net_profile;
 const dvar_t *packetDebug;
 const dvar_t *showdrop;
 const dvar_t *showpackets;
+#endif
 #if !COD2_PLUS_SERVER  /* defined by src/server */
 const dvar_t *sv_allowedClan2;
 const dvar_t *sv_allowedClan1;

@@ -154,8 +154,15 @@ class Modules(unittest.TestCase):
         self.assertIn('return 0;', custom['G_AnimScriptSound'])
         self.assertRegex(custom['G_RegisterWeapon'], r'void cod2x_G_RegisterWeapon\(int weapIndex\)\n\{\n\s+G_RegisterWeapon\(weapIndex\);\n\}')
 
-    def test_script_module_splits_on_game(self):
-        self.assertEqual(g.MODULES['script']['client_only'], ['cod2_plus_server.dir/src/game/*.o'])
+    def test_script_module_splits_on_plus_code(self):
+        # what CoD2rev-Plus's game or core defines in the dedicated server, the
+        # VM's thunks into src/PC give only the client
+        client_only = g.MODULES['script']['client_only']
+        for d in ('game', 'universal', 'qcommon', 'stringed', 'unix', 'win32'):
+            self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', client_only)
+
+    def test_fatal_exports_need_no_interface_line(self):
+        self.assertEqual(g.export_names(['A', 'B'], {'C', 'A'}), ['A', 'B', 'C'])
 
 
 if __name__ == '__main__':

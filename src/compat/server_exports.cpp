@@ -1746,12 +1746,6 @@ static_assert(cod2_abi_slot<int>() == 4, "FS_WriteFile: parameter 2 differs from
 extern "C" cod2_abi_int<decltype(FS_WriteFile(std::declval<char const*>(), std::declval<void const*>(), std::declval<int>())), 4> cod2x_FS_WriteFile(char const* a0, void const* a1, int a2) __asm__(COD2_SYM("FS_WriteFile"));
 cod2_abi_int<decltype(FS_WriteFile(std::declval<char const*>(), std::declval<void const*>(), std::declval<int>())), 4> cod2x_FS_WriteFile(char const* a0, void const* a1, int a2) { return (cod2_abi_int<decltype(FS_WriteFile(std::declval<char const*>(), std::declval<void const*>(), std::declval<int>())), 4>)FS_WriteFile(a0, a1, a2); }
 
-static_assert(cod2_bridge_returns_scalar<decltype(Field_Clear(std::declval<field_t*>()))>::value, "Field_Clear returns a struct");
-static_assert(cod2_abi_class<decltype(Field_Clear(std::declval<field_t*>()))>() == 'v', "Field_Clear: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<field_t*>() == 4, "Field_Clear: parameter 0 differs from src/PC/server_mp");
-extern "C" decltype(Field_Clear(std::declval<field_t*>())) cod2x_Field_Clear(field_t* a0) __asm__(COD2_SYM("Field_Clear"));
-decltype(Field_Clear(std::declval<field_t*>())) cod2x_Field_Clear(field_t* a0) { return Field_Clear(a0); }
-
 static_assert(cod2_bridge_returns_scalar<decltype(GetBspExtension())>::value, "GetBspExtension returns a struct");
 static_assert(cod2_abi_class<decltype(GetBspExtension())>() == 'i', "GetBspExtension: return class differs from src/PC/server_mp");
 extern "C" cod2_abi_int<decltype(GetBspExtension()), 4> cod2x_GetBspExtension() __asm__(COD2_SYM("GetBspExtension"));
@@ -2271,3 +2265,385 @@ static_assert(cod2_abi_class<decltype(Z_MallocInternal(std::declval<int>()))>() 
 static_assert(cod2_abi_slot<int>() == 4, "Z_MallocInternal: parameter 0 differs from src/PC/server_mp");
 extern "C" cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4> cod2x_Z_MallocInternal(int a0) __asm__(COD2_SYM("Z_MallocInternal"));
 cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4> cod2x_Z_MallocInternal(int a0) { return (cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4>)Z_MallocInternal(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(Com_SurfaceTypeToName(std::declval<int>()))>::value, "Com_SurfaceTypeToName returns a struct");
+extern "C" decltype(Com_SurfaceTypeToName(std::declval<int>())) cod2x_Com_SurfaceTypeToName(int a0) __asm__(COD2_SYM("Com_SurfaceTypeToName"));
+decltype(Com_SurfaceTypeToName(std::declval<int>())) cod2x_Com_SurfaceTypeToName(int a0) { return Com_SurfaceTypeToName(a0); }
+
+extern "C" void cod2x_CCallOfDutyEngine_DoMouseWheel(void) __asm__(COD2_SYM("CCallOfDutyEngine_DoMouseWheel"));
+void cod2x_CCallOfDutyEngine_DoMouseWheel(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CCallOfDutyEngine_DoMouseWheel" );
+}
+
+extern "C" void cod2x_CCallOfDutyEngine_DoTextInput(void) __asm__(COD2_SYM("CCallOfDutyEngine_DoTextInput"));
+void cod2x_CCallOfDutyEngine_DoTextInput(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CCallOfDutyEngine_DoTextInput" );
+}
+
+extern "C" void cod2x_CM_GetPlaneNum(void) __asm__(COD2_SYM("CM_GetPlaneNum"));
+void cod2x_CM_GetPlaneNum(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CM_GetPlaneNum" );
+}
+
+extern "C" void cod2x_CM_SaveLump(void) __asm__(COD2_SYM("CM_SaveLump"));
+void cod2x_CM_SaveLump(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CM_SaveLump" );
+}
+
+extern "C" void cod2x_CMacGameEngine_DrawSplashScreen(void) __asm__(COD2_SYM("CMacGameEngine_DrawSplashScreen"));
+void cod2x_CMacGameEngine_DrawSplashScreen(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CMacGameEngine_DrawSplashScreen" );
+}
+
+extern "C" void cod2x_Cmd_ArgsBuffer(void) __asm__(COD2_SYM("Cmd_ArgsBuffer"));
+void cod2x_Cmd_ArgsBuffer(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Cmd_ArgsBuffer" );
+}
+
+extern "C" void cod2x_Cmd_GetAutoCompleteFileList(void) __asm__(COD2_SYM("Cmd_GetAutoCompleteFileList"));
+void cod2x_Cmd_GetAutoCompleteFileList(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Cmd_GetAutoCompleteFileList" );
+}
+
+extern "C" void cod2x_Cmd_TokenizeString2(void) __asm__(COD2_SYM("Cmd_TokenizeString2"));
+void cod2x_Cmd_TokenizeString2(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Cmd_TokenizeString2" );
+}
+
+extern "C" void cod2x_Com_LoadDvarsFromBuffer(void) __asm__(COD2_SYM("Com_LoadDvarsFromBuffer"));
+void cod2x_Com_LoadDvarsFromBuffer(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Com_LoadDvarsFromBuffer" );
+}
+
+extern "C" void cod2x_Com_SaveDvarsToBuffer(void) __asm__(COD2_SYM("Com_SaveDvarsToBuffer"));
+void cod2x_Com_SaveDvarsToBuffer(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Com_SaveDvarsToBuffer" );
+}
+
+extern "C" void cod2x_Com_SurfaceTypeFromName(void) __asm__(COD2_SYM("Com_SurfaceTypeFromName"));
+void cod2x_Com_SurfaceTypeFromName(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Com_SurfaceTypeFromName" );
+}
+
+extern "C" void cod2x_Com_TouchMemory(void) __asm__(COD2_SYM("Com_TouchMemory"));
+void cod2x_Com_TouchMemory(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Com_TouchMemory" );
+}
+
+extern "C" void cod2x_Dvar_AnyLatchedValues(void) __asm__(COD2_SYM("Dvar_AnyLatchedValues"));
+void cod2x_Dvar_AnyLatchedValues(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_AnyLatchedValues" );
+}
+
+extern "C" void cod2x_Dvar_ChangeResetValue(void) __asm__(COD2_SYM("Dvar_ChangeResetValue"));
+void cod2x_Dvar_ChangeResetValue(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_ChangeResetValue" );
+}
+
+extern "C" void cod2x_Dvar_EnumToString(void) __asm__(COD2_SYM("Dvar_EnumToString"));
+void cod2x_Dvar_EnumToString(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_EnumToString" );
+}
+
+extern "C" void cod2x_Dvar_GetUnpackedColor(void) __asm__(COD2_SYM("Dvar_GetUnpackedColor"));
+void cod2x_Dvar_GetUnpackedColor(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_GetUnpackedColor" );
+}
+
+extern "C" void cod2x_Dvar_GetUnpackedColorByName(void) __asm__(COD2_SYM("Dvar_GetUnpackedColorByName"));
+void cod2x_Dvar_GetUnpackedColorByName(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_GetUnpackedColorByName" );
+}
+
+extern "C" void cod2x_Dvar_ResetDvars(void) __asm__(COD2_SYM("Dvar_ResetDvars"));
+void cod2x_Dvar_ResetDvars(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_ResetDvars" );
+}
+
+extern "C" void cod2x_Dvar_SetCheatState(void) __asm__(COD2_SYM("Dvar_SetCheatState"));
+void cod2x_Dvar_SetCheatState(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_SetCheatState" );
+}
+
+extern "C" void cod2x_Dvar_SetFromString(void) __asm__(COD2_SYM("Dvar_SetFromString"));
+void cod2x_Dvar_SetFromString(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_SetFromString" );
+}
+
+extern "C" void cod2x_Dvar_SetFromStringByNameFromSource(void) __asm__(COD2_SYM("Dvar_SetFromStringByNameFromSource"));
+void cod2x_Dvar_SetFromStringByNameFromSource(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_SetFromStringByNameFromSource" );
+}
+
+extern "C" void cod2x_Dvar_SetModified(void) __asm__(COD2_SYM("Dvar_SetModified"));
+void cod2x_Dvar_SetModified(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_SetModified" );
+}
+
+extern "C" void cod2x_Dvar_UnregisterSystem(void) __asm__(COD2_SYM("Dvar_UnregisterSystem"));
+void cod2x_Dvar_UnregisterSystem(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_UnregisterSystem" );
+}
+
+extern "C" void cod2x_Dvar_UpdateEnumDomain(void) __asm__(COD2_SYM("Dvar_UpdateEnumDomain"));
+void cod2x_Dvar_UpdateEnumDomain(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Dvar_UpdateEnumDomain" );
+}
+
+extern "C" void cod2x_FS_CompareIwds(void) __asm__(COD2_SYM("FS_CompareIwds"));
+void cod2x_FS_CompareIwds(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_CompareIwds" );
+}
+
+extern "C" void cod2x_FS_ConditionalRestart(void) __asm__(COD2_SYM("FS_ConditionalRestart"));
+void cod2x_FS_ConditionalRestart(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_ConditionalRestart" );
+}
+
+extern "C" void cod2x_FS_CopyFile(void) __asm__(COD2_SYM("FS_CopyFile"));
+void cod2x_FS_CopyFile(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_CopyFile" );
+}
+
+extern "C" void cod2x_FS_CreatePath(void) __asm__(COD2_SYM("FS_CreatePath"));
+void cod2x_FS_CreatePath(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_CreatePath" );
+}
+
+extern "C" void cod2x_FS_FTell(void) __asm__(COD2_SYM("FS_FTell"));
+void cod2x_FS_FTell(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_FTell" );
+}
+
+extern "C" void cod2x_FS_FullPath_f(void) __asm__(COD2_SYM("FS_FullPath_f"));
+void cod2x_FS_FullPath_f(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_FullPath_f" );
+}
+
+extern "C" void cod2x_FS_Path_f(void) __asm__(COD2_SYM("FS_Path_f"));
+void cod2x_FS_Path_f(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_Path_f" );
+}
+
+extern "C" void cod2x_FS_PureServerSetReferencedIwds(void) __asm__(COD2_SYM("FS_PureServerSetReferencedIwds"));
+void cod2x_FS_PureServerSetReferencedIwds(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_PureServerSetReferencedIwds" );
+}
+
+extern "C" void cod2x_FS_ReferencedIwdPureChecksums(void) __asm__(COD2_SYM("FS_ReferencedIwdPureChecksums"));
+void cod2x_FS_ReferencedIwdPureChecksums(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_ReferencedIwdPureChecksums" );
+}
+
+extern "C" void cod2x_FS_SV_Rename(void) __asm__(COD2_SYM("FS_SV_Rename"));
+void cod2x_FS_SV_Rename(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_SV_Rename" );
+}
+
+extern "C" void cod2x_FS_ShiftStr(void) __asm__(COD2_SYM("FS_ShiftStr"));
+void cod2x_FS_ShiftStr(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_ShiftStr" );
+}
+
+extern "C" void cod2x_FS_ShortOSFilePath(void) __asm__(COD2_SYM("FS_ShortOSFilePath"));
+void cod2x_FS_ShortOSFilePath(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "FS_ShortOSFilePath" );
+}
+
+extern "C" void cod2x_Field_Clear(void) __asm__(COD2_SYM("Field_Clear"));
+void cod2x_Field_Clear(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Field_Clear" );
+}
+
+extern "C" void cod2x_Hunk_AllocNoZeroInternal(void) __asm__(COD2_SYM("Hunk_AllocNoZeroInternal"));
+void cod2x_Hunk_AllocNoZeroInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Hunk_AllocNoZeroInternal" );
+}
+
+extern "C" void cod2x_Hunk_Used(void) __asm__(COD2_SYM("Hunk_Used"));
+void cod2x_Hunk_Used(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Hunk_Used" );
+}
+
+extern "C" void cod2x_Language_IsAsian(void) __asm__(COD2_SYM("Language_IsAsian"));
+void cod2x_Language_IsAsian(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Language_IsAsian" );
+}
+
+extern "C" void cod2x_LargeLocal_GetBuf(void) __asm__(COD2_SYM("LargeLocal_GetBuf"));
+void cod2x_LargeLocal_GetBuf(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "LargeLocal_GetBuf" );
+}
+
+extern "C" void cod2x_LargeLocal_LargeLocal(void) __asm__(COD2_SYM("LargeLocal_LargeLocal"));
+void cod2x_LargeLocal_LargeLocal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "LargeLocal_LargeLocal" );
+}
+
+extern "C" void cod2x_ReplaceStringInternal(void) __asm__(COD2_SYM("ReplaceStringInternal"));
+void cod2x_ReplaceStringInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "ReplaceStringInternal" );
+}
+
+extern "C" void cod2x_SEH_LocalizeTextMessage(void) __asm__(COD2_SYM("SEH_LocalizeTextMessage"));
+void cod2x_SEH_LocalizeTextMessage(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_LocalizeTextMessage" );
+}
+
+extern "C" void cod2x_SEH_PrintStrlen(void) __asm__(COD2_SYM("SEH_PrintStrlen"));
+void cod2x_SEH_PrintStrlen(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_PrintStrlen" );
+}
+
+extern "C" void cod2x_SEH_ReadCharFromString(void) __asm__(COD2_SYM("SEH_ReadCharFromString"));
+void cod2x_SEH_ReadCharFromString(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_ReadCharFromString" );
+}
+
+extern "C" void cod2x_SEH_SafeTranslateString(void) __asm__(COD2_SYM("SEH_SafeTranslateString"));
+void cod2x_SEH_SafeTranslateString(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_SafeTranslateString" );
+}
+
+extern "C" void cod2x_SEH_StringEd_GetString(void) __asm__(COD2_SYM("SEH_StringEd_GetString"));
+void cod2x_SEH_StringEd_GetString(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_StringEd_GetString" );
+}
+
+extern "C" void cod2x_SEH_UpdateLanguageInfo(void) __asm__(COD2_SYM("SEH_UpdateLanguageInfo"));
+void cod2x_SEH_UpdateLanguageInfo(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_UpdateLanguageInfo" );
+}
+
+extern "C" void cod2x_SEH_VerifyLanguageSelection(void) __asm__(COD2_SYM("SEH_VerifyLanguageSelection"));
+void cod2x_SEH_VerifyLanguageSelection(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "SEH_VerifyLanguageSelection" );
+}
+
+extern "C" void cod2x_Sys_DirectXFatalError(void) __asm__(COD2_SYM("Sys_DirectXFatalError"));
+void cod2x_Sys_DirectXFatalError(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_DirectXFatalError" );
+}
+
+extern "C" void cod2x_Sys_LoadingKeepAlive(void) __asm__(COD2_SYM("Sys_LoadingKeepAlive"));
+void cod2x_Sys_LoadingKeepAlive(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_LoadingKeepAlive" );
+}
+
+extern "C" void cod2x_Sys_MillisecondsRaw(void) __asm__(COD2_SYM("Sys_MillisecondsRaw"));
+void cod2x_Sys_MillisecondsRaw(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_MillisecondsRaw" );
+}
+
+extern "C" void cod2x_Sys_OpenURL(void) __asm__(COD2_SYM("Sys_OpenURL"));
+void cod2x_Sys_OpenURL(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_OpenURL" );
+}
+
+extern "C" void cod2x_Sys_RemoveDirTree(void) __asm__(COD2_SYM("Sys_RemoveDirTree"));
+void cod2x_Sys_RemoveDirTree(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_RemoveDirTree" );
+}
+
+extern "C" void cod2x_Sys_StartProcess(void) __asm__(COD2_SYM("Sys_StartProcess"));
+void cod2x_Sys_StartProcess(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_StartProcess" );
+}
+
+extern "C" void cod2x_ZN10LargeLocalD1Ev(void) __asm__(COD2_SYM("ZN10LargeLocalD1Ev"));
+void cod2x_ZN10LargeLocalD1Ev(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "ZN10LargeLocalD1Ev" );
+}
+
+extern "C" void cod2x_Z_VirtualAllocInternal(void) __asm__(COD2_SYM("Z_VirtualAllocInternal"));
+void cod2x_Z_VirtualAllocInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Z_VirtualAllocInternal" );
+}
+
+extern "C" void cod2x_Z_VirtualCommitInternal(void) __asm__(COD2_SYM("Z_VirtualCommitInternal"));
+void cod2x_Z_VirtualCommitInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Z_VirtualCommitInternal" );
+}
+
+extern "C" void cod2x_Z_VirtualDecommitInternal(void) __asm__(COD2_SYM("Z_VirtualDecommitInternal"));
+void cod2x_Z_VirtualDecommitInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Z_VirtualDecommitInternal" );
+}
+
+extern "C" void cod2x_Z_VirtualFreeInternal(void) __asm__(COD2_SYM("Z_VirtualFreeInternal"));
+void cod2x_Z_VirtualFreeInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Z_VirtualFreeInternal" );
+}
+
+extern "C" void cod2x_Z_VirtualReserveInternal(void) __asm__(COD2_SYM("Z_VirtualReserveInternal"));
+void cod2x_Z_VirtualReserveInternal(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Z_VirtualReserveInternal" );
+}
+
+extern "C" void cod2x_hunk_guard_check(void) __asm__(COD2_SYM("hunk_guard_check"));
+void cod2x_hunk_guard_check(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "hunk_guard_check" );
+}

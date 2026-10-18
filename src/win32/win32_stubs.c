@@ -5,7 +5,9 @@ int g_dip_is_tri;
 int g_dip_numelems_zero;
 int g_fp_enable_count;
 
+#if !COD2_PLUS_SERVER  /* the dedicated server's bridge stops on it (test/server_fatal.txt) */
 void CMacGameEngine_DrawSplashScreen(void) {}
+#endif
 #ifdef W32_CLIENT
 
 int Linux_PollInputEvent(void *event) { (void)event; return 0; }
@@ -139,4 +141,6 @@ int   curl_multi_add_handle(void*a,void*b){(void)a;(void)b;return 0;}
 int   curl_multi_remove_handle(void*a,void*b){(void)a;(void)b;return 0;}
 int   curl_multi_perform(void*a,int*b){(void)a;if(b)*b=0;return 0;}
 void *curl_multi_info_read(void*a,int*b){(void)a;if(b)*b=0;return 0;}
+#if !COD2_PLUS_SERVER  /* the dedicated server's bridge stops on it (test/server_fatal.txt) */
 void  Sys_OpenURL(const char *url, int activate){(void)url;(void)activate;}
+#endif

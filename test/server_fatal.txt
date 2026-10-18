@@ -73,3 +73,11 @@ MSG_ReadBitsCompress
 Com_GetClientDObj
 CM_TransformedBoxTraceExternal
 CM_BoxTrace
+# Only cgame and cgame_mp look surface types up by name.
+Com_SurfaceTypeFromName
+# Only the client's console clears its input field; CoD2rev-Plus has it only
+# in src/unix.
+Field_Clear
+# Only linux_input.c, the client's SDL input, feeds these to the Mac input layer.
+CCallOfDutyEngine_DoMouseWheel
+CCallOfDutyEngine_DoTextInput

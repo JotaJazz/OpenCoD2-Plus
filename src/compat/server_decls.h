@@ -38,7 +38,6 @@ int FS_FOpenFileReadStream( const char *filename, fileHandle_t *file, qboolean u
 int SEH_GetCurrentLanguage( void );                                                   /* stringed/stringed_hooks.cpp */
 qboolean SEH_GetLanguageIndexForName( const char* language, int *langindex );         /* stringed/stringed_hooks.cpp */
 const char *SEH_GetLanguageName( const int iLanguage );                               /* stringed/stringed_hooks.cpp */
-void Field_Clear( field_t *edit );                                                    /* unix/unix_main.cpp */
 void Sys_BeginStreamedFile( fileHandle_t f, int readAhead );                          /* unix/unix_main.cpp */
 void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );  /* unix/unix_main.cpp */
 int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f );            /* unix/unix_main.cpp */

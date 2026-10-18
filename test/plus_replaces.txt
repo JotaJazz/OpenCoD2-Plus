@@ -12,6 +12,7 @@ src/PC/bgame/
 src/PC/universal/dvar.c
 src/PC/universal/com_memory.c
 src/PC/universal/com_files.c
+src/PC/universal/surfaceflags.c
 # qcommon
 src/PC/qcommon/common.c
 src/PC/qcommon/cmd.c
@@ -33,14 +34,18 @@ src/PC/qcommon/cm_trace.c
 src/PC/qcommon/cm_world.c
 src/PC/qcommon/com_bsp_load_obj.c
 src/PC/qcommon/com_fileaccess.c
+# zlib's unzip (CoD2rev-Plus's has the 64-bit API it uses)
+src/PC/zlib/unzip.c
 # stringed (the current language)
 src/PC/stringed/stringed_hooks.c
 # platform (src/unix in Linux, src/win32 in MinGW)
 src/PC/win32/win_net.c
 src/PC/win32/win_threads.c
 src/PC/win32/win_shared.c
+src/PC/win32/win_syscon.c
 src/Mac/Main/mac_main.c
 src/Mac/Main/mac_common.c
 src/Mac/Main/mac_syscon.c
+src/Mac/Main/mac_input.c
 src/unix/linux_common.c
 src/unix/linux_net.c

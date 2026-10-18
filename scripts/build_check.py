@@ -11,7 +11,8 @@ glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
 distributions than the build machine) and the dedicated server needs none of
 the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
 server must get no C name both from CoD2rev-Plus and from the engine
-(scripts/check_duplicates.py).
+(scripts/check_duplicates.py), and no engine object of it may still define a
+function the bridge exports (scripts/check_single_impl.py).
 """
 import argparse, os, re, subprocess, sys
 
@@ -68,13 +69,19 @@ def client_libraries(build_dir):
 
 
 def duplicates(variant, build_dir):
-    """The C names the dedicated server gets both from CoD2rev-Plus and from the engine."""
+    """The C names the dedicated server gets both from CoD2rev-Plus and from the
+    engine, and the exported functions an engine object of it still defines."""
     target, nm = ('cod2_win32_ded', 'i686-w64-mingw32-nm') if variant == 'mingw' else ('cod2_lnxded', 'nm')
     if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
         return []
-    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_duplicates.py'), build_dir, target,
-                          '--nm', nm], capture_output=True, text=True)
-    return [] if run.returncode == 0 else [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+    errors = []
+    for script, extra in (('check_duplicates.py', []),
+                          ('check_single_impl.py', ['--prefix', '_' if variant == 'mingw' else ''])):
+        run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', script), build_dir, target,
+                              '--nm', nm] + extra, capture_output=True, text=True)
+        if run.returncode != 0:
+            errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+    return errors
 
 
 def main():

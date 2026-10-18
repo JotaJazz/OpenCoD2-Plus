@@ -108,18 +108,21 @@ endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
 # the generated bridge in src/compat (scripts/gen_script_bridge.py), and
-# cod2_plus_script_client with the bridge's calls into src/PC/game_mp, for the
-# executables without CoD2rev-Plus's game (src/compat/client_script_imports.cpp).
+# cod2_plus_script_client with the bridge's calls into what CoD2rev-Plus's game
+# and core replace in the dedicated server, for the executables without them
+# (src/compat/client_script_*.cpp).
 function(cod2_plus_script)
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/script_*.cpp)
   add_library(cod2_plus_script OBJECT ${src})
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
-  add_library(cod2_plus_script_client OBJECT ${COD2_SRC_DIR}/compat/client_script_imports.cpp)
+  add_library(cod2_plus_script_client OBJECT ${COD2_SRC_DIR}/compat/client_script_imports.cpp
+    ${COD2_SRC_DIR}/compat/client_script_missing.cpp)
   target_compile_definitions(cod2_plus_script_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
-# bgame, universal, qcommon, stringed and platform (src/unix, or src/win32 on Windows)
+# bgame, universal, qcommon, stringed, zlib's unzip and platform (src/unix, or
+# src/win32 on Windows)
 # sources and their bridge to the engine (src/compat/server_*.cpp).
 function(cod2_plus_server)
   if(WIN32)
@@ -129,7 +132,7 @@ function(cod2_plus_server)
   endif()
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
     ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/universal/*.cpp ${COD2_SRC_DIR}/qcommon/*.cpp
-    ${COD2_SRC_DIR}/stringed/*.cpp ${platform}
+    ${COD2_SRC_DIR}/stringed/*.cpp ${COD2_SRC_DIR}/zlib/unzip.c ${COD2_SRC_DIR}/zlib/ioapi.c ${platform}
     ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
@@ -617,9 +620,10 @@ if(COD2_PLUS_SERVER)
   cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
   cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
   list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
-  list(REMOVE_ITEM ALL_C src/blobs/bss.c)
+  list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/universal/com_math.c)
   list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
-  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
+  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c
+    src/PC/universal/com_math.c)
 endif()
 
 # 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat
