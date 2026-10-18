@@ -2386,6 +2386,13 @@ void FS_Startup(const char *gameName)
         FS_AddGameDirectoryAllLanguages(path, gameName);
     }
 
+    /* The iwds a server keeps in its own folder, as CoD2rev-Plus (from the
+       Linux binary) and Quake III add them. */
+    path = fs_homepath->current.string;
+    if (*path && I_stricmp(path, fs_basepath->current.string)) {
+        FS_AddGameDirectoryAllLanguages(path, gameName);
+    }
+
     dir = fs_basegame->current.string;
     if (*dir && !I_stricmp(gameName, "main") && I_stricmp(dir, gameName)) {
         path = fs_cdpath->current.string;
