@@ -39,3 +39,13 @@ src/zlib/zlib.h
 src/misc/hexrays_defs.h
 src/libcod/gsc.hpp
 src/libcod/libcod_client.h
+src/server/sv_ccmds_mp.cpp
+src/server/sv_client_mp.cpp
+src/server/sv_game_mp.cpp
+src/server/sv_init_mp.cpp
+src/server/sv_main_mp.cpp
+src/server/sv_main_pc_mp.cpp
+src/server/sv_net_chan_mp.cpp
+src/server/sv_snapshot_mp.cpp
+src/server/sv_voice_mp.cpp
+src/server/sv_world_mp.cpp
