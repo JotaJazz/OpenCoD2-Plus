@@ -119,7 +119,7 @@ function(cod2_plus_script)
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
-# bgame, universal, qcommon and platform (src/unix, or src/win32 on Windows)
+# bgame, universal, qcommon, stringed and platform (src/unix, or src/win32 on Windows)
 # sources and their bridge to the engine (src/compat/server_*.cpp).
 function(cod2_plus_server)
   if(WIN32)
@@ -128,7 +128,8 @@ function(cod2_plus_server)
     set(platform ${COD2_SRC_DIR}/unix/*.cpp)
   endif()
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
-    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/universal/*.cpp ${COD2_SRC_DIR}/qcommon/*.cpp ${platform}
+    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/universal/*.cpp ${COD2_SRC_DIR}/qcommon/*.cpp
+    ${COD2_SRC_DIR}/stringed/*.cpp ${platform}
     ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)

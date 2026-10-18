@@ -191,11 +191,7 @@ int MSG_ReadBitsCompress( const byte *from, int fromSizeBytes, byte *to, int toS
 }
 # Hunk_ClearLow: CoD2rev-Plus's body is the engine's Hunk_ClearToMarkLow.
 SERVER_RENAMED = {'Hunk_ClearLow': 'Hunk_ClearToMarkLow'}
-SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet',
-                   'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex', 'FS_HomeFileLength', 'FS_RotateHomeFile',
-                   'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString', 'MSG_ReadStringLine', 'RoundFloatArray',
-                   'SetConfigString', 'SetConfigString2', 'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp',
-                   'VectorInverse', 'VectorLength', 'VectorLengthSquared'}
+SERVER_PROVIDED = {'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex'}
 SERVER_EXPORT_CUSTOM = {
     # Static in CoD2rev-Plus: its SV_AddOperatorCommands registers say and
     # tell itself when com_dedicated is set, which it is from the start in the
@@ -261,6 +257,87 @@ int cod2x_BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex)
 }
 ''',
 }
+# The engine's core functions CoD2rev-Plus lacks: src/PC's bodies on
+# CoD2rev-Plus's file system and hunk. unzip.c opens the iwds through
+# FS_FileOpen; com_sndalias.c is linked too.
+SERVER_EXPORT_CUSTOM.update({
+    'FS_FileOpen': '''extern "C" FILE *cod2x_FS_FileOpen(const char *filename, const char *mode) __asm__(COD2_SYM("FS_FileOpen"));
+FILE *cod2x_FS_FileOpen(const char *filename, const char *mode)
+{
+    return fopen(filename, mode);
+}
+''',
+    'FS_Remove': '''extern "C" void cod2x_FS_Remove(const char *osPath) __asm__(COD2_SYM("FS_Remove"));
+void cod2x_FS_Remove(const char *osPath)
+{
+    remove(osPath);
+}
+''',
+    # The engine's checked the pure list first; CoD2rev-Plus's read does.
+    'FS_TouchFile': '''extern "C" int cod2x_FS_TouchFile(const char *name) __asm__(COD2_SYM("FS_TouchFile"));
+int cod2x_FS_TouchFile(const char *name)
+{
+    fileHandle_t f;
+
+    FS_FOpenFileRead(name, &f, qfalse);
+    if (f) {
+        FS_FCloseFile(f);
+        return 1;
+    }
+    return 0;
+}
+''',
+    # The engine's opened fs_homepath/fs_gamedir/file, as FS_HomeFileLength does.
+    'FS_FileExists': '''extern "C" int cod2x_FS_FileExists(const char *file) __asm__(COD2_SYM("FS_FileExists"));
+int cod2x_FS_FileExists(const char *file)
+{
+    return FS_HomeFileLength(file) >= 0;
+}
+''',
+    'Hunk_ClearTempMemory': '''extern "C" void cod2x_Hunk_ClearTempMemory(void) __asm__(COD2_SYM("Hunk_ClearTempMemory"));
+void cod2x_Hunk_ClearTempMemory(void)
+{
+    Hunk_ClearTempMemoryInternal();
+}
+''',
+    # stdio wrappers in the engine (com_fileaccess.c), with fread's and
+    # fwrite's arguments; CoD2rev-Plus's take a length in bytes.
+    'FS_FileRead': '''extern "C" size_t cod2x_FS_FileRead(void *ptr, size_t size, size_t nitems, FILE *stream) __asm__(COD2_SYM("FS_FileRead"));
+size_t cod2x_FS_FileRead(void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+    return fread(ptr, size, nitems, stream);
+}
+''',
+    'FS_FileWrite': '''extern "C" size_t cod2x_FS_FileWrite(const void *ptr, size_t size, size_t nitems, FILE *stream) __asm__(COD2_SYM("FS_FileWrite"));
+size_t cod2x_FS_FileWrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+    return fwrite(ptr, size, nitems, stream);
+}
+''',
+    'FS_FileClose': '''extern "C" int cod2x_FS_FileClose(FILE *stream) __asm__(COD2_SYM("FS_FileClose"));
+int cod2x_FS_FileClose(FILE *stream)
+{
+    return fclose(stream);
+}
+''',
+    # The engine passes an allocation tracking type CoD2rev-Plus does not take.
+    'FS_ListFiles': '''extern "C" char **cod2x_FS_ListFiles(const char *path, const char *extension, FsListBehavior behavior, int *numfiles, int allocTrackType) __asm__(COD2_SYM("FS_ListFiles"));
+char **cod2x_FS_ListFiles(const char *path, const char *extension, FsListBehavior behavior, int *numfiles, int allocTrackType)
+{
+    (void)allocTrackType;
+    return FS_ListFiles(path, extension, behavior, numfiles);
+}
+''',
+    'FS_FreeFileList': '''extern "C" void cod2x_FS_FreeFileList(char **list, int allocTrackType) __asm__(COD2_SYM("FS_FreeFileList"));
+void cod2x_FS_FreeFileList(char **list, int allocTrackType)
+{
+    (void)allocTrackType;
+    FS_FreeFileList(list);
+}
+''',
+})
+with open(os.path.join(ROOT, 'test', 'server_fatal.txt')) as f:
+    SERVER_EXPORT_FATAL = {l.strip() for l in f if l.strip() and not l.startswith('#')}
 # Exports CoD2rev-Plus defines under another name.
 SERVER_EXPORT_RENAMED = {'SV_GetClientPositionAtTime': 'SV_GetClientPositionsAtTime'}
 SERVER_STRUCT_RETURN_OK = set()
@@ -278,14 +355,16 @@ MODULES = {
                    client_only=['cod2_plus_server.dir/src/game/*.o']),
     'server': dict(objects=['cod2_plus_server.dir/src/server/*.o', 'cod2_plus_server.dir/src/game/*.o',
                             'cod2_plus_server.dir/src/bgame/*.o', 'cod2_plus_server.dir/src/universal/*.o',
-                            'cod2_plus_server.dir/src/qcommon/*.o', 'cod2_plus_server.dir/src/unix/*.o',
+                            'cod2_plus_server.dir/src/qcommon/*.o', 'cod2_plus_server.dir/src/stringed/*.o',
+                            'cod2_plus_server.dir/src/unix/*.o',
                             'cod2_plus_server.dir/src/win32/*.o',
                             'cod2_plus_server.dir/src/compat/server_missing.cpp.o'],
                    others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o'],
                    header=SERVER_HEADER, overloads=SERVER_OVERLOADS, extra_args=SERVER_EXTRA_ARGS,
                    renamed=SERVER_RENAMED, provided=SERVER_PROVIDED, export_custom=SERVER_EXPORT_CUSTOM,
                    export_renamed=SERVER_EXPORT_RENAMED, struct_return_ok=SERVER_STRUCT_RETURN_OK,
-                   ignored_args=SERVER_IGNORED_ARGS, import_custom=SERVER_IMPORT_CUSTOM),
+                   ignored_args=SERVER_IGNORED_ARGS, import_custom=SERVER_IMPORT_CUSTOM,
+                   export_fatal=SERVER_EXPORT_FATAL),
 }
 
 # C integer types of each size, for a return the two sides give different sizes.
@@ -374,6 +453,15 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
             f'{r} cod2x_{name}({sig}) {{ return {target}({args}); }}\n')
 
 
+def fatal_export(name):
+    """An export for an engine function the module lacks and whose callers do
+    not run in the dedicated server: it stops the server with its name. cdecl
+    leaves the arguments to the caller, so it takes none."""
+    return (f'extern "C" void cod2x_{name}(void) __asm__(COD2_SYM("{name}"));\n'
+            f'void cod2x_{name}(void)\n{{\n'
+            f'    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "{name}" );\n}}\n')
+
+
 def import_thunk(name, params, cfg=None, abi=None):
     cfg = cfg or MODULES['script']
     if name in cfg.get('import_custom', {}):
@@ -429,12 +517,19 @@ def nm(args, objects):
     return names
 
 
+# The C library's names for FILE, which the demangler spells out.
+FILE_TYPES = re.compile(r'\b(_IO_FILE|_iobuf)\b')
+
+
 def signatures(mangled):
-    """{name: [demangled signature, ...]} for the C++ function symbols."""
+    """{name: [demangled signature, ...]} for the C++ function symbols, with
+    FILE as the source spells it on every platform."""
     sigs = {}
     for m, d in zip(mangled, demangle(mangled)):
+        d = FILE_TYPES.sub('FILE', d)
         if m.startswith('_Z') and '(' in d and '::' not in d.split('(')[0]:
-            sigs.setdefault(d.split('(')[0], []).append(d)
+            if d not in sigs.get(d.split('(')[0], []):
+                sigs.setdefault(d.split('(')[0], []).append(d)
     return sigs
 
 
@@ -516,6 +611,8 @@ def main():
         target = cfg.get('export_renamed', {}).get(name, name)
         if name in cfg['export_custom']:
             out.append(cfg['export_custom'][name])
+        elif name in cfg.get('export_fatal', ()):
+            out.append(fatal_export(name))
         elif target in exports:
             out.append(export_thunk(name, choose_overload(target, exports[target], cfg), cfg, abi.get(name), target))
         elif name not in defined:

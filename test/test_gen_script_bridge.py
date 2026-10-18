@@ -119,6 +119,18 @@ class Modules(unittest.TestCase):
         objects = g.MODULES['server']['objects']
         self.assertTrue(any(o.endswith('src/game/*.o') for o in objects), objects)
 
+    def test_file_type_is_portable(self):
+        # glibc demangles FILE as _IO_FILE and MinGW as _iobuf: one signature
+        sigs = g.signatures(['_Z11FS_FileSeekP8_IO_FILEii', '_Z11FS_FileSeekP6_iobufii'])
+        self.assertEqual(sigs, {'FS_FileSeek': ['FS_FileSeek(FILE*, int, int)']})
+
+    def test_fatal_export(self):
+        # an engine function CoD2rev-Plus lacks whose callers do not run in
+        # the dedicated server stops it with its name if one ever does
+        code = g.fatal_export('CL_Frame')
+        self.assertIn('__asm__(COD2_SYM("CL_Frame"))', code)
+        self.assertIn('Com_Error( ERR_FATAL, "%s is not in the dedicated server", "CL_Frame" );', code)
+
     def test_plus_replaces_listed(self):
         # every source the dedicated server leaves to CoD2rev-Plus exists here
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

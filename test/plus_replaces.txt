@@ -33,6 +33,8 @@ src/PC/qcommon/cm_trace.c
 src/PC/qcommon/cm_world.c
 src/PC/qcommon/com_bsp_load_obj.c
 src/PC/qcommon/com_fileaccess.c
+# stringed (the current language)
+src/PC/stringed/stringed_hooks.c
 # platform (src/unix in Linux, src/win32 in MinGW)
 src/PC/win32/win_net.c
 src/PC/win32/win_threads.c

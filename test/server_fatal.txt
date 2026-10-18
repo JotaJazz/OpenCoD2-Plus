@@ -1,0 +1,75 @@
+# Engine functions CoD2rev-Plus does not have and whose callers do not run in
+# the dedicated server (cgame, client_mp, gfx_d3d, ui, the sound driver, the
+# player profile, downloads, the Mac splash, the blobs' imp_ pointers): their
+# exports stop the server with their name (scripts/gen_script_bridge.py).
+CM_GetPlaneNum
+CM_SaveLump
+CMacGameEngine_DrawSplashScreen
+Cmd_ArgsBuffer
+Cmd_GetAutoCompleteFileList
+Cmd_TokenizeString2
+Com_LoadDvarsFromBuffer
+Com_SaveDvarsToBuffer
+Com_TouchMemory
+Dvar_AnyLatchedValues
+Dvar_ChangeResetValue
+Dvar_EnumToString
+Dvar_GetUnpackedColor
+Dvar_GetUnpackedColorByName
+Dvar_ResetDvars
+Dvar_SetCheatState
+Dvar_SetFromString
+Dvar_SetFromStringByNameFromSource
+Dvar_SetModified
+Dvar_UnregisterSystem
+Dvar_UpdateEnumDomain
+FS_CompareIwds
+FS_ConditionalRestart
+FS_CopyFile
+FS_CreatePath
+FS_FTell
+FS_FullPath_f
+FS_Path_f
+FS_PureServerSetReferencedIwds
+FS_ReferencedIwdPureChecksums
+FS_SV_Rename
+FS_ShiftStr
+FS_ShortOSFilePath
+Hunk_AllocNoZeroInternal
+Hunk_Used
+Language_IsAsian
+LargeLocal_GetBuf
+LargeLocal_LargeLocal
+ReplaceStringInternal
+SEH_LocalizeTextMessage
+SEH_PrintStrlen
+SEH_ReadCharFromString
+SEH_SafeTranslateString
+SEH_StringEd_GetString
+SEH_UpdateLanguageInfo
+SEH_VerifyLanguageSelection
+Sys_DirectXFatalError
+Sys_LoadingKeepAlive
+Sys_MillisecondsRaw
+Sys_OpenURL
+Sys_RemoveDirTree
+Sys_StartProcess
+ZN10LargeLocalD1Ev
+Z_VirtualAllocInternal
+Z_VirtualCommitInternal
+Z_VirtualDecommitInternal
+Z_VirtualFreeInternal
+Z_VirtualReserveInternal
+hunk_guard_check
+# These CoD2rev-Plus has with another signature, and only client_mp, cgame_mp
+# and EffectsCore call them.
+MSG_WriteBigString
+MSG_ReadStringLine
+MSG_ReadString
+MSG_ReadDeltaPlayerstate
+MSG_ReadDeltaEntity
+MSG_ReadDeltaClient
+MSG_ReadBitsCompress
+Com_GetClientDObj
+CM_TransformedBoxTraceExternal
+CM_BoxTrace
