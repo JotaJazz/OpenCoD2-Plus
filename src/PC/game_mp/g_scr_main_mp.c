@@ -1875,6 +1875,7 @@ unsigned int GScr_SetWinningTeam(void)
         return Scr_ParamError(0, va("Illegal team string '%s'. Must be allies, axis, or none.", SL_ConvertToString(team)));
 
     GScr_UpdateWinnerConfig(winner);
+    return 0;
 }
 
 void GScr_GetTeamScore(void)

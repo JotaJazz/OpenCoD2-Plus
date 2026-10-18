@@ -1,4 +1,5 @@
 #include "common_types.h"
+extern void Com_Printf(const char *fmt, ...);
 #include "imports.h"
 #include <string.h>
 /* dvar globals */

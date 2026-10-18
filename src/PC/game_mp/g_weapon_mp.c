@@ -487,7 +487,7 @@ void G_SetupWeaponDef(void)
     BG_FillInAmmoItems(registerWeapon);
 
     if (level.initializing)
-        BG_GetWeaponIndexForName("defaultweapon_mp", registerWeapon);
+        BG_GetWeaponIndexForName("defaultweapon_mp", (void *)registerWeapon);
     else
         BG_FindWeaponIndexForName("defaultweapon_mp");
 

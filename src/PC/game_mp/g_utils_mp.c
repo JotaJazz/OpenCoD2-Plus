@@ -331,6 +331,7 @@ int G_DObjCalcPose(gentity_t *ent)
     }
 
     SV_DObjCalcSkel(ent, partBits);
+    return 0;
 }
 
 int G_DObjCalcBone(gentity_t *ent, int boneIndex)
@@ -357,6 +358,7 @@ int G_DObjCalcBone(gentity_t *ent, int boneIndex)
     Com_Printf("[ckpt] CalcBone before CalcSkel\n");
     SV_DObjCalcSkel(ent, partBits);
     Com_Printf("[ckpt] CalcBone DONE\n");
+    return 0;
 }
 
 DObjAnimMat_s *G_DObjGetLocalTagMatrix(gentity_t *ent, unsigned int tagName)
@@ -531,6 +533,7 @@ unsigned char G_PlaySoundAlias(gentity_t *ent, int index)
 
     (_ENT(ent)->eventTime) = LEVEL_TIME;
     (_ENT(ent)->r.eventTime) = LEVEL_TIME;
+    return 0;
 }
 
 void G_OverrideModel(int modelindex, const char *defaultModelName)
@@ -628,6 +631,7 @@ unsigned char G_CalcTagParentAxis(gentity_t *ent, vec3_t *parentAxis)
         MatrixMultiply((vec_t *)axis, (vec_t *)tempAxis, (vec_t *)parentAxis);
         MatrixTransformVector43((vec_t *)&mat->trans, (vec_t *)tempAxis, ((vec_t *)parentAxis + 9));
     }
+    return 0;
 }
 
 unsigned char G_SetFixedLink(gentity_t *ent, int eAngles)
@@ -660,6 +664,7 @@ unsigned char G_SetFixedLink(gentity_t *ent, int eAngles)
         MatrixTransformVector43(((tagInfo)->axis[3]), (vec_t *)parentAxis, (_ENT(ent)->r.currentOrigin));
         break;
     }
+    return 0;
 }
 
 unsigned char G_CalcTagAxis(gentity_t *ent, qboolean bAnglesOnly)
@@ -686,6 +691,7 @@ unsigned char G_CalcTagAxis(gentity_t *ent, qboolean bAnglesOnly)
         MatrixInverseOrthogonal43( (const float (*)[3])((vec_t *)parentAxis), (float (*)[3])((vec_t *)invParentAxis));
         MatrixMultiply43(axis, invParentAxis, tagInfo->axis);
     }
+    return 0;
 }
 
 unsigned char G_EntUnlink(gentity_t *ent)
@@ -740,6 +746,7 @@ unsigned char G_EntUnlink(gentity_t *ent)
     (_ENT(ent)->tagInfo = COD2_TagInfoHandle(NULL));
     Scr_SetString(&((tagInfo)->name), 0);
     MT_Free((unsigned int *)tagInfo, 0x70);
+    return 0;
 }
 
 static qboolean G_EntLinkToInternal(gentity_t *ent, gentity_t *parent, unsigned int tagName)

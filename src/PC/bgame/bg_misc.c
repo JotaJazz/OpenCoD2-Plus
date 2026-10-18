@@ -1,4 +1,5 @@
 #include "common_types.h"
+extern void Com_Printf(const char *fmt, ...);
 #include "imports.h"
 
 const dvar_t *player_view_pitch_up;

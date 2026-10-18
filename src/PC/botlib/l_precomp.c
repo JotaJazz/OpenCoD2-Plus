@@ -16,7 +16,7 @@ extern void FreeScript(script_t *script);
 extern script_t *LoadScriptFile(const char *filename);
 extern int PS_ReadToken(script_t *script, token_t *token);
 extern int EndOfScript(script_t *script);
-extern int vsnprintf(char *str, size_t size, const char *format, va_list ap);
+#include <stdio.h>
 extern char *strncat(char *dest, const char *src, size_t count);
 #include <time.h>
 extern void free(void *ptr);

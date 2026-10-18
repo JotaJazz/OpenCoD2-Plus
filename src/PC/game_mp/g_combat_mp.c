@@ -452,7 +452,8 @@ qboolean G_RadiusDamage(const vec_t *origin, gentity_t *inflictor, gentity_t *at
         radius = 1.0f;
     }
 
-    float searchRadius = radius * 1.4142135f;
+    float searchRadius;
+    searchRadius = radius * 1.4142135f;
 
     for (i = 0; i < 3; i++) {
         mins[i] = origin[i] - searchRadius;

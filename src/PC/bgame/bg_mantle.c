@@ -189,11 +189,11 @@ void Mantle_CreateAnims(MantleAnimAlloc xanimAlloc)
     if (s_mantleAnims != 0)
         return;
 
-    s_mantleAnims = (char (*)[64])(XAnimCreateAnims("PLAYER_MANTLE", 11, xanimAlloc));
+    s_mantleAnims = (char (*)[64])(XAnimCreateAnims("PLAYER_MANTLE", 11, (void *)xanimAlloc));
     XAnimBlend( (XAnim *)(s_mantleAnims), 0, s_mantleAnimNames[0], 1, 10, 0);
 
     for (i = 1; i < 11; i++) {
-        XAnimPrecache(s_mantleAnimNames[i], MantleXAnimPrecacheAlloc);
+        XAnimPrecache(s_mantleAnimNames[i], (void *)MantleXAnimPrecacheAlloc);
         XAnimCreate((struct XAnim_s *)s_mantleAnims, i, s_mantleAnimNames[i]);
     }
 

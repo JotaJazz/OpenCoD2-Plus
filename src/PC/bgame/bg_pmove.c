@@ -1941,7 +1941,7 @@ viewLerpWaypoint_t viewLerp_CrouchProne[13] = {
     { 0x46, 18.0f, 0x0 },
     { 0x5a, 17.0f, 0x0 },
     { 0x64, 11.0f, 0x0 },
-    { 0xffffffff, 0.0f, 0x0 },
+    { (int)0xffffffff, 0.0f, 0x0 },
     { 0x0, 0.0f, 0x0 },
     { 0x0, 0.0f, 0x0 }
 };
@@ -1954,7 +1954,7 @@ viewLerpWaypoint_t viewLerp_CrouchStand[10] = {
     { 0x60, 58.5f, 0x0 },
     { 0x63, 59.5f, 0x0 },
     { 0x64, 60.0f, 0x0 },
-    { 0xffffffff, 0.0f, 0x0 },
+    { (int)0xffffffff, 0.0f, 0x0 },
     { 0x0, 0.0f, 0x0 }
 };
 viewLerpWaypoint_t viewLerp_ProneCrouch[8] = {
@@ -1965,7 +1965,7 @@ viewLerpWaypoint_t viewLerp_ProneCrouch[8] = {
     { 0x43, 31.0f, 0x0 },
     { 0x53, 34.0f, 0x0 },
     { 0x64, 40.0f, 0x0 },
-    { 0xffffffff, 0.0f, 0x0 }
+    { (int)0xffffffff, 0.0f, 0x0 }
 };
 viewLerpWaypoint_t viewLerp_StandCrouch[10] = {
     { 0x0, 60.0f, 0x0 },
@@ -1976,6 +1976,6 @@ viewLerpWaypoint_t viewLerp_StandCrouch[10] = {
     { 0x5a, 41.5f, 0x0 },
     { 0x5f, 40.5f, 0x0 },
     { 0x64, 40.0f, 0x0 },
-    { 0xffffffff, 0.0f, 0x0 },
+    { (int)0xffffffff, 0.0f, 0x0 },
     { 0x0, 0.0f, 0x0 }
 };

@@ -41,7 +41,7 @@ extern int I_strnicmp(const char *s1, const char *s2, size_t n);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern char *I_CleanStr(char *string);
 extern qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2);
-extern char *strchr(const char *s, int c);
+#include <string.h>
 extern int Dvar_GetInt(const char *dvarName);
 extern const dvar_t *Dvar_RegisterString_mac(const char *dvarName, const char *value, int flags);
 extern void Cbuf_ExecuteText(int exec_when, const char *text);

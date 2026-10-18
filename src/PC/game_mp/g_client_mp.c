@@ -777,7 +777,8 @@ void ClientUserinfoChanged(int clientNum)
     }
 
     {
-        char *longName = client->sess.cs.name;
+        char *longName;
+        longName = client->sess.cs.name;
 
         I_strncpyz(oldname, longName, 0x400);
 

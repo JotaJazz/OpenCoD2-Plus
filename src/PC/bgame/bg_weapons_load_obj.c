@@ -189,7 +189,7 @@ void BG_LoadPlayerAnimTypes(void)
     }
 
     FS_Read(buf, iLen, f);
-    buf[iLen] = (char)((const char *)('\0'));
+    buf[iLen] = '\0';
     FS_FCloseFile(f);
 
     text_p = (char *)((const char *)(buf));

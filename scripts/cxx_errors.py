@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Counts the C++ errors of each C source of a build, compiled the way COD2_CXX_DIRS compiles it.
 
-    python3 scripts/cxx_errors.py <build_dir> [--module PC/qcommon ...] [--max 20] [--jobs N]
+    python3 scripts/cxx_errors.py <build_dir> [--module PC/qcommon ...] [--max 20] [--jobs N] [--return-type]
 
 Reads <build_dir>/compile_commands.json, and compiles each C file of the
 modules (paths relative to src/) as C++ inside extern "C" { #include "x.c" },
 with the C++ compiler that matches the C one and the file's own flags. Prints
 "<module>: <n> errors" and the first --max errors of each module. Exits with 0
 when there are none.
+
+--return-type looks only for non-void functions that can end without a return:
+C allows it when the caller ignores the value, in C++ it is undefined and GCC
+drops the code after the call. It compiles without -w and with -O1, because the
+check needs the flow analysis.
 """
 import argparse, collections, concurrent.futures, json, os, re, shlex, subprocess, sys, tempfile
 
@@ -45,7 +50,7 @@ def real_source(entry):
     return path, path
 
 
-def errors_of(entry, tmpdir):
+def errors_of(entry, tmpdir, return_type=False):
     args = shlex.split(entry['command']) if 'command' in entry else list(entry['arguments'])
     source, compiled = real_source(entry)
     flags, skip = [], False
@@ -56,15 +61,21 @@ def errors_of(entry, tmpdir):
         if a == '-o':
             skip = True
             continue
-        if a == '-c' or a.startswith('-std=') or a in C_ONLY or os.path.normpath(os.path.join(entry['directory'], a)) == compiled:
+        if a == '-c' or a.startswith('-std=') or a in C_ONLY or os.path.normpath(os.path.join(entry['directory'], a)) == compiled \
+                or (return_type and a == '-w'):
             continue
         flags.append(a)
     wrapper = os.path.join(tmpdir, os.path.relpath(source, SRC).replace(os.sep, '_') + '.cpp')
     with open(wrapper, 'w') as f:
         f.write(wrapper_text(source))
-    run = subprocess.run([cxx_compiler(args[0]), '-std=gnu++17', '-fsyntax-only', '-fmax-errors=0'] + flags + [wrapper],
+    mode = ['-fsyntax-only'] if not return_type else \
+        ['-O1', '-Wreturn-type', '-Werror=return-type', '-c', '-o', os.devnull]
+    run = subprocess.run([cxx_compiler(args[0]), '-std=gnu++17', '-fmax-errors=0'] + flags + mode + [wrapper],
                          cwd=entry['directory'], capture_output=True, text=True, errors='replace')
-    return source, [l for l in run.stderr.splitlines() if ' error: ' in l or l.startswith('error:')]
+    errors = [l for l in run.stderr.splitlines() if ' error: ' in l or l.startswith('error:')]
+    if return_type:
+        errors = [l for l in errors if 'return-type' in l]
+    return source, errors
 
 
 def main():
@@ -73,6 +84,7 @@ def main():
     ap.add_argument('--module', action='append', help='path relative to src/, e.g. PC/qcommon (repeatable)')
     ap.add_argument('--max', type=int, default=20)
     ap.add_argument('--jobs', type=int, default=os.cpu_count() or 4)
+    ap.add_argument('--return-type', action='store_true', help='only non-void functions that can end without a return')
     args = ap.parse_args()
 
     with open(os.path.join(args.build_dir, 'compile_commands.json')) as f:
@@ -90,7 +102,7 @@ def main():
     by_module = collections.defaultdict(list)
     with tempfile.TemporaryDirectory(prefix='cxx_errors_') as tmpdir, \
             concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
-        for source, errors in pool.map(lambda e: errors_of(e, tmpdir), entries):
+        for source, errors in pool.map(lambda e: errors_of(e, tmpdir, args.return_type), entries):
             by_module[module_of(source)].extend(errors)
 
     total = 0
