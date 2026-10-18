@@ -370,6 +370,11 @@ int Sys_TryEnterCriticalSection(int section);
 void Sys_LeaveCriticalSection(int section);
 
 qboolean Sys_CreateNewThread(void* (*ThreadMain)(void*), threadid_t *tid, void* arg);
+#ifdef _WIN32
+#define Sys_CreatePthread pthread_create
+#else
+int Sys_CreatePthread(pthread_t *thread, const pthread_attr_t *attr, void *(*func)(void *), void *arg);
+#endif
 void Sys_ExitThread(int code);
 void Sys_SleepMSec(int msec);
 
