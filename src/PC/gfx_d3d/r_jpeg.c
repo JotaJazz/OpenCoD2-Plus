@@ -200,8 +200,8 @@ void R_LoadJpg(const char *filepath, byte **file, byte **pic, int *width, int *h
     *(void **)(cinfo) = jerr;
 #if !COD2_FEATURE_MODERN_LIBS
 
-    *(void **)(cinfo + 0x18) = Z_MallocJpeg;
-    *(void **)(cinfo + 0x1c) = Z_FreeJpeg;
+    *(void **)(cinfo + 0x18) = (void *)Z_MallocJpeg;
+    *(void **)(cinfo + 0x1c) = (void *)Z_FreeJpeg;
 #endif
 
     jpeg_CreateDecompress((struct jpeg_decompress_struct *)cinfo, 0x3e, JPEG_D_STRUCT_SIZE);

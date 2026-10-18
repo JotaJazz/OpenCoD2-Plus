@@ -1405,7 +1405,7 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             {
                 MaterialVertexDeclaration *declArray = ((MaterialPassDx9 *)pass)->vertexDecl;
-                void *decl = declArray->decl[vertDeclType];
+                void *decl = (void *)declArray->decl[vertDeclType];
                 if (!decl) {
                     tess = RB_TessBase();
                     const Material *mat3 = ((materialCommands_t *)tess)->material;

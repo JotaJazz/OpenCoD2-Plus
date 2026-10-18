@@ -72,8 +72,8 @@ extern const MtlStateMapBitGroup s_stateMapDstFogBitGroup[];
 extern const MtlStateMapBitGroup s_stateMapDstPolygonOffsetBitGroup[];
 extern const MtlStateMapBitGroup s_stateMapDstWireframeBitGroup[];
 extern const MtlStateMapBitGroup s_stateMapDstStencilBitGroup[];
-static const MtlTextureFunctionDx7 s_textureFuncsDx7[21];
-static const PassOptionDx7 s_passOptionsDx7[5];
+static const MtlTextureFunctionDx7 s_textureFuncsDx7[21] = { 0 }; /* never filled in; zero, as C left it */
+static const PassOptionDx7 s_passOptionsDx7[5] = { 0 }; /* never filled in; zero, as C left it */
 
 HRESULT IncludeClass_Close(const IncludeClass *_this, LPCVOID data);
 static Bool MATERIAL_REGPARM3_ABI Material_ValidatePassArguments_impl(const Material *material, const char *techniqueSetName, const char *techniqueName, int argCount, const MaterialShaderArgument *args);
@@ -733,7 +733,7 @@ static int Material_FallbackSamplerDest(const char *name)
 extern HRESULT D3DXGetShaderConstantTable(const void *function, void **constantTable);
 extern const float *Material_RegisterLiteral(const vec_t *literal);
 extern void Com_SkipRestOfLine(const char **text);
-extern int printf(const char *fmt, ...);
+#include <stdio.h>
 
 static Bool MATERIAL_REGPARM3_ABI Material_SetPassShaderArguments_impl(const char **text, const byte *mtlShader,
                                                                        short unsigned int *techFlags, short unsigned int *argCount, MaterialShaderArgument **args)

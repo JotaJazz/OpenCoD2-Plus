@@ -811,13 +811,13 @@ void Material_ReloadAll(void)
                 void *device = (void *)((DxGlobals *)dx)->device;
                 void **vtable = *(void ***)device;
                 hr = ((int (*)(void *, const void *, void **))vtable[0x16c / 4])(
-                    device, ((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
+                    device, (const void *)((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
             } else {
 
                 void *device = (void *)((DxGlobals *)dx)->device;
                 void **vtable = *(void ***)device;
                 hr = ((int (*)(void *, const void *, void **))vtable[0x1a8 / 4])(
-                    device, ((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
+                    device, (const void *)((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
             }
 
             if (hr < 0) {
@@ -1292,7 +1292,7 @@ const stream_dest_info_t s_streamDestInfo[12] = { { 0, 0 }, { 3, 0 }, { 10, 0 },
 COD2_ALT("declEnd", "declEnd_131795")
 const unsigned char declEnd_131795[20] = {
 #else
-const unsigned char declEnd_131795[20] __asm__("declEnd") = {
+extern const unsigned char declEnd_131795[20] __asm__("declEnd") = {
 #endif
     0xff, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00

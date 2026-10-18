@@ -24,6 +24,9 @@ class Compare(unittest.TestCase):
     def test_missing_check_counts_as_fixed(self):
         self.assertEqual(opencod2_smoke.compare({'b': True}, {'a'}), (set(), {'a'}))
 
+    def test_flaky_ignored_both_ways(self):
+        self.assertEqual(opencod2_smoke.compare({'a': False, 'b': True}, {'b'}, flaky={'a', 'b'}), (set(), set()))
+
 
 class LoadExpected(unittest.TestCase):
     def test_comments_ignored(self):

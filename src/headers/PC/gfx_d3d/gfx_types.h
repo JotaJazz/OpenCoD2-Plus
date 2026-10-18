@@ -768,7 +768,7 @@ struct stream_source_info_t {
 struct DxGlobals {
     HINSTANCE hinst;
     IDirect3D9 *d3d9;
-    void (*device)();
+    void *device; /* IDirect3DDevice9 */
     UINT adapterIndex;
     D3DFORMAT backBufferFormat;
     int displayModeCount;

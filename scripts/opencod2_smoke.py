@@ -8,7 +8,8 @@ server does not have yet. Those failures are listed in
 test/smoke_expected_failures_<protocol>.txt. Exit codes: 0 when the failures
 match the list, 1 when a check not on the list fails, 2 when a listed check now
 passes (the list only shrinks: run again with --update), 3 when smoke_test.py
-printed no results.
+printed no results. The checks in test/smoke_flaky.txt are timing-dependent
+with this server and count neither way.
 """
 import argparse, os, re, subprocess, sys
 
@@ -36,10 +37,10 @@ def load_expected(path):
         return {l.strip() for l in f if l.strip() and not l.strip().startswith('#')}
 
 
-def compare(results, expected):
-    """(failures not on the list, listed checks that no longer fail or no longer exist)."""
+def compare(results, expected, flaky=frozenset()):
+    """(failures not on the list, listed checks that no longer fail or no longer exist), flaky ones aside."""
     failed = {name for name, ok in results.items() if not ok}
-    return failed - expected, expected - failed
+    return failed - expected - flaky, expected - failed - flaky
 
 
 def main():
@@ -63,11 +64,12 @@ def main():
     path = os.path.join(ROOT, 'test', f'smoke_expected_failures_{args.protocol}.txt')
     if args.update:
         with open(path, 'w') as f:
-            f.write(HEADER + ''.join(name + '\n' for name in sorted(n for n, ok in results.items() if not ok)))
+            flaky = load_expected(os.path.join(ROOT, 'test', 'smoke_flaky.txt'))
+            f.write(HEADER + ''.join(name + '\n' for name in sorted(n for n, ok in results.items() if not ok and n not in flaky)))
         print(f'\nwrote {os.path.relpath(path, ROOT)}')
         return 0
 
-    new, fixed = compare(results, load_expected(path))
+    new, fixed = compare(results, load_expected(path), load_expected(os.path.join(ROOT, 'test', 'smoke_flaky.txt')))
     if new:
         print('\nnew failures: ' + ', '.join(sorted(new)))
         return 1

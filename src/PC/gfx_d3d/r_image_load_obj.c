@@ -23,7 +23,7 @@ extern void Image_BuildSpecularityMap(int unused, byte *pic);
 
 extern GfxImage *Image_Alloc(const char *name, int category, int semantic, int imageTrack);
 static vec3_t lightGridLookupMatrix[3];
-static const int faceAxis[6][3];
+static const int faceAxis[6][3] = { 0 }; /* never filled in; zero, as C left it */
 
 void Image_Generate2D(GfxImage *image, byte *pixels, int width, int height, int imageFormat);
 void Image_Generate3D(GfxImage *image, byte *pixels, int width, int height, int depth, D3DFORMAT imageFormat);

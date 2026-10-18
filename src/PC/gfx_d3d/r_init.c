@@ -61,7 +61,7 @@ extern void R_AddCmdDrawQuadPic(vec2_t *verts, const vec_t *color, MaterialHandl
 extern void R_AddCmdDrawSprite(MaterialHandle material, const byte *rgbaColor, const vec_t *pos, float radius, float minScreenRadius, int renderFxFlags);
 
 static vec2_t cornerTexCoords[4];
-static const r_index_t quadIndices[6];
+static const r_index_t quadIndices[6] = { 0 }; /* never filled in; zero, as C left it */
 
 void R_FatalInitError(const char *msg);
 const char *R_ErrorDescription(HRESULT hr);

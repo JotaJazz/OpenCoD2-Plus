@@ -14,7 +14,7 @@ extern void Hunk_FreeTempMemory(void *buf);
 typedef int (*CM_BoxTraceFn)(trace_t *results, const vec_t *start, const vec_t *end,
                              const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask);
 
-static const int outdoorMapSize[3];
+static const int outdoorMapSize[3] = { 0 }; /* never filled in; zero, as C left it */
 
 static OutdoorGlob outdoorGlob;
 

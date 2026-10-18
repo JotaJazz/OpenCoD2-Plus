@@ -78,7 +78,7 @@ static void SMT_Log(const char *tag, struct XModel *mdl, GfxEntity *ent)
 }
 #endif
 extern r_global_permanent_t rgp;
-__attribute__((used)) const int boxVerts[24][3] = {
+__attribute__((used)) extern const int boxVerts[24][3] = {
     { 0, 0, 0 },
     { 1, 0, 0 },
     { 0, 0, 0 },

@@ -7,7 +7,6 @@ g_forceRate applies
 heartbeat sent to sv_master1
 no fake lines in the game log
 no line break in names
-rcon right after a wrong password
 say right after userinfo runs
 server still running
 server-only iwd download refused

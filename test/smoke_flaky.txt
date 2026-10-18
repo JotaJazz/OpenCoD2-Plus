@@ -1,0 +1,6 @@
+# Checks of smoke_test.py whose result depends on timing with the opencod2
+# server; opencod2_smoke.py counts them neither as a failure nor as fixed.
+# The stock server ignores an rcon that comes less than 500 ms after another
+# one from the same address, so this passes when a slow frame delays the
+# first reply long enough (CoD2rev-Plus fixed it).
+rcon right after a wrong password

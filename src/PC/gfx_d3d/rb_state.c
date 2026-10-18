@@ -16,8 +16,8 @@ extern DxGlobals dx;
 
 extern struct DxState dxState;
 extern r_backEndGlobals_t backEnd;
-static const DxTextureStageEnums texStageEnums;
-static const DxTextureStageEnums texStageEnums_002f24ac;
+static const DxTextureStageEnums texStageEnums = { (D3DTEXTURESTAGESTATETYPE)0 }; /* never filled in; zero, as C left it */
+static const DxTextureStageEnums texStageEnums_002f24ac = { (D3DTEXTURESTAGESTATETYPE)0 }; /* never filled in; zero, as C left it */
 extern const byte defaultSamplerStateTable[];
 extern const DWORD s_blendTable[];
 extern const DWORD s_blendOpTable[];
