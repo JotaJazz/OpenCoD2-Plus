@@ -1,0 +1,7 @@
+# Fallos esperados de smoke_test.py con el servidor de opencod2; solo se achica.
+client receives the gamestate
+console log lines have timestamps
+console log rotated
+heartbeat sent to sv_master1
+server still running
+sv_logRcon 0 hides rcon commands
