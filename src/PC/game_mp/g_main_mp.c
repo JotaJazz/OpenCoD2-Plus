@@ -619,6 +619,10 @@ void G_InitGame(int levelTime, int randomSeed, qboolean restart, qboolean savepe
     DBG_PrintFreeVars(str_dbg_endload);
 
     *(void **)imp_bgs = (void *)&level_bgs;
+    /* BG_AnimParseAnimScript appends to the script items, so a map load
+       starts from an empty animScriptData, as in CoD2rev-Plus. */
+    if (!restart)
+        memset(&level_bgs.animScriptData, 0, sizeof(level_bgs.animScriptData));
     level_bgs.animScriptData.soundAlias = (snd_alias_list_t *(__cdecl *)(const char *))((snd_alias_list_t * (*)()) Com_FindSoundAlias);
     level_bgs.animScriptData.playSoundAlias = (int (__cdecl *)(int,snd_alias_list_t *))((int (*)())G_AnimScriptSound);
 
@@ -911,6 +915,10 @@ void G_InitGame(int levelTime, int randomSeed, qboolean restart, qboolean savepe
     DBG_PrintFreeVars(str_dbg_endload);
 
     *(void **)imp_bgs = (void *)&level_bgs;
+    /* BG_AnimParseAnimScript appends to the script items, so a map load
+       starts from an empty animScriptData, as in CoD2rev-Plus. */
+    if (!restart)
+        memset(&level_bgs.animScriptData, 0, sizeof(level_bgs.animScriptData));
     level_bgs.animScriptData.soundAlias = (snd_alias_list_t * (*)()) Com_FindSoundAlias;
     level_bgs.animScriptData.playSoundAlias = (int (*)())G_AnimScriptSound;
 
