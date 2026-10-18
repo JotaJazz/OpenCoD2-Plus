@@ -1,12 +1,16 @@
 #include "common_types.h"
 #include "imports.h"
 
+#ifdef _WIN32
 #ifdef __cplusplus
 extern "C" {
 #endif
 __declspec(dllimport) DWORD __stdcall timeGetTime(void);
 #ifdef __cplusplus
 }
+#endif
+#else
+extern int timeGetTime(void);
 #endif
 
 extern int sys_timeBase;

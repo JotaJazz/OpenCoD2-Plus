@@ -267,8 +267,15 @@ static void cr_atexit_diag(void)
 /* A CRT secure-function failure (e.g. a buffer size wrong on x64) invokes the invalid-parameter
    handler, which by default __fastfails -- terminating abruptly with no SEH report. Trap it so it
    logs and CONTINUES (returns an error to the caller) instead of killing the process. */
+#ifdef _WIN32
 typedef void(__cdecl *cr_invh_t)(const void *, const void *, const void *, unsigned int, void *);
+#ifdef __MINGW32__
+#include <stdlib.h>
+#define cr_set_invh(h) _set_invalid_parameter_handler((_invalid_parameter_handler)(h))
+#else
 extern cr_invh_t __cdecl _set_invalid_parameter_handler(cr_invh_t);
+#define cr_set_invh(h) _set_invalid_parameter_handler(h)
+#endif
 static void __cdecl cr_inv_param(const void *e, const void *f, const void *fl, unsigned int line, void *r)
 {
     /* Safety net: a CRT secure-function invalid parameter would otherwise __fastfail (abrupt exit,
@@ -279,6 +286,7 @@ static void __cdecl cr_inv_param(const void *e, const void *f, const void *fl, u
     if (n++ < 3)
         Com_Printf("[INVPARAM] CRT invalid-parameter trapped -- continuing\n");
 }
+#endif
 
 #if defined(COD2_X64) && defined(_DEBUG)
 /* CRT debug-heap corruption diagnostic (x64): records each non-CRT allocation's
@@ -373,7 +381,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
                             COD2_VERSION_DATE, lpCmdLine);
 #endif
     { extern int atexit(void (*)(void)); atexit(cr_atexit_diag); }
-    _set_invalid_parameter_handler(cr_inv_param);
+#ifdef _WIN32
+    cr_set_invh(cr_inv_param);
+#endif
 #if defined(COD2_X64) && defined(_DEBUG)
     cr_heapdiag_init();
 #endif

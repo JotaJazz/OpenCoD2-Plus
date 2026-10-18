@@ -7171,7 +7171,7 @@ struct animation_s {
     int duration;
     int nameHash;
     int flags;
-    long long int movetype;
+    long long int movetype COD2_WIN_ALIGN8;
     int noteType;
 };
 

@@ -50,3 +50,4 @@ src/win32/sdl2/lib/*.pdb
 # ...and the same dropped into third_party/
 /third_party/SDL2-*/
 /third_party/SDL2-*.zip
+build/check-*/

@@ -17,6 +17,15 @@ void IN_Frame(void) {}
  * CDirect3D*D0Ev/D1Ev destructors in the reconstructed CDirect3D*.c -- stubbing
  * them here is what required /FORCE:MULTIPLE, so they're dropped. */
 void UpdateSystemActivity(void) {}
+#ifndef W32_CLIENT
+/* macos_compat.c is client-only, so the headless server needs these two. */
+void *MacDisplay_CreateScreenContext(int depth, int windowed, int stencil, int multiSample, int fsaa, int *hasAux)
+{
+    (void)depth; (void)windowed; (void)stencil; (void)multiSample; (void)fsaa; (void)hasAux;
+    return 0;
+}
+void SDL_GL_SwapWindowDirect(void) {}
+#endif
 void __ZNSs4_Rep11_S_terminalE(void) {}
 void __ZNSs6appendEPKcm(void) {}
 void __ZNSs6assignEPKcm(void) {}

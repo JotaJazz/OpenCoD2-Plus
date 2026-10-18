@@ -38,7 +38,7 @@ typedef struct dcell_ondisk_s {
     int reflectionProbeCount;
 } dcell_ondisk_t;
 
-static int R_FinishLoadingAabbTrees_r(byte *tree, int totalTreesUsed);
+static int R_FinishLoadingAabbTrees_r(GfxAabbTree *tree, int totalTreesUsed);
 #endif
 const char *R_ParseSunLight(SunLightParseParams *params, const char *text);
 void R_InterpretSunLightParseParamsIntoLights(SunLightParseParams *sunParse, GfxLight *sunLight);

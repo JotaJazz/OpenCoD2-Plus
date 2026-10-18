@@ -537,7 +537,10 @@ snd_alias_t *Com_PickSoundAliasFromList(snd_alias_list_t *aliasList)
     return Com_PickSoundAliasFromList_core(aliasList);
 }
 
-__forceinline snd_alias_list_t *Com_FindSoundAlias(const char *name)
+#ifdef _MSC_VER
+__forceinline
+#endif
+snd_alias_list_t *Com_FindSoundAlias(const char *name)
 {
     snd_alias_list_t *aliasList;
 

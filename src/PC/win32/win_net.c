@@ -183,7 +183,7 @@ void NET_Sleep(int msec)
     fdset.fd_count = 1;
     fdset.fd_array[0] = ip_socket;
 #else
-    fdset.fds_bits[(unsigned)ip_socket >> 5] |= 1 << (ip_socket & 31);
+    FD_SET(ip_socket, &fdset);
 #endif
 
     timeout.tv_sec = msec / 1000;

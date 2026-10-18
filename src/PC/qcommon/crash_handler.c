@@ -1,3 +1,6 @@
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#    define _GNU_SOURCE /* REG_EIP and the other gregs indexes */
+#endif
 #include "crash_handler.h"
 
 #ifndef COD2_GIT_HASH

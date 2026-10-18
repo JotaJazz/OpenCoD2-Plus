@@ -637,10 +637,8 @@ const dvar_t *player_dmgtimer_minScale;
 const dvar_t *player_dmgtimer_maxTime;
 const dvar_t *player_dmgtimer_timePerPoint;
 const dvar_t *player_turnAnims;
-BSSINT player_spectateSpeedScale;
 const dvar_t *player_backSpeedScale;
 const dvar_t *player_strafeSpeedScale;
-BSSINT player_footstepsThreshhold;
 const dvar_t *player_moveThreshhold;
 const dvar_t *player_adsExitDelay;
 const dvar_t *player_scopeExitOnDamage;
@@ -659,22 +657,11 @@ const dvar_t *bg_bobAmplitudeProne;
 const dvar_t *bg_bobAmplitudeDucked;
 const dvar_t *bg_bobAmplitudeStanding;
 const dvar_t *bg_swingSpeed;
-BSSINT friction;
-BSSINT stopspeed;
-BSSINT inertiaAngle;
-BSSINT inertiaDebug;
-BSSINT inertiaMax;
-BSSINT bg_fallDamageMaxHeight;
-BSSINT bg_fallDamageMinHeight;
 const dvar_t *bg_foliagesnd_resetinterval;
 const dvar_t *bg_foliagesnd_fastinterval;
 const dvar_t *bg_foliagesnd_slowinterval;
 const dvar_t *bg_foliagesnd_maxspeed;
 const dvar_t *bg_foliagesnd_minspeed;
-BSSINT bg_prone_yawcap;
-BSSINT bg_ladder_yawcap;
-BSSINT player_view_pitch_down;
-const dvar_t *player_view_pitch_up;   /* dvar pointer-blob retype */
 #if defined(COD2_X64)
 /* x86 sizeof(clipMap_t)=384; on x64 its many pointer fields grow so the struct is
    larger -> the byte blob put nodes/planes/leafs at wrong offsets and overflowed

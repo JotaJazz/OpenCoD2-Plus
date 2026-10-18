@@ -220,6 +220,7 @@ unsigned int g_lastop_dbg;
 /* write-watchpoint: make ent#439's page read-only so the corrupting write faults with an exact rip */
 void dbg_protect_439(void)
 {
+#ifdef _WIN32
     static int done;
     void *__stdcall GetModuleHandleA(const char *);
     void *__stdcall GetProcAddress(void *, const char *);
@@ -241,6 +242,7 @@ void dbg_protect_439(void)
         vp((void *)(uintptr_t)page, 0x1000, 2 /*PAGE_READONLY*/, &oldp);
         Com_Printf("[wp] protected ent#439 page %p (ent at %p)\n", (void *)(uintptr_t)page, (void *)base);
     }
+#endif
 }
 void dbg_end_probe(int step)
 {
@@ -272,11 +274,16 @@ void dbg_check439(void)
 {
     static int rep;
     if (!rep && (unsigned int)g_entities[439].s.pos.trType > 20u) {
+#ifdef _WIN32
         void *__stdcall GetModuleHandleA(const char *);
+        char *base = (char *)GetModuleHandleA(0);
+#else
+        char *base = 0;
+#endif
         rep = 1;
         Com_Printf("[corruptor] ent#439 trType=0x%x after builtinIndex=%u fn_rva=0x%llx\n",
                    (unsigned int)g_entities[439].s.pos.trType, g_dbg_lastBuiltin,
-                   (unsigned long long)((char *)g_dbg_lastBuiltinFn - (char *)GetModuleHandleA(0)));
+                   (unsigned long long)((char *)g_dbg_lastBuiltinFn - base));
     }
 }
 
@@ -489,7 +496,6 @@ extern void G_SpawnTriggerHurt(int numBrushModels);
 extern void GScr_PostResetTimeout(void);
 extern short int CheckTeamStatus(void);
 extern void DeathmatchScoreboardMessage(gentity_t *ent);
-extern const char *SL_ConvertToString(unsigned short index);
 extern void Dvar_SetBool(const dvar_t *dvar, int value);
 extern void SaveRegisteredWeapons(void);
 extern void SaveRegisteredItems(void);
@@ -709,7 +715,6 @@ extern void G_SpawnTriggerHurt(int numBrushModels);
 extern void GScr_PostResetTimeout(void);
 extern short int CheckTeamStatus(void);
 extern void DeathmatchScoreboardMessage(gentity_t *ent);
-extern const char *SL_ConvertToString(unsigned short index);
 extern void Dvar_SetBool(const dvar_t *dvar, int value);
 extern void SaveRegisteredWeapons(void);
 extern void SaveRegisteredItems(void);
