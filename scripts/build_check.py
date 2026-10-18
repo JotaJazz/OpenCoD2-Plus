@@ -35,14 +35,12 @@ def build(variant, extra):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
-    ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS')
+    ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
     ap.add_argument('--cxx-all', action='store_true', help='passes -DCOD2_CXX_ALL=ON')
     args = ap.parse_args()
 
     variants = list(VARIANTS) if 'all' in args.variants else args.variants
-    extra = []
-    if args.cxx_dirs is not None:
-        extra.append('-DCOD2_CXX_DIRS=' + args.cxx_dirs)
+    extra = ['-DCOD2_CXX_DIRS=' + (args.cxx_dirs or '')]
     extra.append('-DCOD2_CXX_ALL=' + ('ON' if args.cxx_all else 'OFF'))
 
     failed = False

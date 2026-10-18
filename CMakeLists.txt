@@ -69,6 +69,57 @@ set(COD2_WNO
 
 set(COD2_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
+# C++ conversion. A C source picked here is compiled as C++ through a generated
+# wrapper, extern "C" { #include "x.c" }, so everything it defines or declares
+# (block-scope externs included) keeps its C name for the data blobs, the .S
+# files and the --defsym aliases. The data blobs and the third-party libraries
+# stay C.
+# Modules already converted (they build, link and pass the smoke test as C++):
+set(COD2_CXX_DIRS_CONVERTED "")
+set(COD2_CXX_DIRS "" CACHE STRING "More src/ subdirectories to compile as C++, e.g. PC/qcommon;PC/server_mp")
+option(COD2_CXX_ALL "Compile every engine C source as C++" OFF)
+set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
+
+# cod2_cxx_sources(<out_var> <sources...>): the sources, with the picked C files
+# replaced by their wrappers under ${CMAKE_BINARY_DIR}/cxx_wrap/.
+function(cod2_cxx_sources out)
+  set(result "")
+  foreach(src ${ARGN})
+    file(RELATIVE_PATH rel ${COD2_SRC_DIR} ${CMAKE_SOURCE_DIR}/${src})
+    set(pick FALSE)
+    if(src MATCHES "\\.c$" AND NOT rel MATCHES "^\\.\\." AND NOT rel MATCHES "${COD2_CXX_NEVER}")
+      if(COD2_CXX_ALL)
+        set(pick TRUE)
+      else()
+        foreach(dir ${COD2_CXX_DIRS_CONVERTED} ${COD2_CXX_DIRS})
+          if(rel MATCHES "^${dir}/")
+            set(pick TRUE)
+          endif()
+        endforeach()
+      endif()
+    endif()
+    if(pick)
+      set(wrapper ${CMAKE_BINARY_DIR}/cxx_wrap/${rel}.cpp)
+      set(content "extern \"C\" {\n#include \"${CMAKE_SOURCE_DIR}/${src}\"\n}\n")
+      set(old "")
+      if(EXISTS ${wrapper})
+        file(READ ${wrapper} old)
+      endif()
+      if(NOT old STREQUAL content)
+        file(WRITE ${wrapper} "${content}")
+      endif()
+      get_source_file_property(defs ${src} COMPILE_DEFINITIONS)
+      if(defs)
+        set_source_files_properties(${wrapper} PROPERTIES COMPILE_DEFINITIONS "${defs}")
+      endif()
+      list(APPEND result ${wrapper})
+    else()
+      list(APPEND result ${src})
+    endif()
+  endforeach()
+  set(${out} ${result} PARENT_SCOPE)
+endfunction()
+
 # x64 port: expose COD2_X64 to the source so the ILP32 layout pins
 # (COD2_ASSERT_FIELD/SIZE in cod2_defs.h) and other arch-specific code can adapt.
 # Global so every target/branch below inherits it. No-op for the default 32-bit
@@ -248,6 +299,7 @@ endforeach()
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
+cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
@@ -458,6 +510,8 @@ list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
 # WSL), and no .iwd is found.
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
+cod2_cxx_sources(ALL_C ${ALL_C})
+cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
