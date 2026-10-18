@@ -1,7 +1,12 @@
 #ifndef CLEAN_PC_CGAME_MP_CG_FUNCS_H
 #define CLEAN_PC_CGAME_MP_CG_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
+
 
 void CGScr_LoadAnimTrees(void);
 void CG_SetDObjInfo(int iEntNum, int iEntType, struct XModel *pXModel);
@@ -243,4 +248,8 @@ void CG_DrawOffHandIcon(rectDef_s *rect, float scale, vec_t *color, MaterialHand
 void CG_DrawOffHandHighlight(rectDef_s *rect, float scale, vec_t *color, MaterialHandle material, int weaponType);
 void CG_DrawOffHandAmmo(rectDef_s *rect, struct Font_s *font, float scale, vec_t *color, int textStyle, int weaponType);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,10 @@
 #ifndef PC_EFFECTSCORE_FXMEMMGR_H_H
 #define PC_EFFECTSCORE_FXMEMMGR_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Cloud;
 struct Cylinder;
 struct Emitter;
@@ -67,4 +71,7 @@ struct Tail {
     FxChannelInstance lengthRandChannelInstance;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

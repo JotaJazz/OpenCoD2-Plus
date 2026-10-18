@@ -1,7 +1,12 @@
 #ifndef CLEAN_PC_SCRIPT_SCR_FUNCS_H
 #define CLEAN_PC_SCRIPT_SCR_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
+
 
 #ifndef SCR_FUNCS_VM_LOCAL_VAR_ARCHIVE_DEFINED
 #define SCR_FUNCS_VM_LOCAL_VAR_ARCHIVE_DEFINED
@@ -307,4 +312,8 @@ void Scr_AddVector(const float *value);
 YY_BUFFER_STATE yy_create_buffer(FILE *file, int size);
 void ScriptParse(sval_t *parseData, int user);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

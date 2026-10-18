@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_MACOPENGLUTILS_H_H
 #define MAC_DIRECTX_9_MACOPENGLUTILS_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "PC/gfx_d3d/rb_backend.h"
 #include "PC/universal/com_math.h"
 #include "PC/universal/com_vector.h"
@@ -1575,4 +1579,7 @@ struct water_t {
     GfxImage *image;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

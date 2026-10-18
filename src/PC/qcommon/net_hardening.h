@@ -1,7 +1,12 @@
 #ifndef COD2_NET_HARDENING_H
 #define COD2_NET_HARDENING_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
+
 
 #if COD2_FEATURE_NET_HARDENING
 
@@ -20,4 +25,8 @@ int NetHardening_SVC_RateLimitAddress(struct netadr_t from, int nowMsec);
 
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

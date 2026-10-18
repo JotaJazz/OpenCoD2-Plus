@@ -1,6 +1,11 @@
 #ifndef IMPORTS_LIBSTDCXX_H
 #define IMPORTS_LIBSTDCXX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 void *cxa_allocate_exception(unsigned long thrown_size);
 int cxa_begin_catch();
 int cxa_end_catch();
@@ -13,4 +18,8 @@ __attribute__((noreturn))
 void cxa_throw(void *thrown_exception, void *tinfo, void (*dest)(void *));
 int gxx_personality_v0();
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

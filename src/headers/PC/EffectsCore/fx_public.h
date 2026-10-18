@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_EFFECTSCORE_FX_PUBLIC_H
 #define CLEAN_PC_EFFECTSCORE_FX_PUBLIC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
 typedef struct Cloud Cloud;
@@ -153,7 +157,7 @@ COD2_ASSERT_FIELD(struct Tail, endpoint, 0x24c);
 COD2_ASSERT_FIELD(struct Tail, lengthChannelInstance, 0x260);
 COD2_ASSERT_FIELD(struct Tail, lengthRandChannelInstance, 0x26c);
 
-enum FxChannelId {
+enum FxChannelId COD2_ENUM_INT {
     FXCHAN_COLOR = 0,
     FXCHAN_COLOR_RAND = 1,
     FXCHAN_ALPHA = 2,
@@ -311,4 +315,7 @@ struct TextPool {
     int capacity;
     int used;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

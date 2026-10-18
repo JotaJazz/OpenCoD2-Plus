@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_CDIRECT3DVERTEXBUFFER_H_H
 #define MAC_DIRECTX_9_CDIRECT3DVERTEXBUFFER_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CCacheInfoBlock;
 struct CDirect3DVertexBuffer;
 struct CFence;
@@ -132,4 +136,7 @@ struct new_allocator_GLuint {
     int _placeholder;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

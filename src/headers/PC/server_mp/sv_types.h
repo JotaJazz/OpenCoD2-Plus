@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_SERVER_MP_SV_TYPES_H
 #define CLEAN_PC_SERVER_MP_SV_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -82,4 +86,7 @@ struct ucmd_t {
     char *name;
     void (*func)();
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

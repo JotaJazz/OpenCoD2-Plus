@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_QCOMMON_QCOMMON_TYPES_H
 #define CLEAN_PC_QCOMMON_QCOMMON_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -212,4 +216,7 @@ struct cm_world_t {
     short unsigned int freeHead;
     worldSector_t sectors[1024];
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

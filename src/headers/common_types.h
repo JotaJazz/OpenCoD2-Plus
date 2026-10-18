@@ -1,3 +1,6 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "cod2_feature_config.h"
 #include "headers/cod2_types.h"
 
@@ -1200,13 +1203,13 @@ struct worldTree_s;
 struct yy_buffer_state;
 struct z_stream_s;
 
-enum CFComparisonResult {
+enum CFComparisonResult COD2_ENUM_INT {
     kCFCompareLessThan = -1,
     kCFCompareEqualTo = 0,
     kCFCompareGreaterThan = 1
 };
 
-enum CGLError {
+enum CGLError COD2_ENUM_INT {
     kCGLNoError = 0,
     kCGLBadAttribute = 10000,
     kCGLBadProperty = 10001,
@@ -1228,7 +1231,7 @@ enum CGLError {
     kCGLBadConnection = 10017
 };
 
-enum CGLPixelFormatAttribute {
+enum CGLPixelFormatAttribute COD2_ENUM_INT {
     kCGLPFAAllRenderers = 1,
     kCGLPFADoubleBuffer = 5,
     kCGLPFAStereo = 6,
@@ -1266,7 +1269,7 @@ enum CGLPixelFormatAttribute {
     kCGLPFAVirtualScreenCount = 128
 };
 
-enum ConverterType {
+enum ConverterType COD2_ENUM_INT {
     ATI_4_COMPS_CONVERTER_ARGB = 0,
     ATI_4_COMPS_CONVERTER_ABGR = 1,
     STD_CONVERTER_ARGB = 2,
@@ -1274,7 +1277,7 @@ enum ConverterType {
     UNKNOWN_CONVERTER = 4
 };
 
-enum CubemapShot {
+enum CubemapShot COD2_ENUM_INT {
     CUBEMAPSHOT_NONE = 0,
     CUBEMAPSHOT_UP = 1,
     CUBEMAPSHOT_DOWN = 2,
@@ -1285,21 +1288,21 @@ enum CubemapShot {
     CUBEMAPSHOT_COUNT = 7
 };
 
-enum D3DBACKBUFFER_TYPE {
+enum D3DBACKBUFFER_TYPE COD2_ENUM_INT {
     D3DBACKBUFFER_TYPE_MONO = 0,
     D3DBACKBUFFER_TYPE_LEFT = 1,
     D3DBACKBUFFER_TYPE_RIGHT = 2,
     D3DBACKBUFFER_TYPE_FORCE_DWORD = 2147483647
 };
 
-enum D3DBASISTYPE {
+enum D3DBASISTYPE COD2_ENUM_INT {
     D3DBASIS_BEZIER = 0,
     D3DBASIS_BSPLINE = 1,
     D3DBASIS_CATMULL_ROM = 2,
     D3DBASIS_FORCE_DWORD = 2147483647
 };
 
-enum D3DDEGREETYPE {
+enum D3DDEGREETYPE COD2_ENUM_INT {
     D3DDEGREE_LINEAR = 1,
     D3DDEGREE_QUADRATIC = 2,
     D3DDEGREE_CUBIC = 3,
@@ -1307,7 +1310,7 @@ enum D3DDEGREETYPE {
     D3DDEGREE_FORCE_DWORD = 2147483647
 };
 
-enum D3DDEVTYPE {
+enum D3DDEVTYPE COD2_ENUM_INT {
     D3DDEVTYPE_HAL = 1,
     D3DDEVTYPE_REF = 2,
     D3DDEVTYPE_SW = 3,
@@ -1315,7 +1318,7 @@ enum D3DDEVTYPE {
     D3DDEVTYPE_FORCE_DWORD = 2147483647
 };
 
-enum D3DFOGMODE {
+enum D3DFOGMODE COD2_ENUM_INT {
     D3DFOG_NONE = 0,
     D3DFOG_EXP = 1,
     D3DFOG_EXP2 = 2,
@@ -1323,14 +1326,14 @@ enum D3DFOGMODE {
     D3DFOG_FORCE_DWORD = 2147483647
 };
 
-enum D3DLIGHTTYPE {
+enum D3DLIGHTTYPE COD2_ENUM_INT {
     D3DLIGHT_POINT = 1,
     D3DLIGHT_SPOT = 2,
     D3DLIGHT_DIRECTIONAL = 3,
     D3DLIGHT_FORCE_DWORD = 2147483647
 };
 
-enum D3DMULTISAMPLE_TYPE {
+enum D3DMULTISAMPLE_TYPE COD2_ENUM_INT {
     D3DMULTISAMPLE_NONE = 0,
     D3DMULTISAMPLE_NONMASKABLE = 1,
     D3DMULTISAMPLE_2_SAMPLES = 2,
@@ -1351,7 +1354,7 @@ enum D3DMULTISAMPLE_TYPE {
     D3DMULTISAMPLE_FORCE_DWORD = 2147483647
 };
 
-enum D3DPOOL {
+enum D3DPOOL COD2_ENUM_INT {
     D3DPOOL_DEFAULT = 0,
     D3DPOOL_MANAGED = 1,
     D3DPOOL_SYSTEMMEM = 2,
@@ -1359,7 +1362,7 @@ enum D3DPOOL {
     D3DPOOL_FORCE_DWORD = 2147483647
 };
 
-enum D3DPRIMITIVETYPE {
+enum D3DPRIMITIVETYPE COD2_ENUM_INT {
     D3DPT_POINTLIST = 1,
     D3DPT_LINELIST = 2,
     D3DPT_LINESTRIP = 3,
@@ -1369,7 +1372,7 @@ enum D3DPRIMITIVETYPE {
     D3DPT_FORCE_DWORD = 2147483647
 };
 
-enum D3DQUERYTYPE {
+enum D3DQUERYTYPE COD2_ENUM_INT {
     D3DQUERYTYPE_VCACHE = 4,
     D3DQUERYTYPE_RESOURCEMANAGER = 5,
     D3DQUERYTYPE_VERTEXSTATS = 6,
@@ -1386,7 +1389,7 @@ enum D3DQUERYTYPE {
     D3DQUERYTYPE_CACHEUTILIZATION = 18
 };
 
-enum D3DRENDERSTATETYPE {
+enum D3DRENDERSTATETYPE COD2_ENUM_INT {
     D3DRS_ZENABLE = 7,
     D3DRS_FILLMODE = 8,
     D3DRS_SHADEMODE = 9,
@@ -1493,7 +1496,7 @@ enum D3DRENDERSTATETYPE {
     D3DRS_FORCE_DWORD = 2147483647
 };
 
-enum D3DSAMPLERSTATETYPE {
+enum D3DSAMPLERSTATETYPE COD2_ENUM_INT {
     D3DSAMP_ADDRESSU = 1,
     D3DSAMP_ADDRESSV = 2,
     D3DSAMP_ADDRESSW = 3,
@@ -1510,21 +1513,21 @@ enum D3DSAMPLERSTATETYPE {
     D3DSAMP_FORCE_DWORD = 2147483647
 };
 
-enum D3DSTATEBLOCKTYPE {
+enum D3DSTATEBLOCKTYPE COD2_ENUM_INT {
     D3DSBT_ALL = 1,
     D3DSBT_PIXELSTATE = 2,
     D3DSBT_VERTEXSTATE = 3,
     D3DSBT_FORCE_DWORD = 2147483647
 };
 
-enum D3DSWAPEFFECT {
+enum D3DSWAPEFFECT COD2_ENUM_INT {
     D3DSWAPEFFECT_DISCARD = 1,
     D3DSWAPEFFECT_FLIP = 2,
     D3DSWAPEFFECT_COPY = 3,
     D3DSWAPEFFECT_FORCE_DWORD = 2147483647
 };
 
-enum D3DTEXTURESTAGESTATETYPE {
+enum D3DTEXTURESTAGESTATETYPE COD2_ENUM_INT {
     D3DTSS_COLOROP = 1,
     D3DTSS_COLORARG1 = 2,
     D3DTSS_COLORARG2 = 3,
@@ -1546,7 +1549,7 @@ enum D3DTEXTURESTAGESTATETYPE {
     D3DTSS_FORCE_DWORD = 2147483647
 };
 
-enum D3DTEXTURETRANSFORMFLAGS {
+enum D3DTEXTURETRANSFORMFLAGS COD2_ENUM_INT {
     D3DTTFF_DISABLE = 0,
     D3DTTFF_COUNT1 = 1,
     D3DTTFF_COUNT2 = 2,
@@ -1556,7 +1559,7 @@ enum D3DTEXTURETRANSFORMFLAGS {
     D3DTTFF_FORCE_DWORD = 2147483647
 };
 
-enum D3DTRANSFORMSTATETYPE {
+enum D3DTRANSFORMSTATETYPE COD2_ENUM_INT {
     D3DTS_VIEW = 2,
     D3DTS_PROJECTION = 3,
     D3DTS_TEXTURE0 = 16,
@@ -1570,7 +1573,7 @@ enum D3DTRANSFORMSTATETYPE {
     D3DTS_FORCE_DWORD = 2147483647
 };
 
-enum D3DXIMAGE_FILEFORMAT {
+enum D3DXIMAGE_FILEFORMAT COD2_ENUM_INT {
     D3DXIFF_BMP = 0,
     D3DXIFF_JPG = 1,
     D3DXIFF_TGA = 2,
@@ -1583,13 +1586,13 @@ enum D3DXIMAGE_FILEFORMAT {
     D3DXIFF_FORCE_DWORD = 2147483647
 };
 
-enum D3DXINCLUDE_TYPE {
+enum D3DXINCLUDE_TYPE COD2_ENUM_INT {
     D3DXINC_LOCAL = 0,
     D3DXINC_SYSTEM = 1,
     D3DXINC_FORCE_DWORD = 2147483647
 };
 
-enum D3DXPARAMETER_CLASS {
+enum D3DXPARAMETER_CLASS COD2_ENUM_INT {
     D3DXPC_SCALAR = 0,
     D3DXPC_VECTOR = 1,
     D3DXPC_MATRIX_ROWS = 2,
@@ -1599,7 +1602,7 @@ enum D3DXPARAMETER_CLASS {
     D3DXPC_FORCE_DWORD = 2147483647
 };
 
-enum D3DXPARAMETER_TYPE {
+enum D3DXPARAMETER_TYPE COD2_ENUM_INT {
     D3DXPT_VOID = 0,
     D3DXPT_BOOL = 1,
     D3DXPT_INT = 2,
@@ -1622,7 +1625,7 @@ enum D3DXPARAMETER_TYPE {
     D3DXPT_FORCE_DWORD = 2147483647
 };
 
-enum D3DXREGISTER_SET {
+enum D3DXREGISTER_SET COD2_ENUM_INT {
     D3DXRS_BOOL = 0,
     D3DXRS_INT4 = 1,
     D3DXRS_FLOAT4 = 2,
@@ -1630,29 +1633,29 @@ enum D3DXREGISTER_SET {
     D3DXRS_FORCE_DWORD = 2147483647
 };
 
-enum DemoType {
+enum DemoType COD2_ENUM_INT {
     DEMO_TYPE_NONE = 0,
     DEMO_TYPE_CLIENT = 1,
     DEMO_TYPE_SERVER = 2
 };
 
-enum DpvsClipChildren {
+enum DpvsClipChildren COD2_ENUM_INT {
     DPVS_DONT_CLIP_CHILDREN = 0,
     DPVS_CLIP_CHILDREN = 1
 };
 
-enum DpvsForceBevels {
+enum DpvsForceBevels COD2_ENUM_INT {
     DPVS_DONT_FORCE_BEVELS = 0,
     DPVS_FORCE_BEVELS = 1
 };
 
-enum DvarSetSource {
+enum DvarSetSource COD2_ENUM_INT {
     DVAR_SOURCE_INTERNAL = 0,
     DVAR_SOURCE_EXTERNAL = 1,
     DVAR_SOURCE_SCRIPT = 2
 };
 
-enum DxCapsResponse {
+enum DxCapsResponse COD2_ENUM_INT {
     DX_CAPS_RESPONSE_QUIT = 0,
     DX_CAPS_RESPONSE_WARN = 1,
     DX_CAPS_RESPONSE_INFO = 2,
@@ -1660,37 +1663,39 @@ enum DxCapsResponse {
     DX_CAPS_RESPONSE_FORBID_DX9 = 4
 };
 
-enum EMediaTypes {
+enum EMediaTypes COD2_ENUM_INT {
     MEDIA_MATERIALS = 0,
     MEDIA_MODELS = 1,
     MEDIA_EFFECTS = 2
 };
 
-enum FFType {
+enum FFType COD2_ENUM_INT {
     kExactItem = 0,
     kAnyItem = 1,
     kAnyItemType = 2
 };
 
-enum FogColorSrcEnum {
+enum FogColorSrcEnum COD2_ENUM_INT {
     FOG_COLOR_SRC_UNSPECIFIED = 0,
     FOG_COLOR_SRC_STANDARD = 1,
     FOG_COLOR_SRC_BLACK = 2
 };
 
-enum Format {
+enum Format COD2_ENUM_INT {
     ARGB = 0,
     ABGR = 1
 };
 
-enum FsListBehavior {
+enum FsListBehavior COD2_ENUM_INT {
     FS_LIST_PURE_ONLY = 0,
     FS_LIST_ALL = 1
 };
 
+COD2_ENUM_DECL(FsListBehavior)
+
 typedef enum FsListBehavior FsListBehavior_e;
 
-enum FxChannelId {
+enum FxChannelId COD2_ENUM_INT {
     FXCHAN_COLOR = 0,
     FXCHAN_COLOR_RAND = 1,
     FXCHAN_ALPHA = 2,
@@ -1718,12 +1723,12 @@ enum FxChannelId {
     FXCHAN_COUNT = 24
 };
 
-enum GfxDrawGroupGlueBehavior {
+enum GfxDrawGroupGlueBehavior COD2_ENUM_INT {
     R_DRAWGROUP_GLUE_ISSUE = 0,
     R_DRAWGROUP_GLUE_SKIP = 1
 };
 
-enum GfxDrawGroupType {
+enum GfxDrawGroupType COD2_ENUM_INT {
     R_DRAWGROUP_DEPTH_PREPASS = 0,
     R_DRAWGROUP_SHADOW_COOKIE = 1,
     R_DRAWGROUP_WORLD_SUN = 2,
@@ -1732,38 +1737,38 @@ enum GfxDrawGroupType {
     R_DRAWGROUP_COUNT = 5
 };
 
-enum GfxDrawSurfOrder {
+enum GfxDrawSurfOrder COD2_ENUM_INT {
     GFX_DRAW_SURFS_ITER_FORWARD = 0,
     GFX_DRAW_SURFS_ITER_BACKWARD = 1
 };
 
-enum GfxFogOffset {
+enum GfxFogOffset COD2_ENUM_INT {
     FOG_OFFSET_NONE = 0,
     FOG_OFFSET_LINEAR = 1,
     FOG_OFFSET_EXP = 2,
     FOG_OFFSET_COUNT = 3
 };
 
-enum GfxLightType {
+enum GfxLightType COD2_ENUM_INT {
     GFX_LIGHT_TYPE_SUN = 0,
     GFX_LIGHT_TYPE_SKY = 1,
     GFX_LIGHT_TYPE_POINT = 2,
     GFX_LIGHT_TYPE_COUNT = 3
 };
 
-enum GfxLockType {
+enum GfxLockType COD2_ENUM_INT {
     GFX_LOCK_BEGIN_FRAME = 0,
     GFX_LOCK_RESUME_FRAME = 1
 };
 
-enum GfxOptimizedVertexSource {
+enum GfxOptimizedVertexSource COD2_ENUM_INT {
     OPT_VERTS_NONE = 0,
     OPT_VERTS_WORLD = 1,
     OPT_VERTS_SMC = 2,
     OPT_VERTS_COUNT = 3
 };
 
-enum GfxPrimStatsTarget {
+enum GfxPrimStatsTarget COD2_ENUM_INT {
     GFX_PRIM_STATS_WORLD = 0,
     GFX_PRIM_STATS_SMODELCACHED = 1,
     GFX_PRIM_STATS_SMODELRIGID = 2,
@@ -1778,7 +1783,7 @@ enum GfxPrimStatsTarget {
     GFX_PRIM_STATS_COUNT = 11
 };
 
-enum GfxRenderTargetId {
+enum GfxRenderTargetId COD2_ENUM_INT {
     R_RENDERTARGET_FRAME_BUFFER = 0,
     R_RENDERTARGET_RESOLVED_POST_SUN = 1,
     R_RENDERTARGET_RESOLVED_SCENE = 2,
@@ -1796,17 +1801,17 @@ enum GfxRenderTargetId {
     R_RENDERTARGET_NONE = 14
 };
 
-enum GfxScreenshotType {
+enum GfxScreenshotType COD2_ENUM_INT {
     R_SCREENSHOT_JPG = 0,
     R_SCREENSHOT_TGA = 1
 };
 
-enum GfxViewportBehavior {
+enum GfxViewportBehavior COD2_ENUM_INT {
     GFX_USE_VIEWPORT_FOR_VIEW = 0,
     GFX_USE_VIEWPORT_FULL = 1
 };
 
-enum JPEG_MARKER {
+enum JPEG_MARKER COD2_ENUM_INT {
     M_SOF0 = 192,
     M_SOF1 = 193,
     M_SOF2 = 194,
@@ -1862,14 +1867,14 @@ enum JPEG_MARKER {
     M_ERROR = 256
 };
 
-enum J_BUF_MODE {
+enum J_BUF_MODE COD2_ENUM_INT {
     JBUF_PASS_THRU = 0,
     JBUF_SAVE_SOURCE = 1,
     JBUF_CRANK_DEST = 2,
     JBUF_SAVE_AND_PASS = 3
 };
 
-enum J_COLOR_SPACE {
+enum J_COLOR_SPACE COD2_ENUM_INT {
     JCS_UNKNOWN = 0,
     JCS_GRAYSCALE = 1,
     JCS_RGB = 2,
@@ -1878,30 +1883,30 @@ enum J_COLOR_SPACE {
     JCS_YCCK = 5
 };
 
-enum J_DCT_METHOD {
+enum J_DCT_METHOD COD2_ENUM_INT {
     JDCT_ISLOW = 0,
     JDCT_IFAST = 1,
     JDCT_FLOAT = 2
 };
 
-enum J_DITHER_MODE {
+enum J_DITHER_MODE COD2_ENUM_INT {
     JDITHER_NONE = 0,
     JDITHER_ORDERED = 1,
     JDITHER_FS = 2
 };
 
-enum LoopMode {
+enum LoopMode COD2_ENUM_INT {
     LM_FOREVER = 0,
     LM_TIMES = 1,
     LM_MODE_COUNT = 2
 };
 
-enum MaterialShaderType {
+enum MaterialShaderType COD2_ENUM_INT {
     MTL_VERTEX_SHADER = 0,
     MTL_PIXEL_SHADER = 1
 };
 
-enum MaterialTechniqueType {
+enum MaterialTechniqueType COD2_ENUM_INT {
     TECHNIQUE_DEPTH_PREPASS = 0,
     TECHNIQUE_SKY = 1,
     TECHNIQUE_BUILD_FLOAT_Z = 2,
@@ -1947,7 +1952,7 @@ enum MaterialTechniqueType {
     TECHNIQUE_NONE = -1
 };
 
-enum MaterialTextureSource {
+enum MaterialTextureSource COD2_ENUM_INT {
     TEXTURE_SRC_CODE_BLACK = 0,
     TEXTURE_SRC_CODE_WHITE = 1,
     TEXTURE_SRC_CODE_IDENTITY_NORMAL_MAP = 2,
@@ -1974,7 +1979,7 @@ enum MaterialTextureSource {
     TEXTURE_SRC_CODE_WATER_COLOR = 23
 };
 
-enum MaterialVertexDeclType {
+enum MaterialVertexDeclType COD2_ENUM_INT {
     VERTDECL_GENERIC = 0,
     VERTDECL_WORLD = 1,
     VERTDECL_POS_TEX = 2,
@@ -1982,13 +1987,13 @@ enum MaterialVertexDeclType {
     VERTDECL_COUNT = 4
 };
 
-enum MtlParseSuccess {
+enum MtlParseSuccess COD2_ENUM_INT {
     MTL_PARSE_SUCCESS = 0,
     MTL_PARSE_NO_MATCH = 1,
     MTL_PARSE_ERROR = 2
 };
 
-enum MtlTextureFunctionValidDx7 {
+enum MtlTextureFunctionValidDx7 COD2_ENUM_INT {
     MTL_TEXFUNC_VALID_COLOR = 1,
     MTL_TEXFUNC_VALID_ALPHA = 2,
     MTL_TEXFUNC_VALID_BOTH = 3
@@ -1996,31 +2001,31 @@ enum MtlTextureFunctionValidDx7 {
 
 typedef int OGLSITPTypes;
 
-enum OffhandClass {
+enum OffhandClass COD2_ENUM_INT {
     OFFHAND_CLASS_NONE = 0,
     OFFHAND_CLASS_FRAG_GRENADE = 1,
     OFFHAND_CLASS_SMOKE_GRENADE = 2,
     OFFHAND_CLASS_COUNT = 3
 };
 
-enum OpenGLPixelShaderType {
+enum OpenGLPixelShaderType COD2_ENUM_INT {
     ATITextFragmentProgram = 0,
     NVidiaRegisterCombinersProgram = 1,
     ARBFragmentProgram = 2
 };
 
-enum OwnershipType {
+enum OwnershipType COD2_ENUM_INT {
     IS_OWNER = 0,
     IS_NOT_OWNER = 1
 };
 
-enum PlayRateMode {
+enum PlayRateMode COD2_ENUM_INT {
     PRM_FIXED_FPS = 0,
     PRM_SYNC_TO_PARTICLE_LIFETIME = 1,
     PRM_MODE_COUNT = 2
 };
 
-enum PrimType {
+enum PrimType COD2_ENUM_INT {
     PT_NONE = 0,
     PT_PARTICLE = 1,
     PT_LINE = 2,
@@ -2036,46 +2041,54 @@ enum PrimType {
     PT_CLOUD = 12
 };
 
-enum RenderTargetUsage {
+enum RenderTargetUsage COD2_ENUM_INT {
     RENDERTARGET_USAGE_RENDER = 0,
     RENDERTARGET_USAGE_TEXTURE = 1,
     RENDERTARGET_USAGE_READBACK = 2
 };
 
-enum ShadowType {
+enum ShadowType COD2_ENUM_INT {
     SHADOW_NONE = 0,
     SHADOW_COOKIE = 1
 };
 
-enum StartFrameMode {
+enum StartFrameMode COD2_ENUM_INT {
     SFM_FIXED_FRAME = 0,
     SFM_RANDOM = 1,
     SFM_INDEXED = 2,
     SFM_MODE_COUNT = 3
 };
 
-enum SurfaceType {
+enum SurfaceType COD2_ENUM_INT {
     TEXTURE_SURFACE = 0,
     CUBE_SURFACE = 1,
     VOLUME_SURFACE = 2
 };
 
-enum VAOStatus {
+enum VAOStatus COD2_ENUM_INT {
     UNINITIALIZED_VAO_STATUS = 0,
     USING_GENERIC_VAO = 1,
     USING_VIRGIN_VAO = 2,
     USING_CACHED_VAO = 3
 };
 
+COD2_ENUM_DECL(CGLError)
+
 typedef enum CGLError _CGLError;
+
+COD2_ENUM_DECL(CGLPixelFormatAttribute)
 
 typedef enum CGLPixelFormatAttribute _CGLPixelFormatAttribute;
 
+COD2_ENUM_DECL(D3DBACKBUFFER_TYPE)
+
 typedef enum D3DBACKBUFFER_TYPE _D3DBACKBUFFER_TYPE;
+
+COD2_ENUM_DECL(D3DBASISTYPE)
 
 typedef enum D3DBASISTYPE _D3DBASISTYPE;
 
-enum _D3DCUBEMAP_FACES {
+enum _D3DCUBEMAP_FACES COD2_ENUM_INT {
     D3DCUBEMAP_FACE_POSITIVE_X = 0,
     D3DCUBEMAP_FACE_NEGATIVE_X = 1,
     D3DCUBEMAP_FACE_POSITIVE_Y = 2,
@@ -2085,13 +2098,19 @@ enum _D3DCUBEMAP_FACES {
     D3DCUBEMAP_FACE_FORCE_DWORD = 2147483647
 };
 
+COD2_ENUM_DECL(D3DDEGREETYPE)
+
 typedef enum D3DDEGREETYPE _D3DDEGREETYPE;
+
+COD2_ENUM_DECL(D3DDEVTYPE)
 
 typedef enum D3DDEVTYPE _D3DDEVTYPE;
 
+COD2_ENUM_DECL(D3DFOGMODE)
+
 typedef enum D3DFOGMODE _D3DFOGMODE;
 
-enum _D3DFORMAT {
+enum _D3DFORMAT COD2_ENUM_INT {
     D3DFMT_UNKNOWN = 0,
     D3DFMT_R8G8B8 = 20,
     D3DFMT_A8R8G8B8 = 21,
@@ -2155,19 +2174,31 @@ enum _D3DFORMAT {
     D3DFMT_FORCE_DWORD = 2147483647
 };
 
+COD2_ENUM_DECL(D3DLIGHTTYPE)
+
 typedef enum D3DLIGHTTYPE _D3DLIGHTTYPE;
+
+COD2_ENUM_DECL(D3DMULTISAMPLE_TYPE)
 
 typedef enum D3DMULTISAMPLE_TYPE _D3DMULTISAMPLE_TYPE;
 
+COD2_ENUM_DECL(D3DPOOL)
+
 typedef enum D3DPOOL _D3DPOOL;
+
+COD2_ENUM_DECL(D3DPRIMITIVETYPE)
 
 typedef enum D3DPRIMITIVETYPE _D3DPRIMITIVETYPE;
 
+COD2_ENUM_DECL(D3DQUERYTYPE)
+
 typedef enum D3DQUERYTYPE _D3DQUERYTYPE;
+
+COD2_ENUM_DECL(D3DRENDERSTATETYPE)
 
 typedef enum D3DRENDERSTATETYPE _D3DRENDERSTATETYPE;
 
-enum _D3DRESOURCETYPE {
+enum _D3DRESOURCETYPE COD2_ENUM_INT {
     D3DRTYPE_SURFACE = 1,
     D3DRTYPE_VOLUME = 2,
     D3DRTYPE_TEXTURE = 3,
@@ -2178,13 +2209,19 @@ enum _D3DRESOURCETYPE {
     D3DRTYPE_FORCE_DWORD = 2147483647
 };
 
+COD2_ENUM_DECL(D3DSAMPLERSTATETYPE)
+
 typedef enum D3DSAMPLERSTATETYPE _D3DSAMPLERSTATETYPE;
+
+COD2_ENUM_DECL(D3DSTATEBLOCKTYPE)
 
 typedef enum D3DSTATEBLOCKTYPE _D3DSTATEBLOCKTYPE;
 
+COD2_ENUM_DECL(D3DSWAPEFFECT)
+
 typedef enum D3DSWAPEFFECT _D3DSWAPEFFECT;
 
-enum _D3DTEXTUREADDRESS {
+enum _D3DTEXTUREADDRESS COD2_ENUM_INT {
     D3DTADDRESS_WRAP = 1,
     D3DTADDRESS_MIRROR = 2,
     D3DTADDRESS_CLAMP = 3,
@@ -2193,7 +2230,7 @@ enum _D3DTEXTUREADDRESS {
     D3DTADDRESS_FORCE_DWORD = 2147483647
 };
 
-enum _D3DTEXTUREFILTERTYPE {
+enum _D3DTEXTUREFILTERTYPE COD2_ENUM_INT {
     D3DTEXF_NONE = 0,
     D3DTEXF_POINT = 1,
     D3DTEXF_LINEAR = 2,
@@ -2203,7 +2240,7 @@ enum _D3DTEXTUREFILTERTYPE {
     D3DTEXF_FORCE_DWORD = 2147483647
 };
 
-enum _D3DTEXTUREOP {
+enum _D3DTEXTUREOP COD2_ENUM_INT {
     D3DTOP_DISABLE = 1,
     D3DTOP_SELECTARG1 = 2,
     D3DTOP_SELECTARG2 = 3,
@@ -2233,30 +2270,48 @@ enum _D3DTEXTUREOP {
     D3DTOP_FORCE_DWORD = 2147483647
 };
 
+COD2_ENUM_DECL(D3DTEXTURESTAGESTATETYPE)
+
 typedef enum D3DTEXTURESTAGESTATETYPE _D3DTEXTURESTAGESTATETYPE;
+
+COD2_ENUM_DECL(D3DTEXTURETRANSFORMFLAGS)
 
 typedef enum D3DTEXTURETRANSFORMFLAGS _D3DTEXTURETRANSFORMFLAGS;
 
+COD2_ENUM_DECL(D3DTRANSFORMSTATETYPE)
+
 typedef enum D3DTRANSFORMSTATETYPE _D3DTRANSFORMSTATETYPE;
+
+COD2_ENUM_DECL(D3DXIMAGE_FILEFORMAT)
 
 typedef enum D3DXIMAGE_FILEFORMAT _D3DXIMAGE_FILEFORMAT;
 
+COD2_ENUM_DECL(D3DXINCLUDE_TYPE)
+
 typedef enum D3DXINCLUDE_TYPE _D3DXINCLUDE_TYPE;
+
+COD2_ENUM_DECL(D3DXPARAMETER_CLASS)
 
 typedef enum D3DXPARAMETER_CLASS _D3DXPARAMETER_CLASS;
 
+COD2_ENUM_DECL(D3DXPARAMETER_TYPE)
+
 typedef enum D3DXPARAMETER_TYPE _D3DXPARAMETER_TYPE;
+
+COD2_ENUM_DECL(D3DXREGISTER_SET)
 
 typedef enum D3DXREGISTER_SET _D3DXREGISTER_SET;
 
-enum _Rb_tree_color {
+enum _Rb_tree_color COD2_ENUM_INT {
     _S_red = 0,
     _S_black = 1
 };
 
+COD2_ENUM_DECL(J_DITHER_MODE)
+
 typedef enum J_DITHER_MODE __darwin_suseconds_t;
 
-enum aistateEnum_t {
+enum aistateEnum_t COD2_ENUM_INT {
     AISTATE_NULL = -1,
     AISTATE_RELAXED = 0,
     AISTATE_QUERY = 1,
@@ -2265,7 +2320,7 @@ enum aistateEnum_t {
     MAX_AISTATES = 4
 };
 
-enum animBodyPart_t {
+enum animBodyPart_t COD2_ENUM_INT {
     ANIM_BP_UNUSED = 0,
     ANIM_BP_LEGS = 1,
     ANIM_BP_TORSO = 2,
@@ -2273,13 +2328,13 @@ enum animBodyPart_t {
     NUM_ANIM_BODYPARTS = 4
 };
 
-enum animScriptConditionTypes_t {
+enum animScriptConditionTypes_t COD2_ENUM_INT {
     ANIM_CONDTYPE_BITFLAGS = 0,
     ANIM_CONDTYPE_VALUE = 1,
     NUM_ANIM_CONDTYPES = 2
 };
 
-enum animScriptParseMode_t {
+enum animScriptParseMode_t COD2_ENUM_INT {
     PARSEMODE_DEFINES = 0,
     PARSEMODE_ANIMATION = 1,
     PARSEMODE_CANNED_ANIMATIONS = 2,
@@ -2288,19 +2343,19 @@ enum animScriptParseMode_t {
     NUM_PARSEMODES = 5
 };
 
-enum c_pass_type {
+enum c_pass_type COD2_ENUM_INT {
     main_pass = 0,
     huff_opt_pass = 1,
     output_pass = 2
 };
 
-enum clientConnected_t {
+enum clientConnected_t COD2_ENUM_INT {
     CON_DISCONNECTED = 0,
     CON_CONNECTING = 1,
     CON_CONNECTED = 2
 };
 
-enum connstate_t {
+enum connstate_t COD2_ENUM_INT {
     CA_DISCONNECTED = 0,
     CA_CINEMATIC = 1,
     CA_LOGO = 2,
@@ -2312,7 +2367,7 @@ enum connstate_t {
     CA_ACTIVE = 8
 };
 
-enum e_status {
+enum e_status COD2_ENUM_INT {
     FMV_IDLE = 0,
     FMV_PLAY = 1,
     FMV_EOF = 2,
@@ -2322,7 +2377,7 @@ enum e_status {
     FMV_ID_WAIT = 6
 };
 
-enum errorParm_t {
+enum errorParm_t COD2_ENUM_INT {
     ERR_FATAL = 0,
     ERR_DROP = 1,
     ERR_SERVERDISCONNECT = 2,
@@ -2332,7 +2387,7 @@ enum errorParm_t {
     ERR_LOCALIZATION = 6
 };
 
-enum fieldtype_t {
+enum fieldtype_t COD2_ENUM_INT {
     F_INT = 0,
     F_FLOAT = 1,
     F_LSTRING = 2,
@@ -2344,14 +2399,14 @@ enum fieldtype_t {
     F_MODEL = 8
 };
 
-enum fsMode_t {
+enum fsMode_t COD2_ENUM_INT {
     FS_READ = 0,
     FS_WRITE = 1,
     FS_APPEND = 2,
     FS_APPEND_SYNC = 3
 };
 
-enum he_type_t {
+enum he_type_t COD2_ENUM_INT {
     HE_TYPE_FREE = 0,
     HE_TYPE_TEXT = 1,
     HE_TYPE_VALUE = 2,
@@ -2369,7 +2424,7 @@ enum he_type_t {
     HE_TYPE_COUNT = 14
 };
 
-enum hitLocation_t {
+enum hitLocation_t COD2_ENUM_INT {
     HITLOC_NONE = 0,
     HITLOC_HELMET = 1,
     HITLOC_HEAD = 2,
@@ -2392,13 +2447,13 @@ enum hitLocation_t {
     HITLOC_NUM = 19
 };
 
-enum hudelem_update_t {
+enum hudelem_update_t COD2_ENUM_INT {
     HUDELEM_UPDATE_ARCHIVAL = 1,
     HUDELEM_UPDATE_CURRENT = 2,
     HUDELEM_UPDATE_ARCHIVAL_AND_CURRENT = 3
 };
 
-enum inflate_block_mode {
+enum inflate_block_mode COD2_ENUM_INT {
     TYPE = 0,
     LENS = 1,
     STORED = 2,
@@ -2411,7 +2466,7 @@ enum inflate_block_mode {
     BAD = 9
 };
 
-enum inflate_codes_mode {
+enum inflate_codes_mode COD2_ENUM_INT {
     START = 0,
     LEN = 1,
     LENEXT = 2,
@@ -2426,14 +2481,14 @@ enum inflate_codes_mode {
 
 typedef int inflate_mode;
 
-enum itemType_t {
+enum itemType_t COD2_ENUM_INT {
     IT_BAD = 0,
     IT_WEAPON = 1,
     IT_AMMO = 2,
     IT_HEALTH = 3
 };
 
-enum language_t {
+enum language_t COD2_ENUM_INT {
     LANGUAGE_ENGLISH = 0,
     LANGUAGE_FRENCH = 1,
     LANGUAGE_GERMAN = 2,
@@ -2451,11 +2506,11 @@ enum language_t {
     MAX_LANGUAGES = 14
 };
 
-enum leType_t {
+enum leType_t COD2_ENUM_INT {
     LE_MOVING_TRACER = 0
 };
 
-enum listColumnTypes_t {
+enum listColumnTypes_t COD2_ENUM_INT {
     LCT_NAME = 0,
     LCT_CLAN = 1,
     LCT_SCORE = 2,
@@ -2466,19 +2521,19 @@ enum listColumnTypes_t {
     LCT_NUM = 7
 };
 
-enum msgLocErrType_t {
+enum msgLocErrType_t COD2_ENUM_INT {
     LOCMSG_SAFE = 0,
     LOCMSG_NOERR = 1
 };
 
-enum msgwnd_mode_t {
+enum msgwnd_mode_t COD2_ENUM_INT {
     MWM_TOPDOWN = 0,
     MWM_TOPDOWN_REVERSED = 1,
     MWM_BOTTOMUP = 2,
     MWM_BOTTOMUP_CENTERED = 3
 };
 
-enum netadrtype_t {
+enum netadrtype_t COD2_ENUM_INT {
     NA_BOT = 0,
     NA_BAD = 1,
     NA_LOOPBACK = 2,
@@ -2486,14 +2541,14 @@ enum netadrtype_t {
     NA_IP = 4
 };
 
-enum netsrc_t {
+enum netsrc_t COD2_ENUM_INT {
     NS_CLIENT1 = 0,
     NS_SERVER = 1,
     NS_MAXCLIENTS = 1,
     NS_PACKET = 2
 };
 
-enum objectiveState_t {
+enum objectiveState_t COD2_ENUM_INT {
     OBJST_EMPTY = 0,
     OBJST_ACTIVE = 1,
     OBJST_INVISIBLE = 2,
@@ -2503,7 +2558,7 @@ enum objectiveState_t {
     OBJST_NUMSTATES = 6
 };
 
-enum print_msg_type_t {
+enum print_msg_type_t COD2_ENUM_INT {
     PMSG_CONSOLE = 0,
     PMSG_GAME = 1,
     PMSG_BOLDGAME = 2,
@@ -2511,12 +2566,12 @@ enum print_msg_type_t {
     PMSG_LOGFILE = 4
 };
 
-enum proneCheckType_t {
+enum proneCheckType_t COD2_ENUM_INT {
     PCT_CLIENT = 0,
     PCT_ACTOR = 1
 };
 
-enum refEntityType_t {
+enum refEntityType_t COD2_ENUM_INT {
     RT_DOBJ = 0,
     RT_XMODEL = 1,
     RT_STATICMODEL = 2,
@@ -2530,7 +2585,7 @@ enum refEntityType_t {
     RT_MAX_REF_ENTITY_TYPE = 10
 };
 
-enum scriptAnimEventTypes_t {
+enum scriptAnimEventTypes_t COD2_ENUM_INT {
     ANIM_ET_PAIN = 0,
     ANIM_ET_DEATH = 1,
     ANIM_ET_FIREWEAPON = 2,
@@ -2553,7 +2608,7 @@ enum scriptAnimEventTypes_t {
     NUM_ANIM_EVENTTYPES = 19
 };
 
-enum scriptAnimMoveTypes_t {
+enum scriptAnimMoveTypes_t COD2_ENUM_INT {
     ANIM_MT_UNUSED = 0,
     ANIM_MT_IDLE = 1,
     ANIM_MT_IDLECR = 2,
@@ -2598,20 +2653,20 @@ enum scriptAnimMoveTypes_t {
     NUM_ANIM_MOVETYPES = 41
 };
 
-enum serverState_t {
+enum serverState_t COD2_ENUM_INT {
     SS_DEAD = 0,
     SS_LOADING = 1,
     SS_GAME = 2
 };
 
-enum sessionState_t {
+enum sessionState_t COD2_ENUM_INT {
     SESS_STATE_PLAYING = 0,
     SESS_STATE_DEAD = 1,
     SESS_STATE_SPECTATOR = 2,
     SESS_STATE_INTERMISSION = 3
 };
 
-enum snd_alias_members_t {
+enum snd_alias_members_t COD2_ENUM_INT {
     SA_INVALID = 0,
     SA_NAME = 1,
     SA_SEQUENCE = 2,
@@ -2639,14 +2694,14 @@ enum snd_alias_members_t {
     SA_NUMFIELDS = 24
 };
 
-enum snd_alias_system_t {
+enum snd_alias_system_t COD2_ENUM_INT {
     SASYS_UI = 0,
     SASYS_CGAME = 1,
     SASYS_GAME = 2,
     SASYS_COUNT = 3
 };
 
-enum snd_alias_type_t {
+enum snd_alias_type_t COD2_ENUM_INT {
     SAT_UNKNOWN = 0,
     SAT_LOADED = 1,
     SAT_STREAMED = 2,
@@ -2654,14 +2709,14 @@ enum snd_alias_type_t {
     SAT_COUNT = 4
 };
 
-enum snd_overlay_type_t {
+enum snd_overlay_type_t COD2_ENUM_INT {
     SND_OVERLAY_NONE = 0,
     SND_OVERLAY_3D = 1,
     SND_OVERLAY_STREAM = 2,
     SND_OVERLAY_2D = 3
 };
 
-enum snd_stopsounds_arg_t {
+enum snd_stopsounds_arg_t COD2_ENUM_INT {
     SND_STOP_ALL = 0,
     SND_KEEP_REVERB = 1,
     SND_KEEP_MUSIC = 2,
@@ -2671,12 +2726,12 @@ enum snd_stopsounds_arg_t {
     SND_KEEP_CHANNEL_VOLUMES = 16
 };
 
-enum sscType_t {
+enum sscType_t COD2_ENUM_INT {
     SSC_STRING = 0,
     SSC_YESNO = 1
 };
 
-enum surfaceType_t {
+enum surfaceType_t COD2_ENUM_UINT {
     SF_BAD = 0,
     SF_POLY = 1,
     SF_ENTITY = 2,
@@ -2689,12 +2744,12 @@ enum surfaceType_t {
     SF_MAX = 4294967295
 };
 
-enum svscmd_type {
+enum svscmd_type COD2_ENUM_INT {
     SV_CMD_CAN_IGNORE = 0,
     SV_CMD_RELIABLE = 1
 };
 
-enum sysEventType_t {
+enum sysEventType_t COD2_ENUM_INT {
     SE_NONE = 0,
     SE_KEY = 1,
     SE_CHAR = 2,
@@ -2703,7 +2758,7 @@ enum sysEventType_t {
     SE_PACKET = 5
 };
 
-enum team_t {
+enum team_t COD2_ENUM_INT {
     TEAM_FREE = 0,
     TEAM_AXIS = 1,
     TEAM_ALLIES = 2,
@@ -2711,7 +2766,7 @@ enum team_t {
     TEAM_NUM_TEAMS = 4
 };
 
-enum trType_t {
+enum trType_t COD2_ENUM_INT {
     TR_STATIONARY = 0,
     TR_INTERPOLATE = 1,
     TR_LINEAR = 2,
@@ -2723,7 +2778,7 @@ enum trType_t {
     TR_DECELERATE = 8
 };
 
-enum uiMenuCommand_t {
+enum uiMenuCommand_t COD2_ENUM_INT {
     UIMENU_NONE = 0,
     UIMENU_MAIN = 1,
     UIMENU_INGAME = 2,
@@ -2738,7 +2793,7 @@ enum uiMenuCommand_t {
     UIMENU_PLAYER_PROFILE = 11
 };
 
-enum weapClass_t {
+enum weapClass_t COD2_ENUM_INT {
     WEAPCLASS_RIFLE = 0,
     WEAPCLASS_MG = 1,
     WEAPCLASS_SMG = 2,
@@ -2752,7 +2807,7 @@ enum weapClass_t {
     WEAPCLASS_NUM = 10
 };
 
-enum weapOverlayReticle_t {
+enum weapOverlayReticle_t COD2_ENUM_INT {
     WEAPOVERLAYRETICLE_NONE = 0,
     WEAPOVERLAYRETICLE_CROSSHAIR = 1,
     WEAPOVERLAYRETICLE_FG42 = 2,
@@ -2761,28 +2816,28 @@ enum weapOverlayReticle_t {
     WEAPOVERLAYRETICLE_NUM = 5
 };
 
-enum weapProjExposion_t {
+enum weapProjExposion_t COD2_ENUM_INT {
     WEAPPROJEXP_GRENADE = 0,
     WEAPPROJEXP_ROCKET = 1,
     WEAPPROJEXP_NONE = 2,
     WEAPPROJEXP_NUM = 3
 };
 
-enum weapSlot_t {
+enum weapSlot_t COD2_ENUM_INT {
     WEAPSLOT_NONE = 0,
     WEAPSLOT_PRIMARY = 1,
     WEAPSLOT_PRIMARYB = 2,
     WEAPSLOT_NUM = 3
 };
 
-enum weapStance_t {
+enum weapStance_t COD2_ENUM_INT {
     WEAPSTANCE_STAND = 0,
     WEAPSTANCE_DUCK = 1,
     WEAPSTANCE_PRONE = 2,
     WEAPSTANCE_NUM = 3
 };
 
-enum weapType_t {
+enum weapType_t COD2_ENUM_INT {
     WEAPTYPE_BULLET = 0,
     WEAPTYPE_GRENADE = 1,
     WEAPTYPE_PROJECTILE = 2,
@@ -4206,133 +4261,262 @@ typedef struct worldTree_s worldTree_s;
 typedef struct yy_buffer_state yy_buffer_state;
 typedef struct z_stream_s z_stream_s;
 
+COD2_ENUM_DECL(CFComparisonResult)
+
 typedef enum CFComparisonResult CFComparisonResult;
+COD2_ENUM_DECL(CGLError)
 typedef enum CGLError CGLError;
+COD2_ENUM_DECL(CGLPixelFormatAttribute)
 typedef enum CGLPixelFormatAttribute CGLPixelFormatAttribute;
+COD2_ENUM_DECL(ConverterType)
 typedef enum ConverterType ConverterType;
+COD2_ENUM_DECL(CubemapShot)
 typedef enum CubemapShot CubemapShot;
+COD2_ENUM_DECL(D3DBACKBUFFER_TYPE)
 typedef enum D3DBACKBUFFER_TYPE D3DBACKBUFFER_TYPE;
+COD2_ENUM_DECL(D3DBASISTYPE)
 typedef enum D3DBASISTYPE D3DBASISTYPE;
+COD2_ENUM_DECL(D3DDEGREETYPE)
 typedef enum D3DDEGREETYPE D3DDEGREETYPE;
+COD2_ENUM_DECL(D3DDEVTYPE)
 typedef enum D3DDEVTYPE D3DDEVTYPE;
+COD2_ENUM_DECL(D3DFOGMODE)
 typedef enum D3DFOGMODE D3DFOGMODE;
+COD2_ENUM_DECL(D3DLIGHTTYPE)
 typedef enum D3DLIGHTTYPE D3DLIGHTTYPE;
+COD2_ENUM_DECL(D3DMULTISAMPLE_TYPE)
 typedef enum D3DMULTISAMPLE_TYPE D3DMULTISAMPLE_TYPE;
+COD2_ENUM_DECL(D3DPOOL)
 typedef enum D3DPOOL D3DPOOL;
+COD2_ENUM_DECL(D3DPRIMITIVETYPE)
 typedef enum D3DPRIMITIVETYPE D3DPRIMITIVETYPE;
+COD2_ENUM_DECL(D3DQUERYTYPE)
 typedef enum D3DQUERYTYPE D3DQUERYTYPE;
+COD2_ENUM_DECL(D3DRENDERSTATETYPE)
 typedef enum D3DRENDERSTATETYPE D3DRENDERSTATETYPE;
+COD2_ENUM_DECL(D3DSAMPLERSTATETYPE)
 typedef enum D3DSAMPLERSTATETYPE D3DSAMPLERSTATETYPE;
+COD2_ENUM_DECL(D3DSTATEBLOCKTYPE)
 typedef enum D3DSTATEBLOCKTYPE D3DSTATEBLOCKTYPE;
+COD2_ENUM_DECL(D3DSWAPEFFECT)
 typedef enum D3DSWAPEFFECT D3DSWAPEFFECT;
+COD2_ENUM_DECL(D3DTEXTURESTAGESTATETYPE)
 typedef enum D3DTEXTURESTAGESTATETYPE D3DTEXTURESTAGESTATETYPE;
+COD2_ENUM_DECL(D3DTEXTURETRANSFORMFLAGS)
 typedef enum D3DTEXTURETRANSFORMFLAGS D3DTEXTURETRANSFORMFLAGS;
+COD2_ENUM_DECL(D3DTRANSFORMSTATETYPE)
 typedef enum D3DTRANSFORMSTATETYPE D3DTRANSFORMSTATETYPE;
+COD2_ENUM_DECL(D3DXIMAGE_FILEFORMAT)
 typedef enum D3DXIMAGE_FILEFORMAT D3DXIMAGE_FILEFORMAT;
+COD2_ENUM_DECL(D3DXINCLUDE_TYPE)
 typedef enum D3DXINCLUDE_TYPE D3DXINCLUDE_TYPE;
+COD2_ENUM_DECL(D3DXPARAMETER_CLASS)
 typedef enum D3DXPARAMETER_CLASS D3DXPARAMETER_CLASS;
+COD2_ENUM_DECL(D3DXPARAMETER_TYPE)
 typedef enum D3DXPARAMETER_TYPE D3DXPARAMETER_TYPE;
+COD2_ENUM_DECL(D3DXREGISTER_SET)
 typedef enum D3DXREGISTER_SET D3DXREGISTER_SET;
+COD2_ENUM_DECL(DemoType)
 typedef enum DemoType DemoType;
+COD2_ENUM_DECL(DpvsClipChildren)
 typedef enum DpvsClipChildren DpvsClipChildren;
+COD2_ENUM_DECL(DpvsForceBevels)
 typedef enum DpvsForceBevels DpvsForceBevels;
+COD2_ENUM_DECL(DvarSetSource)
 typedef enum DvarSetSource DvarSetSource;
+COD2_ENUM_DECL(DxCapsResponse)
 typedef enum DxCapsResponse DxCapsResponse;
+COD2_ENUM_DECL(EMediaTypes)
 typedef enum EMediaTypes EMediaTypes;
+COD2_ENUM_DECL(FFType)
 typedef enum FFType FFType;
+COD2_ENUM_DECL(FogColorSrcEnum)
 typedef enum FogColorSrcEnum FogColorSrcEnum;
+COD2_ENUM_DECL(Format)
 typedef enum Format Format;
+COD2_ENUM_DECL(FsListBehavior)
 typedef enum FsListBehavior FsListBehavior;
+COD2_ENUM_DECL(FxChannelId)
 typedef enum FxChannelId FxChannelId;
+COD2_ENUM_DECL(GfxDrawGroupGlueBehavior)
 typedef enum GfxDrawGroupGlueBehavior GfxDrawGroupGlueBehavior;
+COD2_ENUM_DECL(GfxDrawGroupType)
 typedef enum GfxDrawGroupType GfxDrawGroupType;
+COD2_ENUM_DECL(GfxDrawSurfOrder)
 typedef enum GfxDrawSurfOrder GfxDrawSurfOrder;
+COD2_ENUM_DECL(GfxFogOffset)
 typedef enum GfxFogOffset GfxFogOffset;
+COD2_ENUM_DECL(GfxLightType)
 typedef enum GfxLightType GfxLightType;
+COD2_ENUM_DECL(GfxLockType)
 typedef enum GfxLockType GfxLockType;
+COD2_ENUM_DECL(GfxOptimizedVertexSource)
 typedef enum GfxOptimizedVertexSource GfxOptimizedVertexSource;
+COD2_ENUM_DECL(GfxPrimStatsTarget)
 typedef enum GfxPrimStatsTarget GfxPrimStatsTarget;
+COD2_ENUM_DECL(GfxRenderTargetId)
 typedef enum GfxRenderTargetId GfxRenderTargetId;
+COD2_ENUM_DECL(GfxScreenshotType)
 typedef enum GfxScreenshotType GfxScreenshotType;
+COD2_ENUM_DECL(GfxViewportBehavior)
 typedef enum GfxViewportBehavior GfxViewportBehavior;
+COD2_ENUM_DECL(JPEG_MARKER)
 typedef enum JPEG_MARKER JPEG_MARKER;
+COD2_ENUM_DECL(J_BUF_MODE)
 typedef enum J_BUF_MODE J_BUF_MODE;
+COD2_ENUM_DECL(J_COLOR_SPACE)
 typedef enum J_COLOR_SPACE J_COLOR_SPACE;
+COD2_ENUM_DECL(J_DCT_METHOD)
 typedef enum J_DCT_METHOD J_DCT_METHOD;
+COD2_ENUM_DECL(J_DITHER_MODE)
 typedef enum J_DITHER_MODE J_DITHER_MODE;
+COD2_ENUM_DECL(LoopMode)
 typedef enum LoopMode LoopMode;
+COD2_ENUM_DECL(MaterialShaderType)
 typedef enum MaterialShaderType MaterialShaderType;
+COD2_ENUM_DECL(MaterialTechniqueType)
 typedef enum MaterialTechniqueType MaterialTechniqueType;
+COD2_ENUM_DECL(MaterialTextureSource)
 typedef enum MaterialTextureSource MaterialTextureSource;
+COD2_ENUM_DECL(MaterialVertexDeclType)
 typedef enum MaterialVertexDeclType MaterialVertexDeclType;
+COD2_ENUM_DECL(MtlParseSuccess)
 typedef enum MtlParseSuccess MtlParseSuccess;
+COD2_ENUM_DECL(MtlTextureFunctionValidDx7)
 typedef enum MtlTextureFunctionValidDx7 MtlTextureFunctionValidDx7;
+COD2_ENUM_DECL(OffhandClass)
 typedef enum OffhandClass OffhandClass;
+COD2_ENUM_DECL(OpenGLPixelShaderType)
 typedef enum OpenGLPixelShaderType OpenGLPixelShaderType;
+COD2_ENUM_DECL(OwnershipType)
 typedef enum OwnershipType OwnershipType;
+COD2_ENUM_DECL(PlayRateMode)
 typedef enum PlayRateMode PlayRateMode;
+COD2_ENUM_DECL(PrimType)
 typedef enum PrimType PrimType;
+COD2_ENUM_DECL(RenderTargetUsage)
 typedef enum RenderTargetUsage RenderTargetUsage;
+COD2_ENUM_DECL(ShadowType)
 typedef enum ShadowType ShadowType;
+COD2_ENUM_DECL(StartFrameMode)
 typedef enum StartFrameMode StartFrameMode;
+COD2_ENUM_DECL(SurfaceType)
 typedef enum SurfaceType SurfaceType;
+COD2_ENUM_DECL(VAOStatus)
 typedef enum VAOStatus VAOStatus;
+COD2_ENUM_DECL(_D3DCUBEMAP_FACES)
 typedef enum _D3DCUBEMAP_FACES _D3DCUBEMAP_FACES;
+COD2_ENUM_DECL(_D3DFORMAT)
 typedef enum _D3DFORMAT _D3DFORMAT;
+COD2_ENUM_DECL(_D3DRESOURCETYPE)
 typedef enum _D3DRESOURCETYPE _D3DRESOURCETYPE;
+COD2_ENUM_DECL(_D3DTEXTUREADDRESS)
 typedef enum _D3DTEXTUREADDRESS _D3DTEXTUREADDRESS;
+COD2_ENUM_DECL(_D3DTEXTUREFILTERTYPE)
 typedef enum _D3DTEXTUREFILTERTYPE _D3DTEXTUREFILTERTYPE;
+COD2_ENUM_DECL(_D3DTEXTUREOP)
 typedef enum _D3DTEXTUREOP _D3DTEXTUREOP;
+COD2_ENUM_DECL(_Rb_tree_color)
 typedef enum _Rb_tree_color _Rb_tree_color;
+COD2_ENUM_DECL(aistateEnum_t)
 typedef enum aistateEnum_t aistateEnum_t;
+COD2_ENUM_DECL(animBodyPart_t)
 typedef enum animBodyPart_t animBodyPart_t;
+COD2_ENUM_DECL(animScriptConditionTypes_t)
 typedef enum animScriptConditionTypes_t animScriptConditionTypes_t;
+COD2_ENUM_DECL(animScriptParseMode_t)
 typedef enum animScriptParseMode_t animScriptParseMode_t;
+COD2_ENUM_DECL(c_pass_type)
 typedef enum c_pass_type c_pass_type;
+COD2_ENUM_DECL(clientConnected_t)
 typedef enum clientConnected_t clientConnected_t;
+COD2_ENUM_DECL(connstate_t)
 typedef enum connstate_t connstate_t;
+COD2_ENUM_DECL(e_status)
 typedef enum e_status e_status;
+COD2_ENUM_DECL(errorParm_t)
 typedef enum errorParm_t errorParm_t;
+COD2_ENUM_DECL(fieldtype_t)
 typedef enum fieldtype_t fieldtype_t;
+COD2_ENUM_DECL(fsMode_t)
 typedef enum fsMode_t fsMode_t;
+COD2_ENUM_DECL(he_type_t)
 typedef enum he_type_t he_type_t;
+COD2_ENUM_DECL(hitLocation_t)
 typedef enum hitLocation_t hitLocation_t;
+COD2_ENUM_DECL(hudelem_update_t)
 typedef enum hudelem_update_t hudelem_update_t;
+COD2_ENUM_DECL(inflate_block_mode)
 typedef enum inflate_block_mode inflate_block_mode;
+COD2_ENUM_DECL(inflate_codes_mode)
 typedef enum inflate_codes_mode inflate_codes_mode;
+COD2_ENUM_DECL(itemType_t)
 typedef enum itemType_t itemType_t;
+COD2_ENUM_DECL(language_t)
 typedef enum language_t language_t;
+COD2_ENUM_DECL(leType_t)
 typedef enum leType_t leType_t;
+COD2_ENUM_DECL(listColumnTypes_t)
 typedef enum listColumnTypes_t listColumnTypes_t;
+COD2_ENUM_DECL(msgLocErrType_t)
 typedef enum msgLocErrType_t msgLocErrType_t;
+COD2_ENUM_DECL(msgwnd_mode_t)
 typedef enum msgwnd_mode_t msgwnd_mode_t;
+COD2_ENUM_DECL(netadrtype_t)
 typedef enum netadrtype_t netadrtype_t;
+COD2_ENUM_DECL(netsrc_t)
 typedef enum netsrc_t netsrc_t;
+COD2_ENUM_DECL(objectiveState_t)
 typedef enum objectiveState_t objectiveState_t;
+COD2_ENUM_DECL(print_msg_type_t)
 typedef enum print_msg_type_t print_msg_type_t;
+COD2_ENUM_DECL(proneCheckType_t)
 typedef enum proneCheckType_t proneCheckType_t;
+COD2_ENUM_DECL(refEntityType_t)
 typedef enum refEntityType_t refEntityType_t;
+COD2_ENUM_DECL(scriptAnimEventTypes_t)
 typedef enum scriptAnimEventTypes_t scriptAnimEventTypes_t;
+COD2_ENUM_DECL(scriptAnimMoveTypes_t)
 typedef enum scriptAnimMoveTypes_t scriptAnimMoveTypes_t;
+COD2_ENUM_DECL(serverState_t)
 typedef enum serverState_t serverState_t;
+COD2_ENUM_DECL(sessionState_t)
 typedef enum sessionState_t sessionState_t;
+COD2_ENUM_DECL(snd_alias_members_t)
 typedef enum snd_alias_members_t snd_alias_members_t;
+COD2_ENUM_DECL(snd_alias_system_t)
 typedef enum snd_alias_system_t snd_alias_system_t;
+COD2_ENUM_DECL(snd_alias_type_t)
 typedef enum snd_alias_type_t snd_alias_type_t;
+COD2_ENUM_DECL(snd_overlay_type_t)
 typedef enum snd_overlay_type_t snd_overlay_type_t;
+COD2_ENUM_DECL(snd_stopsounds_arg_t)
 typedef enum snd_stopsounds_arg_t snd_stopsounds_arg_t;
+COD2_ENUM_DECL(sscType_t)
 typedef enum sscType_t sscType_t;
+COD2_ENUM_DECL_UINT(surfaceType_t)
 typedef enum surfaceType_t surfaceType_t;
+COD2_ENUM_DECL(svscmd_type)
 typedef enum svscmd_type svscmd_type;
+COD2_ENUM_DECL(sysEventType_t)
 typedef enum sysEventType_t sysEventType_t;
+COD2_ENUM_DECL(team_t)
 typedef enum team_t team_t;
+COD2_ENUM_DECL(trType_t)
 typedef enum trType_t trType_t;
+COD2_ENUM_DECL(uiMenuCommand_t)
 typedef enum uiMenuCommand_t uiMenuCommand_t;
+COD2_ENUM_DECL(weapClass_t)
 typedef enum weapClass_t weapClass_t;
+COD2_ENUM_DECL(weapOverlayReticle_t)
 typedef enum weapOverlayReticle_t weapOverlayReticle_t;
+COD2_ENUM_DECL(weapProjExposion_t)
 typedef enum weapProjExposion_t weapProjExposion_t;
+COD2_ENUM_DECL(weapSlot_t)
 typedef enum weapSlot_t weapSlot_t;
+COD2_ENUM_DECL(weapStance_t)
 typedef enum weapStance_t weapStance_t;
+COD2_ENUM_DECL(weapType_t)
 typedef enum weapType_t weapType_t;
 
 typedef struct _ADPCMDATATAG ADPCMDATA;
@@ -16241,4 +16425,8 @@ typedef jpeg_d_post_controller (*histptr)[4];
 typedef jpeg_component_info * (*my_fdct_ptr)[10];
 
 #endif
+#endif
+
+#ifdef __cplusplus
+}
 #endif

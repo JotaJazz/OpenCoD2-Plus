@@ -1,7 +1,12 @@
 #ifndef CLEAN_PC_EFFECTSCORE_FX_FUNCS_H
 #define CLEAN_PC_EFFECTSCORE_FX_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
+
 
 void FxArchive_FxArchive(const FxArchive *_this);
 void FxArchive_BeginReading(const FxArchive *_this, MemoryFile *memFile);
@@ -272,4 +277,8 @@ void ZN14GenericParser2D1Ev(GenericParser2 *_this);
 Bool GPGroup_Parse(const GPGroup *_this, char **dataPtr, TextPool **textPool);
 Bool GenericParser2_Parse(const GenericParser2 *_this, char **dataPtr, int cleanFirst, int writeable);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,11 @@
 #ifndef IMPORTS_COREFOUNDATION_H
 #define IMPORTS_COREFOUNDATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int CFArrayGetCount();
 int CFArrayGetValueAtIndex();
 int CFBooleanGetValue();
@@ -28,4 +33,8 @@ int CFURLGetFSRef();
 extern void **kCFAllocatorDefault;
 extern void **kCFPreferencesCurrentApplication;
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

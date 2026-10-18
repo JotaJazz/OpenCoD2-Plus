@@ -1,22 +1,42 @@
 #ifndef CLEAN_MAC_MAC_TYPES_H
 #define CLEAN_MAC_MAC_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../cod2_fwd.h"
 
+COD2_ENUM_DECL(D3DBACKBUFFER_TYPE)
+
 typedef enum D3DBACKBUFFER_TYPE _D3DBACKBUFFER_TYPE;
+COD2_ENUM_DECL(D3DBASISTYPE)
 typedef enum D3DBASISTYPE _D3DBASISTYPE;
+COD2_ENUM_DECL(D3DDEGREETYPE)
 typedef enum D3DDEGREETYPE _D3DDEGREETYPE;
+COD2_ENUM_DECL(D3DDEVTYPE)
 typedef enum D3DDEVTYPE _D3DDEVTYPE;
+COD2_ENUM_DECL(D3DLIGHTTYPE)
 typedef enum D3DLIGHTTYPE _D3DLIGHTTYPE;
+COD2_ENUM_DECL(D3DMULTISAMPLE_TYPE)
 typedef enum D3DMULTISAMPLE_TYPE _D3DMULTISAMPLE_TYPE;
+COD2_ENUM_DECL(D3DPOOL)
 typedef enum D3DPOOL _D3DPOOL;
+COD2_ENUM_DECL(D3DPRIMITIVETYPE)
 typedef enum D3DPRIMITIVETYPE _D3DPRIMITIVETYPE;
+COD2_ENUM_DECL(D3DQUERYTYPE)
 typedef enum D3DQUERYTYPE _D3DQUERYTYPE;
+COD2_ENUM_DECL(D3DRENDERSTATETYPE)
 typedef enum D3DRENDERSTATETYPE _D3DRENDERSTATETYPE;
+COD2_ENUM_DECL(D3DSAMPLERSTATETYPE)
 typedef enum D3DSAMPLERSTATETYPE _D3DSAMPLERSTATETYPE;
+COD2_ENUM_DECL(D3DSWAPEFFECT)
 typedef enum D3DSWAPEFFECT _D3DSWAPEFFECT;
+COD2_ENUM_DECL(D3DTEXTURESTAGESTATETYPE)
 typedef enum D3DTEXTURESTAGESTATETYPE _D3DTEXTURESTAGESTATETYPE;
+COD2_ENUM_DECL(D3DTEXTURETRANSFORMFLAGS)
 typedef enum D3DTEXTURETRANSFORMFLAGS _D3DTEXTURETRANSFORMFLAGS;
+COD2_ENUM_DECL(D3DTRANSFORMSTATETYPE)
 typedef enum D3DTRANSFORMSTATETYPE _D3DTRANSFORMSTATETYPE;
 typedef struct ATI4CompsConverterABGR ATI4CompsConverterABGR;
 typedef struct ATI4CompsConverterARGB ATI4CompsConverterARGB;
@@ -87,12 +107,19 @@ typedef struct _Rb_tree_node_base _Rb_tree_node_base;
 typedef struct _Rep _Rep;
 typedef struct _Rep_base _Rep_base;
 typedef struct _Vector_impl _Vector_impl;
+COD2_ENUM_DECL(ConverterType)
 typedef enum ConverterType ConverterType;
+COD2_ENUM_DECL(OpenGLPixelShaderType)
 typedef enum OpenGLPixelShaderType OpenGLPixelShaderType;
+COD2_ENUM_DECL(OwnershipType)
 typedef enum OwnershipType OwnershipType;
+COD2_ENUM_DECL(SurfaceType)
 typedef enum SurfaceType SurfaceType;
+COD2_ENUM_DECL(VAOStatus)
 typedef enum VAOStatus VAOStatus;
+COD2_ENUM_DECL(_D3DTEXTUREADDRESS)
 typedef enum _D3DTEXTUREADDRESS _D3DTEXTUREADDRESS;
+COD2_ENUM_DECL(_D3DTEXTUREOP)
 typedef enum _D3DTEXTUREOP _D3DTEXTUREOP;
 typedef struct _D3DADAPTER_IDENTIFIER9 D3DADAPTER_IDENTIFIER9;
 typedef struct _D3DBOX D3DBOX;
@@ -132,7 +159,9 @@ typedef short unsigned int * PUINT16;
 typedef long unsigned int ULONG;
 typedef unsigned long VAOSet;
 typedef long unsigned int __darwin_size_t;
-typedef int (*__vtbl_ptr_type)();
+#if !defined(__cplusplus) || !defined(__GNUC__)
+typedef int (*__vtbl_ptr_type)(); /* g++ predefines it */
+#endif
 typedef int kern_return_t;
 typedef DialogPtr DialogRef;
 typedef LONG HRESULT;
@@ -176,7 +205,7 @@ typedef struct WinVars_t WinVars_t;
 typedef struct CRectList CRectList;
 typedef struct _WIN32_FIND_DATAA _WIN32_FIND_DATAA;
 
-enum ConverterType {
+enum ConverterType COD2_ENUM_INT {
     ATI_4_COMPS_CONVERTER_ARGB = 0,
     ATI_4_COMPS_CONVERTER_ABGR = 1,
     STD_CONVERTER_ARGB = 2,
@@ -184,31 +213,31 @@ enum ConverterType {
     UNKNOWN_CONVERTER = 4
 };
 
-enum OpenGLPixelShaderType {
+enum OpenGLPixelShaderType COD2_ENUM_INT {
     ATITextFragmentProgram = 0,
     NVidiaRegisterCombinersProgram = 1,
     ARBFragmentProgram = 2
 };
 
-enum OwnershipType {
+enum OwnershipType COD2_ENUM_INT {
     IS_OWNER = 0,
     IS_NOT_OWNER = 1
 };
 
-enum SurfaceType {
+enum SurfaceType COD2_ENUM_INT {
     TEXTURE_SURFACE = 0,
     CUBE_SURFACE = 1,
     VOLUME_SURFACE = 2
 };
 
-enum VAOStatus {
+enum VAOStatus COD2_ENUM_INT {
     UNINITIALIZED_VAO_STATUS = 0,
     USING_GENERIC_VAO = 1,
     USING_VIRGIN_VAO = 2,
     USING_CACHED_VAO = 3
 };
 
-enum _D3DTEXTUREADDRESS {
+enum _D3DTEXTUREADDRESS COD2_ENUM_INT {
     D3DTADDRESS_WRAP = 1,
     D3DTADDRESS_MIRROR = 2,
     D3DTADDRESS_CLAMP = 3,
@@ -217,7 +246,7 @@ enum _D3DTEXTUREADDRESS {
     D3DTADDRESS_FORCE_DWORD = 2147483647
 };
 
-enum _D3DTEXTUREOP {
+enum _D3DTEXTUREOP COD2_ENUM_INT {
     D3DTOP_DISABLE = 1,
     D3DTOP_SELECTARG1 = 2,
     D3DTOP_SELECTARG2 = 3,
@@ -903,4 +932,7 @@ struct _WIN32_FIND_DATAA {
     DWORD dwCreatorType;
     WORD wFinderFlags;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

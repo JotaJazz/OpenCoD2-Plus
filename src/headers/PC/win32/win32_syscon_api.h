@@ -2,6 +2,10 @@
 #ifndef COD2_WIN32_SYSCON_API_H
 #define COD2_WIN32_SYSCON_API_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(COD2_VC71_COMPAT_H)
 
 typedef unsigned int WPARAM;
@@ -175,4 +179,7 @@ BM_EXTERN_C
 #    include <windows.h>
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

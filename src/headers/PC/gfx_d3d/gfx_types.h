@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_GFX_D3D_GFX_TYPES_H
 #define CLEAN_PC_GFX_D3D_GFX_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -91,29 +95,29 @@ typedef struct MaterialTechniqueSet MaterialTechniqueSet;
 typedef struct MaterialVertexDeclaration MaterialVertexDeclaration;
 typedef struct MaterialWaterDef MaterialWaterDef;
 
-enum D3DXINCLUDE_TYPE {
+enum D3DXINCLUDE_TYPE COD2_ENUM_INT {
     D3DXINC_LOCAL = 0,
     D3DXINC_SYSTEM = 1,
     D3DXINC_FORCE_DWORD = 2147483647
 };
 
-enum DpvsClipChildren {
+enum DpvsClipChildren COD2_ENUM_INT {
     DPVS_DONT_CLIP_CHILDREN = 0,
     DPVS_CLIP_CHILDREN = 1
 };
 
-enum FogColorSrcEnum {
+enum FogColorSrcEnum COD2_ENUM_INT {
     FOG_COLOR_SRC_UNSPECIFIED = 0,
     FOG_COLOR_SRC_STANDARD = 1,
     FOG_COLOR_SRC_BLACK = 2
 };
 
-enum GfxDrawGroupGlueBehavior {
+enum GfxDrawGroupGlueBehavior COD2_ENUM_INT {
     R_DRAWGROUP_GLUE_ISSUE = 0,
     R_DRAWGROUP_GLUE_SKIP = 1
 };
 
-enum GfxDrawGroupType {
+enum GfxDrawGroupType COD2_ENUM_INT {
     R_DRAWGROUP_DEPTH_PREPASS = 0,
     R_DRAWGROUP_SHADOW_COOKIE = 1,
     R_DRAWGROUP_WORLD_SUN = 2,
@@ -122,28 +126,28 @@ enum GfxDrawGroupType {
     R_DRAWGROUP_COUNT = 5
 };
 
-enum GfxLockType {
+enum GfxLockType COD2_ENUM_INT {
     GFX_LOCK_BEGIN_FRAME = 0,
     GFX_LOCK_RESUME_FRAME = 1
 };
 
-enum GfxScreenshotType {
+enum GfxScreenshotType COD2_ENUM_INT {
     R_SCREENSHOT_JPG = 0,
     R_SCREENSHOT_TGA = 1
 };
 
-enum MaterialShaderType {
+enum MaterialShaderType COD2_ENUM_INT {
     MTL_VERTEX_SHADER = 0,
     MTL_PIXEL_SHADER = 1
 };
 
-enum MtlParseSuccess {
+enum MtlParseSuccess COD2_ENUM_INT {
     MTL_PARSE_SUCCESS = 0,
     MTL_PARSE_NO_MATCH = 1,
     MTL_PARSE_ERROR = 2
 };
 
-enum RenderTargetUsage {
+enum RenderTargetUsage COD2_ENUM_INT {
     RENDERTARGET_USAGE_RENDER = 0,
     RENDERTARGET_USAGE_TEXTURE = 1,
     RENDERTARGET_USAGE_READBACK = 2
@@ -899,4 +903,7 @@ struct MaterialWaterDef {
     vec2_t windDirection;
     water_t *map;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

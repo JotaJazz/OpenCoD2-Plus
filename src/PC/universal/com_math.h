@@ -1,6 +1,10 @@
 #ifndef PC_UNIVERSAL_COM_MATH_H_H
 #define PC_UNIVERSAL_COM_MATH_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "Mac/DirectX 9/MacOpenGLUtils.h"
 #include "PC/gfx_d3d/rb_backend.h"
 #include "PC/universal/com_vector.h"
@@ -937,4 +941,7 @@ struct weaponInfo_s {
     vec3_t vPositionAng[2];
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

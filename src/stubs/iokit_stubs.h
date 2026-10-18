@@ -1,6 +1,10 @@
 #ifndef STUBS_IOKIT_H
 #define STUBS_IOKIT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *io_object_t;
 typedef void *io_iterator_t;
 typedef void *io_service_t;
@@ -20,4 +24,7 @@ int IOHIDDeviceOpen(void *device, unsigned int options);
 int IOHIDDeviceClose(void *device, unsigned int options);
 mach_port_t IOMasterPort(unsigned int bootstrapPort, mach_port_t *masterPort);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -4,6 +4,10 @@
  * its own; this dir is on the include path for MSVC only. */
 #ifndef COD2_MSVC_UNISTD_H
 #define COD2_MSVC_UNISTD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _WIN32
 
 #include <io.h>        /* _close _read _write _access _dup2 _isatty */
@@ -46,4 +50,7 @@ static __inline long readlink(const char *p, char *b, unsigned long n)
 { (void)p; (void)b; (void)n; return -1; }
 
 #endif /* _WIN32 */
+#ifdef __cplusplus
+}
+#endif
 #endif

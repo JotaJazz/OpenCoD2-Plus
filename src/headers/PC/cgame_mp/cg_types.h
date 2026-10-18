@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_CGAME_MP_CG_TYPES_H
 #define CLEAN_PC_CGAME_MP_CG_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -159,4 +163,7 @@ struct weaponInfo_s {
     vec3_t vPositionOrg[2];
     vec3_t vPositionAng[2];
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

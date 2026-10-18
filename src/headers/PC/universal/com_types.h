@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_UNIVERSAL_COM_TYPES_H
 #define CLEAN_PC_UNIVERSAL_COM_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -12,12 +16,12 @@ typedef struct saLoadObjGlob_type saLoadObjGlob_type;
 typedef struct g_sa_type g_sa_type;
 typedef struct va_info_t va_info_t;
 
-enum FsListBehavior {
+enum FsListBehavior COD2_ENUM_INT {
     FS_LIST_PURE_ONLY = 0,
     FS_LIST_ALL = 1
 };
 
-enum snd_alias_members_t {
+enum snd_alias_members_t COD2_ENUM_INT {
     SA_INVALID = 0,
     SA_NAME = 1,
     SA_SEQUENCE = 2,
@@ -95,4 +99,7 @@ struct va_info_t {
     char va_string[2][1024];
     int index;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

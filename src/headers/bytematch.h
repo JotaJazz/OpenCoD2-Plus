@@ -1,6 +1,10 @@
 #ifndef BYTEMATCH_H
 #define BYTEMATCH_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(__GNUC__) && !defined(__clang__) && defined(__i386__) \
     && !defined(__EMSCRIPTEN__) && !defined(_MSC_VER)
 #  define BM_GCC_X86 1
@@ -35,4 +39,7 @@
  * cannot parse; BM_I2F(bits) is the equivalent that compiles everywhere. */
 static BM_ALWAYS_INLINE float BM_I2F(unsigned int b) { float f; *(unsigned int *)&f = b; return f; }
 
+#ifdef __cplusplus
+}
+#endif
 #endif

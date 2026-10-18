@@ -1,6 +1,10 @@
 #ifndef COD2_FEATURE_CONFIG_H
 #define COD2_FEATURE_CONFIG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(COD2_PATCH_10)
   #define COD2_IS_PATCH_13 0
 #else
@@ -75,4 +79,7 @@
   #define COD2_IS_XENON 0
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,10 @@
 #ifndef PC_XANIM_XANIM_LOCAL_H_H
 #define PC_XANIM_XANIM_LOCAL_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct XBoneHierarchy;
 struct XModelConfig;
 struct XModelConfigEntry;
@@ -32,4 +36,7 @@ struct XModelLodInfo {
     XModelSurfs *surfs;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

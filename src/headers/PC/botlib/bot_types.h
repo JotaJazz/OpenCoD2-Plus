@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_BOTLIB_BOT_TYPES_H
 #define CLEAN_PC_BOTLIB_BOT_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -58,4 +62,7 @@ struct script_s {
     token_t token;
     struct script_s *next;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

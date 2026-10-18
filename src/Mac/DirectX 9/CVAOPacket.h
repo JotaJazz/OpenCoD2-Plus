@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_CVAOPACKET_H_H
 #define MAC_DIRECTX_9_CVAOPACKET_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CBaseVA;
 struct CColorArray;
 struct CDirect3DDevice;
@@ -326,4 +330,7 @@ struct pair_constUINT32_CVAOPacket {
     CVAOPacket second;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

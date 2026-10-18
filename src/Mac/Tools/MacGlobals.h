@@ -1,6 +1,10 @@
 #ifndef MAC_TOOLS_MACGLOBALS_H_H
 #define MAC_TOOLS_MACGLOBALS_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct AlertStdCFStringAlertParamRec;
 
 struct AlertStdCFStringAlertParamRec {
@@ -16,4 +20,7 @@ struct AlertStdCFStringAlertParamRec {
     OptionBits flags;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

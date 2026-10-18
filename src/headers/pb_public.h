@@ -1,7 +1,12 @@
 #ifndef PB_PUBLIC_H
 #define PB_PUBLIC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
+
 
 #if COD2_FEATURE_PUNKBUSTER
 
@@ -48,4 +53,8 @@ static inline const char *Com_GetPunkBusterAuthToken(void)
 #endif
 }
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

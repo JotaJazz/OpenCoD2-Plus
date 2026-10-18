@@ -4,9 +4,16 @@
  * index()/rindex() (the codebase uses `index` widely as an identifier). */
 #ifndef COD2_MSVC_STRINGS_H
 #define COD2_MSVC_STRINGS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _WIN32
 #include <string.h>
 #define strcasecmp  _stricmp
 #define strncasecmp _strnicmp
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

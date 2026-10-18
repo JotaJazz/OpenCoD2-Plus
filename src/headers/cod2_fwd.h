@@ -1,5 +1,9 @@
 #ifndef CLEAN_COD2_FWD
 #define CLEAN_COD2_FWD
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "cod2_platform.h"
 
 struct AEDesc;
@@ -1126,4 +1130,7 @@ struct worldSector_s;
 struct worldTree_s;
 struct yy_buffer_state;
 struct z_stream_s;
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,9 +1,13 @@
 #ifndef CLEAN_PC_UNIVERSAL_COM_VECTOR_H
 #define CLEAN_PC_UNIVERSAL_COM_VECTOR_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
-enum GfxPrimStatsTarget {
+enum GfxPrimStatsTarget COD2_ENUM_INT {
     GFX_PRIM_STATS_WORLD = 0,
     GFX_PRIM_STATS_SMODELCACHED = 1,
     GFX_PRIM_STATS_SMODELRIGID = 2,
@@ -18,7 +22,7 @@ enum GfxPrimStatsTarget {
     GFX_PRIM_STATS_COUNT = 11
 };
 
-enum hitLocation_t {
+enum hitLocation_t COD2_ENUM_INT {
     HITLOC_NONE = 0,
     HITLOC_HELMET = 1,
     HITLOC_HEAD = 2,
@@ -64,7 +68,11 @@ typedef struct pointtrace_t pointtrace_t;
 
 typedef struct weaponState_t weaponState_t;
 
+COD2_ENUM_DECL(GfxPrimStatsTarget)
+
 typedef enum GfxPrimStatsTarget GfxPrimStatsTarget;
+
+COD2_ENUM_DECL(hitLocation_t)
 
 typedef enum hitLocation_t hitLocation_t;
 typedef struct DObjModel_s DObjModel;
@@ -207,4 +215,7 @@ struct weaponState_t {
     vec3_t swayAngles;
     int *weapIdleTime;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

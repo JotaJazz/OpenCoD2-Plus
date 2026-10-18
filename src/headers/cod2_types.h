@@ -1,5 +1,9 @@
 #ifndef COMMON_TYPES_H
 #define COMMON_TYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifndef CLEAN_COD2_TYPES
 #define CLEAN_COD2_TYPES
 
@@ -28,5 +32,8 @@
 #include "PC/botlib/bot_types.h"
 #include "PC/win32/win_types.h"
 #include "PC/universal/com_math.h"
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

@@ -1,5 +1,9 @@
 #ifndef WIN32_SHIM_SYS_SOCKET_H
 #define WIN32_SHIM_SYS_SOCKET_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _WIN32
 #if defined(_MSC_VER)
 #define COD2_WINAPI __stdcall      /* MSVC no-ops __attribute__; need real stdcall to match ws2_32 (_bind@12) */
@@ -69,5 +73,8 @@ int    COD2_WINAPI gethostname(char *name, int len);
 int    COD2_WINAPI WSAStartup(unsigned short ver, void *data);
 int    COD2_WINAPI WSACleanup(void);
 int    COD2_WINAPI WSAGetLastError(void);
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

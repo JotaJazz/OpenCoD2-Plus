@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_CCOLORCONVERTER_H_H
 #define MAC_DIRECTX_9_CCOLORCONVERTER_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct ATI4CompsConverterABGR;
 struct ATI4CompsConverterARGB;
 struct CColorConverter;
@@ -35,4 +39,7 @@ struct StdConverterARGB {
     int _placeholder;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

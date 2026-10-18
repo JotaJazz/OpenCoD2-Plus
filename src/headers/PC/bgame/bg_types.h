@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_BGAME_BG_TYPES_H
 #define CLEAN_PC_BGAME_BG_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -11,7 +15,7 @@ typedef struct pmoveHandler_t pmoveHandler_t;
 typedef struct loadAnim_t loadAnim_t;
 typedef struct viewLerpWaypoint_s viewLerpWaypoint_s;
 
-enum aistateEnum_t {
+enum aistateEnum_t COD2_ENUM_INT {
     AISTATE_NULL = -1,
     AISTATE_RELAXED = 0,
     AISTATE_QUERY = 1,
@@ -20,7 +24,7 @@ enum aistateEnum_t {
     MAX_AISTATES = 4
 };
 
-enum animBodyPart_t {
+enum animBodyPart_t COD2_ENUM_INT {
     ANIM_BP_UNUSED = 0,
     ANIM_BP_LEGS = 1,
     ANIM_BP_TORSO = 2,
@@ -28,12 +32,12 @@ enum animBodyPart_t {
     NUM_ANIM_BODYPARTS = 4
 };
 
-enum proneCheckType_t {
+enum proneCheckType_t COD2_ENUM_INT {
     PCT_CLIENT = 0,
     PCT_ACTOR = 1
 };
 
-enum scriptAnimEventTypes_t {
+enum scriptAnimEventTypes_t COD2_ENUM_INT {
     ANIM_ET_PAIN = 0,
     ANIM_ET_DEATH = 1,
     ANIM_ET_FIREWEAPON = 2,
@@ -56,7 +60,7 @@ enum scriptAnimEventTypes_t {
     NUM_ANIM_EVENTTYPES = 19
 };
 
-enum scriptAnimMoveTypes_t {
+enum scriptAnimMoveTypes_t COD2_ENUM_INT {
     ANIM_MT_UNUSED = 0,
     ANIM_MT_IDLE = 1,
     ANIM_MT_IDLECR = 2,
@@ -134,4 +138,7 @@ struct viewLerpWaypoint_s {
     float fViewHeight;
     int iOffset;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

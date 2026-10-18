@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_XANIM_XANIM_PUBLIC_H
 #define CLEAN_PC_XANIM_XANIM_PUBLIC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
 typedef struct XModelConfig XModelConfig;
@@ -122,4 +126,7 @@ struct XModelDefault {
     unsigned char partClassification[1];
     short unsigned int surfNames[1];
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,10 @@
 #ifndef MAC_MAIN_GAMEMAIN_H_H
 #define MAC_MAIN_GAMEMAIN_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CCallOfDutyEngine;
 struct CMacGameEngine;
 struct Point;
@@ -18,4 +22,7 @@ struct Point {
     short int h;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

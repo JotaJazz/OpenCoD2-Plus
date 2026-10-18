@@ -1,6 +1,10 @@
 #ifndef MAC_TOOLS_MACEXCEPTIONS_H_H
 #define MAC_TOOLS_MACEXCEPTIONS_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct AudioChannelDescription;
 struct AudioChannelLayout;
 struct ComponentDescription;
@@ -36,4 +40,7 @@ struct StThreadLock {
     int _placeholder;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

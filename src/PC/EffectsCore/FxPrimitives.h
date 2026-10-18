@@ -1,6 +1,10 @@
 #ifndef PC_EFFECTSCORE_FXPRIMITIVES_H_H
 #define PC_EFFECTSCORE_FXPRIMITIVES_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Effect;
 struct Flash;
 struct FxBoltFrame;
@@ -84,4 +88,7 @@ struct Particle {
     FxChannelInstance velocity2ZRandChannelInstance;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

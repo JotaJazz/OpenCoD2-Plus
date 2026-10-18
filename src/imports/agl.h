@@ -1,6 +1,11 @@
 #ifndef IMPORTS_AGL_H
 #define IMPORTS_AGL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int aglChoosePixelFormat();
 int aglCreateContext();
 int aglDescribePixelFormat();
@@ -13,4 +18,8 @@ int aglSetFullScreen();
 int aglSetInteger();
 int aglSwapBuffers();
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

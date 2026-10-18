@@ -38,6 +38,7 @@ option(COD2_X64 "Target x86_64/LP64 instead of the original ILP32/x86 (port in p
 # rejects it outright, and the x64 port wants the native 64-bit ABI.
 if(NOT CMAKE_TOOLCHAIN_FILE AND NOT COD2_WIN_MSVC AND NOT COD2_X64)
   set(CMAKE_C_FLAGS_INIT   "-m32")
+  set(CMAKE_CXX_FLAGS_INIT "-m32")
   set(CMAKE_ASM_FLAGS_INIT "-m32")
 endif()
 
@@ -45,11 +46,13 @@ endif()
 if(COD2_WIN_MSVC)
   project(cod2 LANGUAGES C CXX)
 else()
-  project(cod2 LANGUAGES C ASM)
+  project(cod2 LANGUAGES C CXX ASM)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS ON)   # gnu++17: the C sources rely on GNU extensions
 
 # git short hash for the crash-reporter build stamp.
 execute_process(COMMAND git -C ${CMAKE_SOURCE_DIR} rev-parse --short HEAD
@@ -164,6 +167,9 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse;-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:ASM>:-m32>")
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${COD2_SRC_DIR}/win32/shims ${CMAKE_SOURCE_DIR})
 
@@ -243,6 +249,9 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN})
+
+# The shared headers compiled as C++ (their layout pins and C linkage).
+add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 target_link_options(${W32_EXE} PRIVATE ${COD2_WIN_LINK})
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
@@ -378,6 +387,12 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_HARDEN_CFLAGS}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_FEATURE_LIST}>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${SDL2_CFLAGS_OTHER}>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_OPT_FLAGS}>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_HARDEN_CFLAGS}>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_FEATURE_LIST}>"
 )
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${CMAKE_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})
 
@@ -444,6 +459,9 @@ list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
+
+# The shared headers compiled as C++ (their layout pins and C linkage).
+add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 
 add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})

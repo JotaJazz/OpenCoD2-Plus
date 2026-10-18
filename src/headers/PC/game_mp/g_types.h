@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_GAME_MP_G_TYPES_H
 #define CLEAN_PC_GAME_MP_G_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 #include "../universal/com_vector.h"
@@ -31,7 +35,7 @@ typedef struct turretInfo_s turretInfo_s;
 typedef struct useList_t useList_t;
 typedef struct gclient_s gclient_s;
 
-enum hudelem_update_t {
+enum hudelem_update_t COD2_ENUM_INT {
     HUDELEM_UPDATE_ARCHIVAL = 1,
     HUDELEM_UPDATE_CURRENT = 2,
     HUDELEM_UPDATE_ARCHIVAL_AND_CURRENT = 3
@@ -261,4 +265,7 @@ struct gclient_s {
     int lastServerTime;
     int lastSpawnTime;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

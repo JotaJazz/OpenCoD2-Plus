@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_CVERTEXARRAYS_H_H
 #define MAC_DIRECTX_9_CVERTEXARRAYS_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "Mac/DirectX 9/CVAOPacket.h"
 
 struct CTexUnit;
@@ -67,4 +71,7 @@ struct OpenGLStateInfoType {
     char *SName;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

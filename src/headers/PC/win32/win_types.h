@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_WIN32_WIN_TYPES_H
 #define CLEAN_PC_WIN32_WIN_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 #include "../../cod2_defs.h"
 
@@ -89,4 +93,7 @@ struct cinematics_t {
     long int oldxsize;
     int currentHandle;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

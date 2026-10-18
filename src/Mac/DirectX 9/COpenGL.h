@@ -1,6 +1,10 @@
 #ifndef MAC_DIRECTX_9_COPENGL_H_H
 #define MAC_DIRECTX_9_COPENGL_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CDirect3DCubeTexture;
 struct CDirect3DTexture;
 struct CDirect3DVolume;
@@ -42,4 +46,7 @@ struct new_allocator_CDirect3DVolumeptr {
     int _placeholder;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

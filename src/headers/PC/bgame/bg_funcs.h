@@ -1,8 +1,13 @@
 #ifndef CLEAN_PC_BGAME_BG_FUNCS_H
 #define CLEAN_PC_BGAME_BG_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
+
 
 #ifndef BG_PRONE_TURNED_ABI
 #  define BG_PRONE_TURNED_ABI COD2_REGPARM(2) COD2_SSEREGPARM
@@ -138,4 +143,8 @@ void SetConfigString(char **ppszConfigString, const char *pszKeyValue);
 WeaponDef *BG_LoadDefaultWeaponDef(void);
 WeaponDef *BG_LoadWeaponDefInternal(const char *folder, const char *name);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

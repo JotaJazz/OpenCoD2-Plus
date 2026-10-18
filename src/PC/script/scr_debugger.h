@@ -1,6 +1,10 @@
 #ifndef SCR_DEBUGGER_H
 #define SCR_DEBUGGER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
 
 #if COD2_FEATURE_SCRIPT_DEBUGGER
@@ -54,4 +58,7 @@ static inline void Scr_Debugger_OnInstruction(const char *codePos)
 
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

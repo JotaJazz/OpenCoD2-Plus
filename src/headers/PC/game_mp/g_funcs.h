@@ -1,7 +1,12 @@
 #ifndef CLEAN_PC_GAME_MP_G_FUNCS_H
 #define CLEAN_PC_GAME_MP_G_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
+
 
 void ClientImpacts(gentity_t *ent, pmove_t *pm);
 qboolean G_ClientCanSpectateTeam(gclient_t *client, team_t team);
@@ -599,4 +604,8 @@ void Player_UpdateLookAtEntity(gentity_t *ent);
 
 void GScr_LoadConsts(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

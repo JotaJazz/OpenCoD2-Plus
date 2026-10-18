@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_CGAME_MP_CG_LOCAL_H
 #define CLEAN_PC_CGAME_MP_CG_LOCAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 
 extern cg_t cgArray[1];
@@ -13,4 +17,7 @@ extern unsigned char cgsArray[];
 static cgs_t * const cgs = (cgs_t *)cgsArray;
 extern centity_t *cg_entities;
 
+#ifdef __cplusplus
+}
+#endif
 #endif

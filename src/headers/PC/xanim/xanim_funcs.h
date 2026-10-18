@@ -1,8 +1,13 @@
 #ifndef CLEAN_PC_XANIM_XANIM_FUNCS_H
 #define CLEAN_PC_XANIM_XANIM_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
+
 
 #ifndef XANIM_CALC_ABI
 #  define XANIM_CALC_ABI COD2_REGPARM(3) COD2_SSEREGPARM
@@ -134,4 +139,8 @@ void XModelSetTestLods(int lodLevel, float dist);
 float XModelGetLodOutDist(const XModel *model);
 int XModelGetLodForDist(const XModel *model, float dist);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

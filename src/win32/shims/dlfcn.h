@@ -1,5 +1,9 @@
 #ifndef WIN32_SHIM_DLFCN_H
 #define WIN32_SHIM_DLFCN_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define RTLD_NOW   0
 #define RTLD_LAZY  0
 #define RTLD_GLOBAL 0
@@ -11,4 +15,7 @@ const char *cod2_dlerror(void);
 #define dlsym(h,s)   cod2_dlsym((h),(s))
 #define dlclose(h)   cod2_dlclose((h))
 #define dlerror()    cod2_dlerror()
+#ifdef __cplusplus
+}
+#endif
 #endif

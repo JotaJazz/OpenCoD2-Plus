@@ -1,6 +1,10 @@
 #ifndef WEB_WEBGL2_COMPAT_H
 #define WEB_WEBGL2_COMPAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef __EMSCRIPTEN__
 
 void glActiveTextureARB(unsigned int texture);
@@ -45,4 +49,7 @@ void webgl2_glEnable(unsigned int cap);
 
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

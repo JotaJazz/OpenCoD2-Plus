@@ -2,6 +2,10 @@
  * (sys/timeb.h) -- no <windows.h>, no <winsock2.h>. MSVC-build include dir only. */
 #ifndef COD2_MSVC_SYS_TIME_H
 #define COD2_MSVC_SYS_TIME_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _WIN32
 
 #include <sys/timeb.h>
@@ -26,4 +30,7 @@ static __inline int gettimeofday(struct timeval *tv, void *tz)
 }
 
 #endif /* _WIN32 */
+#ifdef __cplusplus
+}
+#endif
 #endif

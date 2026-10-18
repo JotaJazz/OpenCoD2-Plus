@@ -1,9 +1,14 @@
 #ifndef CLEAN_PC_QCOMMON_QCOMMON_FUNCS_H
 #define CLEAN_PC_QCOMMON_QCOMMON_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
 #include <signal.h>
+
 
 #ifndef WWW_DOWNLOAD_H
 typedef enum {
@@ -310,4 +315,8 @@ void StatMon_Warning(int type, int duration, const char *materialName);
 void StatMon_GetStatsArray(const statmonitor_t **array, int *count);
 void StatMon_Reset(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

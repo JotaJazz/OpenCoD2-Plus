@@ -1,6 +1,10 @@
 #ifndef STUBS_AGL_H
 #define STUBS_AGL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <GLES3/gl3.h>
 
 typedef void *AGLContext;
@@ -24,4 +28,7 @@ const char *aglErrorString(AGLError code);
 int aglSetInteger(AGLContext ctx, GLenum pname, const GLint *params);
 int aglGetInteger(AGLContext ctx, GLenum pname, GLint *params);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

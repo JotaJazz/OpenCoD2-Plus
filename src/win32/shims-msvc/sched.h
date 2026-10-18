@@ -2,8 +2,15 @@
  * to a Win32 thread-yield (Sleep(0)) without dragging in <windows.h>. */
 #ifndef COD2_MSVC_SCHED_H
 #define COD2_MSVC_SCHED_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _WIN32
 __declspec(dllimport) void __stdcall Sleep(unsigned long);
 static __inline int sched_yield(void) { Sleep(0); return 0; }
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

@@ -1,7 +1,12 @@
 #ifndef WWW_DOWNLOAD_H
 #define WWW_DOWNLOAD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
+
 
 typedef enum {
     DL_STATUS_IDLE,
@@ -34,4 +39,8 @@ static inline dlStatus_t DL_GetStatus(void) { return DL_STATUS_IDLE; }
 
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

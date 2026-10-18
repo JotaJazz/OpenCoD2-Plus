@@ -1,6 +1,10 @@
 #ifndef PC_GFX_D3D_RB_STATE_H_H
 #define PC_GFX_D3D_RB_STATE_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "Mac/DirectX 9/MacOpenGLUtils.h"
 
 struct GfxCodeMatrices;
@@ -72,4 +76,7 @@ struct XVertexInfo_s {
     short int boneOffset;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

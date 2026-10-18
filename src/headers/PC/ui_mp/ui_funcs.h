@@ -1,8 +1,13 @@
 #ifndef CLEAN_PC_UI_MP_UI_FUNCS_H
 #define CLEAN_PC_UI_MP_UI_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
+
 
 #ifndef UI_REGPARM1
 #  define UI_REGPARM1 __attribute__((regparm(1)))
@@ -310,4 +315,8 @@ void Item_SetScreenCoords(itemDef_t *item, float x, float y, int horzAlign, int 
 void Menu_UpdatePosition(menuDef_t *menu);
 qboolean Rect_Parse(const char **p, rectDef_t *r);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

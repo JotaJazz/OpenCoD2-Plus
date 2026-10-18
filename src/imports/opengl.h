@@ -1,9 +1,14 @@
 #ifndef IMPORTS_OPENGL_H
 #define IMPORTS_OPENGL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef __EMSCRIPTEN__
 
 #include "web/webgl2_compat.h"
+
 
 void glBegin(unsigned int mode);
 int glBindVertexArrayAPPLE(unsigned int array);
@@ -215,4 +220,8 @@ void gluOrtho2D(double l, double r, double b, double t);
 
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

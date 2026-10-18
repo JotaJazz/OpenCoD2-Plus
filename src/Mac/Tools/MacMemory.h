@@ -1,6 +1,10 @@
 #ifndef MAC_TOOLS_MACMEMORY_H_H
 #define MAC_TOOLS_MACMEMORY_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct AbsoluteTime;
 struct FSCatalogInfo;
 struct FSRef;
@@ -87,4 +91,7 @@ struct _D3DGAMMARAMP {
     WORD blue[256];
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

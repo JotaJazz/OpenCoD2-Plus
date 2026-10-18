@@ -1,6 +1,10 @@
 #ifndef STUBS_COREFOUNDATION_H
 #define STUBS_COREFOUNDATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *CFTypeRef;
 typedef void *CFAllocatorRef;
 typedef void *CFStringRef;
@@ -22,4 +26,7 @@ int CFNumberGetValue(CFNumberRef number, int theType, void *valuePtr);
 const void *CFDictionaryGetValue(CFDictionaryRef dict, const void *key);
 void CFRetain(CFTypeRef cf);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

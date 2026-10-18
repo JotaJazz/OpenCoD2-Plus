@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_UNIVERSAL_Q_SHARED_H
 #define CLEAN_PC_UNIVERSAL_Q_SHARED_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 typedef struct EffectVisInfo EffectVisInfo;
 typedef struct ping_t ping_t;
@@ -24,4 +28,7 @@ COD2_ASSERT_FIELD(ping_t, start, 0x14);
 COD2_ASSERT_FIELD(ping_t, time, 0x18);
 COD2_ASSERT_FIELD(ping_t, info, 0x1c);
 COD2_ASSERT_SIZE(ping_t, 0x41c);
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,11 @@
 #ifndef GENERATED_SYMS_H
 #define GENERATED_SYMS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 extern void *imp_Com_Error;
 extern void *imp_FS_FreeFile;
 extern void *imp_FS_FreeFileList;
@@ -22003,4 +22008,8 @@ extern const char lit8_00307fb0[];
 extern const char lit8_00307fb8[];
 extern const char lit8_00307fc0[];
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

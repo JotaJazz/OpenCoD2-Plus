@@ -1,8 +1,13 @@
 #ifndef CLEAN_PC_CLIENT_MP_CL_FUNCS_H
 #define CLEAN_PC_CLIENT_MP_CL_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
+
 
 void CL_GetScreenDimensions(int *width, int *height, float *aspect);
 qboolean CL_GetUserCmd(int cmdNumber, usercmd_t *ucmd);
@@ -400,4 +405,8 @@ void CalcSplitScreenTextOffset(FontHandle font, float *y);
 void SetScreenScaling(float safeAreaRatioHorizontal, float safeAreaRatioVertical, int viewportX, int viewportY, int viewportWidth, int viewportHeight);
 void CalcScreenPlacement(float *x, float *y, float *w, float *h, int horzAlign, int vertAlign);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

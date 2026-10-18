@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_GFX_D3D_RB_BACKEND_H
 #define CLEAN_PC_GFX_D3D_RB_BACKEND_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
 typedef struct GfxCmdDrawLines GfxCmdDrawLines;
@@ -57,14 +61,14 @@ struct SunFlareDynamic {
     Bool sunQueryIssued[2];
 };
 
-enum GfxOptimizedVertexSource {
+enum GfxOptimizedVertexSource COD2_ENUM_INT {
     OPT_VERTS_NONE = 0,
     OPT_VERTS_WORLD = 1,
     OPT_VERTS_SMC = 2,
     OPT_VERTS_COUNT = 3
 };
 
-enum MaterialVertexDeclType {
+enum MaterialVertexDeclType COD2_ENUM_INT {
     VERTDECL_GENERIC = 0,
     VERTDECL_WORLD = 1,
     VERTDECL_POS_TEX = 2,
@@ -233,4 +237,7 @@ struct r_backEndGlobals_t {
     D3DMATRIX shadowLookupMatrix;
     FontHandle debugFont;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

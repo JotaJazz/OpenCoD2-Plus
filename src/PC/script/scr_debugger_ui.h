@@ -1,6 +1,10 @@
 #ifndef SCR_DEBUGGER_UI_H
 #define SCR_DEBUGGER_UI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
 
 #if COD2_FEATURE_SCRIPT_DEBUGGER
@@ -481,4 +485,7 @@ void Scr_SetMiscScrollPaneComp(UI_LinesComponent *comp);
 
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,6 +1,11 @@
 #ifndef IMPORTS_LIBC_H
 #define IMPORTS_LIBC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int AUGraphConnectNodeInput();
 int AUGraphGetCPULoad(void *graph, float *outLoad);
 int AUGraphGetNodeInfo();
@@ -317,4 +322,8 @@ int pthread_main_np();
 
 int sysctl();
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

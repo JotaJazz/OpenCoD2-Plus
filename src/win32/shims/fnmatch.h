@@ -1,5 +1,9 @@
 #ifndef WIN32_SHIM_FNMATCH_H
 #define WIN32_SHIM_FNMATCH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <string.h>
 #define FNM_NOMATCH 1
 #define FNM_PATHNAME 0
@@ -17,4 +21,7 @@ static __inline int fnmatch(const char *pat, const char *str, int flags) {
     if (tl < pre + sl) return FNM_NOMATCH;
     return strcmp(str + tl - sl, suf) ? FNM_NOMATCH : 0;
 }
+#ifdef __cplusplus
+}
+#endif
 #endif

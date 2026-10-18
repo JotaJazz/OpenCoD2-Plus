@@ -1,6 +1,10 @@
 #ifndef CLEAN_PC_SCRIPT_SCR_LOCAL_H
 #define CLEAN_PC_SCRIPT_SCR_LOCAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
 typedef struct stype_t stype_t;
@@ -297,4 +301,7 @@ struct yy_buffer_state {
     int yy_fill_buffer;
     int yy_buffer_status;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

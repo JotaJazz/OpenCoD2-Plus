@@ -1,6 +1,11 @@
 #ifndef IMPORTS_AUDIOTOOLBOX_H
 #define IMPORTS_AUDIOTOOLBOX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int AudioConverterDispose();
 int AudioConverterFillBuffer();
 int AudioConverterFillComplexBuffer();
@@ -21,4 +26,8 @@ int AudioUnitSetParameter(AudioUnit unit, unsigned int paramID, unsigned int sco
 int AudioUnitSetProperty();
 int AudioUnitUninitialize();
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

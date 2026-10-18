@@ -1,9 +1,13 @@
 #ifndef CLEAN_PC_UNIVERSAL_COM_MATH_H
 #define CLEAN_PC_UNIVERSAL_COM_MATH_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../../cod2_fwd.h"
 
-enum errorParm_t {
+enum errorParm_t COD2_ENUM_INT {
     ERR_FATAL = 0,
     ERR_DROP = 1,
     ERR_SERVERDISCONNECT = 2,
@@ -34,6 +38,7 @@ typedef struct traceWork_t traceWork_t;
 typedef struct viewState_t viewState_t;
 
 typedef struct weaponParms weaponParms;
+COD2_ENUM_DECL(errorParm_t)
 typedef enum errorParm_t errorParm_t;
 
 typedef struct DObj_s DObj;
@@ -419,4 +424,7 @@ struct weaponParms {
     vec3_t gunForward;
     WeaponDef *weapDef;
 };
+#ifdef __cplusplus
+}
+#endif
 #endif

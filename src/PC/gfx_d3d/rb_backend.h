@@ -1,6 +1,10 @@
 #ifndef PC_GFX_D3D_RB_BACKEND_H_H
 #define PC_GFX_D3D_RB_BACKEND_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "Mac/DirectX 9/MacOpenGLUtils.h"
 #include "PC/gfx_d3d/rb_state.h"
 #include "PC/universal/com_math.h"
@@ -350,4 +354,7 @@ struct trDebugString_t {
     char text[96];
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,8 +1,13 @@
 #ifndef CLEAN_PC_GFX_D3D_GFX_FUNCS_H
 #define CLEAN_PC_GFX_D3D_GFX_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
 #include "bytematch.h"
+
 
 #ifndef GFX_FUNCS_LOCAL_TYPEDEFS
 #define GFX_FUNCS_LOCAL_TYPEDEFS
@@ -526,4 +531,8 @@ void RB_TessXModelSkinned(const surfaceType_t *surfType);
 void RB_TessTriangles(const surfaceType_t *surfType);
 void RB_TessEntity(const GfxEntity *re);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

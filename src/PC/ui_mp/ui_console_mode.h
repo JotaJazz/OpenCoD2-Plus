@@ -1,6 +1,10 @@
 #ifndef UI_CONSOLE_MODE_H
 #define UI_CONSOLE_MODE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cod2_feature_config.h"
 
 #if COD2_FEATURE_GAMEPAD
@@ -23,5 +27,8 @@ void UI_ConsoleMode_DrawGlyphs(void *info);
 
 void UI_ConsoleMode_SafeAreaRect(float *x, float *y, float *w, float *h);
 
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

@@ -1,6 +1,10 @@
 #ifndef WIN32_COMPAT_H
 #define WIN32_COMPAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef _WIN32
 
 #include <io.h>
@@ -12,5 +16,8 @@
 
 static __inline int pthread_main_np(void) { return 1; }
 
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif

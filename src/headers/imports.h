@@ -1,6 +1,10 @@
 #ifndef IMPORTS_H
 #define IMPORTS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "imports/agl.h"
 #include "imports/audiotoolbox.h"
 #include "imports/carbon.h"
@@ -18,4 +22,7 @@
 #define D3DVTCC
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

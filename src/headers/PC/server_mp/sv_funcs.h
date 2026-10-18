@@ -1,7 +1,12 @@
 #ifndef CLEAN_PC_SERVER_MP_SV_FUNCS_H
 #define CLEAN_PC_SERVER_MP_SV_FUNCS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common_types.h"
+
 
 const char *SV_GetMapBaseName(const char *mapname);
 void SV_Heartbeat_f(void);
@@ -161,4 +166,8 @@ int SV_PointSightTraceToEntity(const sightpointtrace_t *clip, svEntity_t *check)
 int SV_SightTraceToEntity(const vec_t *start, const vec_t *mins, const vec_t *maxs, const vec_t *end, int entityNum, int contentmask);
 int SV_PointContents(const vec_t *p, int passEntityNum, int contentmask);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

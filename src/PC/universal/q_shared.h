@@ -1,6 +1,10 @@
 #ifndef PC_UNIVERSAL_Q_SHARED_H_H
 #define PC_UNIVERSAL_Q_SHARED_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "Mac/DirectX 9/MacOpenGLUtils.h"
 
 struct ping_t;
@@ -66,4 +70,7 @@ struct weaponParms {
     WeaponDef *weapDef;
 };
 
+#ifdef __cplusplus
+}
+#endif
 #endif

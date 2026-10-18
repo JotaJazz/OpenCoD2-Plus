@@ -1,6 +1,10 @@
 #ifndef STUBS_CARBON_H
 #define STUBS_CARBON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *WindowRef;
 typedef void *EventRef;
 typedef void *EventHandlerRef;
@@ -96,4 +100,7 @@ void NormalizeThemeDrawingState(void);
 int DrawThemeMenuBarBackground(const Rect *r, int style, int erase);
 WindowRef GetControlOwner(ControlRef control);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

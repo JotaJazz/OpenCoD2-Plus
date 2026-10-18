@@ -1,6 +1,10 @@
 #ifndef CLEAN_COD2_PLATFORM
 #define CLEAN_COD2_PLATFORM
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -25,6 +29,22 @@
 #define COD2_WIN_ALIGN8 __attribute__((aligned(8)))
 #else
 #define COD2_WIN_ALIGN8
+#endif
+
+/* C++ has no forward-declared enums without an underlying type, which GNU C
+ * accepts: COD2_ENUM_DECL(X) declares enum X ahead of its definition in C++,
+ * and COD2_ENUM_INT gives that definition the matching int base (the size the
+ * enums already have with GCC and MSVC). */
+#ifdef __cplusplus
+#define COD2_ENUM_DECL(X) enum X : int;
+#define COD2_ENUM_INT : int
+#define COD2_ENUM_DECL_UINT(X) enum X : unsigned int;
+#define COD2_ENUM_UINT : unsigned int
+#else
+#define COD2_ENUM_DECL(X)
+#define COD2_ENUM_INT
+#define COD2_ENUM_DECL_UINT(X)
+#define COD2_ENUM_UINT
 #endif
 
 /* Windows calling-convention keywords used in shared code; MSVC and MinGW
@@ -80,4 +100,7 @@
 #define COD2_REGPARM_AND_STACKPARM
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

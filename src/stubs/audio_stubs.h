@@ -1,6 +1,10 @@
 #ifndef STUBS_AUDIO_H
 #define STUBS_AUDIO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *AudioUnit;
 typedef void *AUGraph;
 typedef void *AUNode;
@@ -48,4 +52,7 @@ OSStatus AudioDeviceGetProperty(AudioDeviceID dev, unsigned int channel, int isI
 OSStatus AudioDeviceSetProperty(AudioDeviceID dev, const void *when, unsigned int channel, int isInput, unsigned int propID, unsigned int size, const void *data);
 OSStatus AudioHardwareGetProperty(unsigned int propID, unsigned int *size, void *data);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
