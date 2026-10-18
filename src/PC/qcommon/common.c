@@ -93,7 +93,7 @@ extern void longjmp(jmp_buf env, int val);
 extern dvar_t *com_dedicated;
 extern int dvar_modifiedFlags;
 extern Bool updateScreenCalled;
-extern int *com_fileAccessed;
+extern int com_fileAccessed; /* int, as in com_files.c; was int* so "*com_fileAccessed = 0" wrote to address 1 */
 extern void Dvar_ClearModified(const dvar_t *dvar);
 extern void SetAnimCheck(int enabled);
 extern void NET_Sleep(int msec);
@@ -1681,10 +1681,10 @@ BM_NOINLINE void Com_Frame_Try_Block_Function(void)
     SCR_UpdateScreenInternal();
     SCR_RunCinematic();
 
-    if (com_statmon->current.enabled) {
-        if (*com_fileAccessed) {
+    if (com_statmon && com_statmon->current.enabled) { /* com_statmon is only set by R_Init */
+        if (com_fileAccessed) {
             StatMon_Warning(1, 3000, "File Accessed");
-            *com_fileAccessed = 0;
+            com_fileAccessed = 0;
         }
         {
             int prevTime = timeClientFrame;
