@@ -760,16 +760,16 @@ void RuntimeError( const char *codePos, unsigned int index, const char *msg, con
 		if ( dialogMessage )
 		{
 			if ( scrVmPub.terminal_error )
-				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n", msg, "\n", dialogMessage);
+				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n%s%s%s", msg, "\n", dialogMessage);
 			else
-				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n", msg, "\n", dialogMessage);
+				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n%s%s%s", msg, "\n", dialogMessage);
 		}
 		else
 		{
 			if ( scrVmPub.terminal_error )
-				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n", msg, "", "");
+				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n%s%s%s", msg, "", "");
 			else
-				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n", msg, "", "");
+				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n%s%s%s", msg, "", "");
 		}
 	}
 	else
@@ -799,16 +799,16 @@ void RuntimeError( const char *codePos, unsigned int index, const char *msg, con
 		if ( dialogMessage )
 		{
 			if ( scrVmPub.terminal_error )
-				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n", msg, "\n", dialogMessage);
+				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n%s%s%s", msg, "\n", dialogMessage);
 			else
-				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n", msg, "\n", dialogMessage);
+				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n%s%s%s", msg, "\n", dialogMessage);
 		}
 		else
 		{
 			if ( scrVmPub.terminal_error )
-				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n", msg, "", "");
+				Com_Error(ERR_SCRIPT_DROP, "script runtime error\n(see console for details)\n%s%s%s", msg, "", "");
 			else
-				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n", msg, "", "");
+				Com_Error(ERR_SCRIPT, "script runtime error\n(see console for details)\n%s%s%s", msg, "", "");
 		}
 	}
 }
