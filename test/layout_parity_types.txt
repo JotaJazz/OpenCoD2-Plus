@@ -42,3 +42,14 @@ netchan_t:outgoingSequence,sock,remoteAddress,qport,fragmentSequence,fragmentLen
 # dvar_s keeps vectors in line in CoD2rev-Plus (72 bytes) and points to them
 # here (36); the server reads only these.
 dvar_s~:name,flags,type,modified,current
+# Types of CoD2rev-Plus's game whose globals the engine reads too: level and
+# g_entities (unix/sysdiff_statehash.c and the blobs' imp_ pointers),
+# bg_itemlist (bgame, cgame), scr_const (bgame, cgame), g_hudelems, g_scr_data.
+# level_locals_t: frametime and savepersist are frameTime and savePersist
+# there (same offsets, compared through their neighbours and sizeof).
+level_locals_t:gentities,gentitySize,num_entities,firstFreeEnt,lastFreeEnt,logFile,initializing,clientIsSpawning,objectives,maxclients,framenum,time,previousTime,startTime,teamScores,lastTeammateHealthTime,bUpdateScoresForIntermission,manualNameChange,numConnectedClients,sortedClients,voteString,voteDisplayString,voteTime,voteExecuteTime,voteYes,voteNo,numVotingClients,teamVoteString,teamVoteTime,teamVoteYes,teamVoteNo,spawnVar,droppedWeaponCue,fFogOpaqueDist,fFogOpaqueDistSqrd,remapCount,currentPlayerClone,pendingTriggerList,currentTriggerList,pendingTriggerListSize,currentTriggerListSize,finished,bPlayerIgnoreRadiusDamage,bPlayerIgnoreRadiusDamageLatched,registerWeapons,bRegisterItems,currentEntityThink,openScriptIOFileHandles,openScriptIOFileBuffers,currentScriptIOLineMark
+gitem_s:classname,pickup_sound,world_model,icon,pickup_name,quantity,giType,giTag,giAmmoIndex,giClipIndex
+scr_const_t:allies,axis,current,damage,death,dlight,done,empty,entity,failed,fraction,goal,grenade,info_notnull,invisible,key1,key2,killanimscript,left,movedone,noclass,normal,pistol,plane_waypoint,player,position,primary,primaryb,prone,right,rocket,rotatedone,script_brushmodel,script_model,script_origin,spectator,stand,surfacetype,target_script_trigger,tempEntity,touch,trigger,trigger_use,trigger_use_touch,trigger_damage,trigger_lookat,truck_cam,worldspawn,binocular_enter,binocular_exit,binocular_fire,binocular_release,binocular_drop,begin,intermission,menuresponse,playing,none,dead,auto_change,manual_change,freelook,call_vote,vote,snd_enveffectsprio_level,snd_enveffectsprio_shellshock,snd_channelvolprio_holdbreath,snd_channelvolprio_pain,snd_channelvolprio_shellshock,tag_flash,tag_flash_11,tag_flash_2,tag_flash_22,tag_brass,j_head,tag_weapon,tag_player,tag_camera,tag_aim,tag_aim_animated,tag_origin,tag_butt,tag_weapon_right,back_low,back_mid,back_up,neck,head,pelvis
+game_hudelem_s:elem,clientNum,team,archived
+scr_data_t
+entityHandler_t
