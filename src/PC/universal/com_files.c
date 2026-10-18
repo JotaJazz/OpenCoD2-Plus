@@ -271,7 +271,7 @@ FILE *FS_FileForHandle(fileHandle_t f)
 #endif
 }
 
-extern char *strstr(const char *, const char *);
+#include <string.h>
 extern void Sys_Mkdir(const char *path);
 extern void Com_Printf(const char *fmt, ...);
 qboolean FS_CreatePath(char *OSPath)

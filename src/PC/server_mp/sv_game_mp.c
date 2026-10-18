@@ -216,7 +216,7 @@ struct XModel *SV_XModelGet(const char *name)
 {
     if (!Com_ValidXModelName(name))
         return NULL;
-    return XModelPrecache(name + 7, SV_AllocXModelPrecache, SV_AllocXModelPrecacheColl);
+    return XModelPrecache(name + 7, (void *)SV_AllocXModelPrecache, (void *)SV_AllocXModelPrecacheColl);
 }
 
 void SV_DObjDumpInfo(gentity_t *ent)

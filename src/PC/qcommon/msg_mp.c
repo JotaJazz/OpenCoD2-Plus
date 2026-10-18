@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common_types.h"
 #include "imports.h"
 #include <string.h>
@@ -2064,10 +2065,10 @@ void MSG_WriteDeltaPlayerstate(msg_t *msg, playerState_s *from, playerState_s *t
 }
 
 NetField hudElemFields[32] = {
-    { (char *)&str_002acda0, 0x8, 0xffffff9d },
+    { (char *)&str_002acda0, 0x8, (int)0xffffff9d },
     { (char *)&str_0021eb5c, 0x0, 0x4 },
     { (char *)&str_002acda4, 0x20, 0x20 },
-    { (char *)&str_002acdb0, 0x4, 0xffffff9d },
+    { (char *)&str_002acdb0, 0x4, (int)0xffffff9d },
     { (char *)&str_002acdb4, 0x1c, 0x6 },
     { (char *)&str_002acdc0, 0x10, 0x0 },
     { (char *)&str_002acdcc, 0x3c, 0x8 },
@@ -2078,7 +2079,7 @@ NetField hudElemFields[32] = {
     { (char *)&str_002acdfc, 0x2c, 0x10 },
     { (char *)&str_002ace08, 0x70, 0x0 },
     { (char *)&str_002ace10, 0x68, 0x20 },
-    { (char *)&str_002ace18, 0xc, 0xffffff9d },
+    { (char *)&str_002ace18, 0xc, (int)0xffffff9d },
     { (char *)&str_002ace1c, 0x18, 0x4 },
     { (char *)&str_002ace28, 0x78, 0x0 },
     { (char *)&str_002ace30, 0x74, 0x8 },
@@ -2090,8 +2091,8 @@ NetField hudElemFields[32] = {
     { (char *)&str_002ace70, 0x40, 0xa },
     { (char *)&str_002ace7c, 0x60, 0x20 },
     { (char *)&str_002ace8c, 0x64, 0x10 },
-    { (char *)&str_002ace98, 0x50, 0xffffff9d },
-    { (char *)&str_002acea0, 0x54, 0xffffff9d },
+    { (char *)&str_002ace98, 0x50, (int)0xffffff9d },
+    { (char *)&str_002acea0, 0x54, (int)0xffffff9d },
     { (char *)&str_002acea8, 0x5c, 0x6 },
     { (char *)&str_002aceb8, 0x58, 0x4 },
     { (char *)&str_002acec8, 0x6c, 0x20 },

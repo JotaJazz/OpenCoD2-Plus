@@ -74,7 +74,7 @@ extern int strnicmp(const char *s1, const char *s2, size_t n);
 extern int atoi(const char *string);
 extern double atof(const char *string);
 extern int strcmp(const char *s1, const char *s2);
-extern int sscanf(const char *str, const char *format, ...);
+#include <stdio.h>
 extern float floorf(float x);
 
 void Dvar_SetInAutoExec(int inAutoExec);

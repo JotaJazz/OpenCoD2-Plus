@@ -68,7 +68,7 @@ extern void Com_Error(int level, const char *fmt, ...);
 extern void I_strncat(char *dest, int destsize, const char *src);
 extern char *va(const char *fmt, ...);
 extern qboolean FS_FilenameCompare(const char *s1, const char *s2);
-extern char *strstr(const char *haystack, const char *needle);
+#include <string.h>
 extern char *I_strlwr(char *s);
 extern void Cmd_TokenizeString(const char *text);
 extern int atoi(const char *nptr);

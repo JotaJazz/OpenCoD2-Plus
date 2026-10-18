@@ -9,7 +9,7 @@ with the C++ compiler that matches the C one and the file's own flags. Prints
 "<module>: <n> errors" and the first --max errors of each module. Exits with 0
 when there are none.
 """
-import argparse, collections, concurrent.futures, json, os, shlex, subprocess, sys, tempfile
+import argparse, collections, concurrent.futures, json, os, re, shlex, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
@@ -36,9 +36,18 @@ def module_of(path):
     return '/'.join(parts[:2]) if parts[0] == 'PC' and len(parts) > 2 else parts[0] if len(parts) > 1 else rel
 
 
+def real_source(entry):
+    """The C file of an entry: the file itself, or the one a cxx_wrap wrapper includes."""
+    path = os.path.normpath(os.path.join(entry['directory'], entry['file']))
+    if path.endswith('.c.cpp') and os.sep + 'cxx_wrap' + os.sep in path:
+        with open(path) as f:
+            return os.path.normpath(re.search(r'#include "([^"]+)"', f.read()).group(1)), path
+    return path, path
+
+
 def errors_of(entry, tmpdir):
     args = shlex.split(entry['command']) if 'command' in entry else list(entry['arguments'])
-    source = os.path.normpath(os.path.join(entry['directory'], entry['file']))
+    source, compiled = real_source(entry)
     flags, skip = [], False
     for a in args[1:]:
         if skip:
@@ -47,7 +56,7 @@ def errors_of(entry, tmpdir):
         if a == '-o':
             skip = True
             continue
-        if a == '-c' or a.startswith('-std=') or a in C_ONLY or os.path.normpath(os.path.join(entry['directory'], a)) == source:
+        if a == '-c' or a.startswith('-std=') or a in C_ONLY or os.path.normpath(os.path.join(entry['directory'], a)) == compiled:
             continue
         flags.append(a)
     wrapper = os.path.join(tmpdir, os.path.relpath(source, SRC).replace(os.sep, '_') + '.cpp')
@@ -67,13 +76,13 @@ def main():
     args = ap.parse_args()
 
     with open(os.path.join(args.build_dir, 'compile_commands.json')) as f:
-        entries = [e for e in json.load(f) if e['file'].endswith('.c')]
+        entries = [e for e in json.load(f) if e['file'].endswith(('.c', '.c.cpp'))]
+    entries = [e for e in entries if not e['file'].endswith('.c.cpp') or 'cxx_wrap' in e['file']]
     wanted = [m.rstrip('/') for m in args.module] if args.module else None
     if wanted:
-        entries = [e for e in entries if any(
-            os.path.relpath(os.path.join(e['directory'], e['file']), SRC).replace(os.sep, '/').startswith(m + '/')
-            or os.path.relpath(os.path.join(e['directory'], e['file']), SRC).replace(os.sep, '/') == m
-            for m in wanted)]
+        def rel(e):
+            return os.path.relpath(real_source(e)[0], SRC).replace(os.sep, '/')
+        entries = [e for e in entries if any(rel(e).startswith(m + '/') or rel(e) == m for m in wanted)]
     if not entries:
         print('no C sources matched')
         return 2

@@ -342,3 +342,6 @@ __ZZN9WinCursorC4EvE11sNextHandle
 # MinGW's <stdio.h> in C++ (libstdc++ turns on __USE_MINGW_ANSI_STDIO): inline
 # C++ wrappers over MinGW's ANSI printf family, emitted where they are used.
 re:^__Z\d+v?[sf]?n?(printf|scanf)P
+# Inline functions of the C++ standard library headers (std::isfinite and
+# friends from <cmath>), emitted where the C sources use the C macro.
+re:^_{1,2}ZSt\d

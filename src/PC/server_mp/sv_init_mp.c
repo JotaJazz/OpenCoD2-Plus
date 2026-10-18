@@ -634,15 +634,15 @@ void SV_Shutdown(char *finalmsg)
     }
 
     if (svs->cachedSnapshotEntities) {
-        Z_FreeInternal(svs->cachedSnapshotEntities);
+        Z_FreeInternal((void *)svs->cachedSnapshotEntities);
         *(void **)&svs->cachedSnapshotEntities = 0;
     }
     if (svs->cachedSnapshotClients) {
-        Z_FreeInternal(svs->cachedSnapshotClients);
+        Z_FreeInternal((void *)svs->cachedSnapshotClients);
         *(void **)&svs->cachedSnapshotClients = 0;
     }
     if (svs->archivedSnapshotFrames) {
-        Z_FreeInternal(svs->archivedSnapshotFrames);
+        Z_FreeInternal((void *)svs->archivedSnapshotFrames);
         *(void **)&svs->archivedSnapshotFrames = 0;
     }
     if (svs->archivedSnapshotBuffer) {

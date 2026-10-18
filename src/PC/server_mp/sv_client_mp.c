@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common_types.h"
 #include "imports.h"
 #include "cod2_feature_config.h"

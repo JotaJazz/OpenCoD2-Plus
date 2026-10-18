@@ -12,7 +12,7 @@ extern void MatrixInverse(float *src, float *dst);
 extern int XModelGetStaticBounds(const XModel *model, vec3_t *axis, vec_t *outMins, vec_t *outMaxs);
 extern void Com_Error(int level, const char *fmt, ...);
 extern void *CM_Hunk_Alloc(int size, const char *name, int align);
-extern int sscanf(const char *str, const char *fmt, ...);
+#include <stdio.h>
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 
 void CM_LoadStaticModels(void)

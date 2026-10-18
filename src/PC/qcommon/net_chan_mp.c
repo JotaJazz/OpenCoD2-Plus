@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common_types.h"
 #include "imports.h"
 /* dvar globals */
@@ -41,10 +42,9 @@ extern qboolean Sys_StringToAdr(const char *s, netadr_t *a);
 extern Bool Sys_SendPacket(int length, const void *data, netadr_t to);
 extern int Sys_Milliseconds(void);
 #ifndef _WIN32
-extern void *malloc(int size);
 #endif
 extern void free(void *ptr);
-extern char *strchr(const char *s, int c);
+#include <string.h>
 extern int atoi(const char *s);
 extern void I_strncpyz(char *dest, const char *src, int size);
 extern const dvar_t *Dvar_RegisterBool(const char *name, qboolean defaultValue, int flags);
