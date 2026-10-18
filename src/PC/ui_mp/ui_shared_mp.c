@@ -3032,7 +3032,8 @@ void Item_Bind_Paint(displayContextDef_t *dc, itemDef_t *item)
     BindingFromName(bindName, bindText);
     drawText = bindText;
 
-    int flags = ((itemDef_t *)it)->window.dynamicFlags[0];
+    int flags;
+    flags = ((itemDef_t *)it)->window.dynamicFlags[0];
     if ((flags & 4) && (flags & 2)) {
         float lowLight[4];
         for (i = 0; i < 4; i++)
@@ -3404,7 +3405,8 @@ check_dvar:;
     if ((*(void **)&((itemDef_t *)it)->onFocus))
         Item_RunScript(dc, item, ((itemDef_t *)it)->onFocus);
 
-    snd_alias_list_t *itemSound = ((itemDef_t *)it)->focusSound;
+    snd_alias_list_t *itemSound;
+    itemSound = ((itemDef_t *)it)->focusSound;
     if (itemSound) {
         UI_PlayLocalSoundAlias(itemSound);
     } else if (defaultSound) {
@@ -4054,11 +4056,18 @@ qboolean Item_Bind_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, 
             goto enter_bind;
         if (key == 0xc8) {
 
-            byte *d = (byte *)dc;
-            float cx = (float)((displayContextDef_t *)d)->cursorx;
-            float cy = (float)(((displayContextDef_s*)(d))->cursory);
-            float rx = (((rectDef_t*)(it))->x), ry = (((rectDef_t*)(it))->y);
-            float rw = (((rectDef_t*)(it))->w), rh = (((rectDef_t*)(it))->h);
+            byte *d;
+            d = (byte *)dc;
+            float cx;
+            cx = (float)((displayContextDef_t *)d)->cursorx;
+            float cy;
+            cy = (float)(((displayContextDef_s*)(d))->cursory);
+            float rx, ry;
+            rx = (((rectDef_t*)(it))->x);
+            ry = (((rectDef_t*)(it))->y);
+            float rw, rh;
+            rw = (((rectDef_t*)(it))->w);
+            rh = (((rectDef_t*)(it))->h);
             CalcScreenX(&cx, 4);
             CalcScreenY(&cy, 4);
             CalcScreenPlacement(&rx, &ry, &rw, &rh, (((rectDef_t*)(it))->horzAlign), (((rectDef_t*)(it))->vertAlign));
@@ -4556,8 +4565,10 @@ qboolean Menu_HandleMouseMove(displayContextDef_t *dc, menuDef_t *menu, float x,
                 it = *(byte **)((char *)&((menuDef_t *)m)->items[i]);
             }
 
-            byte *overItem = it;
-            int flags = ((itemDef_t *)overItem)->window.dynamicFlags[0];
+            byte *overItem;
+            overItem = it;
+            int flags;
+            flags = ((itemDef_t *)overItem)->window.dynamicFlags[0];
             if ((flags & 4) && (flags & 2) && !focusItem)
                 focusItem = overItem;
 
@@ -4889,7 +4900,8 @@ void Menu_HandleKey(displayContextDef_t *dc, menuDef_t *menu, int key, qboolean 
         }
     }
 
-    int itemCount = (((menuDef_t*)(m))->itemCount);
+    int itemCount;
+    itemCount = (((menuDef_t*)(m))->itemCount);
     focusedItem = NULL;
     for (i = 0; i < itemCount; i++) {
         byte *it = *(byte **)((char *)&((menuDef_t *)m)->items[i]);
@@ -5449,9 +5461,12 @@ void Menu_Paint(displayContextDef_t *dc, menuDef_t *menu, qboolean forcePaint)
 
     Window_AddDynamicFlags( (itemDef_t *)((void *)m), 0x4000);
 
-    byte *d = (byte *)dc;
-    int openCount = (((displayContextDef_s*)(d))->openMenuCount);
-    int removeIdx = -1;
+    byte *d;
+    d = (byte *)dc;
+    int openCount;
+    openCount = (((displayContextDef_s*)(d))->openMenuCount);
+    int removeIdx;
+    removeIdx = -1;
     for (i = openCount - 1; i >= 0; i--) {
         if (*(void **)((char *)&((displayContextDef_s *)d)->menuStack[i]) == menu) {
             removeIdx = i;
@@ -5466,7 +5481,8 @@ void Menu_Paint(displayContextDef_t *dc, menuDef_t *menu, qboolean forcePaint)
 
     if ((((displayContextDef_s*)(d))->openMenuCount) == 0x10)
         Com_Error(1, "\x15Too many menus opened");
-    int idx = (((displayContextDef_s*)(d))->openMenuCount);
+    int idx;
+    idx = (((displayContextDef_s*)(d))->openMenuCount);
     *(void **)((char *)&((displayContextDef_s *)d)->menuStack[idx]) = menu;
     (((displayContextDef_s*)(d))->openMenuCount) = idx + 1;
 
@@ -5747,62 +5763,62 @@ commandDef_t commandList[28] = {
     { (const char *)&str_002abf34, (void (*)())&Script_ScriptMenuResponse }
 };
 bind_t g_bindings[56] = {
-    { (char *)&str_002abf48, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf50, 0xc9, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf58, 0x77, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf64, 0x73, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf6c, 0x2c, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf78, 0x2e, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf84, 0x20, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf8c, 0x63, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abf98, 0x9c, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfa0, 0x9d, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfa8, 0x9e, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfb0, 0xa3, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfb8, 0xa2, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfc4, 0x2f, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfcc, 0xa6, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfd8, 0x9f, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfe0, 0xcd, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abfec, 0xce, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002abff8, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac000, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac008, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac014, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ab890, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ab8a0, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac020, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac02c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac034, 0xa7, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac03c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac048, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac054, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac060, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac06c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac074, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac084, 0x31, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac098, 0x32, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0ac, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0b8, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0cc, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0d4, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0e0, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0f0, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac0f8, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac100, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac10c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac118, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac128, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac134, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac13c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac148, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac154, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac160, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac16c, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac174, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_00225608, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac180, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
-    { (char *)&str_002ac190, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }
+    { (char *)&str_002abf48, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf50, 0xc9, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf58, 0x77, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf64, 0x73, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf6c, 0x2c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf78, 0x2e, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf84, 0x20, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf8c, 0x63, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abf98, 0x9c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfa0, 0x9d, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfa8, 0x9e, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfb0, 0xa3, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfb8, 0xa2, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfc4, 0x2f, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfcc, 0xa6, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfd8, 0x9f, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfe0, 0xcd, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abfec, 0xce, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002abff8, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac000, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac008, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac014, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ab890, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ab8a0, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac020, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac02c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac034, 0xa7, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac03c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac048, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac054, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac060, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac06c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac074, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac084, 0x31, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac098, 0x32, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0ac, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0b8, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0cc, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0d4, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0e0, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0f0, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac0f8, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac100, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac10c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac118, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac128, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac134, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac13c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac148, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac154, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac160, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac16c, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac174, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_00225608, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac180, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff },
+    { (char *)&str_002ac190, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff, (int)0xffffffff }
 };
 
 const unsigned char border[96] = {
