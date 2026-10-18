@@ -6,8 +6,8 @@
 The data blobs, the .S files and the --defsym aliases refer to the engine's
 symbols by their C names, so a function or a global compiled as C++ without C
 linkage (a _Z... name) breaks them. Exits with 0 when no object defines a
-mangled global symbol other than those in the allowlist (one per line, #
-comments; default test/c_linkage_allowlist.txt).
+mangled global symbol other than those in the allowlist (one name per line,
+or re:<regex>; # comments; default test/c_linkage_allowlist.txt).
 """
 import argparse, os, re, subprocess, sys
 
@@ -26,10 +26,18 @@ def objects(build_dir):
 
 
 def load_allowlist(path):
-    if not path or not os.path.exists(path):
-        return set()
-    with open(path) as f:
-        return {l.strip() for l in f if l.strip() and not l.strip().startswith('#')}
+    """(names, regexes) from an allowlist file."""
+    names, regexes = set(), []
+    if path and os.path.exists(path):
+        with open(path) as f:
+            for line in (l.strip() for l in f):
+                if not line or line.startswith('#'):
+                    continue
+                if line.startswith('re:'):
+                    regexes.append(re.compile(line[3:]))
+                else:
+                    names.add(line)
+    return names, regexes
 
 
 def mangled_symbols(nm, path):
@@ -44,11 +52,11 @@ def main():
     ap.add_argument('--allowlist', default=os.path.join(ROOT, 'test', 'c_linkage_allowlist.txt'))
     args = ap.parse_args()
 
-    allowed = load_allowlist(args.allowlist)
+    names, regexes = load_allowlist(args.allowlist)
     found = 0
     for path in sorted(objects(args.build_dir)):
         for symbol in mangled_symbols(args.nm, path):
-            if symbol not in allowed:
+            if symbol not in names and not any(r.search(symbol) for r in regexes):
                 print(f'{os.path.relpath(path, args.build_dir)}: {symbol}')
                 found += 1
     if found:

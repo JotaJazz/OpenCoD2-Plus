@@ -51,7 +51,7 @@ extern int Sys_Milliseconds(void);
 extern int sscanf(const char *str, const char *format, ...);
 extern char *strchr(const char *s, int c);
 extern Bool Dvar_GetBool(const char *name);
-extern int sprintf(char *str, const char *format, ...);
+#include <stdio.h>
 extern void SND_StopSounds(snd_stopsounds_arg_t a);
 extern void SV_Frame(int a);
 extern void CL_Disconnect(void);

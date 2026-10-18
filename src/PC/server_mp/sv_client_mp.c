@@ -73,7 +73,7 @@ extern qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b);
 extern gentity_t *SV_GentityNum(int num);
 extern playerState_t *SV_GameClientNum(int num);
 extern void ClientBegin(int clientNum);
-extern int sprintf(char *str, const char *format, ...);
+#include <stdio.h>
 extern void LargeLocal_LargeLocal(const LargeLocal *_this, int size);
 extern void * LargeLocal_GetBuf(const LargeLocal *_this);
 extern void ZN10LargeLocalD1Ev(LargeLocal *ll);

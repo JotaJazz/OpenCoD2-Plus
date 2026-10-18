@@ -42,6 +42,13 @@ class CheckCLinkage(unittest.TestCase):
             f.write('# a real C++ symbol\n_Z3foov\n')
         self.assertEqual(self.run_check('--allowlist', allow).returncode, 0)
 
+    def test_allowlist_regex(self):
+        self.compile('g++', '.cpp', 'int foo(void){return 0;}\n')
+        allow = os.path.join(self.dir, 'allow.txt')
+        with open(allow, 'w') as f:
+            f.write('re:^_Z3fo+v$\n')
+        self.assertEqual(self.run_check('--allowlist', allow).returncode, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

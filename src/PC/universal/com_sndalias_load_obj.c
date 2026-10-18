@@ -87,7 +87,7 @@ extern char *strlwr(char *s);
 extern void *Hunk_AllocateTempMemoryInternal(int size);
 extern SndCurve *Com_RegisterSoundAliasVolumeFalloffCurve(const char *filename, const char *sourceFile);
 extern int ___maskrune(int c, unsigned long mask);
-extern int sprintf(char *str, const char *format, ...);
+#include <stdio.h>
 
 extern void *imp_fs_basepath;
 extern void *imp_fs_gamedir;

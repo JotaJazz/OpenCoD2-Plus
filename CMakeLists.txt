@@ -75,7 +75,7 @@ set(COD2_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 # files and the --defsym aliases. The data blobs and the third-party libraries
 # stay C.
 # Modules already converted (they build, link and pass the smoke test as C++):
-set(COD2_CXX_DIRS_CONVERTED "")
+set(COD2_CXX_DIRS_CONVERTED PC/stringed PC/script PC/xanim)
 set(COD2_CXX_DIRS "" CACHE STRING "More src/ subdirectories to compile as C++, e.g. PC/qcommon;PC/server_mp")
 option(COD2_CXX_ALL "Compile every engine C source as C++" OFF)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")

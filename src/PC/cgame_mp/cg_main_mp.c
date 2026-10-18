@@ -10,7 +10,7 @@ extern snd_alias_t *CL_PickSoundAlias(const char *aliasname);
 extern const char *CL_GetConfigString(int index);
 extern void CL_SubtitlePrint(const char *pszText, int iDuration, int iLineWidth);
 extern int atoi(const char *nptr);
-extern int sprintf(char *str, const char *format, ...);
+#include <stdio.h>
 extern char *Info_ValueForKey(const char *s, const char *key);
 extern const char *SEH_LocalizeTextMessage(const char *msg, const char *context, int errType);
 extern void SND_PlayAmbientAlias(const snd_alias_t *pAlias, int fadetime, snd_alias_system_t system);
