@@ -651,6 +651,16 @@ static void cr_posix_regs(int fd, void *ucontext)
         cr_emit(fd, "  eax=%08x ebx=%08x ecx=%08x edx=%08x\n",
                 (unsigned)r[REG_EAX], (unsigned)r[REG_EBX], (unsigned)r[REG_ECX], (unsigned)r[REG_EDX]);
         cr_emit(fd, "  esi=%08x edi=%08x\n", (unsigned)r[REG_ESI], (unsigned)r[REG_EDI]);
+        /* The unwinder stops at a bad eip (a call through a null pointer), so
+           the top of the stack is the only way back to the caller there. */
+        {
+            const unsigned *sp = (const unsigned *)(uintptr_t)r[REG_ESP];
+            int k;
+            cr_emit(fd, "stack:\n");
+            for (k = 0; k < 32; k += 4)
+                cr_emit(fd, "  %08x: %08x %08x %08x %08x\n", (unsigned)(uintptr_t)(sp + k),
+                        sp[k], sp[k + 1], sp[k + 2], sp[k + 3]);
+        }
     }
 #    else
     cr_emit(fd, "registers: (unsupported arch)\n");
