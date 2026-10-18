@@ -502,10 +502,11 @@ sysEvent_t Sys_GetEvent(void)
 
     MSG_Init(&netmsg, sys_packetReceived, 0x4000);
     if (NET_GetPacket(&adr, &netmsg)) {
-        len = netmsg.cursize - netmsg.readcount + 12;
+        /* the whole netadr_t, port included (it sits at 0x12), then the data */
+        len = netmsg.cursize - netmsg.readcount + (int)sizeof(netadr_t);
         byte *buf = (byte *)Z_MallocInternal(len);
-        memcpy(buf, &adr, 12);
-        memcpy(buf + 12, netmsg.data + netmsg.readcount, netmsg.cursize - netmsg.readcount);
+        memcpy(buf, &adr, sizeof(netadr_t));
+        memcpy(buf + sizeof(netadr_t), netmsg.data + netmsg.readcount, netmsg.cursize - netmsg.readcount);
         Sys_QueEventInternal(0, (sysEventType_t)5, 0, 0, len, buf);
     }
 

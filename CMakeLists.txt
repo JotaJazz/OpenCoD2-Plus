@@ -438,6 +438,11 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
 
+# 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat
+# fails with EOVERFLOW on file systems with large inodes (Windows drives under
+# WSL), and no .iwd is found.
+add_compile_definitions(_FILE_OFFSET_BITS=64)
+
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 
 add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_GUARDED})

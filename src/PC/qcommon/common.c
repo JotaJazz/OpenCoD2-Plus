@@ -1481,7 +1481,7 @@ int Com_EventLoop(void)
         case 5:
         {
             netadr_t *from = (netadr_t *)evPtr;
-            int dataLen = evPtrLength - 12;
+            int dataLen = evPtrLength - (int)sizeof(netadr_t);
             if (dataLen > buf.maxsize) {
                 Z_FreeInternal(evPtr);
                 Com_Printf("Com_EventLoop: oversize packet\n");
@@ -1489,7 +1489,7 @@ int Com_EventLoop(void)
             }
             memcpy(&evFrom, from, sizeof(netadr_t));
             buf.cursize = dataLen;
-            memcpy(buf.data, (char *)evPtr + 12, dataLen);
+            memcpy(buf.data, (char *)evPtr + sizeof(netadr_t), dataLen);
             Z_FreeInternal(evPtr);
             CL_SwitchToLocalClient(0);
             if (com_sv_running->current.enabled)
