@@ -18,7 +18,6 @@ BG_CalculateWeaponPosition_Sway v0 4,4,4,4,4,4
 BG_CanItemBeGrabbed i4 4,4,4
 BG_ClearWeaponDef v0 -
 BG_ClipForWeapon i4 4
-BG_CreateRotationMatrix missing
 BG_DoesWeaponNeedSlot i1 4
 BG_DoesWeaponRequireSlot i1 4
 BG_EvaluateTrajectory v0 4,4,4
@@ -52,9 +51,7 @@ BG_PlayerStateToEntityState v0 4,4,4,4
 BG_PlayerTouchesItem i4 4,4,4
 BG_Player_DoControllers v0 4,4,4,4,4
 BG_RegisterDvars v0 -
-BG_RotatePoint missing
 BG_TakePlayerWeapon i4 4,4
-BG_TransposeMatrix missing
 BG_UpdatePlayerDObj v0 4,4,4,4
 BG_WeaponAmmo i4 4,4
 BG_WeaponFireRecoil v0 4,4,4
@@ -102,9 +99,6 @@ ColorIndex i4 4
 Com_AbortDObj v0 -
 Com_AddToString i4 4,4,4,4,4
 Com_BeginRedirect v0 4,4,4
-Com_BitCheck missing
-Com_BitClear missing
-Com_BitSet missing
 Com_DPrintf v0 4 ...
 Com_DvarDump v0 4
 Com_EndRedirect v0 -
@@ -175,12 +169,12 @@ Dvar_SetInt v0 4,4
 Dvar_SetString v0 4,4
 Dvar_SetStringByName v0 4,4
 ExpandBoundsToWidth v0 4,4
+FS_BuildOSPath v0 4,4,4,4
 FS_ClearIwdReferences v0 -
 FS_ConvertPath v0 4
 FS_FreeFile v0 4
 FS_GetFileList i4 4,4,4,4,4
 FS_GetMapBaseName i4 4
-FS_HomeFileLength missing
 FS_LoadedIwdChecksums i4 -
 FS_LoadedIwdNames i4 -
 FS_LoadedIwdPureChecksums i4 -
@@ -189,7 +183,6 @@ FS_ReadFile i4 4,4
 FS_ReferencedIwdChecksums i4 -
 FS_ReferencedIwdNames i4 -
 FS_Restart v0 4
-FS_RotateHomeFile missing
 FS_SV_FOpenFileRead i4 4,4
 FS_Shutdown v0 4
 FS_Write i4 4,4,4
@@ -208,7 +201,7 @@ GetBspExtension i4 -
 Hunk_AllocAlignInternal i4 4,4
 Hunk_AllocLowAlignInternal i4 4,4
 Hunk_AllocateTempMemoryInternal i4 4
-Hunk_ClearLow missing
+Hunk_ClearLow v0 4
 Hunk_FreeTempMemory v0 4
 Hunk_OverrideDataForFile v0 4,4,4
 I_CleanChar i4 4
@@ -287,7 +280,6 @@ RadiusFromBounds f4 4,4
 RadiusFromBounds2D f4 4,4
 Rand_Init v0 4
 RotationToYaw f4 4
-RoundFloatArray missing
 SV_AddTestClient i4 -
 SV_ClientHasClientMuted i1 4,4
 SV_ClientWantsVoiceData i1 4
@@ -358,18 +350,13 @@ ShrinkBoundsToHeight v0 4,4
 Swap_Init v0 -
 Sys_IsLANAddress i4 20
 Vec2DistanceSq f4 4,4
-Vec2Length missing
-Vec2LengthSq missing
 Vec2Normalize f4 4
 Vec3Cross v0 4,4,4
 Vec3Distance f4 4,4
 Vec3DistanceSq f4 4,4
-Vec3Lerp missing
 Vec3Normalize f4 4
 Vec3NormalizeTo f4 4,4
 VectorAngleMultiply v0 4,4
-VectorLength missing
-VectorLengthSquared missing
 XAnimAbort v0 -
 XAnimCalcAbsDelta v0 4,4,4,4
 XAnimCalcDelta v0 4,4,4,4,4

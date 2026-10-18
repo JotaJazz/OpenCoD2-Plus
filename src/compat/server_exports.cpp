@@ -4,6 +4,7 @@
 #include "../server/server.h"
 #include "../game/g_shared.h"
 #include "script_bridge.h"
+#include "server_decls.h"
 
 extern "C" void cod2x_SV_AddDedicatedCommands(void) __asm__(COD2_SYM("SV_AddDedicatedCommands"));
 void cod2x_SV_AddDedicatedCommands(void)

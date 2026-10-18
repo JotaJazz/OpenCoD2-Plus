@@ -5,8 +5,11 @@
 #include "../script/script_public.h"
 #include "../server/server.h"
 #include "../game/g_shared.h"
+#include "server_decls.h"
 
 extern searchpath_t *fs_searchpaths;  // src/PC/universal/com_files.c
+extern char fs_gamedir[];             // src/PC/universal/com_files.c
+extern dvar_t *fs_homepath;           // src/PC/universal/com_files.c
 
 // universal/q_shared.cpp
 short BigShort( short l )
@@ -34,6 +37,155 @@ int I_strcmpConstantTime(const char *s0, const char *s1)
 	}
 
 	return diff;
+}
+
+// universal/q_shared.cpp
+bool Com_BitCheck( const int array[], int bitNum )
+{
+	return (array[bitNum >> 5] >> (bitNum & 31)) & 1;
+}
+
+// universal/q_shared.cpp
+void Com_BitSet( int array[], int bitNum )
+{
+	array[bitNum >> 5] |= 1 << (bitNum & 31);
+}
+
+// universal/q_shared.cpp
+void Com_BitClear( int array[], int bitNum )
+{
+	array[bitNum >> 5] &= ~(1 << (bitNum & 31));
+}
+
+// universal/com_math.cpp
+void VectorInverse( vec3_t v )
+{
+	v[0] = -v[0];
+	v[1] = -v[1];
+	v[2] = -v[2];
+}
+
+// universal/com_math.cpp
+vec_t VectorLength( const vec3_t v )
+{
+	return I_sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+}
+
+// universal/com_math.cpp
+vec_t Vec2Length( const vec2_t v )
+{
+	return I_sqrt( v[0] * v[0] + v[1] * v[1] );
+}
+
+// universal/com_math.cpp
+vec_t Vec2LengthSq( const vec2_t v )
+{
+	return ( v[0] * v[0] + v[1] * v[1] );
+}
+
+// universal/com_math.cpp
+vec_t VectorLengthSquared( const vec3_t v )
+{
+	return ( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+}
+
+// universal/com_math.cpp
+void Vec3Lerp(const vec3_t start, const vec3_t end, float fraction, vec3_t endpos)
+{
+	endpos[0] = (end[0] - start[0]) * fraction + start[0];
+	endpos[1] = (end[1] - start[1]) * fraction + start[1];
+	endpos[2] = (end[2] - start[2]) * fraction + start[2];
+}
+
+// universal/com_math.cpp
+void RoundFloatArray(vec3_t x, vec3_t y)
+{
+	int i;
+
+	for ( i = 0; i < 3; i++ )
+	{
+		if ( x[i] < y[i] )
+			x[i] = ceil(x[i]);
+		else
+			x[i] = floor(x[i]);
+	}
+}
+
+// bgame/bg_misc.cpp
+void BG_CreateRotationMatrix( const vec3_t angles, vec3_t matrix[3] )
+{
+	AngleVectors( angles, matrix[0], matrix[1], matrix[2] );
+	VectorInverse( matrix[1] );
+}
+
+// bgame/bg_misc.cpp
+void BG_TransposeMatrix( const vec3_t matrix[3], vec3_t transpose[3] )
+{
+	int i, j;
+	for ( i = 0; i < 3; i++ )
+	{
+		for ( j = 0; j < 3; j++ )
+		{
+			transpose[i][j] = matrix[j][i];
+		}
+	}
+}
+
+// bgame/bg_misc.cpp
+void BG_RotatePoint( vec3_t point, const vec3_t matrix[3] )
+{
+	vec3_t tvec;
+
+	VectorCopy( point, tvec );
+	point[0] = DotProduct( matrix[0], tvec );
+	point[1] = DotProduct( matrix[1], tvec );
+	point[2] = DotProduct( matrix[2], tvec );
+}
+
+// universal/com_files.cpp
+void FS_RotateHomeFile(const char *filename, int count)
+{
+	char from[MAX_OSPATH];
+	char to[MAX_OSPATH];
+	int i;
+
+	if (count <= 0)
+	{
+		return;
+	}
+
+	FS_BuildOSPath(fs_homepath->current.string, fs_gamedir, va("%s.%i", filename, count), from);
+	remove(from);
+
+	for (i = count - 1; i >= 0; i--)
+	{
+		FS_BuildOSPath(fs_homepath->current.string, fs_gamedir, i ? va("%s.%i", filename, i) : filename, from);
+		FS_BuildOSPath(fs_homepath->current.string, fs_gamedir, va("%s.%i", filename, i + 1), to);
+		rename(from, to);
+	}
+}
+
+// universal/com_files.cpp: the engine has no FS_FileOpenReadBinary or
+// FS_FileGetFileSize, so stdio stands in.
+int FS_HomeFileLength(const char *filename)
+{
+	char ospath[MAX_OSPATH];
+	FILE *f;
+	int len;
+
+	FS_BuildOSPath(fs_homepath->current.string, fs_gamedir, filename, ospath);
+	f = fopen(ospath, "rb");
+
+	if (!f)
+	{
+		return -1;
+	}
+
+	fseek(f, 0, SEEK_END);
+	len = ftell(f);
+	fclose(f);
+
+	return len;
 }
 
 // universal/com_math.cpp
@@ -157,27 +309,6 @@ qboolean FS_VerifyIwd( const char *iwd )
 		}
 	}
 	return qfalse;
-}
-
-// game/g_load_utils.cpp
-qboolean G_GetEntityToken( char *buffer, int bufferSize )
-{
-	const char* s;
-
-	// Parse the next token from sv.entityParsePoint
-	s = Com_Parse(&sv.entityParsePoint);
-
-	// Copy the parsed token into the destination buffer
-	Q_strncpyz(buffer, s, bufferSize);
-
-	// If sv.entityParsePoint is NULL and the parsed token is empty,
-	// we've reached the end (return qfalse), otherwise qtrue
-	if (!sv.entityParsePoint && !s[0])
-	{
-		return qfalse;
-	}
-
-	return qtrue;
 }
 
 // qcommon/msg_mp.cpp: the engine's versions take no buffer and return a

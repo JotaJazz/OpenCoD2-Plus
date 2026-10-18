@@ -1041,7 +1041,9 @@ unsigned char lit8_00307fb0[1] = {0};
 unsigned char lit8_00307fb8[1] = {0};
 unsigned char lit8_00307fc0[1] = {0};
 unsigned char str_002157b8[1] = {0};
+#if !COD2_PLUS_SERVER  /* defined by src/bgame/bg_misctables.cpp */
 unsigned char bg_numItems[1] = {0};
+#endif
 unsigned char faceAxis[1] = {0};
 unsigned char iSlotPreferenceOrder[1] = {0};
 /* refEntIsInWorldSpace: defined by typed C TU; skipped. */

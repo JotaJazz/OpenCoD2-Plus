@@ -119,10 +119,11 @@ function(cod2_plus_script)
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server and game
-# sources and their bridge to the engine (src/compat/server_*.cpp).
+# sources, the game's item table (bgame/bg_misctables.cpp), and their bridge to
+# the engine (src/compat/server_*.cpp).
 function(cod2_plus_server)
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
-    ${COD2_SRC_DIR}/compat/server_*.cpp)
+    ${COD2_SRC_DIR}/bgame/bg_misctables.cpp ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
@@ -583,9 +584,9 @@ if(COD2_PLUS_SERVER)
   set(COD2_SERVER_MP_C ${ALL_C})
   list(FILTER COD2_SERVER_MP_C INCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
   list(FILTER ALL_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
-  list(REMOVE_ITEM ALL_C src/blobs/bss.c)
-  list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c)
-  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c)
+  list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/bgame/bg_misc.c)
+  list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
+  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c src/PC/bgame/bg_misc.c)
 endif()
 
 # 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat

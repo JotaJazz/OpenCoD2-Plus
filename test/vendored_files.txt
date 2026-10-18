@@ -74,3 +74,4 @@ src/game/g_weapon_load_obj.cpp
 src/game/g_weapon_mp.cpp
 src/game/player_use_mp.cpp
 src/game/scr_const_mp.cpp
+src/bgame/bg_misctables.cpp

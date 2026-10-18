@@ -1544,9 +1544,11 @@ struct _d32_controller_names __attribute__((aligned(4))) controller_names = {
 /* kb: defined by typed C TU; skipped. */
 /* staticNULL: defined by typed C TU; skipped. */
 /* playerMaxs: migrated to home .c (plan 4g); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 struct _d32_playerMins __attribute__((aligned(4))) playerMins = {
     { 0, 0, 112, 193, 0, 0, 112, 193, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* endOffset: defined by typed C TU; skipped. */
 struct _d32_startOffset __attribute__((aligned(4))) startOffset = {
     { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -1580,9 +1582,11 @@ struct _d32_actorLocationalMins __attribute__((aligned(4))) actorLocationalMins 
 #endif
 /* modNames: defined by typed C TU; skipped. */
 /* riflePriorityMap: migrated to home .c (plan 4g); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 struct _d32_bulletPriorityMap __attribute__((aligned(4))) bulletPriorityMap = {
     { 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* g_HitLocNames: defined by typed C TU; skipped. */
 struct _d32_lastLeadTeam __attribute__((aligned(4))) lastLeadTeam = {
     { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }

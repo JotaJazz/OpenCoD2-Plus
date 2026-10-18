@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 BY_HAND = {
     'AngleNormalize360': 'f4 4',                # src/PC/universal/com_math.c
     'Com_AbortDObj': 'v0 -',                    # src/PC/qcommon/dobj_management.c
+    'Hunk_ClearLow': 'v0 4',                    # Hunk_ClearToMarkLow, src/PC/universal/com_memory.c
     'MatrixTransformVector': 'v0 4,4,4',        # src/PC/universal/com_math.c
 }
 

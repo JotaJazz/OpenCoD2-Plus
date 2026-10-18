@@ -388,7 +388,9 @@ unsigned char g_sv_skel_memory_start[128];
 unsigned char g_sv_skel_memory[262144];
 #endif
 unsigned char warnCount_00ec7000[128];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 const dvar_t *g_gametype;
+#endif
 unsigned char g_mapname[64];
 BSSINT g_ingameMenusLoaded;
 unsigned char ui_serverFilterType[28];
@@ -484,14 +486,20 @@ unsigned char g_load[1600];
 unsigned char menuParseKeywordHash[2048];
 unsigned char menuBuf1[4096];
 unsigned char string_00f3b9c0[4160];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 unsigned char g_clients[665856];
+#endif
 BSSINT hud_flash_period_offhand;
 unsigned char hud_flash_time_offhand[124];
 unsigned char cached_models[1024];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 unsigned char pushed[32768];
 unsigned char pushed_p[128];
+#endif
 turretInfo_s turretInfo[32];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 unsigned char g_HitLocConstNames[128];
+#endif
 unsigned char numIPFilters[32];
 unsigned char ipFilters[8288];
 unsigned char str_00fea180[256];
@@ -1406,10 +1414,12 @@ const dvar_t *hud_fade_stance;
 const dvar_t *hud_fade_compass;
 const dvar_t *hud_fade_healthbar;
 const dvar_t *hud_fade_ammodisplay;
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 scr_data_t g_scr_data;   /* x86 blob 14080; x64 sizeof(scr_data_t)=14328 -> overflow */
 #else
 scr_data_t g_scr_data;
+#endif
 #endif
 /* consumer keywordHash_t *itemParseKeywordHash[512]: x86-sized pointer-array blob, too small on x64 */
 #if defined(COD2_X64) || defined(__x86_64__)
@@ -1417,6 +1427,7 @@ keywordHash_t *itemParseKeywordHash[512];
 #else
 keywordHash_t *itemParseKeywordHash[512];
 #endif
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 const dvar_t *g_dumpAnims;
 const dvar_t *g_voteAbstainWeight;
 const dvar_t *g_oldVoting;
@@ -1427,7 +1438,9 @@ const dvar_t *player_meleeRange;
 const dvar_t *g_friendlyNameDist;
 const dvar_t *g_friendlyfireDist;
 const dvar_t *g_debugLocDamage;
+#endif
 const dvar_t *g_NoScriptSpam;
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 const dvar_t *g_TeamColor_Axis;
 const dvar_t *g_TeamColor_Allies;
 const dvar_t *g_TeamName_Axis;
@@ -1438,6 +1451,7 @@ const dvar_t *g_ScoresBanner_Axis;
 const dvar_t *g_ScoresBanner_Allies;
 const dvar_t *g_smoothClients;
 const dvar_t *g_banIPs;
+#endif
 #ifdef __EMSCRIPTEN__
 
 extern int g_banIPs_dvar __attribute__((alias("g_banIPs")));
@@ -1448,6 +1462,7 @@ COD2_ALT("g_banIPs_dvar", "g_banIPs")
 #else
 __asm__(".globl g_banIPs_dvar\n.set g_banIPs_dvar, g_banIPs\n");
 #endif
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 const dvar_t *g_listEntity;
 const dvar_t *g_deadChat;
 const dvar_t *g_allowVote;
@@ -1479,14 +1494,17 @@ const dvar_t *g_speed;
 const dvar_t *g_dedicated;
 const dvar_t *g_maxclients;
 const dvar_t *g_password;
+#endif
 unsigned char g_gametype_017e1a58[40];
 /* 573440 = 1024 * 560 (x86 sizeof(gentity_s)). On x64 the struct is larger, so the blob must grow
    to hold all 1024 entity slots (indices up to 0x3FF incl. the world entity 1022) -- otherwise high
    indices overflow into adjacent BSS. BSS, so re-sizing is binary-compatible. */
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct gentity_s g_entities[1024];
 #else
 unsigned char g_entities[573440];
+#endif
 #endif
 /* 817664 = x86 sizeof(bgs_t). On x64 bgs_t is larger (embedded animScriptData and
    clientinfo[] hold pointers that grow 4->8), so as a fixed x86-sized blob its high
@@ -1510,16 +1528,22 @@ bgs_t level_bgs;
    the same class as the level_bgs->g_entities bug. (This is NOT the mp_breakout/
    mp_rhine weapon-precache crash; that is scrVmPub->bg_weaponDefs above.) Retype so
    the compiler sizes it for the arch. BSS, so binary-compatible on x86. */
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct level_locals_t level;
 #else
 struct level_locals_t level;
 #endif
+#endif
 qboolean itemRegistered[256];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 game_hudelem_t g_hudelems[1024];
+#endif
 unsigned char __ZN12UI_Component1gE[224];
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 float g_fHitLocDamageMult[19];
 scr_const_t scr_const;
+#endif
 struct lagometer_t lagometer;
 int cl_connectedToPureServer;
 BSSINT removeMeWhenMPStopsCrashingInHere;

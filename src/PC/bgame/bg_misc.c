@@ -1164,4 +1164,6 @@ qboolean BG_PlayerTouchesItem(playerState_t *ps, entityState_t *item, int atTime
     return 1;
 }
 
+#if !COD2_PLUS_SERVER  /* defined by src/game */
 const int singleClientEvents[7] = { 140, 141, 142, 143, 185, 186, -1 }; /* truncated 40->7 (blob over-capture) */
+#endif
