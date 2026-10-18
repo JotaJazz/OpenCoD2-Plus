@@ -376,6 +376,9 @@ void Com_Error(errorParm_t code, const char *fmt, ...)
     }
 
     errorcode = code;
+    /* An rcon command redirects the output into a buffer on its own stack,
+       which the longjmp unwinds: flush it now, while it is still valid. */
+    Com_EndRedirect();
     longjmp(*(jmp_buf *)Sys_GetValue(2), -1);
 }
 
