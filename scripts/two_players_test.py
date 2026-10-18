@@ -8,7 +8,9 @@ error stop the map, and a temporary home folder, joins two
 clients of cod2client.py, has both send commands, disconnects the first one
 and joins it again, and kicks the second one with rcon. After every step the
 server must still answer getinfo; at the end its log must hold no crash
-report or script error. Exits with 0 when all of that holds.
+report or script error. g_speed set on the command line must survive the
+game's registration, and a games_mp.log under g_logRotateSize must not be
+rotated. Exits with 0 when all of that holds.
 """
 import argparse, os, re, subprocess, sys, tempfile, time
 
@@ -18,6 +20,8 @@ import cod2client, smoke_test
 
 DEFAULT_BINARY = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-linux/cod2_lnxded'}
 RCON = 'twopw'
+G_SPEED = '300'  # not the default (190)
+SMALL_LOG = 'small games log\n'
 
 
 class Run:
@@ -51,6 +55,10 @@ class Run:
     def steps(self):
         m = re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(self.port, RCON, 'sv_serverid'))
         self.server_id = int(m.group(1))
+        # the game registers g_speed after the command line set it
+        speed = re.search(r'"g_speed" is: ?"(\d+)', smoke_test.rcon(self.port, RCON, 'g_speed'))
+        self.check('g_speed keeps the command line value', speed is not None and speed.group(1) == G_SPEED,
+                   speed.group(1) if speed else 'no reply')
         a = self.join('alpha')
         if a:
             a.read_frames(1.0)
@@ -90,11 +98,17 @@ def main():
 
     with tempfile.TemporaryDirectory(prefix='cod2_two_') as home:
         log_path = os.path.join(home, 'server.log')
+        # a games_mp.log under g_logRotateSize (1 MB), which must not rotate
+        game_log = os.path.join(home, 'main', 'games_mp.log')
+        os.makedirs(os.path.dirname(game_log))
+        with open(game_log, 'w') as f:
+            f.write(SMALL_LOG)
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(
                 [binary, '+set', 'fs_basepath', os.path.abspath(args.game_dir), '+set', 'fs_homepath', home,
                  '+set', 'dedicated', '1', '+set', 'developer', '1', '+set', 'net_port', str(port), '+set', 'sv_cracked', '1',
-                 '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'tdm', '+map', args.map],
+                 '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'tdm', '+set', 'g_speed', G_SPEED,
+                 '+set', 'g_logRotate', '2', '+set', 'g_logRotateSize', '1', '+map', args.map],
                 stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=home)
         run = Run(port, args.protocol, server)
         try:
@@ -111,6 +125,8 @@ def main():
                 except subprocess.TimeoutExpired:
                     server.kill()
         text = open(log_path, encoding='latin-1').read()
+        run.check('small games_mp.log not rotated', not os.path.exists(game_log + '.1')
+                  and open(game_log, encoding='latin-1').read().startswith(SMALL_LOG))
         run.check('no crash report', 'CRASH REPORT' not in text)
         run.check('no script error', 'script runtime error' not in text)
         if run.failures:
