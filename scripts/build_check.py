@@ -9,7 +9,9 @@ cross-compile. The engine compiles as C++ unless --c is given; with --c,
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
 distributions than the build machine) and the dedicated server needs none of
-the client's libraries (CLIENT_LIBRARIES).
+the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
+server must get no C name both from CoD2rev-Plus and from the engine
+(scripts/check_duplicates.py).
 """
 import argparse, os, re, subprocess, sys
 
@@ -65,6 +67,16 @@ def client_libraries(build_dir):
     return [f'cod2_lnxded: needs {lib}' for lib in needed if lib.startswith(CLIENT_LIBRARIES)]
 
 
+def duplicates(variant, build_dir):
+    """The C names the dedicated server gets both from CoD2rev-Plus and from the engine."""
+    target, nm = ('cod2_win32_ded', 'i686-w64-mingw32-nm') if variant == 'mingw' else ('cod2_lnxded', 'nm')
+    if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
+        return []
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_duplicates.py'), build_dir, target,
+                          '--nm', nm], capture_output=True, text=True)
+    return [] if run.returncode == 0 else [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
@@ -81,9 +93,11 @@ def main():
     failed = False
     for variant in variants:
         errors = build(variant, extra)
+        build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):
-            build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
+        if not errors:
+            errors = duplicates(variant, build_dir)
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')
