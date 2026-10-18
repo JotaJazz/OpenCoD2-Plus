@@ -6,7 +6,8 @@
 Starts the server in LAN mode with a temporary home folder and loads maps
 through rcon, alternating map_restart and map between two maps, N times
 (8 by default). After each load the server must answer getinfo with the
-map it was asked for; at the end its log must hold no crash report. Exits
+map it was asked for; at the end its log must hold no crash report and its
+game log must be in the home folder. Exits
 with 0 when all of that holds.
 """
 import argparse, os, shutil, subprocess, sys, tempfile, time
@@ -85,6 +86,8 @@ def main():
             shutil.copy(log_path, args.log)
         text = open(log_path, encoding='latin-1').read()
         check('no crash report', 'CRASH REPORT' not in text)
+        # the game log goes to fs_homepath/main, which the server must create
+        check('games_mp.log written', os.path.exists(os.path.join(home, 'main', 'games_mp.log')))
         if failures:
             print('\n--- last lines of the server log ---')
             print('\n'.join(l for l in text.splitlines()[-60:] if not l.startswith(('[ckpt]', '[scan'))))

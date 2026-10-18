@@ -284,10 +284,12 @@ qboolean FS_CreatePath(char *OSPath)
     }
 
     for (ofs = OSPath + 1; *ofs; ofs++) {
-        if (*ofs == '\\') {   /* OSPath is Windows-native, so the separator is '\', not '/' */
+        /* FS_BuildOSPath joins with '/'; a Windows path may also hold '\'. */
+        if (*ofs == '/' || *ofs == '\\') {
+            char sep = *ofs;
             *ofs = '\0';
             Sys_Mkdir(OSPath);
-            *ofs = '\\';
+            *ofs = sep;
         }
     }
     return 0;
