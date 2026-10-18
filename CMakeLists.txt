@@ -503,11 +503,16 @@ set(COD2_LINK_EXTRA
   -Wl,--defsym,g_time=imp_level_bgs
   -Wl,--defsym,g_time_ptr=imp_bgs)
 
-set(COD2_LIBS GL X11 m pthread dl z ${COD2_LIBSTDCPP} ${SDL2_LIBRARIES})
+# The dedicated server gets src/unix/linux_ded_stubs.c instead of the
+# client's libraries (COD2_CLIENT_LIBS: GL, X11, SDL2 and curl), so it runs on
+# a machine without them.
+set(COD2_DED_LIBS m pthread dl z ${COD2_LIBSTDCPP})
+set(COD2_CLIENT_LIBS GL X11 ${SDL2_LIBRARIES})
 if(COD2_WWWDL_LIBS)
   separate_arguments(COD2_WWWDL_LIST UNIX_COMMAND "${COD2_WWWDL_LIBS}")
-  list(APPEND COD2_LIBS ${COD2_WWWDL_LIST})
+  list(APPEND COD2_CLIENT_LIBS ${COD2_WWWDL_LIST})
 endif()
+set(COD2_LIBS ${COD2_CLIENT_LIBS} ${COD2_DED_LIBS})
 
 file(GLOB_RECURSE COD2_PC_C    CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/PC/*.c")
 file(GLOB_RECURSE COD2_MAC_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/Mac/*.c")
@@ -560,9 +565,10 @@ add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED})
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_GUARDED}
+  src/unix/linux_ded_stubs.c)
 target_compile_definitions(cod2_lnxded PRIVATE DEDICATED)
-target_link_libraries(cod2_lnxded PRIVATE ${COD2_LIBS})
+target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})
 target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})
 
 set_target_properties(cod2_linux cod2_lnxded PROPERTIES

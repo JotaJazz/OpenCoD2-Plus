@@ -8,13 +8,15 @@ cross-compile. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
-distributions than the build machine).
+distributions than the build machine) and the dedicated server needs none of
+the client's libraries (CLIENT_LIBRARIES).
 """
 import argparse, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
 LINUX_BINARIES = ('cod2_linux', 'cod2_lnxded')
+CLIENT_LIBRARIES = ('libGL.', 'libX11.', 'libSDL2', 'libcurl.')
 
 VARIANTS = {
     'linux': [],
@@ -53,6 +55,16 @@ def glibc_too_new(build_dir):
     return found
 
 
+def client_libraries(build_dir):
+    """'cod2_lnxded: needs libX' for each client library the dedicated server links."""
+    path = os.path.join(build_dir, 'cod2_lnxded')
+    if not os.path.exists(path):
+        return []
+    out = subprocess.run(['readelf', '-d', path], capture_output=True, text=True).stdout
+    needed = re.findall(r'\(NEEDED\)\s+Shared library: \[([^\]]+)\]', out)
+    return [f'cod2_lnxded: needs {lib}' for lib in needed if lib.startswith(CLIENT_LIBRARIES)]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
@@ -70,7 +82,8 @@ def main():
     for variant in variants:
         errors = build(variant, extra)
         if not errors and variant.startswith('linux'):
-            errors = glibc_too_new(os.path.join(ROOT, 'build', 'check-' + variant))
+            build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
+            errors = glibc_too_new(build_dir) + client_libraries(build_dir)
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')
