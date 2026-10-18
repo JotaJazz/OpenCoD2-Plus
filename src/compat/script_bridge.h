@@ -5,6 +5,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <utility>
+#include <type_traits>
+#include <stdint.h>
+#include <string.h>
+
+/* Exports must return what the engine reads from eax: a scalar or nothing. */
+template<class T> struct cod2_bridge_returns_scalar
+	: std::integral_constant<bool, std::is_scalar<T>::value || std::is_void<T>::value> {};
 
 /* The assembler name of a C symbol: MinGW (i686) prefixes an underscore. */
 #define COD2_SYM_STR2(x) #x

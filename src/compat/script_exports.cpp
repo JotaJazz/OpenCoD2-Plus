@@ -4,108 +4,142 @@
 #include "script_bridge.h"
 #include "script_decls.h"
 
+static_assert(cod2_bridge_returns_scalar<decltype(MT_Alloc(std::declval<int>()))>::value, "MT_Alloc returns a struct");
 extern "C" decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0) __asm__(COD2_SYM("MT_Alloc"));
 decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0) { return MT_Alloc(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(MT_DumpTree())>::value, "MT_DumpTree returns a struct");
 extern "C" decltype(MT_DumpTree()) cod2x_MT_DumpTree() __asm__(COD2_SYM("MT_DumpTree"));
 decltype(MT_DumpTree()) cod2x_MT_DumpTree() { return MT_DumpTree(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(MT_Free(std::declval<void*>(), std::declval<int>()))>::value, "MT_Free returns a struct");
 extern "C" decltype(MT_Free(std::declval<void*>(), std::declval<int>())) cod2x_MT_Free(void* a0, int a1) __asm__(COD2_SYM("MT_Free"));
 decltype(MT_Free(std::declval<void*>(), std::declval<int>())) cod2x_MT_Free(void* a0, int a1) { return MT_Free(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_Abort())>::value, "Scr_Abort returns a struct");
 extern "C" decltype(Scr_Abort()) cod2x_Scr_Abort() __asm__(COD2_SYM("Scr_Abort"));
 decltype(Scr_Abort()) cod2x_Scr_Abort() { return Scr_Abort(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddArray())>::value, "Scr_AddArray returns a struct");
 extern "C" decltype(Scr_AddArray()) cod2x_Scr_AddArray() __asm__(COD2_SYM("Scr_AddArray"));
 decltype(Scr_AddArray()) cod2x_Scr_AddArray() { return Scr_AddArray(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddArrayStringIndexed(std::declval<unsigned int>()))>::value, "Scr_AddArrayStringIndexed returns a struct");
 extern "C" decltype(Scr_AddArrayStringIndexed(std::declval<unsigned int>())) cod2x_Scr_AddArrayStringIndexed(unsigned int a0) __asm__(COD2_SYM("Scr_AddArrayStringIndexed"));
 decltype(Scr_AddArrayStringIndexed(std::declval<unsigned int>())) cod2x_Scr_AddArrayStringIndexed(unsigned int a0) { return Scr_AddArrayStringIndexed(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddBool(std::declval<bool>()))>::value, "Scr_AddBool returns a struct");
 extern "C" decltype(Scr_AddBool(std::declval<bool>())) cod2x_Scr_AddBool(bool a0) __asm__(COD2_SYM("Scr_AddBool"));
 decltype(Scr_AddBool(std::declval<bool>())) cod2x_Scr_AddBool(bool a0) { return Scr_AddBool(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddClassField(std::declval<int>(), std::declval<char const*>(), std::declval<unsigned int>()))>::value, "Scr_AddClassField returns a struct");
 extern "C" decltype(Scr_AddClassField(std::declval<int>(), std::declval<char const*>(), std::declval<unsigned int>())) cod2x_Scr_AddClassField(int a0, char const* a1, unsigned int a2) __asm__(COD2_SYM("Scr_AddClassField"));
 decltype(Scr_AddClassField(std::declval<int>(), std::declval<char const*>(), std::declval<unsigned int>())) cod2x_Scr_AddClassField(int a0, char const* a1, unsigned int a2) { return Scr_AddClassField(a0, a1, a2); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddConstString(std::declval<unsigned int>()))>::value, "Scr_AddConstString returns a struct");
 extern "C" decltype(Scr_AddConstString(std::declval<unsigned int>())) cod2x_Scr_AddConstString(unsigned int a0) __asm__(COD2_SYM("Scr_AddConstString"));
 decltype(Scr_AddConstString(std::declval<unsigned int>())) cod2x_Scr_AddConstString(unsigned int a0) { return Scr_AddConstString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddEntityNum(std::declval<int>(), std::declval<int>()))>::value, "Scr_AddEntityNum returns a struct");
 extern "C" decltype(Scr_AddEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_AddEntityNum(int a0, int a1) __asm__(COD2_SYM("Scr_AddEntityNum"));
 decltype(Scr_AddEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_AddEntityNum(int a0, int a1) { return Scr_AddEntityNum(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddExecThread(std::declval<int>(), std::declval<unsigned int>()))>::value, "Scr_AddExecThread returns a struct");
 extern "C" decltype(Scr_AddExecThread(std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_AddExecThread(int a0, unsigned int a1) __asm__(COD2_SYM("Scr_AddExecThread"));
 decltype(Scr_AddExecThread(std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_AddExecThread(int a0, unsigned int a1) { return Scr_AddExecThread(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddFields(std::declval<char const*>(), std::declval<char const*>()))>::value, "Scr_AddFields returns a struct");
 extern "C" decltype(Scr_AddFields(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_AddFields(char const* a0, char const* a1) __asm__(COD2_SYM("Scr_AddFields"));
 decltype(Scr_AddFields(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_AddFields(char const* a0, char const* a1) { return Scr_AddFields(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddFloat(std::declval<float>()))>::value, "Scr_AddFloat returns a struct");
 extern "C" decltype(Scr_AddFloat(std::declval<float>())) cod2x_Scr_AddFloat(float a0) __asm__(COD2_SYM("Scr_AddFloat"));
 decltype(Scr_AddFloat(std::declval<float>())) cod2x_Scr_AddFloat(float a0) { return Scr_AddFloat(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddInt(std::declval<int>()))>::value, "Scr_AddInt returns a struct");
 extern "C" decltype(Scr_AddInt(std::declval<int>())) cod2x_Scr_AddInt(int a0) __asm__(COD2_SYM("Scr_AddInt"));
 decltype(Scr_AddInt(std::declval<int>())) cod2x_Scr_AddInt(int a0) { return Scr_AddInt(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddObject(std::declval<unsigned int>()))>::value, "Scr_AddObject returns a struct");
 extern "C" decltype(Scr_AddObject(std::declval<unsigned int>())) cod2x_Scr_AddObject(unsigned int a0) __asm__(COD2_SYM("Scr_AddObject"));
 decltype(Scr_AddObject(std::declval<unsigned int>())) cod2x_Scr_AddObject(unsigned int a0) { return Scr_AddObject(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddString(std::declval<char const*>()))>::value, "Scr_AddString returns a struct");
 extern "C" decltype(Scr_AddString(std::declval<char const*>())) cod2x_Scr_AddString(char const* a0) __asm__(COD2_SYM("Scr_AddString"));
 decltype(Scr_AddString(std::declval<char const*>())) cod2x_Scr_AddString(char const* a0) { return Scr_AddString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddStruct())>::value, "Scr_AddStruct returns a struct");
 extern "C" decltype(Scr_AddStruct()) cod2x_Scr_AddStruct() __asm__(COD2_SYM("Scr_AddStruct"));
 decltype(Scr_AddStruct()) cod2x_Scr_AddStruct() { return Scr_AddStruct(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddUndefined())>::value, "Scr_AddUndefined returns a struct");
 extern "C" decltype(Scr_AddUndefined()) cod2x_Scr_AddUndefined() __asm__(COD2_SYM("Scr_AddUndefined"));
 decltype(Scr_AddUndefined()) cod2x_Scr_AddUndefined() { return Scr_AddUndefined(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AddVector(std::declval<float const*>()))>::value, "Scr_AddVector returns a struct");
 extern "C" decltype(Scr_AddVector(std::declval<float const*>())) cod2x_Scr_AddVector(float const* a0) __asm__(COD2_SYM("Scr_AddVector"));
 decltype(Scr_AddVector(std::declval<float const*>())) cod2x_Scr_AddVector(float const* a0) { return Scr_AddVector(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AllocArray())>::value, "Scr_AllocArray returns a struct");
 extern "C" decltype(Scr_AllocArray()) cod2x_Scr_AllocArray() __asm__(COD2_SYM("Scr_AllocArray"));
 decltype(Scr_AllocArray()) cod2x_Scr_AllocArray() { return Scr_AllocArray(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AllocGameVariable())>::value, "Scr_AllocGameVariable returns a struct");
 extern "C" decltype(Scr_AllocGameVariable()) cod2x_Scr_AllocGameVariable() __asm__(COD2_SYM("Scr_AllocGameVariable"));
 decltype(Scr_AllocGameVariable()) cod2x_Scr_AllocGameVariable() { return Scr_AllocGameVariable(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_AllocString(std::declval<char const*>()))>::value, "Scr_AllocString returns a struct");
 extern "C" decltype(Scr_AllocString(std::declval<char const*>())) cod2x_Scr_AllocString(char const* a0) __asm__(COD2_SYM("Scr_AllocString"));
 decltype(Scr_AllocString(std::declval<char const*>())) cod2x_Scr_AllocString(char const* a0) { return Scr_AllocString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_BeginLoadAnimTrees(std::declval<int>()))>::value, "Scr_BeginLoadAnimTrees returns a struct");
 extern "C" decltype(Scr_BeginLoadAnimTrees(std::declval<int>())) cod2x_Scr_BeginLoadAnimTrees(int a0) __asm__(COD2_SYM("Scr_BeginLoadAnimTrees"));
 decltype(Scr_BeginLoadAnimTrees(std::declval<int>())) cod2x_Scr_BeginLoadAnimTrees(int a0) { return Scr_BeginLoadAnimTrees(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_BeginLoadScripts())>::value, "Scr_BeginLoadScripts returns a struct");
 extern "C" decltype(Scr_BeginLoadScripts()) cod2x_Scr_BeginLoadScripts() __asm__(COD2_SYM("Scr_BeginLoadScripts"));
 decltype(Scr_BeginLoadScripts()) cod2x_Scr_BeginLoadScripts() { return Scr_BeginLoadScripts(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_DumpScriptThreads())>::value, "Scr_DumpScriptThreads returns a struct");
 extern "C" decltype(Scr_DumpScriptThreads()) cod2x_Scr_DumpScriptThreads() __asm__(COD2_SYM("Scr_DumpScriptThreads"));
 decltype(Scr_DumpScriptThreads()) cod2x_Scr_DumpScriptThreads() { return Scr_DumpScriptThreads(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_EndLoadAnimTrees())>::value, "Scr_EndLoadAnimTrees returns a struct");
 extern "C" decltype(Scr_EndLoadAnimTrees()) cod2x_Scr_EndLoadAnimTrees() __asm__(COD2_SYM("Scr_EndLoadAnimTrees"));
 decltype(Scr_EndLoadAnimTrees()) cod2x_Scr_EndLoadAnimTrees() { return Scr_EndLoadAnimTrees(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_EndLoadScripts())>::value, "Scr_EndLoadScripts returns a struct");
 extern "C" decltype(Scr_EndLoadScripts()) cod2x_Scr_EndLoadScripts() __asm__(COD2_SYM("Scr_EndLoadScripts"));
 decltype(Scr_EndLoadScripts()) cod2x_Scr_EndLoadScripts() { return Scr_EndLoadScripts(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_Error(std::declval<char const*>()))>::value, "Scr_Error returns a struct");
 extern "C" decltype(Scr_Error(std::declval<char const*>())) cod2x_Scr_Error(char const* a0) __asm__(COD2_SYM("Scr_Error"));
 decltype(Scr_Error(std::declval<char const*>())) cod2x_Scr_Error(char const* a0) { return Scr_Error(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ExecEntThreadNum(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<unsigned int>()))>::value, "Scr_ExecEntThreadNum returns a struct");
 extern "C" decltype(Scr_ExecEntThreadNum(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_ExecEntThreadNum(int a0, int a1, int a2, unsigned int a3) __asm__(COD2_SYM("Scr_ExecEntThreadNum"));
 decltype(Scr_ExecEntThreadNum(std::declval<int>(), std::declval<int>(), std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_ExecEntThreadNum(int a0, int a1, int a2, unsigned int a3) { return Scr_ExecEntThreadNum(a0, a1, a2, a3); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ExecThread(std::declval<int>(), std::declval<unsigned int>()))>::value, "Scr_ExecThread returns a struct");
 extern "C" decltype(Scr_ExecThread(std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_ExecThread(int a0, unsigned int a1) __asm__(COD2_SYM("Scr_ExecThread"));
 decltype(Scr_ExecThread(std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_ExecThread(int a0, unsigned int a1) { return Scr_ExecThread(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FindAnim(std::declval<char const*>(), std::declval<char const*>(), std::declval<scr_anim_s*>(), std::declval<int>()))>::value, "Scr_FindAnim returns a struct");
 extern "C" decltype(Scr_FindAnim(std::declval<char const*>(), std::declval<char const*>(), std::declval<scr_anim_s*>(), std::declval<int>())) cod2x_Scr_FindAnim(char const* a0, char const* a1, scr_anim_s* a2, int a3) __asm__(COD2_SYM("Scr_FindAnim"));
 decltype(Scr_FindAnim(std::declval<char const*>(), std::declval<char const*>(), std::declval<scr_anim_s*>(), std::declval<int>())) cod2x_Scr_FindAnim(char const* a0, char const* a1, scr_anim_s* a2, int a3) { return Scr_FindAnim(a0, a1, a2, a3); }
 
 extern "C" decltype(Scr_FindAnimTree(std::declval<char const*>())) cod2x_Scr_FindAnimTree(char const* a0) __asm__(COD2_SYM("Scr_FindAnimTree"));
 decltype(Scr_FindAnimTree(std::declval<char const*>())) cod2x_Scr_FindAnimTree(char const* a0) { return Scr_FindAnimTree(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FindField(std::declval<char const*>(), std::declval<int*>()))>::value, "Scr_FindField returns a struct");
 extern "C" decltype(Scr_FindField(std::declval<char const*>(), std::declval<int*>())) cod2x_Scr_FindField(char const* a0, int* a1) __asm__(COD2_SYM("Scr_FindField"));
 decltype(Scr_FindField(std::declval<char const*>(), std::declval<int*>())) cod2x_Scr_FindField(char const* a0, int* a1) { return Scr_FindField(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FreeEntityList())>::value, "Scr_FreeEntityList returns a struct");
 extern "C" decltype(Scr_FreeEntityList()) cod2x_Scr_FreeEntityList() __asm__(COD2_SYM("Scr_FreeEntityList"));
 decltype(Scr_FreeEntityList()) cod2x_Scr_FreeEntityList() { return Scr_FreeEntityList(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FreeEntityNum(std::declval<int>(), std::declval<int>()))>::value, "Scr_FreeEntityNum returns a struct");
 extern "C" decltype(Scr_FreeEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_FreeEntityNum(int a0, int a1) __asm__(COD2_SYM("Scr_FreeEntityNum"));
 decltype(Scr_FreeEntityNum(std::declval<int>(), std::declval<int>())) cod2x_Scr_FreeEntityNum(int a0, int a1) { return Scr_FreeEntityNum(a0, a1); }
 
@@ -128,141 +162,192 @@ void cod2x_Scr_FreeScripts(int sys)
     }
 }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FreeThread(std::declval<unsigned short>()))>::value, "Scr_FreeThread returns a struct");
 extern "C" decltype(Scr_FreeThread(std::declval<unsigned short>())) cod2x_Scr_FreeThread(unsigned short a0) __asm__(COD2_SYM("Scr_FreeThread"));
 decltype(Scr_FreeThread(std::declval<unsigned short>())) cod2x_Scr_FreeThread(unsigned short a0) { return Scr_FreeThread(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_FreeValue(std::declval<unsigned int>()))>::value, "Scr_FreeValue returns a struct");
 extern "C" decltype(Scr_FreeValue(std::declval<unsigned int>())) cod2x_Scr_FreeValue(unsigned int a0) __asm__(COD2_SYM("Scr_FreeValue"));
 decltype(Scr_FreeValue(std::declval<unsigned int>())) cod2x_Scr_FreeValue(unsigned int a0) { return Scr_FreeValue(a0); }
 
-extern "C" decltype(Scr_GetAnim(std::declval<unsigned long>(), std::declval<XAnimTree_s*>())) cod2x_Scr_GetAnim(unsigned long a0, XAnimTree_s* a1) __asm__(COD2_SYM("Scr_GetAnim"));
-decltype(Scr_GetAnim(std::declval<unsigned long>(), std::declval<XAnimTree_s*>())) cod2x_Scr_GetAnim(unsigned long a0, XAnimTree_s* a1) { return Scr_GetAnim(a0, a1); }
+extern "C" unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree) __asm__(COD2_SYM("Scr_GetAnim"));
+unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)
+{
+    scr_anim_s anim = Scr_GetAnim(index, (XAnimTree_s *)(uintptr_t)tree);
+    unsigned int value;
+    static_assert(sizeof(anim) == sizeof(value), "scr_anim_s is 4 bytes");
+    memcpy(&value, &anim, sizeof(value));
+    return value;
+}
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetAnims(std::declval<int>()))>::value, "Scr_GetAnims returns a struct");
 extern "C" decltype(Scr_GetAnims(std::declval<int>())) cod2x_Scr_GetAnims(int a0) __asm__(COD2_SYM("Scr_GetAnims"));
 decltype(Scr_GetAnims(std::declval<int>())) cod2x_Scr_GetAnims(int a0) { return Scr_GetAnims(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetConstLowercaseString(std::declval<unsigned long>()))>::value, "Scr_GetConstLowercaseString returns a struct");
 extern "C" decltype(Scr_GetConstLowercaseString(std::declval<unsigned long>())) cod2x_Scr_GetConstLowercaseString(unsigned long a0) __asm__(COD2_SYM("Scr_GetConstLowercaseString"));
 decltype(Scr_GetConstLowercaseString(std::declval<unsigned long>())) cod2x_Scr_GetConstLowercaseString(unsigned long a0) { return Scr_GetConstLowercaseString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetConstString(std::declval<unsigned long>()))>::value, "Scr_GetConstString returns a struct");
 extern "C" decltype(Scr_GetConstString(std::declval<unsigned long>())) cod2x_Scr_GetConstString(unsigned long a0) __asm__(COD2_SYM("Scr_GetConstString"));
 decltype(Scr_GetConstString(std::declval<unsigned long>())) cod2x_Scr_GetConstString(unsigned long a0) { return Scr_GetConstString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetConstStringIncludeNull(std::declval<unsigned long>()))>::value, "Scr_GetConstStringIncludeNull returns a struct");
 extern "C" decltype(Scr_GetConstStringIncludeNull(std::declval<unsigned long>())) cod2x_Scr_GetConstStringIncludeNull(unsigned long a0) __asm__(COD2_SYM("Scr_GetConstStringIncludeNull"));
 decltype(Scr_GetConstStringIncludeNull(std::declval<unsigned long>())) cod2x_Scr_GetConstStringIncludeNull(unsigned long a0) { return Scr_GetConstStringIncludeNull(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetDebugString(std::declval<unsigned long>()))>::value, "Scr_GetDebugString returns a struct");
 extern "C" decltype(Scr_GetDebugString(std::declval<unsigned long>())) cod2x_Scr_GetDebugString(unsigned long a0) __asm__(COD2_SYM("Scr_GetDebugString"));
 decltype(Scr_GetDebugString(std::declval<unsigned long>())) cod2x_Scr_GetDebugString(unsigned long a0) { return Scr_GetDebugString(a0); }
 
 extern "C" decltype(Scr_GetEntityRef(std::declval<unsigned long>())) cod2x_Scr_GetEntityRef(unsigned long a0) __asm__(COD2_SYM("Scr_GetEntityRef"));
 decltype(Scr_GetEntityRef(std::declval<unsigned long>())) cod2x_Scr_GetEntityRef(unsigned long a0) { return Scr_GetEntityRef(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetFloat(std::declval<unsigned long>()))>::value, "Scr_GetFloat returns a struct");
 extern "C" decltype(Scr_GetFloat(std::declval<unsigned long>())) cod2x_Scr_GetFloat(unsigned long a0) __asm__(COD2_SYM("Scr_GetFloat"));
 decltype(Scr_GetFloat(std::declval<unsigned long>())) cod2x_Scr_GetFloat(unsigned long a0) { return Scr_GetFloat(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetFunctionHandle(std::declval<char const*>(), std::declval<char const*>()))>::value, "Scr_GetFunctionHandle returns a struct");
 extern "C" decltype(Scr_GetFunctionHandle(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_GetFunctionHandle(char const* a0, char const* a1) __asm__(COD2_SYM("Scr_GetFunctionHandle"));
 decltype(Scr_GetFunctionHandle(std::declval<char const*>(), std::declval<char const*>())) cod2x_Scr_GetFunctionHandle(char const* a0, char const* a1) { return Scr_GetFunctionHandle(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetInt(std::declval<unsigned long>()))>::value, "Scr_GetInt returns a struct");
 extern "C" decltype(Scr_GetInt(std::declval<unsigned long>())) cod2x_Scr_GetInt(unsigned long a0) __asm__(COD2_SYM("Scr_GetInt"));
 decltype(Scr_GetInt(std::declval<unsigned long>())) cod2x_Scr_GetInt(unsigned long a0) { return Scr_GetInt(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetIString(std::declval<unsigned int>()))>::value, "Scr_GetIString returns a struct");
 extern "C" decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) __asm__(COD2_SYM("Scr_GetIString"));
 decltype(Scr_GetIString(std::declval<unsigned int>())) cod2x_Scr_GetIString(unsigned int a0) { return Scr_GetIString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetNumParam())>::value, "Scr_GetNumParam returns a struct");
 extern "C" decltype(Scr_GetNumParam()) cod2x_Scr_GetNumParam() __asm__(COD2_SYM("Scr_GetNumParam"));
 decltype(Scr_GetNumParam()) cod2x_Scr_GetNumParam() { return Scr_GetNumParam(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetNumScriptThreads())>::value, "Scr_GetNumScriptThreads returns a struct");
 extern "C" decltype(Scr_GetNumScriptThreads()) cod2x_Scr_GetNumScriptThreads() __asm__(COD2_SYM("Scr_GetNumScriptThreads"));
 decltype(Scr_GetNumScriptThreads()) cod2x_Scr_GetNumScriptThreads() { return Scr_GetNumScriptThreads(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetNumScriptVars())>::value, "Scr_GetNumScriptVars returns a struct");
 extern "C" decltype(Scr_GetNumScriptVars()) cod2x_Scr_GetNumScriptVars() __asm__(COD2_SYM("Scr_GetNumScriptVars"));
 decltype(Scr_GetNumScriptVars()) cod2x_Scr_GetNumScriptVars() { return Scr_GetNumScriptVars(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetObject(std::declval<unsigned long>()))>::value, "Scr_GetObject returns a struct");
 extern "C" decltype(Scr_GetObject(std::declval<unsigned long>())) cod2x_Scr_GetObject(unsigned long a0) __asm__(COD2_SYM("Scr_GetObject"));
 decltype(Scr_GetObject(std::declval<unsigned long>())) cod2x_Scr_GetObject(unsigned long a0) { return Scr_GetObject(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetOffset(std::declval<unsigned int>(), std::declval<char const*>()))>::value, "Scr_GetOffset returns a struct");
 extern "C" decltype(Scr_GetOffset(std::declval<unsigned int>(), std::declval<char const*>())) cod2x_Scr_GetOffset(unsigned int a0, char const* a1) __asm__(COD2_SYM("Scr_GetOffset"));
 decltype(Scr_GetOffset(std::declval<unsigned int>(), std::declval<char const*>())) cod2x_Scr_GetOffset(unsigned int a0, char const* a1) { return Scr_GetOffset(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetPointerType(std::declval<unsigned long>()))>::value, "Scr_GetPointerType returns a struct");
 extern "C" decltype(Scr_GetPointerType(std::declval<unsigned long>())) cod2x_Scr_GetPointerType(unsigned long a0) __asm__(COD2_SYM("Scr_GetPointerType"));
 decltype(Scr_GetPointerType(std::declval<unsigned long>())) cod2x_Scr_GetPointerType(unsigned long a0) { return Scr_GetPointerType(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetString(std::declval<unsigned int>()))>::value, "Scr_GetString returns a struct");
 extern "C" decltype(Scr_GetString(std::declval<unsigned int>())) cod2x_Scr_GetString(unsigned int a0) __asm__(COD2_SYM("Scr_GetString"));
 decltype(Scr_GetString(std::declval<unsigned int>())) cod2x_Scr_GetString(unsigned int a0) { return Scr_GetString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetStringUsage())>::value, "Scr_GetStringUsage returns a struct");
 extern "C" decltype(Scr_GetStringUsage()) cod2x_Scr_GetStringUsage() __asm__(COD2_SYM("Scr_GetStringUsage"));
 decltype(Scr_GetStringUsage()) cod2x_Scr_GetStringUsage() { return Scr_GetStringUsage(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetType(std::declval<unsigned long>()))>::value, "Scr_GetType returns a struct");
 extern "C" decltype(Scr_GetType(std::declval<unsigned long>())) cod2x_Scr_GetType(unsigned long a0) __asm__(COD2_SYM("Scr_GetType"));
 decltype(Scr_GetType(std::declval<unsigned long>())) cod2x_Scr_GetType(unsigned long a0) { return Scr_GetType(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetTypeName(std::declval<unsigned long>()))>::value, "Scr_GetTypeName returns a struct");
 extern "C" decltype(Scr_GetTypeName(std::declval<unsigned long>())) cod2x_Scr_GetTypeName(unsigned long a0) __asm__(COD2_SYM("Scr_GetTypeName"));
 decltype(Scr_GetTypeName(std::declval<unsigned long>())) cod2x_Scr_GetTypeName(unsigned long a0) { return Scr_GetTypeName(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetVector(std::declval<unsigned long>(), std::declval<float*>()))>::value, "Scr_GetVector returns a struct");
 extern "C" decltype(Scr_GetVector(std::declval<unsigned long>(), std::declval<float*>())) cod2x_Scr_GetVector(unsigned long a0, float* a1) __asm__(COD2_SYM("Scr_GetVector"));
 decltype(Scr_GetVector(std::declval<unsigned long>(), std::declval<float*>())) cod2x_Scr_GetVector(unsigned long a0, float* a1) { return Scr_GetVector(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_IncTime())>::value, "Scr_IncTime returns a struct");
 extern "C" decltype(Scr_IncTime()) cod2x_Scr_IncTime() __asm__(COD2_SYM("Scr_IncTime"));
 decltype(Scr_IncTime()) cod2x_Scr_IncTime() { return Scr_IncTime(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_Init())>::value, "Scr_Init returns a struct");
 extern "C" decltype(Scr_Init()) cod2x_Scr_Init() __asm__(COD2_SYM("Scr_Init"));
 decltype(Scr_Init()) cod2x_Scr_Init() { return Scr_Init(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_InitSystem())>::value, "Scr_InitSystem returns a struct");
 extern "C" decltype(Scr_InitSystem()) cod2x_Scr_InitSystem() __asm__(COD2_SYM("Scr_InitSystem"));
 decltype(Scr_InitSystem()) cod2x_Scr_InitSystem() { return Scr_InitSystem(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_IsSystemActive())>::value, "Scr_IsSystemActive returns a struct");
 extern "C" decltype(Scr_IsSystemActive()) cod2x_Scr_IsSystemActive() __asm__(COD2_SYM("Scr_IsSystemActive"));
 decltype(Scr_IsSystemActive()) cod2x_Scr_IsSystemActive() { return Scr_IsSystemActive(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_LoadScript(std::declval<char const*>()))>::value, "Scr_LoadScript returns a struct");
 extern "C" decltype(Scr_LoadScript(std::declval<char const*>())) cod2x_Scr_LoadScript(char const* a0) __asm__(COD2_SYM("Scr_LoadScript"));
 decltype(Scr_LoadScript(std::declval<char const*>())) cod2x_Scr_LoadScript(char const* a0) { return Scr_LoadScript(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_MakeArray())>::value, "Scr_MakeArray returns a struct");
 extern "C" decltype(Scr_MakeArray()) cod2x_Scr_MakeArray() __asm__(COD2_SYM("Scr_MakeArray"));
 decltype(Scr_MakeArray()) cod2x_Scr_MakeArray() { return Scr_MakeArray(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_NotifyNum(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>(), std::declval<unsigned long>()))>::value, "Scr_NotifyNum returns a struct");
 extern "C" decltype(Scr_NotifyNum(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>(), std::declval<unsigned long>())) cod2x_Scr_NotifyNum(int a0, int a1, unsigned int a2, unsigned long a3) __asm__(COD2_SYM("Scr_NotifyNum"));
 decltype(Scr_NotifyNum(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>(), std::declval<unsigned long>())) cod2x_Scr_NotifyNum(int a0, int a1, unsigned int a2, unsigned long a3) { return Scr_NotifyNum(a0, a1, a2, a3); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ObjectError(std::declval<char const*>()))>::value, "Scr_ObjectError returns a struct");
 extern "C" decltype(Scr_ObjectError(std::declval<char const*>())) cod2x_Scr_ObjectError(char const* a0) __asm__(COD2_SYM("Scr_ObjectError"));
 decltype(Scr_ObjectError(std::declval<char const*>())) cod2x_Scr_ObjectError(char const* a0) { return Scr_ObjectError(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ParamError(std::declval<unsigned int>(), std::declval<char const*>()))>::value, "Scr_ParamError returns a struct");
 extern "C" decltype(Scr_ParamError(std::declval<unsigned int>(), std::declval<char const*>())) cod2x_Scr_ParamError(unsigned int a0, char const* a1) __asm__(COD2_SYM("Scr_ParamError"));
 decltype(Scr_ParamError(std::declval<unsigned int>(), std::declval<char const*>())) cod2x_Scr_ParamError(unsigned int a0, char const* a1) { return Scr_ParamError(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_PostCompileScripts())>::value, "Scr_PostCompileScripts returns a struct");
 extern "C" decltype(Scr_PostCompileScripts()) cod2x_Scr_PostCompileScripts() __asm__(COD2_SYM("Scr_PostCompileScripts"));
 decltype(Scr_PostCompileScripts()) cod2x_Scr_PostCompileScripts() { return Scr_PostCompileScripts(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_PrecacheAnimTrees(std::declval<void* (*)(int)>(), std::declval<int>()))>::value, "Scr_PrecacheAnimTrees returns a struct");
 extern "C" decltype(Scr_PrecacheAnimTrees(std::declval<void* (*)(int)>(), std::declval<int>())) cod2x_Scr_PrecacheAnimTrees(void* (*a0)(int), int a1) __asm__(COD2_SYM("Scr_PrecacheAnimTrees"));
 decltype(Scr_PrecacheAnimTrees(std::declval<void* (*)(int)>(), std::declval<int>())) cod2x_Scr_PrecacheAnimTrees(void* (*a0)(int), int a1) { return Scr_PrecacheAnimTrees(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_RemoveClassMap(std::declval<int>()))>::value, "Scr_RemoveClassMap returns a struct");
 extern "C" decltype(Scr_RemoveClassMap(std::declval<int>())) cod2x_Scr_RemoveClassMap(int a0) __asm__(COD2_SYM("Scr_RemoveClassMap"));
 decltype(Scr_RemoveClassMap(std::declval<int>())) cod2x_Scr_RemoveClassMap(int a0) { return Scr_RemoveClassMap(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ResetTimeout())>::value, "Scr_ResetTimeout returns a struct");
 extern "C" decltype(Scr_ResetTimeout()) cod2x_Scr_ResetTimeout() __asm__(COD2_SYM("Scr_ResetTimeout"));
 decltype(Scr_ResetTimeout()) cod2x_Scr_ResetTimeout() { return Scr_ResetTimeout(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_RunCurrentThreads())>::value, "Scr_RunCurrentThreads returns a struct");
 extern "C" decltype(Scr_RunCurrentThreads()) cod2x_Scr_RunCurrentThreads() __asm__(COD2_SYM("Scr_RunCurrentThreads"));
 decltype(Scr_RunCurrentThreads()) cod2x_Scr_RunCurrentThreads() { return Scr_RunCurrentThreads(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_SetClassMap(std::declval<int>()))>::value, "Scr_SetClassMap returns a struct");
 extern "C" decltype(Scr_SetClassMap(std::declval<int>())) cod2x_Scr_SetClassMap(int a0) __asm__(COD2_SYM("Scr_SetClassMap"));
 decltype(Scr_SetClassMap(std::declval<int>())) cod2x_Scr_SetClassMap(int a0) { return Scr_SetClassMap(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_SetDynamicEntityField(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>()))>::value, "Scr_SetDynamicEntityField returns a struct");
 extern "C" decltype(Scr_SetDynamicEntityField(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_SetDynamicEntityField(int a0, int a1, unsigned int a2) __asm__(COD2_SYM("Scr_SetDynamicEntityField"));
 decltype(Scr_SetDynamicEntityField(std::declval<int>(), std::declval<int>(), std::declval<unsigned int>())) cod2x_Scr_SetDynamicEntityField(int a0, int a1, unsigned int a2) { return Scr_SetDynamicEntityField(a0, a1, a2); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_SetLoading(std::declval<int>()))>::value, "Scr_SetLoading returns a struct");
 extern "C" decltype(Scr_SetLoading(std::declval<int>())) cod2x_Scr_SetLoading(int a0) __asm__(COD2_SYM("Scr_SetLoading"));
 decltype(Scr_SetLoading(std::declval<int>())) cod2x_Scr_SetLoading(int a0) { return Scr_SetLoading(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_SetString(std::declval<unsigned short*>(), std::declval<unsigned int>()))>::value, "Scr_SetString returns a struct");
 extern "C" decltype(Scr_SetString(std::declval<unsigned short*>(), std::declval<unsigned int>())) cod2x_Scr_SetString(unsigned short* a0, unsigned int a1) __asm__(COD2_SYM("Scr_SetString"));
 decltype(Scr_SetString(std::declval<unsigned short*>(), std::declval<unsigned int>())) cod2x_Scr_SetString(unsigned short* a0, unsigned int a1) { return Scr_SetString(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_SetStructField(std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "Scr_SetStructField returns a struct");
 extern "C" decltype(Scr_SetStructField(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_Scr_SetStructField(unsigned int a0, unsigned int a1) __asm__(COD2_SYM("Scr_SetStructField"));
 decltype(Scr_SetStructField(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_Scr_SetStructField(unsigned int a0, unsigned int a1) { return Scr_SetStructField(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_Settings(std::declval<int>(), std::declval<int>(), std::declval<int>()))>::value, "Scr_Settings returns a struct");
 extern "C" decltype(Scr_Settings(std::declval<int>(), std::declval<int>(), std::declval<int>())) cod2x_Scr_Settings(int a0, int a1, int a2) __asm__(COD2_SYM("Scr_Settings"));
 decltype(Scr_Settings(std::declval<int>(), std::declval<int>(), std::declval<int>())) cod2x_Scr_Settings(int a0, int a1, int a2) { return Scr_Settings(a0, a1, a2); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_Shutdown())>::value, "Scr_Shutdown returns a struct");
 extern "C" decltype(Scr_Shutdown()) cod2x_Scr_Shutdown() __asm__(COD2_SYM("Scr_Shutdown"));
 decltype(Scr_Shutdown()) cod2x_Scr_Shutdown() { return Scr_Shutdown(); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(Scr_ShutdownGameStrings())>::value, "Scr_ShutdownGameStrings returns a struct");
 extern "C" decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() __asm__(COD2_SYM("Scr_ShutdownGameStrings"));
 decltype(Scr_ShutdownGameStrings()) cod2x_Scr_ShutdownGameStrings() { return Scr_ShutdownGameStrings(); }
 
@@ -273,35 +358,46 @@ void cod2x_Scr_ShutdownSystem(int sys, int bComplete)
     Scr_ShutdownSystem(bComplete);
 }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SetAnimCheck(std::declval<int>()))>::value, "SetAnimCheck returns a struct");
 extern "C" decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) __asm__(COD2_SYM("SetAnimCheck"));
 decltype(SetAnimCheck(std::declval<int>())) cod2x_SetAnimCheck(int a0) { return SetAnimCheck(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_AddRefToString(std::declval<unsigned int>()))>::value, "SL_AddRefToString returns a struct");
 extern "C" decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) __asm__(COD2_SYM("SL_AddRefToString"));
 decltype(SL_AddRefToString(std::declval<unsigned int>())) cod2x_SL_AddRefToString(unsigned int a0) { return SL_AddRefToString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_ConvertToString(std::declval<unsigned int>()))>::value, "SL_ConvertToString returns a struct");
 extern "C" decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) __asm__(COD2_SYM("SL_ConvertToString"));
 decltype(SL_ConvertToString(std::declval<unsigned int>())) cod2x_SL_ConvertToString(unsigned int a0) { return SL_ConvertToString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_FindString(std::declval<char const*>()))>::value, "SL_FindString returns a struct");
 extern "C" decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) __asm__(COD2_SYM("SL_FindString"));
 decltype(SL_FindString(std::declval<char const*>())) cod2x_SL_FindString(char const* a0) { return SL_FindString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>()))>::value, "SL_GetString returns a struct");
 extern "C" decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString"));
 decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) { return SL_GetString(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>()))>::value, "SL_GetString_ returns a struct");
 extern "C" decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString_"));
 decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) { return SL_GetString_(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "SL_GetStringOfLen returns a struct");
 extern "C" decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("SL_GetStringOfLen"));
 decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) { return SL_GetStringOfLen(a0, a1, a2); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_RemoveRefToString(std::declval<unsigned int>()))>::value, "SL_RemoveRefToString returns a struct");
 extern "C" decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) __asm__(COD2_SYM("SL_RemoveRefToString"));
 decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) { return SL_RemoveRefToString(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "SL_RemoveRefToStringOfLen returns a struct");
 extern "C" decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) __asm__(COD2_SYM("SL_RemoveRefToStringOfLen"));
 decltype(SL_RemoveRefToStringOfLen(std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_RemoveRefToStringOfLen(unsigned int a0, unsigned int a1) { return SL_RemoveRefToStringOfLen(a0, a1); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(TempMalloc(std::declval<int>()))>::value, "TempMalloc returns a struct");
 extern "C" decltype(TempMalloc(std::declval<int>())) cod2x_TempMalloc(int a0) __asm__(COD2_SYM("TempMalloc"));
 decltype(TempMalloc(std::declval<int>())) cod2x_TempMalloc(int a0) { return TempMalloc(a0); }
 
+static_assert(cod2_bridge_returns_scalar<decltype(TempMemoryReset())>::value, "TempMemoryReset returns a struct");
 extern "C" decltype(TempMemoryReset()) cod2x_TempMemoryReset() __asm__(COD2_SYM("TempMemoryReset"));
 decltype(TempMemoryReset()) cod2x_TempMemoryReset() { return TempMemoryReset(); }

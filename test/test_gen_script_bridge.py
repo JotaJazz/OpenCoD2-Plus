@@ -53,6 +53,17 @@ class Thunks(unittest.TestCase):
         self.assertIn('void cod2x_Scr_FreeScripts(int sys)', g.EXPORT_CUSTOM['Scr_FreeScripts'])
         self.assertIn('Scr_ShutdownSystem(bComplete);', g.EXPORT_CUSTOM['Scr_ShutdownSystem'])
 
+    def test_scalar_return_guard(self):
+        code = g.export_thunk('Scr_GetInt', ['unsigned int'])
+        self.assertIn('static_assert(cod2_bridge_returns_scalar<decltype(Scr_GetInt(std::declval<unsigned int>()))>::value', code)
+
+    def test_struct_return_allowed(self):
+        code = g.export_thunk('Scr_GetEntityRef', ['unsigned long'])
+        self.assertNotIn('static_assert', code)
+
+    def test_get_anim_custom(self):
+        self.assertIn('unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)', g.EXPORT_CUSTOM['Scr_GetAnim'])
+
 
 if __name__ == '__main__':
     unittest.main()
