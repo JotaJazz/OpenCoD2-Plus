@@ -168,7 +168,7 @@ void Scr_LoadAnimTreeAtIndex( int index, void *(*Alloc)(int), int user )
 
 	if ( !Scr_LoadAnimTreeInternal( SL_ConvertToString( filenameId ), scrAnimPub.animtree_node, names ) )
 	{
-		Com_Error(ERR_DROP, va("unknown anim tree '%s'", SL_ConvertToString(filenameId)));
+		Com_Error(ERR_DROP, "unknown anim tree '%s'", SL_ConvertToString(filenameId));
 	}
 
 	size = Scr_GetAnimTreeSize(scrAnimPub.animtree_node);

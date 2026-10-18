@@ -2647,7 +2647,7 @@ void EmitCaseStatement( sval_u expr, sval_u sourcePos )
 	{
 		if ( !IsValidArrayIndex(expr.node[1].intValue) )
 		{
-			CompileError(sourcePos.sourcePosValue, va("case index %d out of range", expr.node[1].intValue));
+			CompileError(sourcePos.sourcePosValue, "case index %d out of range", expr.node[1].intValue);
 			return;
 		}
 

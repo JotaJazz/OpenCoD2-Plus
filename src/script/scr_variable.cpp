@@ -4942,7 +4942,7 @@ void Scr_AddFieldsForFile( const char *filename )
 
 	if ( len < 0 )
 	{
-		Com_Error(ERR_DROP, va("cannot find '%s'", filename));
+		Com_Error(ERR_DROP, "cannot find '%s'", filename);
 	}
 
 	sourceBuffer = (char *)Hunk_AllocateTempMemoryHighInternal( len + 1 );
@@ -4981,14 +4981,14 @@ void Scr_AddFieldsForFile( const char *filename )
 		}
 		else
 		{
-			Com_Error(ERR_DROP, va("unknown type '%s' in '%s'", token, filename));
+			Com_Error(ERR_DROP, "unknown type '%s' in '%s'", token, filename);
 		}
 
 		token = Com_Parse(&sourcePos);
 
 		if ( !sourcePos )
 		{
-			Com_Error(ERR_DROP, va("missing field name in '%s'", filename));
+			Com_Error(ERR_DROP, "missing field name in '%s'", filename);
 		}
 
 		len = strlen(token) + 1;
