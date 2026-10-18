@@ -521,3 +521,351 @@ static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 5 differs fr
 static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 6 differs from src/PC/server_mp");
 extern "C" decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) __asm__(COD2_SYM("G_TraceCapsule"));
 decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) { return G_TraceCapsule(a0, a1, a2, a3, a4, a5, a6); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>()))>::value, "BG_AddPredictableEventToPlayerstate returns a struct");
+static_assert(cod2_abi_class<decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>()))>() == 'v', "BG_AddPredictableEventToPlayerstate: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_AddPredictableEventToPlayerstate: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>())) cod2x_BG_AddPredictableEventToPlayerstate(int a0, int a1, playerState_s* a2) __asm__(COD2_SYM("BG_AddPredictableEventToPlayerstate"));
+decltype(BG_AddPredictableEventToPlayerstate(std::declval<int>(), std::declval<int>(), std::declval<playerState_s*>())) cod2x_BG_AddPredictableEventToPlayerstate(int a0, int a1, playerState_s* a2) { return BG_AddPredictableEventToPlayerstate(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_AmmoForWeapon(std::declval<int>()))>::value, "BG_AmmoForWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_AmmoForWeapon(std::declval<int>()))>() == 'i', "BG_AmmoForWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_AmmoForWeapon: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_AmmoForWeapon(std::declval<int>())), 4> cod2x_BG_AmmoForWeapon(int a0) __asm__(COD2_SYM("BG_AmmoForWeapon"));
+cod2_abi_int<decltype(BG_AmmoForWeapon(std::declval<int>())), 4> cod2x_BG_AmmoForWeapon(int a0) { return (cod2_abi_int<decltype(BG_AmmoForWeapon(std::declval<int>())), 4>)BG_AmmoForWeapon(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>()))>::value, "BG_CalculateViewAngles returns a struct");
+static_assert(cod2_abi_class<decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>()))>() == 'v', "BG_CalculateViewAngles: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<viewState_t*>() == 4, "BG_CalculateViewAngles: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateViewAngles: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>())) cod2x_BG_CalculateViewAngles(viewState_t* a0, float* a1) __asm__(COD2_SYM("BG_CalculateViewAngles"));
+decltype(BG_CalculateViewAngles(std::declval<viewState_t*>(), std::declval<float*>())) cod2x_BG_CalculateViewAngles(viewState_t* a0, float* a1) { return BG_CalculateViewAngles(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>()))>::value, "BG_CalculateWeaponAngles returns a struct");
+static_assert(cod2_abi_class<decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>()))>() == 'v', "BG_CalculateWeaponAngles: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<weaponState_t*>() == 4, "BG_CalculateWeaponAngles: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponAngles: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) cod2x_BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) __asm__(COD2_SYM("BG_CalculateWeaponAngles"));
+decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) cod2x_BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) { return BG_CalculateWeaponAngles(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>::value, "BG_CalculateWeaponPosition_Sway returns a struct");
+static_assert(cod2_abi_class<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>() == 'v', "BG_CalculateWeaponPosition_Sway: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 4 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 5 differs from src/PC/server_mp");
+extern "C" decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) __asm__(COD2_SYM("BG_CalculateWeaponPosition_Sway"));
+decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) { return BG_CalculateWeaponPosition_Sway(a0, a1, a2, a3, a4, a5); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_CanItemBeGrabbed returns a struct");
+static_assert(cod2_abi_class<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_CanItemBeGrabbed: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<entityState_s const*>() == 4, "BG_CanItemBeGrabbed: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_CanItemBeGrabbed: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_CanItemBeGrabbed: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_CanItemBeGrabbed(entityState_s const* a0, playerState_s const* a1, int a2) __asm__(COD2_SYM("BG_CanItemBeGrabbed"));
+cod2_abi_int<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_CanItemBeGrabbed(entityState_s const* a0, playerState_s const* a1, int a2) { return (cod2_abi_int<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>())), 4>)BG_CanItemBeGrabbed(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_ClearWeaponDef())>::value, "BG_ClearWeaponDef returns a struct");
+static_assert(cod2_abi_class<decltype(BG_ClearWeaponDef())>() == 'v', "BG_ClearWeaponDef: return class differs from src/PC/server_mp");
+extern "C" decltype(BG_ClearWeaponDef()) cod2x_BG_ClearWeaponDef() __asm__(COD2_SYM("BG_ClearWeaponDef"));
+decltype(BG_ClearWeaponDef()) cod2x_BG_ClearWeaponDef() { return BG_ClearWeaponDef(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_ClipForWeapon(std::declval<int>()))>::value, "BG_ClipForWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_ClipForWeapon(std::declval<int>()))>() == 'i', "BG_ClipForWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_ClipForWeapon: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_ClipForWeapon(std::declval<int>())), 4> cod2x_BG_ClipForWeapon(int a0) __asm__(COD2_SYM("BG_ClipForWeapon"));
+cod2_abi_int<decltype(BG_ClipForWeapon(std::declval<int>())), 4> cod2x_BG_ClipForWeapon(int a0) { return (cod2_abi_int<decltype(BG_ClipForWeapon(std::declval<int>())), 4>)BG_ClipForWeapon(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_DoesWeaponNeedSlot(std::declval<int>()))>::value, "BG_DoesWeaponNeedSlot returns a struct");
+static_assert(cod2_abi_class<decltype(BG_DoesWeaponNeedSlot(std::declval<int>()))>() == 'i', "BG_DoesWeaponNeedSlot: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_DoesWeaponNeedSlot: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_DoesWeaponNeedSlot(std::declval<int>())), 1> cod2x_BG_DoesWeaponNeedSlot(int a0) __asm__(COD2_SYM("BG_DoesWeaponNeedSlot"));
+cod2_abi_int<decltype(BG_DoesWeaponNeedSlot(std::declval<int>())), 1> cod2x_BG_DoesWeaponNeedSlot(int a0) { return (cod2_abi_int<decltype(BG_DoesWeaponNeedSlot(std::declval<int>())), 1>)BG_DoesWeaponNeedSlot(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>()))>::value, "BG_EvaluateTrajectory returns a struct");
+static_assert(cod2_abi_class<decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>()))>() == 'v', "BG_EvaluateTrajectory: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<trajectory_t const*>() == 4, "BG_EvaluateTrajectory: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_EvaluateTrajectory: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_EvaluateTrajectory: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) cod2x_BG_EvaluateTrajectory(trajectory_t const* a0, int a1, float* a2) __asm__(COD2_SYM("BG_EvaluateTrajectory"));
+decltype(BG_EvaluateTrajectory(std::declval<trajectory_t const*>(), std::declval<int>(), std::declval<float*>())) cod2x_BG_EvaluateTrajectory(trajectory_t const* a0, int a1, float* a2) { return BG_EvaluateTrajectory(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>()))>::value, "BG_FillInAmmoItems returns a struct");
+static_assert(cod2_abi_class<decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>()))>() == 'v', "BG_FillInAmmoItems: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int (*)(int)>() == 4, "BG_FillInAmmoItems: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>())) cod2x_BG_FillInAmmoItems(int (*a0)(int)) __asm__(COD2_SYM("BG_FillInAmmoItems"));
+decltype(BG_FillInAmmoItems(std::declval<int (*)(int)>())) cod2x_BG_FillInAmmoItems(int (*a0)(int)) { return BG_FillInAmmoItems(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetAmmoClipSize(std::declval<int>()))>::value, "BG_GetAmmoClipSize returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetAmmoClipSize(std::declval<int>()))>() == 'i', "BG_GetAmmoClipSize: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetAmmoClipSize: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetAmmoClipSize(std::declval<int>())), 4> cod2x_BG_GetAmmoClipSize(int a0) __asm__(COD2_SYM("BG_GetAmmoClipSize"));
+cod2_abi_int<decltype(BG_GetAmmoClipSize(std::declval<int>())), 4> cod2x_BG_GetAmmoClipSize(int a0) { return (cod2_abi_int<decltype(BG_GetAmmoClipSize(std::declval<int>())), 4>)BG_GetAmmoClipSize(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetAmmoTypeMax(std::declval<int>()))>::value, "BG_GetAmmoTypeMax returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetAmmoTypeMax(std::declval<int>()))>() == 'i', "BG_GetAmmoTypeMax: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetAmmoTypeMax: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetAmmoTypeMax(std::declval<int>())), 4> cod2x_BG_GetAmmoTypeMax(int a0) __asm__(COD2_SYM("BG_GetAmmoTypeMax"));
+cod2_abi_int<decltype(BG_GetAmmoTypeMax(std::declval<int>())), 4> cod2x_BG_GetAmmoTypeMax(int a0) { return (cod2_abi_int<decltype(BG_GetAmmoTypeMax(std::declval<int>())), 4>)BG_GetAmmoTypeMax(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetBobCycle(std::declval<playerState_s const*>()))>::value, "BG_GetBobCycle returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetBobCycle(std::declval<playerState_s const*>()))>() == 'f', "BG_GetBobCycle: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(BG_GetBobCycle(std::declval<playerState_s const*>()))>() == 4, "BG_GetBobCycle: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetBobCycle: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(BG_GetBobCycle(std::declval<playerState_s const*>())) cod2x_BG_GetBobCycle(playerState_s const* a0) __asm__(COD2_SYM("BG_GetBobCycle"));
+decltype(BG_GetBobCycle(std::declval<playerState_s const*>())) cod2x_BG_GetBobCycle(playerState_s const* a0) { return BG_GetBobCycle(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>()))>::value, "BG_GetEmptySlotForWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>()))>() == 'i', "BG_GetEmptySlotForWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_GetEmptySlotForWeapon: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetEmptySlotForWeapon: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())), 4> cod2x_BG_GetEmptySlotForWeapon(playerState_s* a0, int a1) __asm__(COD2_SYM("BG_GetEmptySlotForWeapon"));
+cod2_abi_int<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())), 4> cod2x_BG_GetEmptySlotForWeapon(playerState_s* a0, int a1) { return (cod2_abi_int<decltype(BG_GetEmptySlotForWeapon(std::declval<playerState_s*>(), std::declval<int>())), 4>)BG_GetEmptySlotForWeapon(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_GetFirstAvailableOffhand returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_GetFirstAvailableOffhand: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetFirstAvailableOffhand: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetFirstAvailableOffhand: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetFirstAvailableOffhand(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetFirstAvailableOffhand"));
+cod2_abi_int<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetFirstAvailableOffhand(playerState_s const* a0, int a1) { return (cod2_abi_int<decltype(BG_GetFirstAvailableOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4>)BG_GetFirstAvailableOffhand(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetFirstEquippedOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_GetFirstEquippedOffhand returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetFirstEquippedOffhand(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_GetFirstEquippedOffhand: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetFirstEquippedOffhand: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetFirstEquippedOffhand: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetFirstEquippedOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetFirstEquippedOffhand(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetFirstEquippedOffhand"));
+cod2_abi_int<decltype(BG_GetFirstEquippedOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetFirstEquippedOffhand(playerState_s const* a0, int a1) { return (cod2_abi_int<decltype(BG_GetFirstEquippedOffhand(std::declval<playerState_s const*>(), std::declval<int>())), 4>)BG_GetFirstEquippedOffhand(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>::value, "BG_GetHorizontalBobFactor returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 'f', "BG_GetHorizontalBobFactor: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 4, "BG_GetHorizontalBobFactor: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetHorizontalBobFactor: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetHorizontalBobFactor: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2x_BG_GetHorizontalBobFactor(playerState_s const* a0, float a1, float a2, float a3) __asm__(COD2_SYM("BG_GetHorizontalBobFactor"));
+decltype(BG_GetHorizontalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2x_BG_GetHorizontalBobFactor(playerState_s const* a0, float a1, float a2, float a3) { return BG_GetHorizontalBobFactor(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetNumWeapons())>::value, "BG_GetNumWeapons returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetNumWeapons())>() == 'i', "BG_GetNumWeapons: return class differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetNumWeapons()), 4> cod2x_BG_GetNumWeapons() __asm__(COD2_SYM("BG_GetNumWeapons"));
+cod2_abi_int<decltype(BG_GetNumWeapons()), 4> cod2x_BG_GetNumWeapons() { return (cod2_abi_int<decltype(BG_GetNumWeapons()), 4>)BG_GetNumWeapons(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_GetSpeed returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'f', "BG_GetSpeed: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>()))>() == 4, "BG_GetSpeed: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetSpeed: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetSpeed: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>())) cod2x_BG_GetSpeed(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetSpeed"));
+decltype(BG_GetSpeed(std::declval<playerState_s const*>(), std::declval<int>())) cod2x_BG_GetSpeed(playerState_s const* a0, int a1) { return BG_GetSpeed(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>()))>::value, "BG_GetSpreadForWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "BG_GetSpreadForWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetSpreadForWeapon: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetSpreadForWeapon: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_GetSpreadForWeapon: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_GetSpreadForWeapon: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>())) cod2x_BG_GetSpreadForWeapon(playerState_s const* a0, int a1, float* a2, float* a3) __asm__(COD2_SYM("BG_GetSpreadForWeapon"));
+decltype(BG_GetSpreadForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<float*>(), std::declval<float*>())) cod2x_BG_GetSpreadForWeapon(playerState_s const* a0, int a1, float* a2, float* a3) { return BG_GetSpreadForWeapon(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>()))>::value, "BG_GetStackSlotForWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>()))>() == 'i', "BG_GetStackSlotForWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetStackSlotForWeapon: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetStackSlotForWeapon: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "BG_GetStackSlotForWeapon: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())), 4> cod2x_BG_GetStackSlotForWeapon(playerState_s const* a0, int a1, unsigned int a2) __asm__(COD2_SYM("BG_GetStackSlotForWeapon"));
+cod2_abi_int<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())), 4> cod2x_BG_GetStackSlotForWeapon(playerState_s const* a0, int a1, unsigned int a2) { return (cod2_abi_int<decltype(BG_GetStackSlotForWeapon(std::declval<playerState_s const*>(), std::declval<int>(), std::declval<unsigned int>())), 4>)BG_GetStackSlotForWeapon(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetTotalAmmoReserve(std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_GetTotalAmmoReserve returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetTotalAmmoReserve(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_GetTotalAmmoReserve: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetTotalAmmoReserve: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetTotalAmmoReserve: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetTotalAmmoReserve(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetTotalAmmoReserve(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_GetTotalAmmoReserve"));
+cod2_abi_int<decltype(BG_GetTotalAmmoReserve(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_GetTotalAmmoReserve(playerState_s const* a0, int a1) { return (cod2_abi_int<decltype(BG_GetTotalAmmoReserve(std::declval<playerState_s const*>(), std::declval<int>())), 4>)BG_GetTotalAmmoReserve(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>::value, "BG_GetVerticalBobFactor returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 'f', "BG_GetVerticalBobFactor: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>()))>() == 4, "BG_GetVerticalBobFactor: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetVerticalBobFactor: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "BG_GetVerticalBobFactor: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2x_BG_GetVerticalBobFactor(playerState_s const* a0, float a1, float a2, float a3) __asm__(COD2_SYM("BG_GetVerticalBobFactor"));
+decltype(BG_GetVerticalBobFactor(std::declval<playerState_s const*>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2x_BG_GetVerticalBobFactor(playerState_s const* a0, float a1, float a2, float a3) { return BG_GetVerticalBobFactor(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetViewmodelWeaponIndex(std::declval<playerState_s const*>()))>::value, "BG_GetViewmodelWeaponIndex returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetViewmodelWeaponIndex(std::declval<playerState_s const*>()))>() == 'i', "BG_GetViewmodelWeaponIndex: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_GetViewmodelWeaponIndex: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetViewmodelWeaponIndex(std::declval<playerState_s const*>())), 4> cod2x_BG_GetViewmodelWeaponIndex(playerState_s const* a0) __asm__(COD2_SYM("BG_GetViewmodelWeaponIndex"));
+cod2_abi_int<decltype(BG_GetViewmodelWeaponIndex(std::declval<playerState_s const*>())), 4> cod2x_BG_GetViewmodelWeaponIndex(playerState_s const* a0) { return (cod2_abi_int<decltype(BG_GetViewmodelWeaponIndex(std::declval<playerState_s const*>())), 4>)BG_GetViewmodelWeaponIndex(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetWeaponDef(std::declval<int>()))>::value, "BG_GetWeaponDef returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetWeaponDef(std::declval<int>()))>() == 'i', "BG_GetWeaponDef: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_GetWeaponDef: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponDef(std::declval<int>())), 4> cod2x_BG_GetWeaponDef(int a0) __asm__(COD2_SYM("BG_GetWeaponDef"));
+cod2_abi_int<decltype(BG_GetWeaponDef(std::declval<int>())), 4> cod2x_BG_GetWeaponDef(int a0) { return (cod2_abi_int<decltype(BG_GetWeaponDef(std::declval<int>())), 4>)BG_GetWeaponDef(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>()))>::value, "BG_GetWeaponIndexForName returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>()))>() == 'i', "BG_GetWeaponIndexForName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "BG_GetWeaponIndexForName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int (*)(int)>() == 4, "BG_GetWeaponIndexForName: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())), 4> cod2x_BG_GetWeaponIndexForName(char const* a0, int (*a1)(int)) __asm__(COD2_SYM("BG_GetWeaponIndexForName"));
+cod2_abi_int<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())), 4> cod2x_BG_GetWeaponIndexForName(char const* a0, int (*a1)(int)) { return (cod2_abi_int<decltype(BG_GetWeaponIndexForName(std::declval<char const*>(), std::declval<int (*)(int)>())), 4>)BG_GetWeaponIndexForName(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_GetWeaponSlotForName(std::declval<char const*>()))>::value, "BG_GetWeaponSlotForName returns a struct");
+static_assert(cod2_abi_class<decltype(BG_GetWeaponSlotForName(std::declval<char const*>()))>() == 'i', "BG_GetWeaponSlotForName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "BG_GetWeaponSlotForName: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_GetWeaponSlotForName(std::declval<char const*>())), 4> cod2x_BG_GetWeaponSlotForName(char const* a0) __asm__(COD2_SYM("BG_GetWeaponSlotForName"));
+cod2_abi_int<decltype(BG_GetWeaponSlotForName(std::declval<char const*>())), 4> cod2x_BG_GetWeaponSlotForName(char const* a0) { return (cod2_abi_int<decltype(BG_GetWeaponSlotForName(std::declval<char const*>())), 4>)BG_GetWeaponSlotForName(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_IsAimDownSightWeapon(std::declval<int>()))>::value, "BG_IsAimDownSightWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(BG_IsAimDownSightWeapon(std::declval<int>()))>() == 'i', "BG_IsAimDownSightWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsAimDownSightWeapon: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_IsAimDownSightWeapon(std::declval<int>())), 4> cod2x_BG_IsAimDownSightWeapon(int a0) __asm__(COD2_SYM("BG_IsAimDownSightWeapon"));
+cod2_abi_int<decltype(BG_IsAimDownSightWeapon(std::declval<int>())), 4> cod2x_BG_IsAimDownSightWeapon(int a0) { return (cod2_abi_int<decltype(BG_IsAimDownSightWeapon(std::declval<int>())), 4>)BG_IsAimDownSightWeapon(a0); }
+
+extern "C" int cod2x_BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex) __asm__(COD2_SYM("BG_IsPlayerWeaponAnAlt"));
+int cod2x_BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex)
+{
+    int altIndex = BG_GetWeaponDef(iWeaponIndex)->altWeaponIndex;
+
+    while (altIndex) {
+        if (altIndex == iAltIndex)
+            return 1;
+        if (altIndex == iWeaponIndex)
+            break;
+        altIndex = BG_GetWeaponDef(altIndex)->altWeaponIndex;
+    }
+
+    return 0;
+}
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>()))>::value, "BG_IsPlayerWeaponInSlot returns a struct");
+static_assert(cod2_abi_class<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "BG_IsPlayerWeaponInSlot: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_IsPlayerWeaponInSlot: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsPlayerWeaponInSlot: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_IsPlayerWeaponInSlot: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_BG_IsPlayerWeaponInSlot(playerState_s* a0, int a1, int a2) __asm__(COD2_SYM("BG_IsPlayerWeaponInSlot"));
+cod2_abi_int<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_BG_IsPlayerWeaponInSlot(playerState_s* a0, int a1, int a2) { return (cod2_abi_int<decltype(BG_IsPlayerWeaponInSlot(std::declval<playerState_s*>(), std::declval<int>(), std::declval<int>())), 4>)BG_IsPlayerWeaponInSlot(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_LoadAnim())>::value, "BG_LoadAnim returns a struct");
+static_assert(cod2_abi_class<decltype(BG_LoadAnim())>() == 'v', "BG_LoadAnim: return class differs from src/PC/server_mp");
+extern "C" decltype(BG_LoadAnim()) cod2x_BG_LoadAnim() __asm__(COD2_SYM("BG_LoadAnim"));
+decltype(BG_LoadAnim()) cod2x_BG_LoadAnim() { return BG_LoadAnim(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>()))>::value, "BG_PlayerAnimation returns a struct");
+static_assert(cod2_abi_class<decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>()))>() == 'v', "BG_PlayerAnimation: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "BG_PlayerAnimation: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_PlayerAnimation: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_PlayerAnimation: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>())) cod2x_BG_PlayerAnimation(DObj_s const* a0, entityState_s* a1, clientInfo_s* a2) __asm__(COD2_SYM("BG_PlayerAnimation"));
+decltype(BG_PlayerAnimation(std::declval<DObj_s const*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>())) cod2x_BG_PlayerAnimation(DObj_s const* a0, entityState_s* a1, clientInfo_s* a2) { return BG_PlayerAnimation(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>()))>::value, "BG_PlayerStateToEntityState returns a struct");
+static_assert(cod2_abi_class<decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>()))>() == 'v', "BG_PlayerStateToEntityState: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_PlayerStateToEntityState: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_PlayerStateToEntityState: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_PlayerStateToEntityState: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned char>() == 4, "BG_PlayerStateToEntityState: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>())) cod2x_BG_PlayerStateToEntityState(playerState_s* a0, entityState_s* a1, int a2, unsigned char a3) __asm__(COD2_SYM("BG_PlayerStateToEntityState"));
+decltype(BG_PlayerStateToEntityState(std::declval<playerState_s*>(), std::declval<entityState_s*>(), std::declval<int>(), std::declval<unsigned char>())) cod2x_BG_PlayerStateToEntityState(playerState_s* a0, entityState_s* a1, int a2, unsigned char a3) { return BG_PlayerStateToEntityState(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>()))>::value, "BG_PlayerTouchesItem returns a struct");
+static_assert(cod2_abi_class<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>()))>() == 'i', "BG_PlayerTouchesItem: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_PlayerTouchesItem: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<entityState_s const*>() == 4, "BG_PlayerTouchesItem: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_PlayerTouchesItem: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())), 4> cod2x_BG_PlayerTouchesItem(playerState_s const* a0, entityState_s const* a1, int a2) __asm__(COD2_SYM("BG_PlayerTouchesItem"));
+cod2_abi_int<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())), 4> cod2x_BG_PlayerTouchesItem(playerState_s const* a0, entityState_s const* a1, int a2) { return (cod2_abi_int<decltype(BG_PlayerTouchesItem(std::declval<playerState_s const*>(), std::declval<entityState_s const*>(), std::declval<int>())), 4>)BG_PlayerTouchesItem(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>::value, "BG_Player_DoControllers returns a struct");
+static_assert(cod2_abi_class<decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>() == 'v', "BG_Player_DoControllers: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "BG_Player_DoControllers: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<gentity_s const*>() == 4, "BG_Player_DoControllers: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "BG_Player_DoControllers: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_Player_DoControllers: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_Player_DoControllers: parameter 4 differs from src/PC/server_mp");
+extern "C" decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2x_BG_Player_DoControllers(DObj_s* a0, gentity_s const* a1, int* a2, clientInfo_s* a3, int a4) __asm__(COD2_SYM("BG_Player_DoControllers"));
+decltype(BG_Player_DoControllers(std::declval<DObj_s*>(), std::declval<gentity_s const*>(), std::declval<int*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2x_BG_Player_DoControllers(DObj_s* a0, gentity_s const* a1, int* a2, clientInfo_s* a3, int a4) { return BG_Player_DoControllers(a0, a1, a2, a3, a4); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_RegisterDvars())>::value, "BG_RegisterDvars returns a struct");
+static_assert(cod2_abi_class<decltype(BG_RegisterDvars())>() == 'v', "BG_RegisterDvars: return class differs from src/PC/server_mp");
+extern "C" decltype(BG_RegisterDvars()) cod2x_BG_RegisterDvars() __asm__(COD2_SYM("BG_RegisterDvars"));
+decltype(BG_RegisterDvars()) cod2x_BG_RegisterDvars() { return BG_RegisterDvars(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_ShutdownWeaponDefFiles())>::value, "BG_ShutdownWeaponDefFiles returns a struct");
+static_assert(cod2_abi_class<decltype(BG_ShutdownWeaponDefFiles())>() == 'v', "BG_ShutdownWeaponDefFiles: return class differs from src/PC/server_mp");
+extern "C" decltype(BG_ShutdownWeaponDefFiles()) cod2x_BG_ShutdownWeaponDefFiles() __asm__(COD2_SYM("BG_ShutdownWeaponDefFiles"));
+decltype(BG_ShutdownWeaponDefFiles()) cod2x_BG_ShutdownWeaponDefFiles() { return BG_ShutdownWeaponDefFiles(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>::value, "BG_UpdatePlayerDObj returns a struct");
+static_assert(cod2_abi_class<decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>()))>() == 'v', "BG_UpdatePlayerDObj: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "BG_UpdatePlayerDObj: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<entityState_s*>() == 4, "BG_UpdatePlayerDObj: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<clientInfo_s*>() == 4, "BG_UpdatePlayerDObj: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_UpdatePlayerDObj: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2x_BG_UpdatePlayerDObj(DObj_s* a0, entityState_s* a1, clientInfo_s* a2, int a3) __asm__(COD2_SYM("BG_UpdatePlayerDObj"));
+decltype(BG_UpdatePlayerDObj(std::declval<DObj_s*>(), std::declval<entityState_s*>(), std::declval<clientInfo_s*>(), std::declval<int>())) cod2x_BG_UpdatePlayerDObj(DObj_s* a0, entityState_s* a1, clientInfo_s* a2, int a3) { return BG_UpdatePlayerDObj(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_WeaponAmmo returns a struct");
+static_assert(cod2_abi_class<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_WeaponAmmo: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_WeaponAmmo: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_WeaponAmmo: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_WeaponAmmo(playerState_s const* a0, int a1) __asm__(COD2_SYM("BG_WeaponAmmo"));
+cod2_abi_int<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())), 4> cod2x_BG_WeaponAmmo(playerState_s const* a0, int a1) { return (cod2_abi_int<decltype(BG_WeaponAmmo(std::declval<playerState_s const*>(), std::declval<int>())), 4>)BG_WeaponAmmo(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>()))>::value, "BG_WeaponFireRecoil returns a struct");
+static_assert(cod2_abi_class<decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "BG_WeaponFireRecoil: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_WeaponFireRecoil: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_WeaponFireRecoil: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "BG_WeaponFireRecoil: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>())) cod2x_BG_WeaponFireRecoil(playerState_s* a0, float* a1, float* a2) __asm__(COD2_SYM("BG_WeaponFireRecoil"));
+decltype(BG_WeaponFireRecoil(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>())) cod2x_BG_WeaponFireRecoil(playerState_s* a0, float* a1, float* a2) { return BG_WeaponFireRecoil(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(BG_WeaponIsClipOnly(std::declval<int>()))>::value, "BG_WeaponIsClipOnly returns a struct");
+static_assert(cod2_abi_class<decltype(BG_WeaponIsClipOnly(std::declval<int>()))>() == 'i', "BG_WeaponIsClipOnly: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "BG_WeaponIsClipOnly: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(BG_WeaponIsClipOnly(std::declval<int>())), 4> cod2x_BG_WeaponIsClipOnly(int a0) __asm__(COD2_SYM("BG_WeaponIsClipOnly"));
+cod2_abi_int<decltype(BG_WeaponIsClipOnly(std::declval<int>())), 4> cod2x_BG_WeaponIsClipOnly(int a0) { return (cod2_abi_int<decltype(BG_WeaponIsClipOnly(std::declval<int>())), 4>)BG_WeaponIsClipOnly(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(CG_SetWeaponDefToDefaultWeapon(std::declval<int>()))>::value, "CG_SetWeaponDefToDefaultWeapon returns a struct");
+static_assert(cod2_abi_class<decltype(CG_SetWeaponDefToDefaultWeapon(std::declval<int>()))>() == 'v', "CG_SetWeaponDefToDefaultWeapon: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "CG_SetWeaponDefToDefaultWeapon: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(CG_SetWeaponDefToDefaultWeapon(std::declval<int>())) cod2x_CG_SetWeaponDefToDefaultWeapon(int a0) __asm__(COD2_SYM("CG_SetWeaponDefToDefaultWeapon"));
+decltype(CG_SetWeaponDefToDefaultWeapon(std::declval<int>())) cod2x_CG_SetWeaponDefToDefaultWeapon(int a0) { return CG_SetWeaponDefToDefaultWeapon(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>()))>::value, "Mantle_CreateAnims returns a struct");
+static_assert(cod2_abi_class<decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>()))>() == 'v', "Mantle_CreateAnims: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "Mantle_CreateAnims: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>())) cod2x_Mantle_CreateAnims(void* (*a0)(int)) __asm__(COD2_SYM("Mantle_CreateAnims"));
+decltype(Mantle_CreateAnims(std::declval<void* (*)(int)>())) cod2x_Mantle_CreateAnims(void* (*a0)(int)) { return Mantle_CreateAnims(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(Mantle_ShutdownAnims())>::value, "Mantle_ShutdownAnims returns a struct");
+static_assert(cod2_abi_class<decltype(Mantle_ShutdownAnims())>() == 'v', "Mantle_ShutdownAnims: return class differs from src/PC/server_mp");
+extern "C" decltype(Mantle_ShutdownAnims()) cod2x_Mantle_ShutdownAnims() __asm__(COD2_SYM("Mantle_ShutdownAnims"));
+decltype(Mantle_ShutdownAnims()) cod2x_Mantle_ShutdownAnims() { return Mantle_ShutdownAnims(); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(PM_IsBinocularsADS(std::declval<playerState_s const*>()))>::value, "PM_IsBinocularsADS returns a struct");
+static_assert(cod2_abi_class<decltype(PM_IsBinocularsADS(std::declval<playerState_s const*>()))>() == 'i', "PM_IsBinocularsADS: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s const*>() == 4, "PM_IsBinocularsADS: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(PM_IsBinocularsADS(std::declval<playerState_s const*>())), 1> cod2x_PM_IsBinocularsADS(playerState_s const* a0) __asm__(COD2_SYM("PM_IsBinocularsADS"));
+cod2_abi_int<decltype(PM_IsBinocularsADS(std::declval<playerState_s const*>())), 1> cod2x_PM_IsBinocularsADS(playerState_s const* a0) { return (cod2_abi_int<decltype(PM_IsBinocularsADS(std::declval<playerState_s const*>())), 1>)PM_IsBinocularsADS(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(PM_UpdateViewAngles(std::declval<playerState_s*>(), std::declval<float>(), std::declval<usercmd_s*>(), std::declval<unsigned char>()))>::value, "PM_UpdateViewAngles returns a struct");
+static_assert(cod2_abi_class<decltype(PM_UpdateViewAngles(std::declval<playerState_s*>(), std::declval<float>(), std::declval<usercmd_s*>(), std::declval<unsigned char>()))>() == 'v', "PM_UpdateViewAngles: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "PM_UpdateViewAngles: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "PM_UpdateViewAngles: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<usercmd_s*>() == 4, "PM_UpdateViewAngles: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned char>() == 4, "PM_UpdateViewAngles: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(PM_UpdateViewAngles(std::declval<playerState_s*>(), std::declval<float>(), std::declval<usercmd_s*>(), std::declval<unsigned char>())) cod2x_PM_UpdateViewAngles(playerState_s* a0, float a1, usercmd_s* a2, unsigned char a3) __asm__(COD2_SYM("PM_UpdateViewAngles"));
+decltype(PM_UpdateViewAngles(std::declval<playerState_s*>(), std::declval<float>(), std::declval<usercmd_s*>(), std::declval<unsigned char>())) cod2x_PM_UpdateViewAngles(playerState_s* a0, float a1, usercmd_s* a2, unsigned char a3) { return PM_UpdateViewAngles(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(Pmove(std::declval<pmove_t*>()))>::value, "Pmove returns a struct");
+static_assert(cod2_abi_class<decltype(Pmove(std::declval<pmove_t*>()))>() == 'v', "Pmove: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<pmove_t*>() == 4, "Pmove: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(Pmove(std::declval<pmove_t*>())) cod2x_Pmove(pmove_t* a0) __asm__(COD2_SYM("Pmove"));
+decltype(Pmove(std::declval<pmove_t*>())) cod2x_Pmove(pmove_t* a0) { return Pmove(a0); }

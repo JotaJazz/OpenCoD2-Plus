@@ -1336,9 +1336,11 @@ struct _d32_g_rendererExists __attribute__((aligned(4))) g_rendererExists = {
 /* viewLerp_ProneCrouch: migrated to home .c (plan 4g); skipped. */
 /* viewLerp_StandCrouch: migrated to home .c (plan 4g); skipped. */
 /* viewLerp_CrouchProne: migrated to home .c (plan 4g); skipped. */
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct _d32_bg_iNumWeapons __attribute__((aligned(4))) bg_iNumWeapons = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_g_EndPos __attribute__((aligned(4))) g_EndPos = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -1531,6 +1533,7 @@ struct _d32_bgs __attribute__((aligned(4))) bgs = {
 struct _d32_globalFilename __attribute__((aligned(4))) globalFilename = {
     (void *)&str_002aee58
 };
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct _d32_controller_names __attribute__((aligned(4))) controller_names = {
     (void *)((char *)&scr_const + 168),
     (void *)((char *)&scr_const + 170),
@@ -1540,6 +1543,7 @@ struct _d32_controller_names __attribute__((aligned(4))) controller_names = {
     (void *)((char *)&scr_const + 178),
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
+#endif
 /* animBodyPartsStr: migrated to home .c (plan 4g); skipped. */
 /* kb: defined by typed C TU; skipped. */
 /* staticNULL: defined by typed C TU; skipped. */

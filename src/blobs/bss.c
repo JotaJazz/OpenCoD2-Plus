@@ -171,12 +171,14 @@ unsigned char localization[32];
 unsigned char language_buffer[4192];
 BSSINT shouldQuitOnError;
 unsigned char cml[124];
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 unsigned char bg_iNumAmmoTypes[32];
 unsigned char bg_weapAmmoTypes[512];
 unsigned char bg_iNumSharedAmmoCaps[32];
 unsigned char bg_sharedAmmoCaps[512];
 unsigned char bg_iNumWeapClips[32];
 unsigned char bg_weapClips[544];
+#endif
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrVmGlob[8320];
 #endif
@@ -192,6 +194,7 @@ unsigned char scrCompileGlob[512];
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrAnimGlob_t scrAnimGlob;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 BSSINT jump_height;
 BSSINT jump_spreadAdd;
 BSSINT jump_slowdownEnable;
@@ -199,11 +202,14 @@ BSSINT jump_ladderPushVel;
 unsigned char jump_stepSize[112];
 BSSINT mantle_enable;
 BSSINT mantle_view_yawcap;
+#endif
 BSSINT s_mantleAnims;
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 BSSINT mantle_debug;
 BSSINT mantle_check_angle;
 BSSINT mantle_check_range;
 unsigned char mantle_check_radius[104];
+#endif
 unsigned char token_004ed380[1024];
 unsigned char statCount[32];
 unsigned char stats[96];
@@ -233,7 +239,9 @@ unsigned char szReference[1024];
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int currentPos;
 #endif
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 unsigned char bg_defaultWeaponDefs[1568];
+#endif
 unsigned char g_playerAnimTypeNames[256];
 unsigned char g_playerAnimTypeNamesCount[96];
 unsigned char sys_info[544];
@@ -449,7 +457,9 @@ unsigned char botport[128];
 unsigned char ui_arenaInfos[256];
 unsigned char ui_numArenas[128];
 unsigned char defineBits[1152];
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 unsigned char weaponStrings[1024];
+#endif
 BSSINT parseEvent;
 BSSINT parseMovetype;
 unsigned char defineStringsOffset[24];
@@ -687,6 +697,7 @@ int *clusterSort;
 int effectClusterCount;
 volatile qboolean fx_camera_valid;
 unsigned char fxSchedulers[128];
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 const dvar_t *player_dmgtimer_flinchTime;
 const dvar_t *player_dmgtimer_stumbleTime;
 const dvar_t *player_dmgtimer_minScale;
@@ -718,6 +729,7 @@ const dvar_t *bg_foliagesnd_fastinterval;
 const dvar_t *bg_foliagesnd_slowinterval;
 const dvar_t *bg_foliagesnd_maxspeed;
 const dvar_t *bg_foliagesnd_minspeed;
+#endif
 #if defined(COD2_X64)
 /* x86 sizeof(clipMap_t)=384; on x64 its many pointer fields grow so the struct is
    larger -> the byte blob put nodes/planes/leafs at wrong offsets and overflowed
@@ -732,7 +744,9 @@ struct clipMap_t cm;
    on maps that load many weapons (e.g. mp_breakout). Retype so it holds all 128. */
 /* Typed on BOTH arches so this storage and the consumer's declaration agree; 128 slots
    is what the consumer declares and exceeds x86's need (was 608B/152 slots). */
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct WeaponDef *bg_weaponDefs[128];
+#endif
 /* Consumer is `struct scrVmPub_t scrVmPub` (scr_vm.c). On x86 sizeof==17184 (exact
    fit: 32 header + function_frame_t[32]*24 + VariableValue[2048]*8). On x64 it is
    17720 -- 536 bytes larger (the 4 leading pointers grow 4->8 and function_frame_t
@@ -1512,10 +1526,12 @@ unsigned char g_entities[573440];
    G_FreeEntity's memset of an entity slot was landing on level_bgs.AllocXAnim, NULLing
    it and crashing anim-tree precache on any map with a misc_model (e.g. mp_carentan).
    Retype so the compiler sizes it for the arch. BSS, so binary-compatible on x86. */
+#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct bgs_t level_bgs;
 #else
 bgs_t level_bgs;
+#endif
 #endif
 /* 13952 = the original 32-bit symbol size (MSVC x86 sizeof(level_locals_t)=13860
    fits with tail slack). On x64 sizeof(level_locals_t)=14544 -- 592 bytes larger

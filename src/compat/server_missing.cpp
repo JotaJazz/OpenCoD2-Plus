@@ -111,35 +111,29 @@ void RoundFloatArray(vec3_t x, vec3_t y)
 	}
 }
 
-// bgame/bg_misc.cpp
-void BG_CreateRotationMatrix( const vec3_t angles, vec3_t matrix[3] )
+// universal/q_shared.cpp
+void SetConfigString(char **ppszConfigString, const char *pszKeyValue)
 {
-	AngleVectors( angles, matrix[0], matrix[1], matrix[2] );
-	VectorInverse( matrix[1] );
-}
+	size_t len;
+	char *dest;
 
-// bgame/bg_misc.cpp
-void BG_TransposeMatrix( const vec3_t matrix[3], vec3_t transpose[3] )
-{
-	int i, j;
-	for ( i = 0; i < 3; i++ )
+	if ( *pszKeyValue )
 	{
-		for ( j = 0; j < 3; j++ )
-		{
-			transpose[i][j] = matrix[j][i];
-		}
+		len = strlen(pszKeyValue);
+		dest = (char *)Hunk_AllocLowAlignInternal(len + 1, 1);
+		strcpy(dest, pszKeyValue);
+		*ppszConfigString = dest;
+	}
+	else
+	{
+		*ppszConfigString = "";
 	}
 }
 
-// bgame/bg_misc.cpp
-void BG_RotatePoint( vec3_t point, const vec3_t matrix[3] )
+// universal/q_shared.cpp
+void SetConfigString2(unsigned char *pMember, const char *pszKeyValue)
 {
-	vec3_t tvec;
-
-	VectorCopy( point, tvec );
-	point[0] = DotProduct( matrix[0], tvec );
-	point[1] = DotProduct( matrix[1], tvec );
-	point[2] = DotProduct( matrix[2], tvec );
+	SetConfigString((char **)pMember, pszKeyValue);
 }
 
 // universal/com_files.cpp

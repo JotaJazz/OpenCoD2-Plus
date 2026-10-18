@@ -53,3 +53,6 @@ scr_const_t:allies,axis,current,damage,death,dlight,done,empty,entity,failed,fra
 game_hudelem_s:elem,clientNum,team,archived
 scr_data_t
 entityHandler_t
+# bgs_t is not compared: its animation_s is 104 bytes here (the Windows
+# layout) and 96 there (packed, as cod2_lnxded), so level_bgs stays inside
+# CoD2rev-Plus's game and bgame, which come together into the dedicated server.

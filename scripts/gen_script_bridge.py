@@ -160,6 +160,7 @@ SERVER_OVERLOADS = {}
 SERVER_EXTRA_ARGS = {
     'FS_Shutdown': (['int'], ['1']),                     # closemfp, as src/PC/server_mp passes
     'MSG_WriteBigString': (['msg_t*', 'int', 'int', 'int'], ['0', '0', '0', '0']),  # unused here
+    'DiffTrackAngle': (['float', 'float', 'float'], ['0.0f', '0.0f', '0.0f']),  # unused, as src/PC/bgame passes
 }
 # Imports CoD2rev-Plus calls with trailing arguments the engine does not take
 # (cdecl: the caller pops them): how many. CoD2rev-Plus's own definitions do
@@ -190,10 +191,10 @@ int MSG_ReadBitsCompress( const byte *from, int fromSizeBytes, byte *to, int toS
 }
 # Hunk_ClearLow: CoD2rev-Plus's body is the engine's Hunk_ClearToMarkLow.
 SERVER_RENAMED = {'Hunk_ClearLow': 'Hunk_ClearToMarkLow'}
-SERVER_PROVIDED = {'BG_CreateRotationMatrix', 'BG_RotatePoint', 'BG_TransposeMatrix', 'BigShort', 'Cmd_ReplaceControlChars',
-                   'Com_BitCheck', 'Com_BitClear', 'Com_BitSet', 'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex',
-                   'FS_HomeFileLength', 'FS_RotateHomeFile', 'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString',
-                   'MSG_ReadStringLine', 'RoundFloatArray', 'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp',
+SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet',
+                   'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex', 'FS_HomeFileLength', 'FS_RotateHomeFile',
+                   'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString', 'MSG_ReadStringLine', 'RoundFloatArray',
+                   'SetConfigString', 'SetConfigString2', 'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp',
                    'VectorInverse', 'VectorLength', 'VectorLengthSquared'}
 SERVER_EXPORT_CUSTOM = {
     # Static in CoD2rev-Plus: its SV_AddOperatorCommands registers say and
@@ -239,6 +240,24 @@ int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList)
 void cod2x_G_RegisterWeapon(int weapIndex)
 {
     G_RegisterWeapon(weapIndex);
+}
+''',
+    # Only cgame calls it (linked, never run, in the dedicated server) and
+    # CoD2rev-Plus does not have it: src/PC/bgame/bg_weapons.c's body.
+    'BG_IsPlayerWeaponAnAlt': '''extern "C" int cod2x_BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex) __asm__(COD2_SYM("BG_IsPlayerWeaponAnAlt"));
+int cod2x_BG_IsPlayerWeaponAnAlt(int iWeaponIndex, int iAltIndex)
+{
+    int altIndex = BG_GetWeaponDef(iWeaponIndex)->altWeaponIndex;
+
+    while (altIndex) {
+        if (altIndex == iAltIndex)
+            return 1;
+        if (altIndex == iWeaponIndex)
+            break;
+        altIndex = BG_GetWeaponDef(altIndex)->altWeaponIndex;
+    }
+
+    return 0;
 }
 ''',
 }

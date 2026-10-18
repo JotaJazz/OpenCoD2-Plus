@@ -75,3 +75,11 @@ src/game/g_weapon_mp.cpp
 src/game/player_use_mp.cpp
 src/game/scr_const_mp.cpp
 src/bgame/bg_misctables.cpp
+src/bgame/bg_animation_mp.cpp
+src/bgame/bg_jump.cpp
+src/bgame/bg_mantle.cpp
+src/bgame/bg_misc.cpp
+src/bgame/bg_pmove.cpp
+src/bgame/bg_slidemove.cpp
+src/bgame/bg_weapons.cpp
+src/bgame/bg_weapons_load_obj.cpp

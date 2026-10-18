@@ -79,3 +79,55 @@ G_ParseWeaponAccurayGraphs
 G_PlayerEvent
 G_RegisterWeapon
 G_TraceCapsule
+# Functions of bgame that the engine calls by their C names: the ones
+# src/PC/bgame defines and the dedicated server's other objects reference
+# (cgame_mp and client_mp, linked but not run in the dedicated server, and
+# qcommon/common.c).
+BG_AddPredictableEventToPlayerstate
+BG_AmmoForWeapon
+BG_CalculateViewAngles
+BG_CalculateWeaponAngles
+BG_CalculateWeaponPosition_Sway
+BG_CanItemBeGrabbed
+BG_ClearWeaponDef
+BG_ClipForWeapon
+BG_DoesWeaponNeedSlot
+BG_EvaluateTrajectory
+BG_FillInAmmoItems
+BG_GetAmmoClipSize
+BG_GetAmmoTypeMax
+BG_GetBobCycle
+BG_GetEmptySlotForWeapon
+BG_GetFirstAvailableOffhand
+BG_GetFirstEquippedOffhand
+BG_GetHorizontalBobFactor
+BG_GetNumWeapons
+BG_GetSpeed
+BG_GetSpreadForWeapon
+BG_GetStackSlotForWeapon
+BG_GetTotalAmmoReserve
+BG_GetVerticalBobFactor
+BG_GetViewmodelWeaponIndex
+BG_GetWeaponDef
+BG_GetWeaponIndexForName
+BG_GetWeaponSlotForName
+BG_IsAimDownSightWeapon
+BG_IsPlayerWeaponAnAlt
+BG_IsPlayerWeaponInSlot
+BG_LoadAnim
+BG_PlayerAnimation
+BG_PlayerStateToEntityState
+BG_PlayerTouchesItem
+BG_Player_DoControllers
+BG_RegisterDvars
+BG_ShutdownWeaponDefFiles
+BG_UpdatePlayerDObj
+BG_WeaponAmmo
+BG_WeaponFireRecoil
+BG_WeaponIsClipOnly
+CG_SetWeaponDefToDefaultWeapon
+Mantle_CreateAnims
+Mantle_ShutdownAnims
+PM_IsBinocularsADS
+PM_UpdateViewAngles
+Pmove
