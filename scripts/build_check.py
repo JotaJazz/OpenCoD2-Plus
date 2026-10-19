@@ -98,7 +98,11 @@ def bgame_names(build_dir):
         return []
     run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_bgame_names.py'), build_dir],
                          capture_output=True, text=True)
-    return [] if run.returncode == 0 else ['cod2_linux: ' + line for line in run.stdout.splitlines()[:-1]]
+    if run.returncode == 0:
+        return []
+    # the last line is the summary; a crash leaves only stderr
+    lines = run.stdout.splitlines()[:-1] or (run.stderr.strip().splitlines() or ['check_bgame_names.py failed'])[-3:]
+    return ['cod2_linux: ' + line for line in lines]
 
 
 def main():
