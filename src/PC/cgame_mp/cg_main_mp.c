@@ -682,20 +682,16 @@ static inline __attribute__((always_inline)) int CG_PlayPickedAlias(const snd_al
     return msec;
 }
 
+/* The local player, from the next snapshot: cgArray + 36 is cg.nextSnap,
+ * a pointer, which the offsets 0xd8 and 0x20 were read past without it. */
 static inline __attribute__((always_inline)) int CG_LocalSoundEntityNum(void)
 {
-    const byte *localSoundState;
-
-    localSoundState = (const byte *)&cgArray + 36;
-    return *(const int *)(localSoundState + 0xd8);
+    return cgArray[0].nextSnap ? cgArray[0].nextSnap->ps.clientNum : cgArray[0].clientNum;
 }
 
 static inline __attribute__((always_inline)) const vec_t *CG_LocalSoundOrigin(void)
 {
-    const byte *localSoundState;
-
-    localSoundState = (const byte *)&cgArray + 36;
-    return (const vec_t *)(localSoundState + 0x20);
+    return cgArray[0].nextSnap ? cgArray[0].nextSnap->ps.origin : cgArray[0].predictedPlayerState.origin;
 }
 
 int CG_PlaySoundAliasAsMasterByName(int entitynum, const vec_t *origin, const char *aliasname)
