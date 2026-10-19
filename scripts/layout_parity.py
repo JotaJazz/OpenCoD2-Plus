@@ -10,11 +10,12 @@ in '~' compares only the fields, not sizeof. For each side a
 C++ program prints sizeof and offsetof of every field; the two results are
 compared. Side A is this repo (common_types.h and imports.h inside extern "C"),
 side B is CoD2rev-Plus (qcommon.h, script_public.h, server.h and g_shared.h); both use the flags of the
-variant's build in build/check-<variant>/. Prints 'ok <type>' or
-'DIFF <type>: <field> <A> != <B>', and exits with 0 when nothing differs. The
-mingw variant needs wine to run its programs.
+variant's build in build/check-<variant>/. Nothing is run: each side's
+values are an array in a section of its own (.lpar) of the compiled object,
+which objcopy reads, so the mingw variant needs no wine. Prints 'ok <type>' or
+'DIFF <type>: <field> <A> != <B>', and exits with 0 when nothing differs.
 """
-import argparse, json, os, shlex, shutil, subprocess, sys, tempfile
+import argparse, json, os, shlex, struct, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
@@ -34,29 +35,51 @@ def load_types(path):
 
 
 def program(prologue, types):
-    lines = ['#include <stdio.h>', '#include <stddef.h>', prologue, 'int main(void) {']
+    """A source whose layout_values array holds, in the order of keys(types),
+    each type's sizeof and its fields' offsetof."""
+    values = []
     for name, fields, _ in types:
-        lines.append(f'    printf("{name} sizeof %u\\n", (unsigned)sizeof({name}));')
-        for field in fields:
-            lines.append(f'    printf("{name} {field} %u\\n", (unsigned)offsetof({name}, {field}));')
-    lines += ['    return 0;', '}']
+        values.append(f'(unsigned)sizeof({name})')
+        values += [f'(unsigned)offsetof({name}, {field})' for field in fields]
+    lines = ['#include <stddef.h>', prologue,
+             'extern "C" __attribute__((section(".lpar"), used)) const unsigned layout_values[] = {']
+    lines += [f'    {v},' for v in values]
+    lines += ['};']
     return '\n'.join(lines) + '\n'
 
 
-def measure(compiler, flags, source, tmp, tag, runner):
+def keys(types):
+    return [(name, field) for name, fields, _ in types for field in ['sizeof'] + fields]
+
+
+def objcopy_for(compiler):
+    """The objcopy of the compiler's toolchain (i686-w64-mingw32-g++ -> i686-w64-mingw32-objcopy)."""
+    base = os.path.basename(compiler)
+    for suffix in ('g++', 'c++', 'gcc', 'cc'):
+        if base.endswith(suffix) and base[:-len(suffix)].endswith('-'):
+            return os.path.join(os.path.dirname(compiler), base[:-len(suffix)] + 'objcopy')
+    return 'objcopy'
+
+
+def measure(compiler, flags, source, tmp, tag, types):
     src = os.path.join(tmp, tag + '.cpp')
-    exe = os.path.join(tmp, tag + '.exe')
+    obj = os.path.join(tmp, tag + '.o')
+    data = os.path.join(tmp, tag + '.bin')
     with open(src, 'w') as f:
         f.write(source)
-    build = subprocess.run([compiler, '-std=gnu++17', '-w'] + flags + [src, '-o', exe], capture_output=True, text=True)
+    build = subprocess.run([compiler, '-std=gnu++17', '-w', '-c'] + flags + [src, '-o', obj], capture_output=True, text=True)
     if build.returncode != 0:
         sys.exit(f'side {tag} does not compile:\n' + build.stderr[-3000:])
-    run = subprocess.run(runner + [exe], capture_output=True, text=True)
-    result = {}
-    for line in run.stdout.splitlines():
-        name, field, value = line.split(' ')
-        result[(name, field)] = int(value)
-    return result
+    dump = subprocess.run([objcopy_for(compiler), '-O', 'binary', '--only-section=.lpar', obj, data],
+                          capture_output=True, text=True)
+    if dump.returncode != 0:
+        sys.exit(f'side {tag}: objcopy failed:\n' + dump.stderr[-3000:])
+    names = keys(types)
+    with open(data, 'rb') as f:
+        raw = f.read()
+    if len(raw) < 4 * len(names):
+        sys.exit(f'side {tag}: .lpar holds {len(raw)} bytes, {4 * len(names)} expected')
+    return dict(zip(names, struct.unpack(f'<{len(names)}I', raw[:4 * len(names)])))
 
 
 def variant_flags(variant):
@@ -74,6 +97,8 @@ def variant_flags(variant):
             continue
         if a == '-c' or a.endswith('.c.cpp') or a.startswith('-std='):
             continue
+        if a.startswith('@'):  # MinGW's include response files are relative to the build
+            a = '@' + os.path.join(entry['directory'], a[1:])
         flags.append(a)
     return args[0], flags
 
@@ -88,17 +113,12 @@ def main():
     args = ap.parse_args()
 
     types = load_types(args.types)
-    runner = []
     if args.flags is not None:
         compiler, flags_a = 'g++', shlex.split(args.flags)
         flags_b = flags_a
     else:
         compiler, flags_a = variant_flags(args.variant)
         flags_b = flags_a + [f'-DPROTOCOL_VERSION={PROTOCOL[args.variant]}', '-DNDEBUG']
-        if args.variant == 'mingw':
-            if not shutil.which('wine'):
-                sys.exit('mingw needs wine to run the layout programs')
-            runner = ['wine']
     prologue_a = (f'#include "{args.headers_a}"' if args.headers_a else
                   'extern "C" {\n#include "common_types.h"\n#include "imports.h"\n}')
     prologue_b = (f'#include "{args.headers_b}"' if args.headers_b else
@@ -108,8 +128,8 @@ def main():
                   f'#include "{os.path.join(SRC, "game", "g_shared.h")}"')
 
     with tempfile.TemporaryDirectory(prefix='layout_parity_') as tmp:
-        a = measure(compiler, flags_a, program(prologue_a, types), tmp, 'a', runner)
-        b = measure(compiler, flags_b, program(prologue_b, types), tmp, 'b', runner)
+        a = measure(compiler, flags_a, program(prologue_a, types), tmp, 'a', types)
+        b = measure(compiler, flags_b, program(prologue_b, types), tmp, 'b', types)
 
     failed = 0
     for name, fields, fields_only in types:
