@@ -105,8 +105,11 @@ def main():
                 check('the target shoots the client', game_log(home).count('contact mover hit') > hits,
                       f'{game_log(home).count("contact mover hit") - hits} hits, weapon {weapon}')
                 target.pitch = 10.0
-                target.frag_commands = 6
-                run(6, client)
+                for _ in range(3):  # a grenade can roll out of reach: up to three
+                    target.frag_commands = 6
+                    run(6, client)
+                    if 'contact mover hit MOD_GRENADE' in game_log(home):
+                        break
                 target.pitch = 0.0
                 check('a grenade blasts the client', 'contact mover hit MOD_GRENADE' in game_log(home))
                 for death in (1, 2):
