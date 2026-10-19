@@ -447,6 +447,17 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
         f'static_assert(cod2_bridge_returns_scalar<{r}>::value, "{name} returns a struct");\n'
     guard += abi_asserts(name, params, abi, r, 'src/PC/server_mp')
     w = widened(abi, r)
+    if '...' in params:
+        # the engine's arguments are formatted here and passed on as "%s", as
+        # import_thunk does the other way
+        n = len(fixed(params))
+        fmt = f'a{n - 1}'
+        before = ''.join(f'a{i}, ' for i in range(n - 1))
+        return (guard + f'extern "C" {r} cod2x_{name}({sig}) __asm__(COD2_SYM("{name}"));\n'
+                f'{r} cod2x_{name}({sig})\n{{\n'
+                f'    char buf[4096];\n    va_list ap;\n    va_start(ap, {fmt});\n'
+                f'    vsnprintf(buf, sizeof(buf), {fmt}, ap);\n    va_end(ap);\n'
+                f'    return {target}({before}"%s", buf);\n}}\n')
     if w:
         return (guard + f'extern "C" {w} cod2x_{name}({sig}) __asm__(COD2_SYM("{name}"));\n'
                 f'{w} cod2x_{name}({sig}) {{ return ({w}){target}({args}); }}\n')

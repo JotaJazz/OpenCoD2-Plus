@@ -1072,14 +1072,30 @@ static_assert(cod2_bridge_returns_scalar<decltype(Com_DPrintf(std::declval<char 
 static_assert(cod2_abi_class<decltype(Com_DPrintf(std::declval<char const*>()))>() == 'v', "Com_DPrintf: return class differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_DPrintf: parameter 0 differs from src/PC/server_mp");
 extern "C" decltype(Com_DPrintf(std::declval<char const*>())) cod2x_Com_DPrintf(char const* a0, ...) __asm__(COD2_SYM("Com_DPrintf"));
-decltype(Com_DPrintf(std::declval<char const*>())) cod2x_Com_DPrintf(char const* a0, ...) { return Com_DPrintf(a0); }
+decltype(Com_DPrintf(std::declval<char const*>())) cod2x_Com_DPrintf(char const* a0, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a0);
+    vsnprintf(buf, sizeof(buf), a0, ap);
+    va_end(ap);
+    return Com_DPrintf("%s", buf);
+}
 
 static_assert(cod2_bridge_returns_scalar<decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>()))>::value, "Com_Error returns a struct");
 static_assert(cod2_abi_class<decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>()))>() == 'v', "Com_Error: return class differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<errorParm_t>() == 4, "Com_Error: parameter 0 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_Error: parameter 1 differs from src/PC/server_mp");
 extern "C" decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>())) cod2x_Com_Error(errorParm_t a0, char const* a1, ...) __asm__(COD2_SYM("Com_Error"));
-decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>())) cod2x_Com_Error(errorParm_t a0, char const* a1, ...) { return Com_Error(a0, a1); }
+decltype(Com_Error(std::declval<errorParm_t>(), std::declval<char const*>())) cod2x_Com_Error(errorParm_t a0, char const* a1, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a1);
+    vsnprintf(buf, sizeof(buf), a1, ap);
+    va_end(ap);
+    return Com_Error(a0, "%s", buf);
+}
 
 static_assert(cod2_bridge_returns_scalar<decltype(Com_ExecStartupConfigs(std::declval<char const*>()))>::value, "Com_ExecStartupConfigs returns a struct");
 static_assert(cod2_abi_class<decltype(Com_ExecStartupConfigs(std::declval<char const*>()))>() == 'v', "Com_ExecStartupConfigs: return class differs from src/PC/server_mp");
@@ -1139,7 +1155,15 @@ static_assert(cod2_bridge_returns_scalar<decltype(Com_Printf(std::declval<char c
 static_assert(cod2_abi_class<decltype(Com_Printf(std::declval<char const*>()))>() == 'v', "Com_Printf: return class differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_Printf: parameter 0 differs from src/PC/server_mp");
 extern "C" decltype(Com_Printf(std::declval<char const*>())) cod2x_Com_Printf(char const* a0, ...) __asm__(COD2_SYM("Com_Printf"));
-decltype(Com_Printf(std::declval<char const*>())) cod2x_Com_Printf(char const* a0, ...) { return Com_Printf(a0); }
+decltype(Com_Printf(std::declval<char const*>())) cod2x_Com_Printf(char const* a0, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a0);
+    vsnprintf(buf, sizeof(buf), a0, ap);
+    va_end(ap);
+    return Com_Printf("%s", buf);
+}
 
 static_assert(cod2_bridge_returns_scalar<decltype(Com_PumpMessageLoop())>::value, "Com_PumpMessageLoop returns a struct");
 static_assert(cod2_abi_class<decltype(Com_PumpMessageLoop())>() == 'v', "Com_PumpMessageLoop: return class differs from src/PC/server_mp");
@@ -1655,7 +1679,15 @@ static_assert(cod2_abi_class<decltype(FS_Printf(std::declval<int>(), std::declva
 static_assert(cod2_abi_slot<int>() == 4, "FS_Printf: parameter 0 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_Printf: parameter 1 differs from src/PC/server_mp");
 extern "C" decltype(FS_Printf(std::declval<int>(), std::declval<char const*>())) cod2x_FS_Printf(int a0, char const* a1, ...) __asm__(COD2_SYM("FS_Printf"));
-decltype(FS_Printf(std::declval<int>(), std::declval<char const*>())) cod2x_FS_Printf(int a0, char const* a1, ...) { return FS_Printf(a0, a1); }
+decltype(FS_Printf(std::declval<int>(), std::declval<char const*>())) cod2x_FS_Printf(int a0, char const* a1, ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, a1);
+    vsnprintf(buf, sizeof(buf), a1, ap);
+    va_end(ap);
+    return FS_Printf(a0, "%s", buf);
+}
 
 static_assert(cod2_bridge_returns_scalar<decltype(FS_PureServerSetLoadedIwds(std::declval<char const*>(), std::declval<char const*>()))>::value, "FS_PureServerSetLoadedIwds returns a struct");
 static_assert(cod2_abi_class<decltype(FS_PureServerSetLoadedIwds(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "FS_PureServerSetLoadedIwds: return class differs from src/PC/server_mp");

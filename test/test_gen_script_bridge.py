@@ -124,6 +124,13 @@ class Modules(unittest.TestCase):
         sigs = g.signatures(['_Z11FS_FileSeekP8_IO_FILEii', '_Z11FS_FileSeekP6_iobufii'])
         self.assertEqual(sigs, {'FS_FileSeek': ['FS_FileSeek(FILE*, int, int)']})
 
+    def test_variadic_export_forwards_arguments(self):
+        # the engine's Com_Error(ERR_DROP, "xmodel '%s' not found", name)
+        # must reach CoD2rev-Plus's with the name formatted in
+        code = g.export_thunk('Com_Error', ['errorParm_t', 'char const*', '...'], g.MODULES['server'])
+        self.assertIn('vsnprintf(buf, sizeof(buf), a1, ap);', code)
+        self.assertIn('Com_Error(a0, "%s", buf);', code)
+
     def test_fatal_export(self):
         # an engine function CoD2rev-Plus lacks whose callers do not run in
         # the dedicated server stops it with its name if one ever does
