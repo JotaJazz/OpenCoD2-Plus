@@ -692,7 +692,8 @@ void CG_Corpse(centity_t *cent)
 
     clientNum = cent->nextState.number;
 
-    ci = (byte *)((char *)cgs - 0x6bec + clientNum * CI_STRIDE);
+    /* cgs.corpseinfo[clientNum - 64]: see CG_CorpseInfoForEntityNum */
+    ci = (byte *)&cgs->corpseinfo[clientNum - 64];
 
     obj = Com_GetClientDObj(clientNum, cent->localClientNum);
     BG_UpdatePlayerDObj(obj, es, (clientInfo_t *)ci, 0);

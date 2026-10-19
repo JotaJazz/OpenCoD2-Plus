@@ -193,10 +193,10 @@ static void CG_ResetEntity(char *cent)
         entNum = ((centity_t *)cent)->nextState.number;
 
         {
-            char *cgs_ptr = (char *)cgs;
-
-            corpseBase = cgs_ptr + entNum * CI_STRIDE - 0x6bf0;
-            corpseInfo = corpseBase + 4;
+            /* cgs.corpseinfo[entNum - 64], where CG_InitXAnimTrees creates
+             * the tree (see CG_CorpseInfoForEntityNum in cg_ents_mp.c) */
+            corpseInfo = (char *)&cgs->corpseinfo[entNum - 64];
+            corpseBase = corpseInfo - 4;
         }
 
         pXAnimTree = ((clientInfo_t *)corpseInfo)->pXAnimTree;
@@ -631,10 +631,8 @@ void CG_SetNextSnap(snapshot_t *snap_param)
                             continue;
 
                         {
-                            char *cgs_ptr = (char *)cgs;
                             int csNum = ((centity_t *)cent)->nextState.number;
-                            char *corpseBase = cgs_ptr + csNum * CI_STRIDE - 0x6bf0;
-                            char *corpseCI = corpseBase + 4;
+                            char *corpseCI = (char *)&cgs->corpseinfo[csNum - 64];
 
                             XAnimTree *savedTree = *(XAnimTree **)(corpseCI + CI_PXANIMTREE);
 

@@ -69,11 +69,13 @@ extern const int boxVerts[24][3];
 
 COD2_ASSERT_FIELD(cg_t, rumbleScale, 0x2c5a0);
 
-#define CG_CORPSEINFO_BASE_ADJUST (-0x6bec)
-
+/* A corpse is entity 64 to 71 (MAX_CLIENTS + its index, G_SpawnPlayerClone);
+ * its client info is cgs.corpseinfo[index], where CG_InitXAnimTrees creates
+ * its anim tree. The binary's cgs - 0x6bec + entNum * 1208 was that field in
+ * its own cgs_t, not in this one's. */
 static clientInfo_t *CG_CorpseInfoForEntityNum(int entNum)
 {
-    return (clientInfo_t *)((byte *)cgs + CG_CORPSEINFO_BASE_ADJUST + entNum * sizeof(clientInfo_t));
+    return &cgs->corpseinfo[entNum - 64];
 }
 
 struct XAnim_s *CG_GetMG42Anims(centity_t *cent);
