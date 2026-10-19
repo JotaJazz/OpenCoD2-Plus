@@ -525,7 +525,9 @@ do_step:
 
     PM_playerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, down, ps->clientNum, pm->tracemask);
 
-    if (trace.entityNum > 0x3f) {
+    /* no step onto a player (CoD2rev-Plus: entityNum < MAX_CLIENTS); the
+     * world or nothing below lets the step down go on */
+    if (trace.entityNum < 64) {
 
         ps->origin[0] = down_o[0];
         ps->origin[1] = down_o[1];
