@@ -15,43 +15,48 @@ void CM_CalcTraceEntents(TraceExtents *extents)
     }
 }
 
+/* 1 when the segment from start to end, cut at fraction, misses the box.
+ * The first pass tests the min planes (s = -1), the second the max planes
+ * (s = 1); o is the latest entry and fraction the earliest exit. */
 qboolean CM_TraceBox(const TraceExtents *extents, const vec_t *mins, const vec_t *maxs, float fraction)
 {
     const vec_t *bounds;
-    float tmin, tmax, t1, t2, invD;
-    int i, pass;
+    float o, s, t1, t2, f;
+    int i;
 
-    tmin = 0.0f;
-    tmax = fraction;
+    o = 0.0f;
+    s = -1.0f;
+    bounds = mins;
 
-    for (pass = 0; pass < 2; pass++) {
-        bounds = (pass == 0) ? mins : maxs;
+    for (;;) {
         for (i = 0; i < 3; i++) {
-            t1 = (extents->start[i] - bounds[i]) * -1.0f;
-            t2 = (extents->end[i] - bounds[i]) * -1.0f;
+            t1 = (extents->start[i] - bounds[i]) * s;
+            t2 = (extents->end[i] - bounds[i]) * s;
 
             if (t1 > 0.0f) {
                 if (t2 > 0.0f)
                     return 1;
 
-                invD = t1 * extents->invDelta[i] * -1.0f;
-                if (invD >= tmax)
+                f = t1 * extents->invDelta[i] * s;
+                if (f >= fraction)
                     return 1;
-                if (0.0f - invD > tmin)
-                    tmin = invD;
+                if (f > o)
+                    o = f;
             } else if (t2 > 0.0f) {
-
-                invD = t1 * extents->invDelta[i] * -1.0f;
-                if (invD <= 0.0f)
+                f = t1 * extents->invDelta[i] * s;
+                if (o >= f)
                     return 1;
-
-                if (invD < tmax)
-                    tmax = invD;
-                else
-                    tmax = tmax;
+                if (f < fraction)
+                    fraction = f;
             }
         }
+
+        if (s == 1.0f)
+            break;
+
+        s = 1.0f;
+        bounds = maxs;
     }
 
-    return (tmax == 1.0f) ? 0 : 1;
+    return 0;
 }
