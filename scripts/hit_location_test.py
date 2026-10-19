@@ -24,13 +24,14 @@ import argparse, os, re, subprocess, sys, tempfile, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 import cod2client, smoke_test
-from cod2client import CLC_MOVE_NO_DELTA, hash_key
+from cod2client import CLC_MOVE_NO_DELTA, KEY_MASK_MOVE_FORWARD, hash_key
 
 DEFAULT_BINARY = {
     (115, False): 'build/check-linux-10/cod2_lnxded', (118, False): 'build/check-linux/cod2_lnxded',
     (115, True): 'build/check-linux-10/cod2_linux', (118, True): 'build/check-linux/cod2_linux',
 }
 RCON = 'hitpw'
+BUTTON_MELEE = 4  # q_shared.h
 PREFERENCES = os.path.expanduser('~/.cod2/preferences')
 WEAPON = 'g43_mp'  # 10 rounds: enough for both aims without a reload
 DISTANCE = 120
@@ -130,13 +131,15 @@ Callback_PlayerKilled(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vD
 
 
 class Shooter(cod2client.Client):
-    """A minimal client that stands still and sends the full usercmd, the one
-    with the weapon and the pitch; while firing, it presses the attack button
-    on every other command."""
+    """A minimal client that sends the full usercmd, the one with the weapon
+    and the pitch; it stands still unless walking (forward), and while firing
+    it presses the attack button, or the melee one, on every other command."""
     weapon = 0
     firing = False
     attack = False
     pitch = 0.0  # degrees down from the view the spawn gives
+    walking = False  # the forward key
+    melee = False  # the melee button, while firing
 
     def _parse(self, sequence, data):
         # the commands follow the server's clock: from 1000 by 50 a command,
@@ -151,7 +154,9 @@ class Shooter(cod2client.Client):
         message_ack = self.incoming_sequence
         key = (self.checksum_feed ^ message_ack ^ hash_key(self._acknowledged()[1])) & 0xffffffff
         self.server_time += 50
-        self.attack = self.firing and not self.attack
+        # a press every other command; a melee takes longer, held for 6
+        self.presses = getattr(self, 'presses', 0) + 1
+        self.attack = self.firing and (self.presses // 6 % 2 == 0 if self.melee else not self.attack)
 
         # MSG_ReadDeltaUsercmdKey against the null command
         payload.bits(CLC_MOVE_NO_DELTA, 3)
@@ -160,17 +165,25 @@ class Shooter(cod2client.Client):
         payload.long(self.server_time)
         payload.bits(1 ^ (key & 1), 1)           # something changed
         payload.bits(1 ^ (key & 1), 1)           # not only buttons, angles and move
-        payload.bits(int(self.attack) ^ (key & 1), 1)
+        payload.bits(int(self.attack and not self.melee) ^ (key & 1), 1)
         if self.pitch:
             payload.bits(1, 1)
             payload.bits((int(self.pitch * 65536 / 360) & 0xffff) ^ (key & 0xffff), 16)
         else:
             payload.bits(0, 1)                   # pitch unchanged
         payload.bits(0, 1)                       # yaw unchanged
-        payload.bits(0, 1)                       # no move keys
+        if self.walking:
+            payload.bits(1, 1)
+            payload.bits(KEY_MASK_MOVE_FORWARD ^ (key & 0xf), 4)
+        else:
+            payload.bits(0, 1)                   # no move keys
         key ^= self.server_time
         payload.bits(0, 1)                       # roll unchanged
-        payload.bits(0, 1)                       # no other buttons
+        if self.melee and self.attack:
+            payload.bits(1, 1)
+            payload.bits((BUTTON_MELEE >> 1) ^ (key & 0x3ffff), 18)
+        else:
+            payload.bits(0, 1)                   # no other buttons
         if self.weapon:
             payload.bits(1, 1)
             payload.bits(self.weapon ^ (key & 0x7f), 7)
