@@ -1,0 +1,30 @@
+# Functions of the server and game that the client's other objects call by their
+# C names (scripts/gen_script_bridge.py --module client_server): the ones
+# src/PC/server_mp, src/PC/game_mp and src/PC/game define and the client
+# references (common.c, cmd.c, cm_world.c, net_chan_mp.c, dvar_cmds.c,
+# client_mp, cgame_mp, the engine's bgame, link_stubs.c and the imp_ pointers).
+GScr_LoadConsts
+G_AnimScriptSound
+G_FreeEntity
+G_GetWeaponIndexForName
+G_ParseWeaponAccurayGraphs
+G_PlayerEvent
+G_RegisterWeapon
+G_TraceCapsule
+SV_AddDedicatedCommands
+SV_ClipMoveToEntity
+SV_ClipSightToEntity
+SV_Frame
+SV_GEntityForSvEntity
+SV_GameCommand
+SV_Init
+SV_Netchan_AddOOBProfilePacket
+SV_Netchan_PrintProfileStats
+SV_PacketEvent
+SV_PointContents
+SV_PointSightTraceToEntity
+SV_PointTraceToEntity
+SV_SetConfigValueForKey
+SV_Shutdown
+SV_ShutdownGameProgs
+SV_XModelGet

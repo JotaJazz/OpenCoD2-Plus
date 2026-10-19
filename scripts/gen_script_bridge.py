@@ -370,6 +370,24 @@ MODULES = {
                    export_fatal=SERVER_EXPORT_FATAL),
 }
 
+# The client runs CoD2rev-Plus's server, game and bgame on the engine's core
+# and xanim: their imports come back, and the functions that core lacks are
+# written by hand in src/compat/client_server_missing.cpp. The VM's core thunks
+# (cod2_plus_script_core) already define the engine functions both call.
+CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet',
+                          'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex', 'FS_HomeFileLength',
+                          'FS_RotateHomeFile', 'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString',
+                          'MSG_ReadStringLine', 'RoundFloatArray', 'SetConfigString', 'SetConfigString2',
+                          'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp', 'VectorInverse', 'VectorLength',
+                          'VectorLengthSquared'}
+MODULES['client_server'] = dict(
+    MODULES['server'],
+    objects=['cod2_plus_server_client.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')]
+    + ['cod2_plus_server_client.dir/src/compat/client_server_missing.cpp.o'],
+    others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o',
+            'cod2_plus_script_core.dir/src/compat/*.o'],
+    provided=CLIENT_SERVER_PROVIDED, export_fatal=set())
+
 # C integer types of each size, for a return the two sides give different sizes.
 WIDTH_TYPE = {1: 'unsigned char', 2: 'unsigned short', 4: 'unsigned int', 8: 'unsigned long long'}
 
@@ -563,13 +581,15 @@ def read_module(module, builds):
         files = [os.path.join(build, 'CMakeFiles', g) for g in cfg['objects']]
         objects = sorted(o for g in files for o in glob.glob(g) + glob.glob(g[:-2] + '.obj'))
         if not objects:
-            sys.exit(f'no objects in {files[0]}: configure the build with the module on and build it')
+            continue  # a build without this module (the MinGW server has no client)
         mine = set(nm(['-g', '--defined-only'], objects))
         others = sorted(o for g in cfg['others'] for p in (g, g[:-2] + '.obj')
                         for o in glob.glob(os.path.join(build, 'CMakeFiles', p)))
         elsewhere = set(nm(['-g', '--defined-only'], others))
         defined |= mine
         undefined |= set(nm(['-u'], objects)) - mine - elsewhere
+    if not defined:
+        sys.exit(f'no objects of {cfg["objects"][0]} in {", ".join(builds)}: configure a build with the module on and build it')
     undefined = sorted(undefined - defined)
     exports = signatures(sorted(defined))
     imports = {k: v for k, v in signatures([u for u in undefined if u.startswith('_Z')]).items()

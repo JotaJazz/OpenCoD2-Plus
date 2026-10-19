@@ -142,6 +142,16 @@ function(cod2_plus_server)
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
+# cod2_plus_server_client(): the OBJECT library with CoD2rev-Plus's server,
+# game and bgame for the client's local games, on the engine's core and xanim,
+# and its bridge (src/compat/client_server_*.cpp).
+function(cod2_plus_server_client)
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
+    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/compat/client_server_*.cpp)
+  add_library(cod2_plus_server_client OBJECT ${src})
+  target_compile_definitions(cod2_plus_server_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+endfunction()
+
 # cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
 # <list_var> that test/plus_replaces.txt names (a line ending in / names a
 # directory): with COD2_PLUS_SERVER the dedicated server leaves them to
@@ -656,6 +666,10 @@ if(COD2_PLUS_SERVER)
   cod2_plus_server()
   list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+endif()
+
+if(COD2_PLUS_SERVER)
+  cod2_plus_server_client()
 endif()
 
 # The shared headers compiled as C++ (their layout pins and C linkage).

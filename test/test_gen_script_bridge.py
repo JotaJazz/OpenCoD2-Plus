@@ -166,6 +166,16 @@ class Modules(unittest.TestCase):
         for d in ('universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32'):
             self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', groups['core'])
 
+    def test_client_server_module(self):
+        # the client links CoD2rev-Plus's server, game and bgame on the engine's
+        # core: its bridge reads those objects only, and leaves to the VM's
+        # core thunks the engine functions both call
+        cfg = g.MODULES['client_server']
+        for d in ('server', 'game', 'bgame'):
+            self.assertIn(f'cod2_plus_server_client.dir/src/{d}/*.o', cfg['objects'])
+        self.assertFalse([o for o in cfg['objects'] if '/src/qcommon/' in o or '/src/universal/' in o])
+        self.assertIn('cod2_plus_script_core.dir/src/compat/*.o', cfg['others'])
+
     def test_split_imports_by_group(self):
         shared, parts = g.split_imports({'Scr_GetFunction': ['a'], 'Com_Printf': ['b'], 'XAnimInit': ['c']},
                                         {'game': {'Scr_GetFunction'}, 'core': {'Com_Printf', 'XAnimInit'}})
