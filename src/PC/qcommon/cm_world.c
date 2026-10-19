@@ -864,6 +864,7 @@ static void __attribute_regparm__(3)
 
             CM_InsertEntityIntoWorldSector(childIndex, ent);
             cm_world.sectors[childIndex].contents.contentsEntities |= SV_GEntityForSvEntity(ent)->r.contents;
+            cm_world.sectors[childIndex].contents.contentsEntities |= ent->linkcontents;
         } else {
             prevEnt = ent;
         }

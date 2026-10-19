@@ -291,6 +291,10 @@ int CM_PointContents(const vec_t *p, clipHandle_t model)
 
 check_leaf:
 
+    /* a leaf without brushes holds nothing (CoD2rev-Plus's CM_PointContents) */
+    if (!leaf->leafBrushNode)
+        return 0;
+
     {
         int i;
         for (i = 0; i < 3; i++) {
