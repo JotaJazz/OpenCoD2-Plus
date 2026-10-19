@@ -991,7 +991,7 @@ void CM_LoadMapFromBsp(const char *name, int usePvs)
         box_brush->contents = -1;
 
         cmLocal->box_model.leaf.leafBrushNode = -1;
-        cmLocal->box_model.leaf.brushContents = 0;
+        cmLocal->box_model.leaf.brushContents = -1;
         cmLocal->box_model.leaf.mins[0] = 3.4028234663852886e+38f;
         cmLocal->box_model.leaf.mins[1] = 3.4028234663852886e+38f;
         cmLocal->box_model.leaf.mins[2] = 3.4028234663852886e+38f;
