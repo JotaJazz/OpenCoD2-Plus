@@ -1895,7 +1895,10 @@ static void XAnimCalcAccumulateLeafLocal(const DObj *obj, const XAnimTree_s *tre
         part = &parts->parts[animPartIndex];
 
         if (parts->simpleQuatBits && ((parts->simpleQuatBits[animPartIndex >> 3] >> (animPartIndex & 7)) & 1)) {
-            XAnimCalcAccumulateSimpleQuatLocal(mat, part->quat, &animTime, quatScale);
+            if (part->quat)
+                XAnimCalcAccumulateSimpleQuatLocal(mat, part->quat, &animTime, quatScale);
+            else
+                mat->quat[3] += weightScale; /* an unrotated bone: its weight, not a short's */
         } else {
             XAnimCalcAccumulateFullQuatLocal(mat, part->quat, &animTime, quatScale);
         }
