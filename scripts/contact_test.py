@@ -11,6 +11,9 @@ mod polls:
 - walk: the second player walks straight at the target for a few seconds; the
   two must collide, so the distance between them never falls under a body's
   width. Player against player clipping goes through the world's sectors.
+- trigger: it walks at the target again, through a trigger_radius on its
+  way, which must fire; the trigger finds the player through the world's
+  sectors.
 - melee: it stands next to the target and presses the melee button; the target
   must take MOD_MELEE hits.
 - grenade: it stands farther, aims down and throws a frag grenade, whose
@@ -125,6 +128,15 @@ phases()
 			self place(120);
 			self thread logDistance();
 		}
+		else if(phase == "trigger")
+		{
+			self place(120);
+			// on the way to the target, the mover's feet inside it
+			target = level.target;
+			middle = target.origin + maps\\mp\\_utility::vectorScale(anglesToForward(target.angles), 70);
+			trigger = spawn("trigger_radius", middle, 0, 16, 64);
+			trigger thread logTrigger();
+		}
 		else if(phase == "melee")
 		{
 			origin = self place(40);
@@ -140,6 +152,13 @@ phases()
 			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);
 		}
 	}
+}
+
+logTrigger()
+{
+	self waittill("trigger", player);
+	logPrint("contact trigger " + player getEntityNumber() + "\\n");
+	self delete();
 }
 
 logDistance()
@@ -272,6 +291,15 @@ def main():
                       f'from {distances[0]} to {min(distances)}' if distances else 'no distance')
                 check('the mover stops at the target', distances and min(distances) >= MIN_DISTANCE,
                       f'closest {min(distances)}' if distances else 'no distance')
+
+                start = phase('trigger')
+                run(0.5, mover)
+                mover.walking = True
+                end = time.time() + 4
+                while time.time() < end and 'contact trigger' not in game_log(home)[start:]:
+                    run(0.2, mover)
+                mover.walking = False
+                check('the mover sets off a trigger on its way', 'contact trigger' in game_log(home)[start:])
 
                 start = phase('melee')
                 run(1, mover)
