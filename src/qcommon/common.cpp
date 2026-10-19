@@ -1809,6 +1809,12 @@ void Com_Error( errorParm_t code, const char *fmt, ... )
 	}
 
 	com_errorType = code;
+
+	// an rcon command redirects the output into a buffer on the stack of
+	// SVC_RemoteCommand, which the longjmp leaves: flush it now, while it is
+	// valid, so the error message and the cleanup do not write over it
+	Com_EndRedirect();
+
 	abortframe = (jmp_buf*)Sys_GetValue(THREAD_VALUE_COM_ERROR);
 	longjmp(*abortframe, -1);
 }
