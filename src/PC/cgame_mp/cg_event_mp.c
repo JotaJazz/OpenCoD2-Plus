@@ -91,27 +91,6 @@ extern const char *va(const char *fmt, ...);
 #define SNAP_PS_CLIENTNUM 0xd8
 #define SNAP_PS_WEAPON 0x5a0
 
-#define CGS_SND_FOOTSTEP1_FIRST 0xbeb8
-#define CGS_SND_FOOTSTEP1_THIRD 0xbf14
-#define CGS_SND_FOOTSTEP2_THIRD 0xbf70
-#define CGS_SND_FOOTSTEP2_FIRST 0xbfcc
-#define CGS_SND_FOOTSTEP3_FIRST 0xc028
-#define CGS_SND_FOOTSTEP3_THIRD 0xc084
-#define CGS_SND_SPRINT_FIRST 0xc0e0
-#define CGS_SND_SPRINT_THIRD 0xc13c
-#define CGS_SND_PRONE_LOOP_3P 0xc198
-#define CGS_SND_PRONE_LOOP_1P_NONVIEW 0xc19c
-#define CGS_SND_PRONE_LOOP_1P_VIEW 0xc1a0
-#define CGS_SND_PRONE_STOP_1P 0xc1a4
-#define CGS_SND_WEAPON_PICKUP 0xc1a8
-#define CGS_SND_NIGHTVISION_ON 0xc1b8
-#define CGS_SND_NIGHTVISION_OFF 0xc1bc
-#define CGS_SND_NOAMMO 0xbc84
-#define CGS_SND_MELEE_HIT 0xbc88
-#define CGS_SND_BULLET_WHIZBY 0xbc90
-#define CGS_SND_BULLET_FLESH 0xbcec
-#define CGS_SND_GRENADE_BOUNCE 0xbd48
-#define CGS_FXLOOKUP 0xc200
 
 static const float f_0_01 = 0.009999999776482582f;
 static const float f_4_0 = 4.0f;
@@ -274,7 +253,8 @@ static void CG_Obituary(centity_t *cent)
     }
     {
         /* by field: CG_CLIENTINFO (cg + 0xe0900) and its offsets missed
-         * this cg_t's bgs.clientinfo by 0x1014 */
+         * this cg_t's bgs.clientinfo by 0x1014; the colors and the teamkill
+         * test take the team before the death (oldteam), as the binary */
         victimCI = &cg->bgs.clientinfo[target];
 
         if (victimCI->infoValid == 0)
@@ -284,7 +264,7 @@ static void CG_Obituary(centity_t *cent)
 
         I_strncat(targetName, 0x22, (const char *)"^7");
 
-        CG_DrawScoreboard_GetTeamColor(victimCI->team, victimColor);
+        CG_DrawScoreboard_GetTeamColor(victimCI->oldteam, victimColor);
 
         if (cg->bgs.clientinfo[cg->clientNum].infoValid == 0)
             return;
@@ -301,7 +281,7 @@ static void CG_Obituary(centity_t *cent)
 
         I_strncat(attackerName, 0x22, (const char *)"^7");
 
-        CG_DrawScoreboard_GetTeamColor(attackerCI->team, attackerColor);
+        CG_DrawScoreboard_GetTeamColor(attackerCI->oldteam, attackerColor);
 
         snap = (char *)cg->nextSnap;
         if (target == *(int *)(snap + SNAP_PS_CLIENTNUM)) {
@@ -326,8 +306,8 @@ static void CG_Obituary(centity_t *cent)
         if (attacker == localClientNum) {
 
             if (attackerCI != NULL) {
-                int atkTeam = attackerCI->team;
-                if (atkTeam != 0 && atkTeam == victimCI->team) {
+                int atkTeam = attackerCI->oldteam;
+                if (atkTeam != 0 && atkTeam == victimCI->oldteam) {
 
                     const char *msg = va((const char *)"CGAME_YOUKILLED\x15^1&&2^7 %s\x14%s", targetName, (const char *)"CGAME_TEAMMATE");
 
@@ -350,8 +330,8 @@ static void CG_Obituary(centity_t *cent)
         } else if (target == localClientNum) {
 
             if (attackerCI != NULL) {
-                int atkTeam = attackerCI->team;
-                if (atkTeam != 0 && atkTeam == victimCI->team) {
+                int atkTeam = attackerCI->oldteam;
+                if (atkTeam != 0 && atkTeam == victimCI->oldteam) {
 
                     const char *msg = va((const char *)"CGAME_YOUWEREKILLED\x15^1&&2^7 %s\x14%s", attackerName, (const char *)"CGAME_TEAMMATE");
                     if (cg->inKillCam == 0) {
@@ -1469,9 +1449,11 @@ void CG_EntityEvent(centity_t *cent, int event)
 
             float *angles = (float *)es->apos.trBase;
 
+            /* fxs[1..63] hold the effects (the binary checks 1 <= id < 64
+             * and reads fxs[id]) */
             int fxIndex = cent->nextState.eventParm;
-            int fxIdx = fxIndex - 1;
-            if ((unsigned int)fxIdx > 62) {
+            int fxIdx = fxIndex;
+            if ((unsigned int)(fxIdx - 1) > 62) {
 
                 Com_Printf((const char *)"ERROR: CG_PlayFx called with invalid effect id %i\n", fxIndex);
                 return;

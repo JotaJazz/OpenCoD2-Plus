@@ -376,7 +376,7 @@ static void CG_GetHudElemInfo(const hudelem_t *elem, cg_hudelem_t *cghe, char *h
     case HE_TYPE_PLAYERNAME: {
 
         int idx = (int)(floorf(elem->value + 0.5f));
-        if (idx > 63)
+        if (idx < 0 || idx > 63)
             break;
 
         /* the client's name; snap + 0xe0920 was neither cg nor where
