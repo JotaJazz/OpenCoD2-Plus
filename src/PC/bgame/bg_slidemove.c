@@ -19,7 +19,7 @@ extern Bool Jump_GetStepHeight(playerState_t *ps, const vec_t *origin, float *st
 extern void Jump_ClampVelocity(playerState_t *ps, const vec_t *origin);
 extern qboolean BG_CheckProne(int passEntityNum, const vec_t *vPos, const float fSize, const float fHeight, const float fYaw, float *pfTorsoHeight, float *pfTorsoPitch, float *pfWaistPitch, const qboolean bAlreadyProne, const qboolean bOnGround, vec_t *vGroundNormal, int handler, proneCheckType_t proneCheckType, float prone_feet_dist);
 
-#define MAX_CLIP_PLANES 5
+#define MAX_CLIP_PLANES 8  /* the guard below stops at 8, as CoD2rev-Plus's */
 #define PM_SLIDEMOVE_ABI COD2_REGPARM(3) BM_NOINLINE
 
 static qboolean PM_SLIDEMOVE_ABI PM_SlideMove(pmove_t *pm, pml_t *pml, qboolean gravity);
