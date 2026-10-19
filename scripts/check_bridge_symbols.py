@@ -12,14 +12,18 @@ W). Exits with 0 when all are.
 """
 import argparse, re, subprocess, sys
 
-LABEL = re.compile(r'\bcod2c_\w+\([^)]*\)\s*__asm__\(COD2_SYM\("(\w+)"\)\)')
+LABEL = re.compile(r'__asm__\(COD2_SYM\("(\w+)"\)\)')
 
 
 def labels(paths):
+    """The labels of the import declarations (cod2c_*), whatever their
+    parameters (function pointers and arrays have parentheses too)."""
     names = set()
     for path in paths:
         with open(path) as f:
-            names.update(LABEL.findall(f.read()))
+            for line in f:
+                if 'cod2c_' in line:
+                    names.update(LABEL.findall(line))
     return names
 
 

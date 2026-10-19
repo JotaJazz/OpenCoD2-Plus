@@ -18,7 +18,7 @@ no bridge import may call an engine symbol that is data
 On Linux no engine source of the client may name a renamed bgame global without
 its eng_ name in effect (scripts/check_bgame_names.py).
 """
-import argparse, glob, os, re, subprocess, sys
+import argparse, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
@@ -92,7 +92,11 @@ def duplicates(variant, build_dir):
                 errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
         executable = os.path.join(build_dir, target + ('.exe' if variant == 'mingw' else ''))
         if os.path.exists(executable):
-            bridges = sorted(glob.glob(os.path.join(ROOT, 'src', 'compat', '*_imports.cpp')))
+            # the imports the target links: the client's server and collision
+            # with the VM's core thunks, the dedicated server's own
+            bridges = [os.path.join(ROOT, 'src', 'compat', name) for name in
+                       (['client_server_imports.cpp', 'script_core_imports.cpp'] if module == 'client_server'
+                        else ['server_imports.cpp'])]
             run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_bridge_symbols.py'),
                                   executable] + bridges + ['--nm', nm, '--prefix', prefix],
                                  capture_output=True, text=True)

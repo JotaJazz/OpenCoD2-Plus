@@ -6,6 +6,7 @@ SCRIPT = os.path.join(ROOT, 'scripts', 'check_bridge_symbols.py')
 BRIDGE = '''extern "C" int cod2c_Code(int a0) __asm__(COD2_SYM("Code"));
 extern "C" int cod2c_Data(int a0) __asm__(COD2_SYM("Data"));
 extern "C" int cod2c_Absent(int a0) __asm__(COD2_SYM("Absent"));
+extern "C" void cod2c_Pointer(void (*a0)(int), float (*a1)[3]) __asm__(COD2_SYM("Pointer"));
 '''
 
 
@@ -37,10 +38,11 @@ class CheckBridgeSymbols(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_data_fails(self):
-        exe = self.build('int Code(int x) { return x; }\nint (*Data)(int) = 0;\nint main(void) { return 0; }\n')
+        exe = self.build('int Code(int x) { return x; }\nint (*Data)(int) = 0;\nint Pointer = 0;\nint main(void) { return 0; }\n')
         r = self.run_check(exe)
         self.assertEqual(r.returncode, 1)
         self.assertIn('Data: ', r.stdout)
+        self.assertIn('Pointer: ', r.stdout)
         self.assertNotIn('Code', r.stdout)
         self.assertNotIn('Absent', r.stdout)
 
