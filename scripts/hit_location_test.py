@@ -13,10 +13,12 @@ location the game passes to Callback_PlayerDamage. So real shots go through
 the server's weapon fire, its locational trace, and the target's DObj and
 skeleton, which must put the head and the legs where they are.
 
-The target is another minimal client on the dedicated server, or with --listen
-the client that hosts the game (its local server is CoD2rev-Plus's, on the
-engine's collision and xanim); --listen needs a CD key in ~/.cod2/preferences
-and is skipped without one. Exits with 0 when both aims hit the target, each
+Last it fires level again at the target looking up, whose torso and head the
+player controllers turn. The target is another minimal client, on the
+dedicated server or with --listen in a game a client hosts (its local server
+is CoD2rev-Plus's, on the engine's collision and xanim; the host stands
+aside); --listen needs a CD key in ~/.cod2/preferences and is skipped
+without one. Exits with 0 when both aims hit the target, each
 hit is a rifle bullet in the body parts of its aim, and nothing crashed.
 """
 import argparse, os, re, subprocess, sys, tempfile, time
@@ -33,13 +35,15 @@ DEFAULT_BINARY = {
 RCON = 'hitpw'
 BUTTON_MELEE, BUTTON_FRAG = 4, 65536  # q_shared.h
 PREFERENCES = os.path.expanduser('~/.cod2/preferences')
-WEAPON = 'g43_mp'  # 10 rounds: enough for both aims without a reload
+WEAPON = 'g43_mp'  # semi-automatic, 10 rounds
 DISTANCE = 120
-# where the shots aim, in degrees down, and the body parts they must hit: the
-# target's head is at the shooter's eye height; a host standing idle sways
-# enough for a level shot to take it in the chest
-AIMS = (('level', 0.0, {'head', 'helmet', 'neck', 'torso_upper'}),
-        ('down', 15.0, {'torso_lower', 'right_leg_upper', 'left_leg_upper', 'right_leg_lower', 'left_leg_lower'}))
+# where the shots aim, in degrees down, where the target looks, and the body
+# parts the shots must hit: the target's head is at the shooter's eye height,
+# and a target looking up turns its torso and head with its controllers
+HEAD = {'head', 'helmet', 'neck', 'torso_upper'}
+AIMS = (('level', 0.0, 0.0, HEAD),
+        ('down', 15.0, 0.0, {'torso_lower', 'right_leg_upper', 'left_leg_upper', 'right_leg_lower', 'left_leg_lower'}),
+        ('level at a target looking up', 0.0, -60.0, HEAD))
 
 GAMETYPE = '''main()
 {
@@ -68,7 +72,14 @@ Callback_PlayerConnect()
 	self.maxhealth = 100000;
 	self.health = self.maxhealth;
 
-	if(!isdefined(level.target))
+	if(self.name != "hittarget" && self.name != "hitshooter")
+	{
+		// the host of a local game, out of the way
+		spawnpoints = getentarray("mp_dm_spawn", "classname");
+		self spawn(spawnpoints[spawnpoints.size - 1].origin, spawnpoints[spawnpoints.size - 1].angles);
+		self character\\mp_american_normandy_braeburn::main();
+	}
+	else if(!isdefined(level.target))
 	{
 		// the first spawn point with room for the shooter in front of it
 		spawnpoints = getentarray("mp_dm_spawn", "classname");
@@ -95,6 +106,18 @@ Callback_PlayerConnect()
 		self setSpawnWeapon("%(weapon)s");
 		logPrint("hittest shooter " + self getEntityNumber() + "\\n");
 		self thread hold(origin);
+		self thread keepLoaded();
+	}
+}
+
+// three aims take more rounds than a clip holds
+keepLoaded()
+{
+	for(;;)
+	{
+		if(self getWeaponSlotClipAmmo("primary") < 3)
+			self setWeaponSlotClipAmmo("primary", 10);
+		wait 0.25;
 	}
 }
 
@@ -168,24 +191,18 @@ class Shooter(cod2client.Client):
         payload.bits(1 ^ (key & 1), 1)           # something changed
         payload.bits(1 ^ (key & 1), 1)           # not only buttons, angles and move
         payload.bits(int(self.attack and not (self.melee or self.frag)) ^ (key & 1), 1)
-        if self.pitch:
-            payload.bits(1, 1)
-            payload.bits((int(self.pitch * 65536 / 360) & 0xffff) ^ (key & 0xffff), 16)
-        else:
-            payload.bits(0, 1)                   # pitch unchanged
+        # a field left unchanged keeps the server's previous command's value,
+        # so the pitch, the move keys and the buttons are always sent
+        payload.bits(1, 1)
+        payload.bits((int(self.pitch * 65536 / 360) & 0xffff) ^ (key & 0xffff), 16)
         payload.bits(0, 1)                       # yaw unchanged
-        if self.walking:
-            payload.bits(1, 1)
-            payload.bits(KEY_MASK_MOVE_FORWARD ^ (key & 0xf), 4)
-        else:
-            payload.bits(0, 1)                   # no move keys
+        payload.bits(1, 1)
+        payload.bits((KEY_MASK_MOVE_FORWARD if self.walking else 0) ^ (key & 0xf), 4)
         key ^= self.server_time
         payload.bits(0, 1)                       # roll unchanged
-        if (self.melee or self.frag) and self.attack:
-            payload.bits(1, 1)
-            payload.bits(((BUTTON_MELEE if self.melee else BUTTON_FRAG) >> 1) ^ (key & 0x3ffff), 18)
-        else:
-            payload.bits(0, 1)                   # no other buttons
+        buttons = (BUTTON_MELEE if self.melee else BUTTON_FRAG) if (self.melee or self.frag) and self.attack else 0
+        payload.bits(1, 1)
+        payload.bits((buttons >> 1) ^ (key & 0x3ffff), 18)
         if self.weapon:
             payload.bits(1, 1)
             payload.bits(self.weapon ^ (key & 0x7f), 7)
@@ -264,7 +281,7 @@ def main():
             while time.time() < deadline and server.poll() is None and not smoke_test.query(port, 'getinfo x'):
                 time.sleep(1)
             check('the server runs the map', server.poll() is None and smoke_test.query(port, 'getinfo x') is not None)
-            if not failures and not args.listen:
+            if not failures:
                 target, why = join(port, args.protocol, 'hittarget')
                 check('the target joins', target is not None, why)
                 if target:
@@ -298,10 +315,11 @@ def main():
                     shooter.read_frames(0.25, False)
                     for c in clients[:-1]:
                         c.read_frames(0.05, False)
-                for name, pitch, expected in AIMS:
+                for name, pitch, target_pitch, expected in AIMS:
                     # aim, hold fire until the last shot at the previous aim lands
                     shooter.firing = False
                     shooter.pitch = pitch
+                    clients[0].pitch = target_pitch
                     for _ in range(3):
                         shooter.read_frames(0.25, False)
                         for c in clients[:-1]:
