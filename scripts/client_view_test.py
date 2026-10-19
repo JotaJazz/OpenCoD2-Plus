@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""A client watches a player die and spawn again.
+"""A client is shot, blasted and killed, and watches a player die.
 
     python3 scripts/client_view_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH]
 
 Runs the dedicated server with scripts/contact_test.py's mod, joins its target
 as a minimal client and then a real client (cod2_linux), which the mod places
-in front of the target, facing it. Twice the test has the mod kill the target
-(rcon contact_phase kill): the client draws the corpse the server clones and
-predicts its own moves meanwhile. The client must still run without a crash
-report, and the server must have cloned the body and spawned the target again.
+in front of the target, facing it. The target shoots the client and throws a
+grenade at it, then twice the test has the mod kill the target (rcon
+contact_phase kill): the client draws the corpse the server clones and
+predicts its own moves meanwhile. Last the mod kills the client
+(killmover), which spawns again. The client must still run without a crash
+report, and the hits, deaths and spawns must all have happened.
 The client opens a window and needs a CD key in ~/.cod2/preferences; without
 one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
@@ -88,15 +90,42 @@ def main():
                     run(1, client)
                 check('the client joins', 'contact mover' in game_log(home), f'exit code {client.poll()}')
                 run(5, client)  # in the game, in front of the target
+                weapon = 0
+                for frame in target.read_frames(1, False):
+                    weapon = frame['ps'].get('weapon', 0) or weapon
+                target.weapon = weapon
+
+                # the target shoots the client, then throws a grenade at it
+                smoke_test.rcon(port, RCON, 'set contact_phase face')  # held in the line of fire
+                run(1, client)
+                hits = game_log(home).count('contact mover hit')
+                target.firing = True
+                run(3, client)
+                target.firing = False
+                check('the target shoots the client', game_log(home).count('contact mover hit') > hits,
+                      f'{game_log(home).count("contact mover hit") - hits} hits, weapon {weapon}')
+                target.pitch = 10.0
+                target.frag_commands = 6
+                run(6, client)
+                target.pitch = 0.0
+                check('a grenade blasts the client', 'contact mover hit MOD_GRENADE' in game_log(home))
                 for death in (1, 2):
-                    smoke_test.rcon(port, RCON, f'set contact_phase kill')
-                    run(4, client)
+                    smoke_test.rcon(port, RCON, 'set contact_phase kill')
+                    end = time.time() + 8
+                    while time.time() < end and client.poll() is None and \
+                            game_log(home).count('contact respawned') < death:
+                        run(0.5, client)
                     deaths = game_log(home).count('contact killed')
                     spawns = game_log(home).count('contact respawned')
                     check(f'death {death}: the target dies and spawns again', deaths >= death and spawns >= death,
                           f'{deaths} deaths, {spawns} spawns')
                     smoke_test.rcon(port, RCON, 'set contact_phase none')
                     run(2, client)
+                smoke_test.rcon(port, RCON, 'set contact_phase killmover')
+                run(5, client)
+                check('the client dies and spawns again',
+                      'contact mover killed' in game_log(home) and 'contact mover respawned' in game_log(home))
+                run(2, client)
                 check('the client still runs', client.poll() is None, f'exit code {client.poll()}')
         finally:
             if target:

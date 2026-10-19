@@ -83,6 +83,7 @@ Callback_PlayerConnect()
 		level.targetSpawn = spawnpoints[i];
 		self spawn(spawnpoints[i].origin, spawnpoints[i].angles);
 		self character\\mp_american_normandy_braeburn::main();
+		self arm();
 		logPrint("contact target " + self getEntityNumber() + "\\n");
 	}
 	else
@@ -92,15 +93,21 @@ Callback_PlayerConnect()
 		origin = target.origin + maps\\mp\\_utility::vectorScale(anglesToForward(target.angles), 120);
 		self spawn(origin, vectorToAngles(target.origin - origin));
 		self character\\mp_american_normandy_braeburn::main();
-		self giveWeapon("%(weapon)s");
-		self giveMaxAmmo("%(weapon)s");
-		self setSpawnWeapon("%(weapon)s");
-		self giveWeapon("frag_grenade_american_mp");
-		self setWeaponClipAmmo("frag_grenade_american_mp", 3);
-		self switchToOffhand("frag_grenade_american_mp");
+		self arm();
 		logPrint("contact mover " + self getEntityNumber() + "\\n");
 		self thread phases();
 	}
+}
+
+// a rifle and frag grenades
+arm()
+{
+	self giveWeapon("%(weapon)s");
+	self giveMaxAmmo("%(weapon)s");
+	self setSpawnWeapon("%(weapon)s");
+	self giveWeapon("frag_grenade_american_mp");
+	self setWeaponClipAmmo("frag_grenade_american_mp", 3);
+	self switchToOffhand("frag_grenade_american_mp");
 }
 
 // puts the mover distance units in front of the target, facing it; spawning
@@ -156,6 +163,16 @@ phases()
 			level.target.health = 10;
 			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);
 		}
+		else if(phase == "face")
+		{
+			origin = self place(120);
+			self thread hold(origin);
+		}
+		else if(phase == "killmover")
+		{
+			self.health = 10;
+			radiusDamage(self.origin + (0, 0, 40), 64, 60, 60);
+		}
 		else if(phase == "radius")
 		{
 			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);
@@ -196,17 +213,44 @@ Callback_PlayerDisconnect()
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
 {
-	if(self != level.target)
+	if(isdefined(level.mover) && self == level.mover)
+		logPrint("contact mover hit " + sMeansOfDeath + " " + sHitLoc + " " + iDamage + "\\n");
+	else if(self == level.target)
+		logPrint("contact hit " + sMeansOfDeath + " " + sHitLoc + " " + iDamage + "\\n");
+	else
 		return;
-	logPrint("contact hit " + sMeansOfDeath + " " + sHitLoc + " " + iDamage + "\\n");
 	self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags | level.iDFLAGS_NO_KNOCKBACK, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
 }
 
 Callback_PlayerKilled(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration)
 {
-	logPrint("contact killed " + sMeansOfDeath + "\\n");
 	body = self clonePlayer(deathAnimDuration);
-	self thread respawn();
+	if(self == level.target)
+	{
+		logPrint("contact killed " + sMeansOfDeath + "\\n");
+		self thread respawn();
+	}
+	else
+	{
+		logPrint("contact mover killed " + sMeansOfDeath + "\\n");
+		self thread respawnMover();
+	}
+}
+
+// in front of the target again, armed
+respawnMover()
+{
+	self endon("disconnect");
+	wait 2;
+	self.sessionstate = "playing";
+	self.health = self.maxhealth;
+	target = level.target;
+	origin = target.origin + maps\\mp\\_utility::vectorScale(anglesToForward(target.angles), 120);
+	self spawn(origin, vectorToAngles(target.origin - origin));
+	self detachAll();
+	self character\\mp_american_normandy_braeburn::main();
+	self arm();
+	logPrint("contact mover respawned\\n");
 }
 
 // back at its spawn point, as the target again
@@ -219,6 +263,7 @@ respawn()
 	self spawn(level.targetSpawn.origin, level.targetSpawn.angles);
 	self detachAll();
 	self character\\mp_american_normandy_braeburn::main();
+	self arm();
 	logPrint("contact respawned\\n");
 }
 ''' % {'weapon': WEAPON}
