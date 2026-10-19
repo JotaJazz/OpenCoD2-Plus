@@ -379,7 +379,7 @@ CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck',
                           'FS_RotateHomeFile', 'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString',
                           'MSG_ReadStringLine', 'RoundFloatArray', 'SetConfigString', 'SetConfigString2',
                           'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp', 'VectorInverse', 'VectorLength',
-                          'VectorLengthSquared'}
+                          'VectorLengthSquared', 'Com_SetWeaponInfoMemory', 'Com_FreeWeaponInfoMemory'}
 MODULES['client_server'] = dict(
     MODULES['server'],
     objects=['cod2_plus_server_client.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')]

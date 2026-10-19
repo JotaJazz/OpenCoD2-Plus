@@ -437,11 +437,6 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Com_FindSoundAlias: parameter 
 extern "C" cod2_abi_int<decltype(Com_FindSoundAlias(std::declval<char const*>())), 4> cod2c_Com_FindSoundAlias(char const* a0) __asm__(COD2_SYM("Com_FindSoundAlias"));
 decltype(Com_FindSoundAlias(std::declval<char const*>())) Com_FindSoundAlias(char const* a0) { return (decltype(Com_FindSoundAlias(std::declval<char const*>())))cod2c_Com_FindSoundAlias(a0); }
 
-static_assert(cod2_abi_class<decltype(Com_FreeWeaponInfoMemory(std::declval<int>()))>() == 'v', "Com_FreeWeaponInfoMemory: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "Com_FreeWeaponInfoMemory: parameter 0 differs from the engine");
-extern "C" decltype(Com_FreeWeaponInfoMemory(std::declval<int>())) cod2c_Com_FreeWeaponInfoMemory(int a0) __asm__(COD2_SYM("Com_FreeWeaponInfoMemory"));
-decltype(Com_FreeWeaponInfoMemory(std::declval<int>())) Com_FreeWeaponInfoMemory(int a0) { return cod2c_Com_FreeWeaponInfoMemory(a0); }
-
 static_assert(cod2_abi_class<decltype(Com_GetArgCountOnLine(std::declval<char const**>()))>() == 'i' || cod2_abi_class<decltype(Com_GetArgCountOnLine(std::declval<char const**>()))>() == 'v', "Com_GetArgCountOnLine: return class differs from the engine");
 static_assert(cod2_abi_slot<char const**>() == 4, "Com_GetArgCountOnLine: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Com_GetArgCountOnLine(std::declval<char const**>())), 4> cod2c_Com_GetArgCountOnLine(char const** a0) __asm__(COD2_SYM("Com_GetArgCountOnLine"));
@@ -511,11 +506,6 @@ static_assert(cod2_abi_class<decltype(Com_SetCSV(std::declval<int>()))>() == 'v'
 static_assert(cod2_abi_slot<int>() == 4, "Com_SetCSV: parameter 0 differs from the engine");
 extern "C" decltype(Com_SetCSV(std::declval<int>())) cod2c_Com_SetCSV(int a0) __asm__(COD2_SYM("Com_SetCSV"));
 decltype(Com_SetCSV(std::declval<int>())) Com_SetCSV(int a0) { return cod2c_Com_SetCSV(a0); }
-
-static_assert(cod2_abi_class<decltype(Com_SetWeaponInfoMemory(std::declval<int>()))>() == 'v', "Com_SetWeaponInfoMemory: return class differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "Com_SetWeaponInfoMemory: parameter 0 differs from the engine");
-extern "C" decltype(Com_SetWeaponInfoMemory(std::declval<int>())) cod2c_Com_SetWeaponInfoMemory(int a0) __asm__(COD2_SYM("Com_SetWeaponInfoMemory"));
-decltype(Com_SetWeaponInfoMemory(std::declval<int>())) Com_SetWeaponInfoMemory(int a0) { return cod2c_Com_SetWeaponInfoMemory(a0); }
 
 static_assert(cod2_abi_class<decltype(Com_Shutdown(std::declval<char const*>()))>() == 'v', "Com_Shutdown: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_Shutdown: parameter 0 differs from the engine");

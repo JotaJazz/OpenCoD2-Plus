@@ -376,3 +376,24 @@ char *MSG_ReadString( msg_t *msg, char *string, unsigned int maxChars )
 
 	return string;
 }
+
+// qcommon/common.cpp. In the client the engine's Com_*WeaponInfoMemory belong
+// to cgame's bgame (src/PC/bgame); the local server's weapon defs are in
+// CoD2rev-Plus's bgame, so it keeps its own owner and frees its own defs.
+// Otherwise a full map_restart found the old weapon count, did not register
+// the weapons again, and the anim script named weapons it did not know.
+static int iWeaponInfoSource;
+
+void Com_SetWeaponInfoMemory( int iSource )
+{
+	iWeaponInfoSource = iSource;
+}
+
+void Com_FreeWeaponInfoMemory( int iSource )
+{
+	if ( iSource == iWeaponInfoSource )
+	{
+		iWeaponInfoSource = 0;
+		BG_ShutdownWeaponDefFiles();
+	}
+}
