@@ -1049,7 +1049,12 @@ static inline __attribute__((always_inline)) void DObjFinalizeQuatWeightLocal(DO
     }
 }
 
-static inline __attribute__((always_inline)) void DObjComposeAnimMatLocal(DObjAnimMat *child, const DObjAnimMat *parent)
+/* A bone's rotation follows its parent's: parent * bone, or for a bone a
+ * controller turned (DObjSetControlTagAngles: a player's torso and head, a
+ * turret's aim) bone * parent, so the controller's angles turn it about the
+ * parent's axes, as in CoD2rev-Plus's DObjCalcSkel. */
+static inline __attribute__((always_inline)) void DObjComposeAnimMatLocal(DObjAnimMat *child, const DObjAnimMat *parent,
+                                                                          int controlled)
 {
     DObjAnimMat local = *child;
     const float px = parent->quat[0];
@@ -1074,10 +1079,17 @@ static inline __attribute__((always_inline)) void DObjComposeAnimMatLocal(DObjAn
     const float ly = local.trans[1];
     const float lz = local.trans[2];
 
-    child->quat[0] = pw * cx + px * cw + py * cz - pz * cy;
-    child->quat[1] = pw * cy - px * cz + py * cw + pz * cx;
-    child->quat[2] = pw * cz + px * cy - py * cx + pz * cw;
-    child->quat[3] = pw * cw - px * cx - py * cy - pz * cz;
+    if (controlled) {
+        child->quat[0] = cw * px + cx * pw + cy * pz - cz * py;
+        child->quat[1] = cw * py - cx * pz + cy * pw + cz * px;
+        child->quat[2] = cw * pz + cx * py - cy * px + cz * pw;
+        child->quat[3] = cw * pw - cx * px - cy * py - cz * pz;
+    } else {
+        child->quat[0] = pw * cx + px * cw + py * cz - pz * cy;
+        child->quat[1] = pw * cy - px * cz + py * cw + pz * cx;
+        child->quat[2] = pw * cz + px * cy - py * cx + pz * cw;
+        child->quat[3] = pw * cw - px * cx - py * cy - pz * cz;
+    }
 
     child->trans[0] = parent->trans[0] + (1.0f - yy - zz) * lx + (xy - wz) * ly + (xz + wy) * lz;
     child->trans[1] = parent->trans[1] + (xy + wz) * lx + (1.0f - xx - zz) * ly + (yz - wx) * lz;
@@ -1168,7 +1180,8 @@ void DObjCalcSkel(const DObj *obj, int *partBits)
         while (numRootBones-- > 0) {
             if (DObjPartBitTestLocal(neededBits, globalBoneIndex)) {
                 if (modelParentMat) {
-                    DObjComposeAnimMatLocal(&mat[globalBoneIndex], modelParentMat);
+                    DObjComposeAnimMatLocal(&mat[globalBoneIndex], modelParentMat,
+                                            DObjPartBitTestLocal(skel->controlPartBits, globalBoneIndex));
                 } else {
                     DObjFinalizeQuatWeightLocal(&mat[globalBoneIndex]);
                 }
@@ -1199,7 +1212,8 @@ void DObjCalcSkel(const DObj *obj, int *partBits)
                     mat[globalBoneIndex].trans[2] += parts->trans[childIndex * 3 + 2];
                 }
                 if (parentBoneIndex >= 0) {
-                    DObjComposeAnimMatLocal(&mat[globalBoneIndex], &mat[parentBoneIndex]);
+                    DObjComposeAnimMatLocal(&mat[globalBoneIndex], &mat[parentBoneIndex],
+                                            DObjPartBitTestLocal(skel->controlPartBits, globalBoneIndex));
                 } else {
                     DObjFinalizeQuatWeightLocal(&mat[globalBoneIndex]);
                 }
