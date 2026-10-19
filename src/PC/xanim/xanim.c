@@ -2049,7 +2049,6 @@ void DObjCalcAnim(const DObj *obj, int *partBits)
         childBoneCount = numBones - numRootBones;
         if (childBoneCount) {
             const short *quat = parts->quats;
-            const float *trans = parts->trans;
             for (i = 0; i < childBoneCount; ++i) {
                 if (!((ignorePartBits[boneIndex >> 5] >> (boneIndex & 31)) & 1) &&
                     !((info.animPartBits[boneIndex >> 5] >> (boneIndex & 31)) & 1)) {
@@ -2057,16 +2056,15 @@ void DObjCalcAnim(const DObj *obj, int *partBits)
                     mat->quat[1] = (float)quat[1] * 3.0518509447574615e-05f;
                     mat->quat[2] = (float)quat[2] * 3.0518509447574615e-05f;
                     mat->quat[3] = (float)quat[3] * 3.0518509447574615e-05f;
-                    mat->trans[0] = trans ? trans[0] : 0.0f;
-                    mat->trans[1] = trans ? trans[1] : 0.0f;
-                    mat->trans[2] = trans ? trans[2] : 0.0f;
+                    /* DObjCalcSkel adds the model's trans, as to an animated bone's */
+                    mat->trans[0] = 0.0f;
+                    mat->trans[1] = 0.0f;
+                    mat->trans[2] = 0.0f;
                 }
 
                 ++mat;
                 ++boneIndex;
                 quat += 4;
-                if (trans)
-                    trans += 3;
             }
         }
     }

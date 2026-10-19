@@ -1197,6 +1197,13 @@ void DObjCalcSkel(const DObj *obj, int *partBits)
                 }
 
                 parentBoneIndex = globalBoneIndex - parentDelta;
+                /* an anim's trans is relative to the model's: added here, as
+                 * CoD2rev-Plus's DObjCalcSkel does, for animated bones and not */
+                if (parts->trans) {
+                    mat[globalBoneIndex].trans[0] += parts->trans[childIndex * 3 + 0];
+                    mat[globalBoneIndex].trans[1] += parts->trans[childIndex * 3 + 1];
+                    mat[globalBoneIndex].trans[2] += parts->trans[childIndex * 3 + 2];
+                }
                 if (parentBoneIndex >= 0) {
                     DObjComposeAnimMatLocal(&mat[globalBoneIndex], &mat[parentBoneIndex]);
                 } else {
