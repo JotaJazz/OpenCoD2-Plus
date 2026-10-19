@@ -19,8 +19,11 @@ mod polls:
 - grenade: it stands farther, aims down and throws a frag grenade, whose
   splash must hit the target; the grenade flies and bounces on the world's
   collision.
-- radius: the mod calls radiusDamage next to the target, which must take a
-  MOD_EXPLOSIVE hit; the explosion finds it through the world's sectors too.
+- kill: with its health down, an explosion kills the target, whose body the
+  mod clones, and which spawns again two seconds later.
+- radius: the mod calls radiusDamage next to the target, spawned again,
+  which must take a MOD_EXPLOSIVE hit; the explosion finds it through the
+  world's sectors too.
 
 The target is another minimal client on the dedicated server, or with --listen
 the client that hosts the game (with a CD key in ~/.cod2/preferences; skipped
@@ -77,6 +80,7 @@ Callback_PlayerConnect()
 				break;
 		}
 		level.target = self;
+		level.targetSpawn = spawnpoints[i];
 		self spawn(spawnpoints[i].origin, spawnpoints[i].angles);
 		self character\\mp_american_normandy_braeburn::main();
 		logPrint("contact target " + self getEntityNumber() + "\\n");
@@ -147,6 +151,11 @@ phases()
 			origin = self place(200);
 			self thread hold(origin);
 		}
+		else if(phase == "kill")
+		{
+			level.target.health = 10;
+			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);
+		}
 		else if(phase == "radius")
 		{
 			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);
@@ -195,6 +204,22 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 Callback_PlayerKilled(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime, deathAnimDuration)
 {
+	logPrint("contact killed " + sMeansOfDeath + "\\n");
+	body = self clonePlayer(deathAnimDuration);
+	self thread respawn();
+}
+
+// back at its spawn point, as the target again
+respawn()
+{
+	self endon("disconnect");
+	wait 2;
+	self.sessionstate = "playing";
+	self.health = self.maxhealth;
+	self spawn(level.targetSpawn.origin, level.targetSpawn.angles);
+	self detachAll();
+	self character\\mp_american_normandy_braeburn::main();
+	logPrint("contact respawned\\n");
 }
 ''' % {'weapon': WEAPON}
 
@@ -237,7 +262,7 @@ def main():
     def phase(name):
         smoke_test.rcon(port, RCON, f'set contact_phase {name}')
         smoke_test.wait_for(lambda: f'contact phase {name}\n' in game_log(home), 10)
-        return game_log(home).index(f'contact phase {name}\n') if f'contact phase {name}\n' in game_log(home) else -1
+        return game_log(home).rindex(f'contact phase {name}\n') if f'contact phase {name}\n' in game_log(home) else -1
 
     with tempfile.TemporaryDirectory(prefix='cod2_contact_') as home:
         mod = os.path.join(home, 'contact', 'maps', 'mp', 'gametypes')
@@ -324,6 +349,14 @@ def main():
                 hits = re.findall(r'contact hit (\S+) (\S*) (\d+)', game_log(home)[start:])
                 check('a thrown grenade blasts the target', any(h[0] == 'MOD_GRENADE_SPLASH' for h in hits),
                       ', '.join(f'{h[0]} {h[2]}' for h in hits) or 'no hit')
+
+                start = phase('kill')
+                end = time.time() + 6
+                while time.time() < end and 'contact respawned' not in game_log(home)[start:]:
+                    run(0.3, mover)
+                check('an explosion kills the target', 'contact killed MOD_EXPLOSIVE' in game_log(home)[start:])
+                check('the target spawns again', 'contact respawned' in game_log(home)[start:])
+                run(1, mover)
 
                 start = phase('radius')
                 run(1, mover)
