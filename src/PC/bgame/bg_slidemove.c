@@ -19,8 +19,8 @@ extern qboolean PM_ShouldMakeFootsteps(pmove_t *pm);
 extern void PM_FootstepEvent(pmove_t *pm, pml_t *pml, int iOldBobCycle, int iNewBobCycle, qboolean bFootStep);
 extern void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
 extern void Jump_ClearState(playerState_t *ps);
-extern qboolean Jump_IsPlayerAboveMax(playerState_t *ps);
-extern Bool Jump_GetStepHeight(playerState_t *ps, const vec_t *origin, float *stepSize);
+extern bool Jump_IsPlayerAboveMax(playerState_t *ps);
+extern bool Jump_GetStepHeight(playerState_t *ps, const vec_t *origin, float *stepSize);
 extern void Jump_ClampVelocity(playerState_t *ps, const vec_t *origin);
 extern qboolean BG_CheckProne(int passEntityNum, const vec_t *vPos, const float fSize, const float fHeight, const float fYaw, float *pfTorsoHeight, float *pfTorsoPitch, float *pfWaistPitch, const qboolean bAlreadyProne, const qboolean bOnGround, vec_t *vGroundNormal, int handler, proneCheckType_t proneCheckType, float prone_feet_dist);
 

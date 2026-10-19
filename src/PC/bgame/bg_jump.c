@@ -1,7 +1,10 @@
 #include "common_types.h"
 #include "imports.h"
+#include "bg_plus_compat.h"
 
-extern float sqrtf(float);
+/* Jumping, as CoD2rev-Plus's bg_jump.cpp (the server's), which this follows
+ * line by line. The dvars stay static: the client also links CoD2rev-Plus's,
+ * which defines the same names for its local server. */
 
 extern const dvar_t *Dvar_RegisterFloat(const char *name, float value, float min, float max, int flags);
 extern const dvar_t *Dvar_RegisterBool(const char *name, int value, int flags);
@@ -9,16 +12,388 @@ extern int PM_GetEffectiveStance(playerState_t *ps);
 extern void PM_AddEvent(playerState_t *ps, int event);
 extern int PM_GroundSurfaceType(pml_t *pml);
 extern int BG_AnimScriptEvent(playerState_t *ps, scriptAnimEventTypes_t event, qboolean isContinue, qboolean force);
-extern const vec_t Vec3Normalize(vec_t *v);
-
-#define qtrue 1
-#define qfalse 0
 
 static const dvar_t *jump_height;
 static const dvar_t *jump_stepSize;
 static const dvar_t *jump_slowdownEnable;
 static const dvar_t *jump_ladderPushVel;
 static const dvar_t *jump_spreadAdd;
+
+#define JUMP_LAND_SLOWDOWN_TIME 1800
+
+/*
+==================
+Jump_ActivateSlowdown
+==================
+*/
+void Jump_ActivateSlowdown( playerState_t *ps )
+{
+	if ( ps->pm_time )
+	{
+		return;
+	}
+
+	ps->pm_flags |= PMF_TIME_LAND;
+	ps->pm_time = JUMP_LAND_SLOWDOWN_TIME;
+}
+
+/*
+==================
+Jump_IsPlayerAboveMax
+==================
+*/
+bool Jump_IsPlayerAboveMax( playerState_t *ps )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+	return ps->origin[2] >= ps->jumpOriginZ + jump_height->current.value;
+}
+
+/*
+==================
+Jump_GetStepHeight
+==================
+*/
+bool Jump_GetStepHeight( playerState_t *ps, const vec3_t origin, float *stepSize )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+	assert(origin);
+	assert(stepSize);
+
+	if ( ps->jumpOriginZ + jump_height->current.value <= origin[2] )
+	{
+		return false;
+	}
+
+	*stepSize = jump_stepSize->current.value;
+
+	if ( origin[2] + *stepSize > ps->jumpOriginZ + jump_height->current.value )
+	{
+		*stepSize = ps->jumpOriginZ + jump_height->current.value - origin[2];
+	}
+
+	return true;
+}
+
+/*
+==================
+Jump_ClearState
+==================
+*/
+void Jump_ClearState( playerState_t *ps )
+{
+	ps->pm_flags &= ~PMF_TIME_LAND;
+	ps->jumpOriginZ = 0;
+}
+
+/*
+==================
+Jump_ClampVelocity
+==================
+*/
+void Jump_ClampVelocity( playerState_t *ps, const vec3_t origin )
+{
+	float maxJumpVel;
+	float heightDiff;
+
+	assert(ps->pm_flags & PMF_TIME_LAND);
+	assert(origin);
+
+	if ( ps->origin[2] - origin[2] <= 0 )
+	{
+		return;
+	}
+
+	heightDiff = ps->jumpOriginZ + jump_height->current.value - ps->origin[2];
+
+	if ( heightDiff < 0.1 )
+	{
+		ps->velocity[2] = 0;
+		return;
+	}
+
+	maxJumpVel = I_sqrt((heightDiff + heightDiff) * ps->gravity);
+
+	if ( ps->velocity[2] > maxJumpVel )
+	{
+		ps->velocity[2] = maxJumpVel;
+	}
+}
+
+/*
+==================
+Jump_ReduceFriction
+==================
+*/
+float Jump_ReduceFriction( playerState_t *ps )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+
+	if ( !jump_slowdownEnable->current.enabled )
+	{
+		return 1.0;
+	}
+
+	if ( ps->pm_time >= JUMP_LAND_SLOWDOWN_TIME - FRAMETIME )
+	{
+		return 2.5;
+	}
+
+	return ps->pm_time * 1.5 * 0.00058823527 + 1.0;
+}
+
+/*
+==================
+Jump_GetLandFactor
+==================
+*/
+float Jump_GetLandFactor( playerState_t *ps )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+	assert(ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME);
+
+	if ( !jump_slowdownEnable->current.enabled )
+	{
+		return 1.0;
+	}
+
+	if ( ps->pm_time >= JUMP_LAND_SLOWDOWN_TIME - FRAMETIME )
+	{
+		return 2.5;
+	}
+
+	return ps->pm_time * 1.5 * 0.00058823527 + 1.0;
+}
+
+/*
+==================
+Jump_GetSlowdownFriction
+==================
+*/
+float Jump_GetSlowdownFriction( playerState_t *ps )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+	assert(ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME);
+
+	if ( !jump_slowdownEnable->current.enabled )
+	{
+		return 1.0;
+	}
+
+	if ( ps->pm_time >= JUMP_LAND_SLOWDOWN_TIME - FRAMETIME )
+	{
+		return 2.5;
+	}
+
+	return ps->pm_time * 1.5 * 0.00058823527 + 1.0;
+}
+
+/*
+==================
+Jump_ApplySlowdown
+==================
+*/
+void Jump_ApplySlowdown( playerState_t *ps )
+{
+	assert(ps->pm_flags & PMF_TIME_LAND);
+
+	if ( !jump_slowdownEnable->current.enabled )
+	{
+		VectorScale(ps->velocity, 1.0, ps->velocity);
+		return;
+	}
+
+	if ( ps->pm_time > JUMP_LAND_SLOWDOWN_TIME )
+	{
+		Jump_ClearState(ps);
+		VectorScale(ps->velocity, 0.64999998, ps->velocity);
+		return;
+	}
+
+	if ( ps->pm_time )
+	{
+		VectorScale(ps->velocity, 1.0, ps->velocity);
+		return;
+	}
+
+	if ( ps->jumpOriginZ + 18.0 > ps->origin[2] )
+	{
+		ps->pm_time = JUMP_LAND_SLOWDOWN_TIME;
+		VectorScale(ps->velocity, 0.64999998, ps->velocity);
+		return;
+	}
+
+	ps->pm_time = JUMP_LAND_SLOWDOWN_TIME - FRAMETIME - 500;
+	VectorScale(ps->velocity, 0.5, ps->velocity);
+}
+
+/*
+==================
+Jump_AddSurfaceEvent
+==================
+*/
+void Jump_AddSurfaceEvent( playerState_t *ps, pml_t *pml )
+{
+	if ( (ps->pm_flags & PMF_LADDER) )
+	{
+		PM_AddEvent(ps, EV_JUMP_WOOD);
+		return;
+	}
+
+	int surfType = PM_GroundSurfaceType(pml);
+
+	if ( !surfType )
+	{
+		return;
+	}
+
+	PM_AddEvent(ps, EV_JUMP_DEFAULT + surfType);
+}
+
+/*
+==================
+Jump_PushOffLadder
+==================
+*/
+void Jump_PushOffLadder( playerState_t *ps, pml_t *pml )
+{
+	float dot;
+	vec3_t flatForward;
+	vec3_t pushOffDir;
+
+	assert(ps->pm_flags & PMF_LADDER);
+
+	ps->velocity[2] = ps->velocity[2] * 0.75;
+
+	VectorSet(flatForward, pml->forward[0], pml->forward[1], 0);
+	Vec3Normalize(flatForward);
+
+	dot = DotProduct(ps->vLadderVec, pml->forward);
+
+	if ( dot < 0 )
+	{
+		dot = DotProduct(flatForward, ps->vLadderVec);
+
+		VectorMA(flatForward, dot * -2.0, ps->vLadderVec, pushOffDir);
+		Vec3Normalize(pushOffDir);
+	}
+	else
+	{
+		VectorCopy(flatForward, pushOffDir);
+	}
+
+	Vec2Scale(pushOffDir, jump_ladderPushVel->current.value, ps->velocity);
+	ps->pm_flags &= ~PMF_LADDER;
+}
+
+/*
+==================
+Jump_Start
+==================
+*/
+void Jump_Start( pmove_t *pm, pml_t *pml, float height )
+{
+	playerState_t *ps;
+	float factor;
+	float velocitySqrd;
+
+	ps = pm->ps;
+	assert(ps);
+
+	velocitySqrd = (height + height) * pm->ps->gravity;
+
+	if ( pm->ps->pm_flags & PMF_TIME_LAND && ps->pm_time <= JUMP_LAND_SLOWDOWN_TIME )
+	{
+		factor = Jump_GetLandFactor(ps);
+		assert(factor);
+		velocitySqrd = velocitySqrd / factor;
+	}
+
+	pml->groundPlane = qfalse;
+	pml->almostGroundPlane = qfalse;
+	pml->walking = qfalse;
+
+	ps->groundEntityNum = ENTITYNUM_NONE;
+	ps->jumpTime = pm->cmd.serverTime;
+	ps->jumpOriginZ = ps->origin[2];
+	ps->pm_flags |= PMF_TIME_LAND;
+	ps->pm_time = 0;
+	ps->velocity[2] = I_sqrt(velocitySqrd);
+	ps->aimSpreadScale = ps->aimSpreadScale + jump_spreadAdd->current.value;
+
+	if ( ps->aimSpreadScale > 255 )
+	{
+		ps->aimSpreadScale = 255;
+	}
+}
+
+/*
+==================
+Jump_Start
+==================
+*/
+bool Jump_Check( pmove_t *pm, pml_t *pml )
+{
+	playerState_t *ps;
+
+	assert(pm);
+	ps = pm->ps;
+	assert(ps);
+
+	if ( pm->cmd.serverTime - pm->ps->jumpTime < 500 )
+	{
+		return false;
+	}
+
+	if ( ps->pm_flags & PMF_RESPAWNED )
+	{
+		return false;
+	}
+
+	if ( ps->pm_flags & PMF_MANTLE )
+	{
+		return false;
+	}
+
+	if ( ps->pm_type >= PM_DEAD )
+	{
+		return false;
+	}
+
+	if ( PM_GetEffectiveStance(ps) )
+	{
+		return false;
+	}
+
+	if ( !(pm->cmd.buttons & BUTTON_JUMP) )
+	{
+		return false;
+	}
+
+	if ( pm->oldcmd.buttons & BUTTON_JUMP )
+	{
+		pm->cmd.buttons &= ~BUTTON_JUMP;
+		return false;
+	}
+
+	Jump_Start(pm, pml, jump_height->current.value);
+	Jump_AddSurfaceEvent(ps, pml);
+
+	if ( ps->pm_flags & PMF_LADDER )
+	{
+		Jump_PushOffLadder(ps, pml);
+	}
+
+	if ( pm->cmd.forwardmove >= 0 )
+	{
+		BG_AnimScriptEvent(ps, ANIM_ET_JUMP, qfalse, qtrue);
+	}
+	else
+	{
+		BG_AnimScriptEvent(ps, ANIM_ET_JUMPBK, qfalse, qtrue);
+	}
+
+	return true;
+}
 
 void Jump_RegisterDvars(void)
 {
@@ -29,212 +404,3 @@ void Jump_RegisterDvars(void)
     jump_spreadAdd = Dvar_RegisterFloat("jump_spreadAdd", 64.0f, 0.0f, 512.0f, 0x1180);
 }
 
-static inline __attribute__((always_inline)) void Jump_ClearState_core(playerState_t *ps)
-{
-    ps->pm_flags &= ~0x80000;
-    ps->jumpOriginZ = 0.0f;
-}
-
-void Jump_ClearState(playerState_t *ps)
-{
-    Jump_ClearState_core(ps);
-}
-
-Bool Jump_GetStepHeight(playerState_t *ps, const vec_t *origin, float *stepSize)
-{
-    if (ps->jumpOriginZ + jump_height->current.value > origin[2]) {
-        *stepSize = jump_stepSize->current.value;
-
-        if (origin[2] + *stepSize > ps->jumpOriginZ + jump_height->current.value) {
-            *stepSize = ps->jumpOriginZ + jump_height->current.value - origin[2];
-        }
-        return qtrue;
-    }
-
-    return qfalse;
-}
-
-qboolean Jump_IsPlayerAboveMax(playerState_t *ps)
-{
-    return ps->origin[2] >= ps->jumpOriginZ + jump_height->current.value;
-}
-
-void Jump_ActivateSlowdown(playerState_t *ps)
-{
-    if (ps->pm_time == 0) {
-        ps->pm_flags |= 0x80000;
-        ps->pm_time = 1800;
-    }
-}
-
-void Jump_ApplySlowdown(playerState_t *ps)
-{
-    float scale = 1.0f;
-
-    if (ps->pm_time > 1800) {
-        Jump_ClearState_core(ps);
-        scale = 0.65f;
-    } else if (ps->pm_time == 0) {
-        if (ps->jumpOriginZ + 18.0f > ps->origin[2]) {
-            ps->pm_time = 1800;
-            scale = 0.65f;
-        } else {
-            ps->pm_time = 1200;
-            scale = 0.5f;
-        }
-    }
-
-    if (!jump_slowdownEnable->current.enabled)
-        scale = 1.0f;
-
-    ps->velocity[0] *= scale;
-    ps->velocity[1] *= scale;
-    ps->velocity[2] *= scale;
-}
-
-float Jump_ReduceFriction(playerState_t *ps)
-{
-    if (ps->pm_time > 1800) {
-        Jump_ClearState_core(ps);
-        return 1.0f;
-    }
-
-    if (!jump_slowdownEnable->current.enabled)
-        return 1.0f;
-
-    if (ps->pm_time >= 1700)
-        return 2.5f;
-
-    return (float)ps->pm_time * 1.5f * 0.0005882352706976235f + 1.0f;
-}
-
-Bool Jump_Check(pmove_t *pm, pml_t *pml)
-{
-    playerState_t *ps = pm->ps;
-    vec3_t flatForward, pushOffDir;
-    float jumpVel, factor, dot, reflectScale, pushVel;
-
-    if (pm->cmd.serverTime - ps->jumpTime <= 499)
-        return qfalse;
-
-    if (ps->pm_flags & 0x1000)
-        return qfalse;
-
-    if (ps->pm_flags & 0x4)
-        return qfalse;
-
-    if (ps->pm_type > 5)
-        return qfalse;
-
-    if (PM_GetEffectiveStance(ps) != 0)
-        return qfalse;
-
-    if (!(pm->cmd.buttons & 0x400))
-        return qfalse;
-
-    if (pm->oldcmd.buttons & 0x400) {
-        pm->cmd.buttons &= ~0x400;
-        return qfalse;
-    }
-
-    jumpVel = jump_height->current.value * 2.0f * (float)ps->gravity;
-
-    if ((ps->pm_flags & 0x80000) && ps->pm_time <= 1800) {
-        if (jump_slowdownEnable->current.enabled) {
-            if (ps->pm_time > 1699) {
-                factor = 2.5f;
-            } else {
-                factor = (float)ps->pm_time * 1.5f * 0.0005882352706976235f + 1.0f;
-            }
-        } else {
-            factor = 1.0f;
-        }
-        jumpVel /= factor;
-    }
-
-    pml->walking = 0;
-    pml->groundPlane = 0;
-    pml->almostGroundPlane = 0;
-
-    ps->groundEntityNum = 1023;
-    ps->jumpTime = pm->cmd.serverTime;
-    ps->jumpOriginZ = ps->origin[2];
-    ps->pm_flags |= 0x80000;
-    ps->pm_time = 0;
-
-    ps->velocity[2] = sqrtf(jumpVel);
-
-    ps->aimSpreadScale += jump_spreadAdd->current.value;
-    if (ps->aimSpreadScale > 255.0f)
-        ps->aimSpreadScale = 255.0f;
-
-    if (ps->pm_flags & 0x20) {
-
-        PM_AddEvent(ps, 0x5b);
-    } else {
-        int surfType = PM_GroundSurfaceType(pml);
-        if (surfType != 0) {
-            PM_AddEvent(ps, surfType + 0x46);
-        }
-    }
-
-    if (ps->pm_flags & 0x20) {
-        ps->velocity[2] *= 0.75f;
-
-        flatForward[0] = pml->forward[0];
-        flatForward[1] = pml->forward[1];
-        flatForward[2] = 0.0f;
-        Vec3Normalize(flatForward);
-
-        dot = ps->vLadderVec[0] * pml->forward[0] +
-              ps->vLadderVec[1] * pml->forward[1] +
-              ps->vLadderVec[2] * pml->forward[2];
-
-        if (dot >= 0.0f) {
-
-            pushOffDir[0] = flatForward[0];
-            pushOffDir[1] = flatForward[1];
-            pushOffDir[2] = flatForward[2];
-        } else {
-
-            reflectScale = dot * -2.0f;
-            pushOffDir[0] = flatForward[0] + reflectScale * ps->vLadderVec[0];
-            pushOffDir[1] = flatForward[1] + reflectScale * ps->vLadderVec[1];
-            pushOffDir[2] = flatForward[2] + reflectScale * ps->vLadderVec[2];
-            Vec3Normalize(pushOffDir);
-        }
-
-        pushVel = jump_ladderPushVel->current.value;
-        ps->velocity[0] = pushOffDir[0] * pushVel;
-        ps->velocity[1] = pushOffDir[1] * pushVel;
-
-        ps->pm_flags &= ~0x20;
-    }
-
-    if (pm->cmd.forwardmove < 0) {
-        BG_AnimScriptEvent(ps, ANIM_ET_JUMPBK, 0, 1);
-    } else {
-        BG_AnimScriptEvent(ps, ANIM_ET_JUMP, 0, 1);
-    }
-
-    return qtrue;
-}
-
-void Jump_ClampVelocity(playerState_t *ps, const vec_t *origin)
-{
-    float heightAboveStart, maxHeight, maxVel;
-
-    heightAboveStart = ps->origin[2] - origin[2];
-    if (heightAboveStart > 0.0f) {
-        maxHeight = ps->jumpOriginZ + jump_height->current.value - ps->origin[2];
-
-        if (maxHeight < 0.1f) {
-            ps->velocity[2] = 0.0f;
-            return;
-        }
-
-        maxVel = sqrtf((maxHeight + maxHeight) * (float)ps->gravity);
-        if (ps->velocity[2] > maxVel)
-            ps->velocity[2] = maxVel;
-    }
-}
