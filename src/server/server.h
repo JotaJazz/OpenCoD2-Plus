@@ -539,6 +539,8 @@ enum snd_alias_system_t
 void Com_LoadSoundAliases( const char *loadspec, const char *loadspecCurGame, snd_alias_system_t system );
 void Com_UnloadSoundAliases( snd_alias_system_t system );
 void FX_FreeSystem( void );
+int FX_InitSystem( int rendererExists );
+void FX_CreateDefaultEffect( void );
 void FX_InitServer( void );
 void Sys_LoadingKeepAlive( void );
 void CL_InitLoad( const char *mapname, const char *gametype );

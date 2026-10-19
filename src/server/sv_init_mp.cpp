@@ -1015,6 +1015,15 @@ void SV_SpawnServer( char *server )
 	// load and spawn all other entities
 	SV_InitGameProgs(savepersist);
 
+#ifndef DEDICATED
+	// a client started with dedicated 1 freed the FX system above
+	if ( com_dedicated->current.integer )
+	{
+		FX_InitSystem(0);
+		FX_CreateDefaultEffect();
+	}
+#endif
+
 	// run a few frames to allow everything to settle
 	for( i = 0; i < GAME_INIT_FRAMES; ++i )
 	{
