@@ -1,7 +1,2 @@
 # Fallos esperados de smoke_test.py con el servidor de opencod2; solo se achica.
-console log lines have timestamps
-console log rotated
-crash report written
 heartbeat sent to sv_master1
-net_strictPort stops on a busy port
-sv_logRcon 0 hides rcon commands
