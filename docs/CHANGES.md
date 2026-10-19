@@ -129,6 +129,7 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - **Layout parity:** `scripts/layout_parity.py` compiles a program with this repo's headers and one with CoD2rev-Plus's and compares sizes and offsets of the types in `test/layout_parity_types.txt`: those the script VM, the server and the game share with the engine, in 1.3 and 1.0.
 - **One copy of each state:** `scripts/check_single_impl.py <build> <target>` lists the engine objects that still define a function `test/server_interface.txt` exports.
 - **Names defined twice:** `scripts/check_duplicates.py <build> <target>` lists the C names a target gets both from CoD2rev-Plus's objects and from the engine's.
+- **Renamed bgame globals:** `scripts/check_bgame_names.py <build>` preprocesses each engine source of `compile_commands.json` that names one of `test/engine_bgame_names.txt` and lists where the plain name is left, which would link to CoD2rev-Plus's global instead of the `eng_` one. `scripts/build_check.py` runs it for the Linux client.
 - **Copied files:** `scripts/vendor_check.py` compares every file in `test/vendored_files.txt` with a CoD2rev-Plus checkout.
 - **Unit tests** for the scripts: `python3 -m unittest discover -s test`.
 
@@ -138,6 +139,5 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - Local games are tested up to the game's menus: nobody plays, so a shot's hit location on CoD2rev-Plus's DObj and skeleton code has not been exercised.
 - The MinGW client, MSVC, the web build and x64 keep `src/PC/server_mp`, `src/PC/game_mp` and `src/PC/game`.
 - A client started with `dedicated 1` frees the FX system and does not create it again, as the engine's server did; and CoD2rev-Plus's `SV_Shutdown` does not clear `com_errorEntered` when a local map load is cut short, so a second error during that cleanup is fatal instead of a drop.
-- Nothing checks yet that every engine source naming a renamed bgame global includes `common_types.h`: one that does not would use CoD2rev-Plus's global without an error.
 - The MinGW dedicated server builds with CoD2rev-Plus's server, game, bgame, core and `win32` platform code but has not been run (no Wine here), and its layout parity has not been checked.
 - The MSVC build is not checked by the scripts above and still compiles C with the reconstructed VM and server.

@@ -13,6 +13,8 @@ the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
 server, and the Linux client, must get no C name both from CoD2rev-Plus and
 from the engine (scripts/check_duplicates.py), and no engine object of them may
 still define a function their bridge exports (scripts/check_single_impl.py).
+On Linux no engine source of the client may name a renamed bgame global without
+its eng_ name in effect (scripts/check_bgame_names.py).
 """
 import argparse, os, re, subprocess, sys
 
@@ -89,6 +91,16 @@ def duplicates(variant, build_dir):
     return errors
 
 
+def bgame_names(build_dir):
+    """The engine sources of the Linux client that name one of the engine's
+    bgame globals under its plain name, CoD2rev-Plus's."""
+    if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', 'cod2_linux.dir')):
+        return []
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_bgame_names.py'), build_dir],
+                         capture_output=True, text=True)
+    return [] if run.returncode == 0 else ['cod2_linux: ' + line for line in run.stdout.splitlines()[:-1]]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
@@ -110,6 +122,8 @@ def main():
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
         if not errors:
             errors = duplicates(variant, build_dir)
+        if not errors and variant.startswith('linux'):
+            errors = bgame_names(build_dir)
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')
