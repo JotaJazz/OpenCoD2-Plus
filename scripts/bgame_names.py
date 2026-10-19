@@ -10,9 +10,10 @@ test/engine_bgame_names.txt this writes:
 - src/headers/engine_bgame_names.h: '#define name eng_name', which
   common_types.h includes, so every C source of the engine (the bgame, cgame,
   the blobs and their imp_ pointers) uses the eng_ name;
-- src/compat/server_bgame_names.cpp: a placeholder for each eng_ name in the
-  dedicated server, which leaves the engine's bgame and the blobs' copies out
-  but still links the imp_ pointers that take their addresses.
+- src/compat/server_bgame_names.cpp: a placeholder for each eng_ name the
+  C blobs (BLOBS) do not define, in the dedicated server, which leaves the
+  engine's bgame out but still links the imp_ pointers that take their
+  addresses.
 
 The MinGW blobs (.win.S) spell the labels themselves; they are renamed once
 with --rename-asm FILE.
@@ -21,6 +22,7 @@ import argparse, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFIX = 'eng_'
+BLOBS = ['src/blobs/bss.c', 'build/native_gen/data32.c', 'build/native_gen/literals32.c']
 
 
 def load(path):
@@ -35,6 +37,18 @@ def header(names):
              '#ifndef COD2_ENGINE_BGAME_NAMES_H', '#define COD2_ENGINE_BGAME_NAMES_H', '']
     lines += [f'#define {n} {PREFIX}{n}' for n in names]
     return '\n'.join(lines + ['', '#endif', ''])
+
+
+def defined_in(names, text):
+    """The names a C source defines (not only declares)."""
+    found = set()
+    for line in text.splitlines():
+        if line.lstrip().startswith(('extern', '#', '/*', '*')):
+            continue
+        for n in names:
+            if re.search(r'\b' + re.escape(n) + r'\s*(\[[^\]]*\])*\s*(=|;)', line):
+                found.add(n)
+    return found
 
 
 def placeholders(names):
@@ -59,8 +73,9 @@ def main():
     names = load(os.path.join(ROOT, 'test', 'engine_bgame_names.txt'))
     with open(os.path.join(ROOT, 'src', 'headers', 'engine_bgame_names.h'), 'w') as f:
         f.write(header(names))
+    blobs = ''.join(open(os.path.join(ROOT, p)).read() for p in BLOBS)
     with open(os.path.join(ROOT, 'src', 'compat', 'server_bgame_names.cpp'), 'w') as f:
-        f.write(placeholders(names))
+        f.write(placeholders([n for n in names if n not in defined_in(names, blobs)]))
     for path in args.rename_asm:
         with open(path) as f:
             text = f.read()

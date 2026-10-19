@@ -101,6 +101,36 @@ static_assert(cod2_abi_slot<float>() == 4, "BoxDistSqrdExceeds: parameter 3 diff
 extern "C" cod2_abi_int<decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())), 4> cod2c_BoxDistSqrdExceeds(float const* a0, float const* a1, float const* a2, float a3) __asm__(COD2_SYM("BoxDistSqrdExceeds"));
 decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())) BoxDistSqrdExceeds(float const* a0, float const* a1, float const* a2, float a3) { return (decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())))cod2c_BoxDistSqrdExceeds(a0, a1, a2, a3); }
 
+static_assert(cod2_abi_class<decltype(CL_Disconnect())>() == 'v', "CL_Disconnect: return class differs from the engine");
+extern "C" decltype(CL_Disconnect()) cod2c_CL_Disconnect() __asm__(COD2_SYM("CL_Disconnect"));
+decltype(CL_Disconnect()) CL_Disconnect() { return cod2c_CL_Disconnect(); }
+
+static_assert(cod2_abi_class<decltype(CL_GetLocalClientActive(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(CL_GetLocalClientActive(std::declval<int>()))>() == 'v', "CL_GetLocalClientActive: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "CL_GetLocalClientActive: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(CL_GetLocalClientActive(std::declval<int>())), 1> cod2c_CL_GetLocalClientActive(int a0) __asm__(COD2_SYM("CL_GetLocalClientActive"));
+decltype(CL_GetLocalClientActive(std::declval<int>())) CL_GetLocalClientActive(int a0) { return (decltype(CL_GetLocalClientActive(std::declval<int>())))cod2c_CL_GetLocalClientActive(a0); }
+
+static_assert(cod2_abi_class<decltype(CL_InitLoad(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "CL_InitLoad: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "CL_InitLoad: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "CL_InitLoad: parameter 1 differs from the engine");
+extern "C" decltype(CL_InitLoad(std::declval<char const*>(), std::declval<char const*>())) cod2c_CL_InitLoad(char const* a0, char const* a1) __asm__(COD2_SYM("CL_InitLoad"));
+decltype(CL_InitLoad(std::declval<char const*>(), std::declval<char const*>())) CL_InitLoad(char const* a0, char const* a1) { return cod2c_CL_InitLoad(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(CL_MapLoading(std::declval<char const*>()))>() == 'v', "CL_MapLoading: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "CL_MapLoading: parameter 0 differs from the engine");
+extern "C" decltype(CL_MapLoading(std::declval<char const*>())) cod2c_CL_MapLoading(char const* a0) __asm__(COD2_SYM("CL_MapLoading"));
+decltype(CL_MapLoading(std::declval<char const*>())) CL_MapLoading(char const* a0) { return cod2c_CL_MapLoading(a0); }
+
+static_assert(cod2_abi_class<decltype(CL_ShutdownAll())>() == 'v', "CL_ShutdownAll: return class differs from the engine");
+extern "C" decltype(CL_ShutdownAll()) cod2c_CL_ShutdownAll() __asm__(COD2_SYM("CL_ShutdownAll"));
+decltype(CL_ShutdownAll()) CL_ShutdownAll() { return cod2c_CL_ShutdownAll(); }
+
+static_assert(cod2_abi_class<decltype(CL_StartLoading(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "CL_StartLoading: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "CL_StartLoading: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "CL_StartLoading: parameter 1 differs from the engine");
+extern "C" decltype(CL_StartLoading(std::declval<char const*>(), std::declval<char const*>())) cod2c_CL_StartLoading(char const* a0, char const* a1) __asm__(COD2_SYM("CL_StartLoading"));
+decltype(CL_StartLoading(std::declval<char const*>(), std::declval<char const*>())) CL_StartLoading(char const* a0, char const* a1) { return cod2c_CL_StartLoading(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(CM_AreaEntities(std::declval<float const*>(), std::declval<float const*>(), std::declval<int*>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(CM_AreaEntities(std::declval<float const*>(), std::declval<float const*>(), std::declval<int*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "CM_AreaEntities: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "CM_AreaEntities: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "CM_AreaEntities: parameter 1 differs from the engine");
@@ -437,6 +467,13 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Com_LoadBsp: parameter 0 diffe
 extern "C" decltype(Com_LoadBsp(std::declval<char const*>())) cod2c_Com_LoadBsp(char const* a0) __asm__(COD2_SYM("Com_LoadBsp"));
 decltype(Com_LoadBsp(std::declval<char const*>())) Com_LoadBsp(char const* a0) { return cod2c_Com_LoadBsp(a0); }
 
+static_assert(cod2_abi_class<decltype(Com_LoadSoundAliases(std::declval<char const*>(), std::declval<char const*>(), std::declval<snd_alias_system_t>()))>() == 'v', "Com_LoadSoundAliases: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Com_LoadSoundAliases: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Com_LoadSoundAliases: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<snd_alias_system_t>() == 4, "Com_LoadSoundAliases: parameter 2 differs from the engine");
+extern "C" decltype(Com_LoadSoundAliases(std::declval<char const*>(), std::declval<char const*>(), std::declval<snd_alias_system_t>())) cod2c_Com_LoadSoundAliases(char const* a0, char const* a1, snd_alias_system_t a2) __asm__(COD2_SYM("Com_LoadSoundAliases"));
+decltype(Com_LoadSoundAliases(std::declval<char const*>(), std::declval<char const*>(), std::declval<snd_alias_system_t>())) Com_LoadSoundAliases(char const* a0, char const* a1, snd_alias_system_t a2) { return cod2c_Com_LoadSoundAliases(a0, a1, a2); }
+
 static_assert(cod2_abi_class<decltype(Com_Milliseconds())>() == 'i' || cod2_abi_class<decltype(Com_Milliseconds())>() == 'v', "Com_Milliseconds: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(Com_Milliseconds()), 4> cod2c_Com_Milliseconds() __asm__(COD2_SYM("Com_Milliseconds"));
 decltype(Com_Milliseconds()) Com_Milliseconds() { return (decltype(Com_Milliseconds()))cod2c_Com_Milliseconds(); }
@@ -502,6 +539,11 @@ decltype(Com_UngetToken()) Com_UngetToken() { return cod2c_Com_UngetToken(); }
 static_assert(cod2_abi_class<decltype(Com_UnloadBsp())>() == 'v', "Com_UnloadBsp: return class differs from the engine");
 extern "C" decltype(Com_UnloadBsp()) cod2c_Com_UnloadBsp() __asm__(COD2_SYM("Com_UnloadBsp"));
 decltype(Com_UnloadBsp()) Com_UnloadBsp() { return cod2c_Com_UnloadBsp(); }
+
+static_assert(cod2_abi_class<decltype(Com_UnloadSoundAliases(std::declval<snd_alias_system_t>()))>() == 'v', "Com_UnloadSoundAliases: return class differs from the engine");
+static_assert(cod2_abi_slot<snd_alias_system_t>() == 4, "Com_UnloadSoundAliases: parameter 0 differs from the engine");
+extern "C" decltype(Com_UnloadSoundAliases(std::declval<snd_alias_system_t>())) cod2c_Com_UnloadSoundAliases(snd_alias_system_t a0) __asm__(COD2_SYM("Com_UnloadSoundAliases"));
+decltype(Com_UnloadSoundAliases(std::declval<snd_alias_system_t>())) Com_UnloadSoundAliases(snd_alias_system_t a0) { return cod2c_Com_UnloadSoundAliases(a0); }
 
 static_assert(cod2_abi_class<decltype(Com_ValidXModelName(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Com_ValidXModelName(std::declval<char const*>()))>() == 'v', "Com_ValidXModelName: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Com_ValidXModelName: parameter 0 differs from the engine");
@@ -940,6 +982,14 @@ static_assert(cod2_abi_slot<char*>() == 4, "FS_iwIwd: parameter 0 differs from t
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_iwIwd: parameter 1 differs from the engine");
 extern "C" cod2_abi_int<decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())), 4> cod2c_FS_iwIwd(char* a0, char const* a1) __asm__(COD2_SYM("FS_iwIwd"));
 decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())) FS_iwIwd(char* a0, char const* a1) { return (decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())))cod2c_FS_iwIwd(a0, a1); }
+
+static_assert(cod2_abi_class<decltype(FX_FreeSystem())>() == 'v', "FX_FreeSystem: return class differs from the engine");
+extern "C" decltype(FX_FreeSystem()) cod2c_FX_FreeSystem() __asm__(COD2_SYM("FX_FreeSystem"));
+decltype(FX_FreeSystem()) FX_FreeSystem() { return cod2c_FX_FreeSystem(); }
+
+static_assert(cod2_abi_class<decltype(FX_InitServer())>() == 'v', "FX_InitServer: return class differs from the engine");
+extern "C" decltype(FX_InitServer()) cod2c_FX_InitServer() __asm__(COD2_SYM("FX_InitServer"));
+decltype(FX_InitServer()) FX_InitServer() { return cod2c_FX_InitServer(); }
 
 static_assert(cod2_abi_class<decltype(GetBspExtension())>() == 'i' || cod2_abi_class<decltype(GetBspExtension())>() == 'v', "GetBspExtension: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(GetBspExtension()), 4> cod2c_GetBspExtension() __asm__(COD2_SYM("GetBspExtension"));
@@ -1481,6 +1531,10 @@ static_assert(cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>())
 static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLANAddress: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_IsLANAddress(std::declval<netadr_t>())), 4> cod2c_Sys_IsLANAddress(netadr_t a0) __asm__(COD2_SYM("Sys_IsLANAddress"));
 decltype(Sys_IsLANAddress(std::declval<netadr_t>())) Sys_IsLANAddress(netadr_t a0) { return (decltype(Sys_IsLANAddress(std::declval<netadr_t>())))cod2c_Sys_IsLANAddress(a0); }
+
+static_assert(cod2_abi_class<decltype(Sys_LoadingKeepAlive())>() == 'v', "Sys_LoadingKeepAlive: return class differs from the engine");
+extern "C" decltype(Sys_LoadingKeepAlive()) cod2c_Sys_LoadingKeepAlive() __asm__(COD2_SYM("Sys_LoadingKeepAlive"));
+decltype(Sys_LoadingKeepAlive()) Sys_LoadingKeepAlive() { return cod2c_Sys_LoadingKeepAlive(); }
 
 static_assert(cod2_abi_class<decltype(Sys_SnapVector(std::declval<float*>()))>() == 'v', "Sys_SnapVector: return class differs from the engine");
 static_assert(cod2_abi_slot<float*>() == 4, "Sys_SnapVector: parameter 0 differs from the engine");

@@ -1175,8 +1175,14 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum)
     ((cgs_t *)cgsBase)->levelStartTime = atoi(CL_GetConfigString(0xd));
     SCR_UpdateScreen();
 
+#if COD2_PLUS_CLIENT_SERVER
+    /* the local server runs CoD2rev-Plus's bgame, whose mantle anims are its
+       own: cgame's bgame creates them even with a local server */
+    Mantle_CreateAnims((MantleAnimAlloc)Hunk_AllocXAnimClient);
+#else
     if (!com_sv_running->current.enabled)
         Mantle_CreateAnims((MantleAnimAlloc)Hunk_AllocXAnimClient);
+#endif
 
     if (*(int *)imp_bg_iNumWeapons == 0) {
         CL_SetWeaponInfoMemory();

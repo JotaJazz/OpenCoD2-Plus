@@ -23,6 +23,14 @@ class BgameNames(unittest.TestCase):
         out = bgame_names.rename_asm(text, ['pmoveHandlers'])
         self.assertEqual(out, '.globl _eng_pmoveHandlers\n_eng_pmoveHandlers:\n    .long _pmoveHandlers2\n    .long _PM_Foo\n')
 
+    def test_blob_definitions_need_no_placeholder(self):
+        # bss.c defines the dvar pointers in every executable; only what the
+        # dedicated server lacks (src/PC/bgame's tables) needs a placeholder
+        text = ('extern const dvar_t *friction;\nconst dvar_t *friction;\n'
+                'struct _d32_bg_iNumWeapons __attribute__((aligned(4))) bg_iNumWeapons = {\n')
+        self.assertEqual(bgame_names.defined_in(['friction', 'bg_iNumWeapons', 'pmoveHandlers'], text),
+                         {'friction', 'bg_iNumWeapons'})
+
     def test_names_file(self):
         with tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False) as f:
             f.write('# comment\nplayer_turnAnims\n\nfriction\n')

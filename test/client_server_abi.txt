@@ -1,4 +1,4 @@
-# Written by scripts/engine_abi.py --module client_server from build/check-linux/cod2_linux; see its docstring for the format.
+# Written by scripts/engine_abi.py --module client_server from ../../../tmp/claude-1000/-home-jota-opencod2-plus/0a7f985a-0774-41cb-b2e4-c301cbc85cf4/scratchpad/abi-linux/cod2_linux; see its docstring for the format.
 AddLeanToPosition v0 4,4,4,4,4
 AddPointToBounds v0 4,4,4
 AngleDelta f4 4,4
@@ -13,6 +13,12 @@ AnglesSubtract v0 4,4,4
 AnglesToAxis v0 4,4
 AxisToAngles v0 4,4
 BoxDistSqrdExceeds i4 4,4,4,4
+CL_Disconnect v0 -
+CL_GetLocalClientActive i1 4
+CL_InitLoad v0 4,4
+CL_MapLoading v0 4
+CL_ShutdownAll v0 -
+CL_StartLoading v0 4,4
 CM_AreaEntities i4 4,4,4,4,4
 CM_BoxLeafnums i4 4,4,4,4,4
 CM_BoxSightTrace i4 4,4,4,4,4,4,4
@@ -64,6 +70,7 @@ Com_GetCurrentParseLine i4 -
 Com_GetServerDObj i4 4
 Com_HashKey i4 4,4
 Com_LoadBsp v0 4
+Com_LoadSoundAliases v0 4,4,4
 Com_Milliseconds i4 -
 Com_ParseReturnToMark v0 4,4
 Com_ParseSetMark v0 4,4
@@ -77,6 +84,7 @@ Com_SkipRestOfLine v0 4
 Com_SurfaceTypeToName i4 4
 Com_UngetToken v0 -
 Com_UnloadBsp v0 -
+Com_UnloadSoundAliases v0 4
 Com_ValidXModelName i4 4
 ConvertQuatToMat v0 4,4
 CopyStringInternal i4 4
@@ -148,6 +156,8 @@ FS_Shutdown v0 4
 FS_Write i4 4,4,4
 FS_WriteFile i4 4,4,4
 FS_iwIwd i4 4,4
+FX_FreeSystem v0 -
+FX_InitServer v0 -
 GScr_LoadConsts v0 -
 G_AnimScriptSound i4 4,4
 G_FreeEntity v0 4
@@ -256,6 +266,7 @@ SV_XModelGet i4 4
 ShrinkBoundsToHeight v0 4,4
 Swap_Init v0 -
 Sys_IsLANAddress i4 20
+Sys_LoadingKeepAlive v0 -
 Sys_SnapVector v0 4
 UnGetLeanFraction f4 4
 Vec2DistanceSq f4 4,4

@@ -1338,11 +1338,9 @@ struct _d32_g_rendererExists __attribute__((aligned(4))) g_rendererExists = {
 /* viewLerp_ProneCrouch: migrated to home .c (plan 4g); skipped. */
 /* viewLerp_StandCrouch: migrated to home .c (plan 4g); skipped. */
 /* viewLerp_CrouchProne: migrated to home .c (plan 4g); skipped. */
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct _d32_bg_iNumWeapons __attribute__((aligned(4))) bg_iNumWeapons = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-#endif
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct _d32_g_EndPos __attribute__((aligned(4))) g_EndPos = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -1462,7 +1460,7 @@ struct _d32_chatField __attribute__((aligned(4))) chatField = {
     (void *)&playerKeys,
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 struct _d32_sv_serverId_value __attribute__((aligned(4))) sv_serverId_value = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
@@ -1537,7 +1535,6 @@ struct _d32_bgs __attribute__((aligned(4))) bgs = {
 struct _d32_globalFilename __attribute__((aligned(4))) globalFilename = {
     (void *)&str_002aee58
 };
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct _d32_controller_names __attribute__((aligned(4))) controller_names = {
     (void *)((char *)&scr_const + 168),
     (void *)((char *)&scr_const + 170),
@@ -1547,12 +1544,11 @@ struct _d32_controller_names __attribute__((aligned(4))) controller_names = {
     (void *)((char *)&scr_const + 178),
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
-#endif
 /* animBodyPartsStr: migrated to home .c (plan 4g); skipped. */
 /* kb: defined by typed C TU; skipped. */
 /* staticNULL: defined by typed C TU; skipped. */
 /* playerMaxs: migrated to home .c (plan 4g); skipped. */
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 struct _d32_playerMins __attribute__((aligned(4))) playerMins = {
     { 0, 0, 112, 193, 0, 0, 112, 193, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
@@ -1583,14 +1579,14 @@ struct _d32_range_00313c60 __attribute__((aligned(4))) range_00313c60 = {
 /* offhandStrings: defined by typed C TU (offhandweapons_mp.c); skipped. */
 /* hintStrings: defined by typed C TU (g_mover_mp.c); skipped. */
 /* actorLocationalMaxs: migrated to home .c (plan 4g); skipped. */
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 struct _d32_actorLocationalMins __attribute__((aligned(4))) actorLocationalMins = {
     { 0, 0, 128, 194, 0, 0, 128, 194, 0, 0, 0, 194, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 #endif
 /* modNames: defined by typed C TU; skipped. */
 /* riflePriorityMap: migrated to home .c (plan 4g); skipped. */
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 struct _d32_bulletPriorityMap __attribute__((aligned(4))) bulletPriorityMap = {
     { 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };

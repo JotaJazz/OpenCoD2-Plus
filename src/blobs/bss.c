@@ -191,7 +191,7 @@ unsigned char localization[32];
 unsigned char language_buffer[4192];
 BSSINT shouldQuitOnError;
 unsigned char cml[124];
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
+#if !COD2_PLUS_GAME  /* defined by src/bgame */
 unsigned char bg_iNumAmmoTypes[32];
 unsigned char bg_weapAmmoTypes[512];
 unsigned char bg_iNumSharedAmmoCaps[32];
@@ -214,7 +214,7 @@ unsigned char scrCompileGlob[512];
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 struct scrAnimGlob_t scrAnimGlob;
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
+#if !COD2_PLUS_GAME  /* defined by src/bgame */
 BSSINT jump_height;
 BSSINT jump_spreadAdd;
 BSSINT jump_slowdownEnable;
@@ -224,7 +224,7 @@ BSSINT mantle_enable;
 BSSINT mantle_view_yawcap;
 #endif
 BSSINT s_mantleAnims;
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
+#if !COD2_PLUS_GAME  /* defined by src/bgame */
 BSSINT mantle_debug;
 BSSINT mantle_check_angle;
 BSSINT mantle_check_range;
@@ -263,7 +263,7 @@ unsigned char szReference[1024];
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int currentPos;
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
+#if !COD2_PLUS_GAME  /* defined by src/bgame */
 unsigned char bg_defaultWeaponDefs[1568];
 #endif
 unsigned char g_playerAnimTypeNames[256];
@@ -419,12 +419,12 @@ unsigned char buffer_00e86a20[1120];
 unsigned char input_viewSensitivity[32];
 unsigned char szServerIPAddress[128];
 unsigned char recursive[96];
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 unsigned char g_sv_skel_memory_start[128];
 unsigned char g_sv_skel_memory[262144];
 #endif
 unsigned char warnCount_00ec7000[128];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 const dvar_t *g_gametype;
 #endif
 unsigned char g_mapname[64];
@@ -481,15 +481,13 @@ unsigned char string_00f10c60[1056];
 unsigned char bigConfigString[8192];
 BSSINT warnCount_00f13080;
 unsigned char warnCount_00f13084[124];
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 unsigned char botport[128];
 #endif
 unsigned char ui_arenaInfos[256];
 unsigned char ui_numArenas[128];
 unsigned char defineBits[1152];
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 unsigned char weaponStrings[1024];
-#endif
 BSSINT parseEvent;
 BSSINT parseMovetype;
 unsigned char defineStringsOffset[24];
@@ -526,18 +524,18 @@ unsigned char g_load[1600];
 unsigned char menuParseKeywordHash[2048];
 unsigned char menuBuf1[4096];
 unsigned char string_00f3b9c0[4160];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 unsigned char g_clients[665856];
 #endif
 BSSINT hud_flash_period_offhand;
 unsigned char hud_flash_time_offhand[124];
 unsigned char cached_models[1024];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 unsigned char pushed[32768];
 unsigned char pushed_p[128];
 #endif
 turretInfo_s turretInfo[32];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 unsigned char g_HitLocConstNames[128];
 #endif
 unsigned char numIPFilters[32];
@@ -626,7 +624,7 @@ const dvar_t *com_recommendedSet;
 #if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 const dvar_t *sv_paused;
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 const dvar_t *com_expectedHunkUsage;
 BSSINT nextmap;
 #endif
@@ -757,7 +755,6 @@ int *clusterSort;
 int effectClusterCount;
 volatile qboolean fx_camera_valid;
 unsigned char fxSchedulers[128];
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 const dvar_t *player_dmgtimer_flinchTime;
 const dvar_t *player_dmgtimer_stumbleTime;
 const dvar_t *player_dmgtimer_minScale;
@@ -789,7 +786,6 @@ const dvar_t *bg_foliagesnd_fastinterval;
 const dvar_t *bg_foliagesnd_slowinterval;
 const dvar_t *bg_foliagesnd_maxspeed;
 const dvar_t *bg_foliagesnd_minspeed;
-#endif
 #if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64)
 /* x86 sizeof(clipMap_t)=384; on x64 its many pointer fields grow so the struct is
@@ -806,9 +802,7 @@ struct clipMap_t cm;
    on maps that load many weapons (e.g. mp_breakout). Retype so it holds all 128. */
 /* Typed on BOTH arches so this storage and the consumer's declaration agree; 128 slots
    is what the consumer declares and exceeds x86's need (was 608B/152 slots). */
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
 struct WeaponDef *bg_weaponDefs[128];
-#endif
 /* Consumer is `struct scrVmPub_t scrVmPub` (scr_vm.c). On x86 sizeof==17184 (exact
    fit: 32 header + function_frame_t[32]*24 + VariableValue[2048]*8). On x64 it is
    17720 -- 536 bytes larger (the 4 leading pointers grow 4->8 and function_frame_t
@@ -1372,7 +1366,7 @@ const dvar_t *cl_connectTimeout;
 const dvar_t *cl_timeout;
 const dvar_t *cl_noprint;
 const dvar_t *cl_nodelta;
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 qboolean gameInitialized;
 #endif
 const dvar_t *ui_playerProfileNameNew;
@@ -1417,7 +1411,7 @@ const dvar_t *packetDebug;
 const dvar_t *showdrop;
 const dvar_t *showpackets;
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 const dvar_t *sv_allowedClan2;
 const dvar_t *sv_allowedClan1;
 const dvar_t *sv_referencedIwdNames;
@@ -1460,7 +1454,7 @@ const dvar_t *sv_fps;
 /* Typed in every build: 1.0's serverStatic_t is 0xc108 bytes, and the
    41216 once reserved for it let challenges, redirectAddress and tempBans
    run into sv's configstrings. */
-#if !COD2_PLUS_SERVER  /* defined by src/server */
+#if !COD2_PLUS_GAME  /* defined by src/server */
 server_t sv;
 serverStatic_t svs;
 #endif
@@ -1496,7 +1490,7 @@ const dvar_t *hud_fade_stance;
 const dvar_t *hud_fade_compass;
 const dvar_t *hud_fade_healthbar;
 const dvar_t *hud_fade_ammodisplay;
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 scr_data_t g_scr_data;   /* x86 blob 14080; x64 sizeof(scr_data_t)=14328 -> overflow */
 #else
@@ -1509,7 +1503,7 @@ keywordHash_t *itemParseKeywordHash[512];
 #else
 keywordHash_t *itemParseKeywordHash[512];
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 const dvar_t *g_dumpAnims;
 const dvar_t *g_voteAbstainWeight;
 const dvar_t *g_oldVoting;
@@ -1522,7 +1516,7 @@ const dvar_t *g_friendlyfireDist;
 const dvar_t *g_debugLocDamage;
 #endif
 const dvar_t *g_NoScriptSpam;
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 const dvar_t *g_TeamColor_Axis;
 const dvar_t *g_TeamColor_Allies;
 const dvar_t *g_TeamName_Axis;
@@ -1544,7 +1538,7 @@ COD2_ALT("g_banIPs_dvar", "g_banIPs")
 #else
 __asm__(".globl g_banIPs_dvar\n.set g_banIPs_dvar, g_banIPs\n");
 #endif
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 const dvar_t *g_listEntity;
 const dvar_t *g_deadChat;
 const dvar_t *g_allowVote;
@@ -1581,7 +1575,7 @@ unsigned char g_gametype_017e1a58[40];
 /* 573440 = 1024 * 560 (x86 sizeof(gentity_s)). On x64 the struct is larger, so the blob must grow
    to hold all 1024 entity slots (indices up to 0x3FF incl. the world entity 1022) -- otherwise high
    indices overflow into adjacent BSS. BSS, so re-sizing is binary-compatible. */
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct gentity_s g_entities[1024];
 #else
@@ -1594,7 +1588,7 @@ unsigned char g_entities[573440];
    G_FreeEntity's memset of an entity slot was landing on level_bgs.AllocXAnim, NULLing
    it and crashing anim-tree precache on any map with a misc_model (e.g. mp_carentan).
    Retype so the compiler sizes it for the arch. BSS, so binary-compatible on x86. */
-#if !COD2_PLUS_SERVER  /* defined by src/bgame */
+#if !COD2_PLUS_GAME  /* defined by src/bgame */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct bgs_t level_bgs;
 #else
@@ -1612,7 +1606,7 @@ bgs_t level_bgs;
    the same class as the level_bgs->g_entities bug. (This is NOT the mp_breakout/
    mp_rhine weapon-precache crash; that is scrVmPub->bg_weaponDefs above.) Retype so
    the compiler sizes it for the arch. BSS, so binary-compatible on x86. */
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 #if defined(COD2_X64) || defined(__x86_64__)
 struct level_locals_t level;
 #else
@@ -1620,11 +1614,11 @@ struct level_locals_t level;
 #endif
 #endif
 qboolean itemRegistered[256];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 game_hudelem_t g_hudelems[1024];
 #endif
 unsigned char __ZN12UI_Component1gE[224];
-#if !COD2_PLUS_SERVER  /* defined by src/game */
+#if !COD2_PLUS_GAME  /* defined by src/game */
 float g_fHitLocDamageMult[19];
 scr_const_t scr_const;
 #endif

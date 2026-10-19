@@ -10,9 +10,9 @@ every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
 distributions than the build machine) and the dedicated server needs none of
 the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
-server must get no C name both from CoD2rev-Plus and from the engine
-(scripts/check_duplicates.py), and no engine object of it may still define a
-function the bridge exports (scripts/check_single_impl.py).
+server, and the Linux client, must get no C name both from CoD2rev-Plus and
+from the engine (scripts/check_duplicates.py), and no engine object of them may
+still define a function their bridge exports (scripts/check_single_impl.py).
 """
 import argparse, os, re, subprocess, sys
 
@@ -69,18 +69,23 @@ def client_libraries(build_dir):
 
 
 def duplicates(variant, build_dir):
-    """The C names the dedicated server gets both from CoD2rev-Plus and from the
-    engine, and the exported functions an engine object of it still defines."""
-    target, nm = ('cod2_win32_ded', 'i686-w64-mingw32-nm') if variant == 'mingw' else ('cod2_lnxded', 'nm')
-    if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
-        return []
+    """The C names an executable with CoD2rev-Plus's code gets both from it and
+    from the engine, and the exported functions an engine object of it still
+    defines: the dedicated server, and the Linux client's local server."""
+    nm, prefix = ('i686-w64-mingw32-nm', '_') if variant == 'mingw' else ('nm', '')
+    targets = [('cod2_win32_ded', 'server')] if variant == 'mingw' else \
+        [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')]
     errors = []
-    for script, extra in (('check_duplicates.py', []),
-                          ('check_single_impl.py', ['--prefix', '_' if variant == 'mingw' else ''])):
-        run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', script), build_dir, target,
-                              '--nm', nm] + extra, capture_output=True, text=True)
-        if run.returncode != 0:
-            errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+    for target, module in targets:
+        if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
+            continue
+        interface = os.path.join(ROOT, 'test', f'{module}_interface.txt')
+        for script, extra in (('check_duplicates.py', []),
+                              ('check_single_impl.py', ['--prefix', prefix, '--interface', interface])):
+            run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', script), build_dir, target,
+                                  '--nm', nm] + extra, capture_output=True, text=True)
+            if run.returncode != 0:
+                errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
     return errors
 
 

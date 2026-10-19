@@ -100,6 +100,16 @@ option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server, game and bgame (src/server, 
 if(NOT COD2_PLUS_SCRIPT)
   set(COD2_PLUS_SERVER OFF)
 endif()
+# CoD2rev-Plus's server, game and bgame for the Linux client's local games, on
+# the engine's core and xanim; cgame keeps the engine's bgame, whose globals
+# have their eng_ names (scripts/bgame_names.py). It needs COD2_PLUS_SERVER.
+option(COD2_PLUS_CLIENT_SERVER "Use CoD2rev-Plus's server, game and bgame in the Linux client's local games" ON)
+if(NOT COD2_PLUS_SERVER OR WIN32)
+  set(COD2_PLUS_CLIENT_SERVER OFF)
+endif()
+if(COD2_PLUS_CLIENT_SERVER)
+  add_compile_definitions(COD2_PLUS_CLIENT_SERVER=1)  # cgame no longer shares the bgame with a local server
+endif()
 if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
@@ -149,7 +159,9 @@ function(cod2_plus_server_client)
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
     ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/compat/client_server_*.cpp)
   add_library(cod2_plus_server_client OBJECT ${src})
-  target_compile_definitions(cod2_plus_server_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  # LISTEN_SERVER: CoD2rev-Plus's code for a server inside a client (its
+  # #ifndef DEDICATED blocks)
+  target_compile_definitions(cod2_plus_server_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG LISTEN_SERVER)
 endfunction()
 
 # cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
@@ -356,7 +368,7 @@ else()
   add_compile_definitions(DEDICATED)
   set(W32_EXE cod2_win32_ded)
   if(COD2_PLUS_SERVER)
-    add_compile_definitions(COD2_PLUS_SERVER=1)  # the blobs leave the server's globals to src/server
+    add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
   endif()
 endif()
 if(COD2_WIN32_REAL_D3D9)
@@ -661,15 +673,17 @@ if(COD2_PLUS_SCRIPT)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 if(COD2_PLUS_SERVER)
+  if(COD2_PLUS_CLIENT_SERVER)
+    # the client runs CoD2rev-Plus's server, game and bgame instead
+    list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
+    cod2_plus_server_client()
+    set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
+  endif()
   cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
   add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
   cod2_plus_server()
   list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
-endif()
-
-if(COD2_PLUS_SERVER)
-  cod2_plus_server_client()
 endif()
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
@@ -681,7 +695,9 @@ target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
 add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
-target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>)
+target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
+  $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)
+target_compile_definitions(cod2_linux PRIVATE $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_GAME=1>)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})
 target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})
 

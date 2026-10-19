@@ -5,7 +5,9 @@
 
 For each import and export of the module (scripts/gen_script_bridge.py
 --names), reads with gdb the debug information of a binary built with the
-engine's own side (src/PC/server_mp for the server) and writes
+engine's own side (src/PC/server_mp for the server: a client configured with
+-DCOD2_PLUS_CLIENT_SERVER=OFF, since the bridge's C++ thunks of a client with
+CoD2rev-Plus's server shadow the engine's functions) and writes
 test/<module>_abi.txt, one line per function:
 
     name <class><size> <slot>,<slot>,... [...]

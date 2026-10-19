@@ -8,16 +8,17 @@ symbols by their C names, so a function or a global compiled as C++ without C
 linkage (a _Z... name) breaks them. Exits with 0 when no object defines a
 mangled global symbol other than those in the allowlist (one name per line,
 or re:<regex>; # comments; default test/c_linkage_allowlist.txt). The objects
-of cod2_plus_script, cod2_plus_script_game, cod2_plus_script_core and cod2_plus_server
-(CoD2rev-Plus's C++ script VM, server and game, and their bridges) are
-skipped: their C++ names are meant to be C++.
+of cod2_plus_script, cod2_plus_script_game, cod2_plus_script_core,
+cod2_plus_server and cod2_plus_server_client (CoD2rev-Plus's C++ code and
+its bridges) are skipped: their C++ names are meant to be C++.
 """
 import argparse, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANGLED = re.compile(r'^_{1,2}Z')
 CMAKE_PROBE = re.compile(r'CMakeFiles/\d')
-CXX_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir', 'cod2_plus_server.dir')
+CXX_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir',
+                'cod2_plus_server.dir', 'cod2_plus_server_client.dir')
 
 
 def objects(build_dir):
