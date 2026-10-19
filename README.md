@@ -13,10 +13,10 @@
 
 Reverse-engineered source code of the **Call of Duty 2** engine: the multiplayer client and the dedicated server, for Linux and Windows.
 
-This repository is a fork of [opencod2/opencod2](https://github.com/opencod2/opencod2), which is where the reconstruction of the engine was done. It also carries changes from [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). This fork only adds the changes described in [Changes in this fork](#changes-in-this-fork). Its goal is to become one repository with the client and the dedicated server, by bringing in the server of [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) module by module.
+This repository is a fork of [opencod2/opencod2](https://github.com/opencod2/opencod2), which is where the reconstruction of the engine was done. It also carries changes from [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). This fork only adds the changes described in [Changes in this fork](#changes-in-this-fork). Its goal is to become one repository with the client and the dedicated server, by bringing in the server of [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) module by module. On Linux that is done: the dedicated server runs entirely on CoD2rev-Plus's code, and the client's local games run on its server.
 
 > [!WARNING]
-> **Work in progress — this does not fully work yet.** The client boots to the main menu and the dedicated server, now CoD2rev-Plus's, loads maps and holds players in 1.0 and 1.3, but expect crashes, missing functionality and broken features. It is shared for the curious and for collaboration, not as a finished or playable port.
+> **Work in progress — this does not fully work yet.** The client boots to the main menu, hosts local games that other clients join, and the dedicated server, now CoD2rev-Plus's, loads maps and holds players in 1.0 and 1.3, but expect crashes, missing functionality and broken features. It is shared for the curious and for collaboration, not as a finished or playable port.
 
 > [!IMPORTANT]
 > **No game content is included — bring your own data.** This repository is source code only: no executables, archives, maps, models, textures, sounds or scripts. To run anything you must supply data files from a copy of the game that **you legally own**.
@@ -45,6 +45,7 @@ Every change in detail is in [docs/CHANGES.md](docs/CHANGES.md) (in English).
 
 - **The version is chosen when building.** By default the engine is built as 1.3 (protocol 118); with `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` it is built as 1.0 (protocol 115).
 - **Both dedicated servers work for testing:** in 1.3 and in 1.0 the server loads, changes and restarts maps, answers `getinfo`, `getstatus` and rcon, and holds two players who join, leave, come back and get kicked.
+- **Local games work for testing:** in 1.3 and in 1.0 a client hosts a game on CoD2rev-Plus's server, another client joins it, and both stay through `map_restart` and a map change (`scripts/listen_test.py`, with your CD key).
 - **What CoD2rev-Plus has in libcod is not here yet:** its script functions, the bots and `sv_master1`…`sv_master5`, so the server sends its heartbeat only to the Activision master.
 
 ## Building
@@ -176,13 +177,13 @@ python3 -m unittest discover -s test
 
 | Path | Contents |
 | --- | --- |
-| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), server (`server_mp`), game (`game_mp`, `bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`), animations (`xanim`) and the reconstructed script VM (`script`). |
+| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), server (`server_mp`), game (`game_mp`, `bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`), animations (`xanim`) and the reconstructed script VM (`script`). On Linux and in the MinGW dedicated server, `server_mp`, `game_mp`, `game` and the core CoD2rev-Plus replaces are left out (`test/plus_replaces.txt`). |
 | `src/Mac` | The Mac port's platform layer that the reconstruction came from: OpenGL behind a Direct3D interface, input and sound. |
 | `src/script` | CoD2rev-Plus's script VM, copied unchanged, with the headers it needs in `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` and `src/libcod`. |
 | `src/server` | CoD2rev-Plus's server, copied unchanged; the dedicated server uses it. |
 | `src/game`, `src/bgame` | CoD2rev-Plus's game and bgame, copied unchanged; the dedicated server uses them. |
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | CoD2rev-Plus's core and platform code, copied unchanged; the dedicated server runs on them. `test/plus_replaces.txt` lists the engine sources they replace there. |
-| `src/compat` | The bridges between the engine's C names and CoD2rev-Plus's C++ VM and server; mostly generated. |
+| `src/compat` | The bridges between the engine's C names and CoD2rev-Plus's C++ VM, server and core; mostly generated. |
 | `src/headers`, `src/imports` | Shared types, offsets checked against the original binary, and declarations of imported functions. |
 | `src/blobs`, `build/native_gen`, `build/win_gen`, `build/gfxdll` | Data taken from the original binary, still used by the engine. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Platform code and stubs. |

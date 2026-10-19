@@ -13,10 +13,10 @@
 
 Código fuente, obtenido por ingeniería inversa, del motor de **Call of Duty 2**: el cliente multijugador y el servidor dedicado, para Linux y Windows.
 
-Este repositorio es un fork de [opencod2/opencod2](https://github.com/opencod2/opencod2), que es donde se hizo la reconstrucción del motor. También trae cambios de [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). Aquí solo se añaden los cambios descritos en [Cambios de este fork](#cambios-de-este-fork). El objetivo es llegar a un solo repositorio con el cliente y el servidor dedicado, trayendo módulo por módulo el servidor de [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus).
+Este repositorio es un fork de [opencod2/opencod2](https://github.com/opencod2/opencod2), que es donde se hizo la reconstrucción del motor. También trae cambios de [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). Aquí solo se añaden los cambios descritos en [Cambios de este fork](#cambios-de-este-fork). El objetivo es llegar a un solo repositorio con el cliente y el servidor dedicado, trayendo módulo por módulo el servidor de [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus). En Linux eso ya está hecho: el servidor dedicado corre entero sobre el código de CoD2rev-Plus, y las partidas locales del cliente corren sobre su servidor.
 
 > [!WARNING]
-> **Trabajo en curso: todavía no funciona del todo.** El cliente arranca hasta el menú principal y el servidor dedicado, ahora el de CoD2rev-Plus, carga mapas y aguanta jugadores en 1.0 y 1.3, pero hay que esperar cierres inesperados, funciones que faltan y cosas que fallan. Se comparte para curiosos y para colaborar, no como un port terminado o jugable.
+> **Trabajo en curso: todavía no funciona del todo.** El cliente arranca hasta el menú principal, crea partidas locales a las que se conectan otros clientes, y el servidor dedicado, ahora el de CoD2rev-Plus, carga mapas y aguanta jugadores en 1.0 y 1.3, pero hay que esperar cierres inesperados, funciones que faltan y cosas que fallan. Se comparte para curiosos y para colaborar, no como un port terminado o jugable.
 
 > [!IMPORTANT]
 > **No incluye contenido del juego: hay que poner los datos propios.** Este repositorio es solo código fuente: no hay ejecutables, archivos, mapas, modelos, texturas, sonidos ni scripts. Para ejecutar algo hacen falta los archivos de datos de una copia del juego **que tengas legalmente**.
@@ -45,6 +45,7 @@ Cada cambio en detalle está en [docs/CHANGES.md](docs/CHANGES.md) (en inglés).
 
 - **La versión se elige al compilar.** Por defecto el motor se compila como 1.3 (protocolo 118); con `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` se compila como 1.0 (protocolo 115).
 - **Los dos servidores dedicados sirven para pruebas:** en 1.3 y en 1.0 el servidor carga, cambia y reinicia mapas, responde a `getinfo`, `getstatus` y rcon, y aguanta dos jugadores que entran, salen, vuelven y son expulsados.
+- **Las partidas locales sirven para pruebas:** en 1.3 y en 1.0 un cliente crea una partida sobre el servidor de CoD2rev-Plus, otro cliente se conecta y los dos siguen después de un `map_restart` y de un cambio de mapa (`scripts/listen_test.py`, con tu CD key).
 - **Lo que CoD2rev-Plus tiene en libcod todavía no está aquí:** sus funciones de script, los bots y `sv_master1`…`sv_master5`, así que el servidor manda su latido solo al maestro de Activision.
 
 ## Compilar
@@ -176,13 +177,13 @@ python3 -m unittest discover -s test
 
 | Ruta | Contenido |
 | --- | --- |
-| `src/PC` | El motor reconstruido: cliente (`client_mp`, `cgame_mp`, `ui_mp`), servidor (`server_mp`), juego (`game_mp`, `bgame`), render (`gfx_d3d`), código compartido (`qcommon`, `universal`), animaciones (`xanim`) y la máquina virtual de scripts reconstruida (`script`). |
+| `src/PC` | El motor reconstruido: cliente (`client_mp`, `cgame_mp`, `ui_mp`), servidor (`server_mp`), juego (`game_mp`, `bgame`), render (`gfx_d3d`), código compartido (`qcommon`, `universal`), animaciones (`xanim`) y la máquina virtual de scripts reconstruida (`script`). En Linux y en el servidor dedicado de MinGW se dejan afuera `server_mp`, `game_mp`, `game` y el núcleo que reemplaza CoD2rev-Plus (`test/plus_replaces.txt`). |
 | `src/Mac` | La capa de plataforma del port de Mac del que sale la reconstrucción: OpenGL detrás de una interfaz de Direct3D, entrada y sonido. |
 | `src/script` | La máquina virtual de scripts de CoD2rev-Plus, copiada sin cambios, con los headers que necesita en `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` y `src/libcod`. |
 | `src/server` | El servidor de CoD2rev-Plus, copiado sin cambios; lo usa el servidor dedicado. |
 | `src/game`, `src/bgame` | El game y el bgame de CoD2rev-Plus, copiados sin cambios; los usa el servidor dedicado. |
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | El núcleo y el código de plataforma de CoD2rev-Plus, copiados sin cambios; sobre ellos corre el servidor dedicado. `test/plus_replaces.txt` lista las fuentes del motor que reemplazan ahí. |
-| `src/compat` | Los puentes entre los nombres de C del motor y la máquina virtual y el servidor C++ de CoD2rev-Plus; casi todo generado. |
+| `src/compat` | Los puentes entre los nombres de C del motor y la máquina virtual, el servidor y el núcleo C++ de CoD2rev-Plus; casi todo generado. |
 | `src/headers`, `src/imports` | Tipos compartidos, desplazamientos comprobados contra el binario original y declaraciones de las funciones importadas. |
 | `src/blobs`, `build/native_gen`, `build/win_gen`, `build/gfxdll` | Datos sacados del binario original, que el motor todavía usa. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Código de cada plataforma y stubs. |

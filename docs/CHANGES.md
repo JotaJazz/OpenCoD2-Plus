@@ -137,5 +137,7 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - What CoD2rev-Plus has in libcod is not here: its script functions, the bots and `sv_master1` to `sv_master5`, so the server sends its heartbeat only to the Activision master and the smoke test's `heartbeat sent to sv_master1` fails.
 - Local games are tested up to the game's menus: nobody plays, so a shot's hit location on CoD2rev-Plus's DObj and skeleton code has not been exercised.
 - The MinGW client, MSVC, the web build and x64 keep `src/PC/server_mp`, `src/PC/game_mp` and `src/PC/game`.
+- A client started with `dedicated 1` frees the FX system and does not create it again, as the engine's server did; and CoD2rev-Plus's `SV_Shutdown` does not clear `com_errorEntered` when a local map load is cut short, so a second error during that cleanup is fatal instead of a drop.
+- Nothing checks yet that every engine source naming a renamed bgame global includes `common_types.h`: one that does not would use CoD2rev-Plus's global without an error.
 - The MinGW dedicated server builds with CoD2rev-Plus's server, game, bgame, core and `win32` platform code but has not been run (no Wine here), and its layout parity has not been checked.
 - The MSVC build is not checked by the scripts above and still compiles C with the reconstructed VM and server.
