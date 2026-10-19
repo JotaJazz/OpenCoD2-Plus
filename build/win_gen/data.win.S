@@ -2050,9 +2050,9 @@ _g_rendererExists:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _eventnames
+.globl _eng_eventnames
 .align 4
-_eventnames:
+_eng_eventnames:
     .long _str_0021a974
     .long _str_0021a97c
     .long _str_0021a994
@@ -2256,9 +2256,9 @@ _eventnames:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _pmoveHandlers
+.globl _eng_pmoveHandlers
 .align 4
-_pmoveHandlers:
+_eng_pmoveHandlers:
     .long _CG_TraceCapsule
     .long _CG_PointContents
     .byte 0x00, 0x00, 0x00, 0x00
@@ -2269,9 +2269,9 @@ _pmoveHandlers:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _viewLerp_CrouchStand
+.globl _eng_viewLerp_CrouchStand
 .align 4
-_viewLerp_CrouchStand:
+_eng_viewLerp_CrouchStand:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x42, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x22, 0x42, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x26, 0x42
     .byte 0x00, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x42, 0x00, 0x00, 0x00, 0x00
@@ -2283,9 +2283,9 @@ _viewLerp_CrouchStand:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _viewLerp_ProneCrouch
+.globl _eng_viewLerp_ProneCrouch
 .align 4
-_viewLerp_ProneCrouch:
+_eng_viewLerp_ProneCrouch:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x41, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x20, 0x41, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa8, 0x41
     .byte 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc8, 0x41, 0x00, 0x00, 0x00, 0x00
@@ -2295,9 +2295,9 @@ _viewLerp_ProneCrouch:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _viewLerp_StandCrouch
+.globl _eng_viewLerp_StandCrouch
 .align 4
-_viewLerp_StandCrouch:
+_eng_viewLerp_StandCrouch:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x42, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x6e, 0x42, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6a, 0x42
     .byte 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x42, 0x00, 0x00, 0x00, 0x00
@@ -2309,9 +2309,9 @@ _viewLerp_StandCrouch:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _viewLerp_CrouchProne
+.globl _eng_viewLerp_CrouchProne
 .align 4
-_viewLerp_CrouchProne:
+_eng_viewLerp_CrouchProne:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x42, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x18, 0x42, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x42
     .byte 0x00, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc8, 0x41, 0x00, 0x00, 0x00, 0x00
@@ -2325,9 +2325,9 @@ _viewLerp_CrouchProne:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _bg_iNumWeapons
+.globl _eng_bg_iNumWeapons
 .align 4
-_bg_iNumWeapons:
+_eng_bg_iNumWeapons:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
@@ -3879,9 +3879,9 @@ _infoParms:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _weaponDefFields
+.globl _eng_weaponDefFields
 .align 4
-_weaponDefFields:
+_eng_weaponDefFields:
     .long _str_0022028c
     .byte 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .long _str_00220298
@@ -4617,45 +4617,45 @@ _weaponDefFields:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _offhandClassNames
+.globl _eng_offhandClassNames
 .align 4
-_offhandClassNames:
+_eng_offhandClassNames:
     .long _str_00221b40
     .long _str_00221b48
     .long _str_00221b58
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szProjectileExplosionNames
+.globl _eng_szProjectileExplosionNames
 .align 4
-_szProjectileExplosionNames:
+_eng_szProjectileExplosionNames:
     .long _str_00221b68
     .long _str_00221b70
     .long _str_00218298
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szWeapStanceNames
+.globl _eng_szWeapStanceNames
 .align 4
-_szWeapStanceNames:
+_eng_szWeapStanceNames:
     .long _str_00221b78
     .long _str_00221b80
     .long _str_00221b88
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szWeapSlotNames
+.globl _eng_szWeapSlotNames
 .align 4
-_szWeapSlotNames:
+_eng_szWeapSlotNames:
     .long _str_00218298
     .long _str_00221b90
     .long _str_00221b98
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szWeapOverlayReticleNames
+.globl _eng_szWeapOverlayReticleNames
 .align 4
-_szWeapOverlayReticleNames:
+_eng_szWeapOverlayReticleNames:
     .long _str_00218298
     .long _str_00221ba4
     .long _str_00221bb0
@@ -4666,9 +4666,9 @@ _szWeapOverlayReticleNames:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szWeapClassNames
+.globl _eng_szWeapClassNames
 .align 4
-_szWeapClassNames:
+_eng_szWeapClassNames:
     .long _str_00221bd0
     .long _str_00221bd8
     .long _str_00221bdc
@@ -4682,9 +4682,9 @@ _szWeapClassNames:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _szWeapTypeNames
+.globl _eng_szWeapTypeNames
 .align 4
-_szWeapTypeNames:
+_eng_szWeapTypeNames:
     .long _str_00221c14
     .long _str_00221b68
     .long _str_00221c1c
@@ -6316,9 +6316,9 @@ _bgs:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _animEventTypesStr
+.globl _eng_animEventTypesStr
 .align 4
-_animEventTypesStr:
+_eng_animEventTypesStr:
     .long _str_002ae9fc
     .byte 0xff, 0xff, 0xff, 0xff
     .long _str_002aea04
@@ -6360,9 +6360,9 @@ _animEventTypesStr:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _animMoveTypesStr
+.globl _eng_animMoveTypesStr
 .align 4
-_animMoveTypesStr:
+_eng_animMoveTypesStr:
     .long _str_002aeae4
     .byte 0xff, 0xff, 0xff, 0xff
     .long _str_002aeaf4
@@ -6449,9 +6449,9 @@ _animMoveTypesStr:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _animStateStr
+.globl _eng_animStateStr
 .align 4
-_animStateStr:
+_eng_animStateStr:
     .long _str_002aed1c
     .byte 0xff, 0xff, 0xff, 0xff
     .long _str_002aed24
@@ -6469,13 +6469,13 @@ _animStateStr:
 .align 4
 _animConditionsTable:
     .byte 0x00, 0x00, 0x00, 0x00
-    .long _weaponStrings
+    .long _eng_weaponStrings
     .byte 0x00, 0x00, 0x00, 0x00
     .long _animWeaponClassStr
     .byte 0x01, 0x00, 0x00, 0x00
     .long _animConditionMountedStr
     .byte 0x00, 0x00, 0x00, 0x00
-    .long _animMoveTypesStr
+    .long _eng_animMoveTypesStr
     .byte 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
     .long _animWeaponPositionStr
@@ -6592,9 +6592,9 @@ _globalFilename:
     .long _str_002aee58
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _controller_names
+.globl _eng_controller_names
 .align 4
-_controller_names:
+_eng_controller_names:
     .long _scr_const+168
     .long _scr_const+170
     .long _scr_const+172
@@ -6606,9 +6606,9 @@ _controller_names:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
-.globl _animBodyPartsStr
+.globl _eng_animBodyPartsStr
 .align 4
-_animBodyPartsStr:
+_eng_animBodyPartsStr:
     .long _str_002aeae4
     .byte 0xff, 0xff, 0xff, 0xff
     .long _str_002aee70

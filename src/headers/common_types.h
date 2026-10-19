@@ -2,6 +2,7 @@
 extern "C" {
 #endif
 #include "cod2_feature_config.h"
+#include "headers/engine_bgame_names.h"  /* the engine bgame's eng_ names */
 #include "headers/cod2_types.h"
 
 #if 0

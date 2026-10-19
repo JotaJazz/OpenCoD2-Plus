@@ -559,47 +559,47 @@ _imp_backEnd: .long _backEnd
 .globl _imp_backEndData
 _imp_backEndData: .long _backEndData
 .globl _imp_bg_aimSpreadMoveSpeedThreshold
-_imp_bg_aimSpreadMoveSpeedThreshold: .long _bg_aimSpreadMoveSpeedThreshold
+_imp_bg_aimSpreadMoveSpeedThreshold: .long _eng_bg_aimSpreadMoveSpeedThreshold
 .globl _imp_bg_bobAmplitudeDucked
-_imp_bg_bobAmplitudeDucked: .long _bg_bobAmplitudeDucked
+_imp_bg_bobAmplitudeDucked: .long _eng_bg_bobAmplitudeDucked
 .globl _imp_bg_bobAmplitudeProne
-_imp_bg_bobAmplitudeProne: .long _bg_bobAmplitudeProne
+_imp_bg_bobAmplitudeProne: .long _eng_bg_bobAmplitudeProne
 .globl _imp_bg_bobAmplitudeStanding
-_imp_bg_bobAmplitudeStanding: .long _bg_bobAmplitudeStanding
+_imp_bg_bobAmplitudeStanding: .long _eng_bg_bobAmplitudeStanding
 .globl _imp_bg_bobMax
-_imp_bg_bobMax: .long _bg_bobMax
+_imp_bg_bobMax: .long _eng_bg_bobMax
 .set _g_bobMax_ptr, _imp_bg_bobMax
 .globl _g_bobMax_ptr
 .globl _imp_bg_fallDamageMaxHeight
-_imp_bg_fallDamageMaxHeight: .long _bg_fallDamageMaxHeight
+_imp_bg_fallDamageMaxHeight: .long _eng_bg_fallDamageMaxHeight
 .globl _cg_dvar_shellshock_max
 .set _cg_dvar_shellshock_max, _imp_bg_fallDamageMaxHeight
 .globl _imp_bg_fallDamageMinHeight
-_imp_bg_fallDamageMinHeight: .long _bg_fallDamageMinHeight
+_imp_bg_fallDamageMinHeight: .long _eng_bg_fallDamageMinHeight
 .globl _cg_dvar_shellshock_min
 .set _cg_dvar_shellshock_min, _imp_bg_fallDamageMinHeight
 .globl _imp_bg_foliagesnd_fastinterval
-_imp_bg_foliagesnd_fastinterval: .long _bg_foliagesnd_fastinterval
+_imp_bg_foliagesnd_fastinterval: .long _eng_bg_foliagesnd_fastinterval
 .globl _imp_bg_foliagesnd_maxspeed
-_imp_bg_foliagesnd_maxspeed: .long _bg_foliagesnd_maxspeed
+_imp_bg_foliagesnd_maxspeed: .long _eng_bg_foliagesnd_maxspeed
 .globl _imp_bg_foliagesnd_minspeed
-_imp_bg_foliagesnd_minspeed: .long _bg_foliagesnd_minspeed
+_imp_bg_foliagesnd_minspeed: .long _eng_bg_foliagesnd_minspeed
 .globl _imp_bg_foliagesnd_resetinterval
-_imp_bg_foliagesnd_resetinterval: .long _bg_foliagesnd_resetinterval
+_imp_bg_foliagesnd_resetinterval: .long _eng_bg_foliagesnd_resetinterval
 .globl _imp_bg_foliagesnd_slowinterval
-_imp_bg_foliagesnd_slowinterval: .long _bg_foliagesnd_slowinterval
+_imp_bg_foliagesnd_slowinterval: .long _eng_bg_foliagesnd_slowinterval
 .globl _imp_bg_iNumWeapons
-_imp_bg_iNumWeapons: .long _bg_iNumWeapons
+_imp_bg_iNumWeapons: .long _eng_bg_iNumWeapons
 .globl _imp_bg_itemlist
 _imp_bg_itemlist: .long _bg_itemlist
 .globl _imp_bg_ladder_yawcap
-_imp_bg_ladder_yawcap: .long _bg_ladder_yawcap
+_imp_bg_ladder_yawcap: .long _eng_bg_ladder_yawcap
 .globl _imp_bg_numItems
 _imp_bg_numItems: .long _bg_numItems
 .globl _imp_bg_prone_yawcap
-_imp_bg_prone_yawcap: .long _bg_prone_yawcap
+_imp_bg_prone_yawcap: .long _eng_bg_prone_yawcap
 .globl _imp_bg_swingSpeed
-_imp_bg_swingSpeed: .long _bg_swingSpeed
+_imp_bg_swingSpeed: .long _eng_bg_swingSpeed
 .globl _imp_bgs
 _imp_bgs: .long _bgs
 .globl _imp_bulletPriorityMap
@@ -1164,11 +1164,11 @@ _imp_effectActiveCountNonBolt: .long _effectActiveCountNonBolt
 .globl _imp_entityHandlers
 _imp_entityHandlers: .long _entityHandlers
 .globl _imp_eventnames
-_imp_eventnames: .long _eventnames
+_imp_eventnames: .long _eng_eventnames
 .globl _imp_frame_msec
 _imp_frame_msec: .long _frame_msec
 .globl _imp_friction
-_imp_friction: .long _friction
+_imp_friction: .long _eng_friction
 .globl _imp_frontEndDataOut
 _imp_frontEndDataOut: .long _frontEndDataOut
 .globl _imp_fs_basepath
@@ -1384,11 +1384,11 @@ _imp_hud_fade_stance: .long _hud_fade_stance
 .globl _imp_hud_health_startpulse_injured
 _imp_hud_health_startpulse_injured: .long _hud_health_startpulse_injured
 .globl _imp_inertiaAngle
-_imp_inertiaAngle: .long _inertiaAngle
+_imp_inertiaAngle: .long _eng_inertiaAngle
 .globl _imp_inertiaDebug
-_imp_inertiaDebug: .long _inertiaDebug
+_imp_inertiaDebug: .long _eng_inertiaDebug
 .globl _imp_inertiaMax
-_imp_inertiaMax: .long _inertiaMax
+_imp_inertiaMax: .long _eng_inertiaMax
 .globl _imp_infoParms
 _imp_infoParms: .long _infoParms
 .globl _imp_keys
@@ -1438,35 +1438,35 @@ _imp_playerMaxs: .long _playerMaxs
 .globl _imp_playerMins
 _imp_playerMins: .long _playerMins
 .globl _imp_player_adsExitDelay
-_imp_player_adsExitDelay: .long _player_adsExitDelay
+_imp_player_adsExitDelay: .long _eng_player_adsExitDelay
 .globl _imp_player_backSpeedScale
-_imp_player_backSpeedScale: .long _player_backSpeedScale
+_imp_player_backSpeedScale: .long _eng_player_backSpeedScale
 .globl _imp_player_breath_fire_delay
-_imp_player_breath_fire_delay: .long _player_breath_fire_delay
+_imp_player_breath_fire_delay: .long _eng_player_breath_fire_delay
 .globl _imp_player_breath_gasp_lerp
-_imp_player_breath_gasp_lerp: .long _player_breath_gasp_lerp
+_imp_player_breath_gasp_lerp: .long _eng_player_breath_gasp_lerp
 .globl _imp_player_breath_gasp_scale
-_imp_player_breath_gasp_scale: .long _player_breath_gasp_scale
+_imp_player_breath_gasp_scale: .long _eng_player_breath_gasp_scale
 .globl _imp_player_breath_gasp_time
-_imp_player_breath_gasp_time: .long _player_breath_gasp_time
+_imp_player_breath_gasp_time: .long _eng_player_breath_gasp_time
 .globl _imp_player_breath_hold_lerp
-_imp_player_breath_hold_lerp: .long _player_breath_hold_lerp
+_imp_player_breath_hold_lerp: .long _eng_player_breath_hold_lerp
 .globl _imp_player_breath_hold_time
-_imp_player_breath_hold_time: .long _player_breath_hold_time
+_imp_player_breath_hold_time: .long _eng_player_breath_hold_time
 .globl _imp_player_breath_snd_delay
-_imp_player_breath_snd_delay: .long _player_breath_snd_delay
+_imp_player_breath_snd_delay: .long _eng_player_breath_snd_delay
 .globl _imp_player_breath_snd_lerp
-_imp_player_breath_snd_lerp: .long _player_breath_snd_lerp
+_imp_player_breath_snd_lerp: .long _eng_player_breath_snd_lerp
 .globl _imp_player_dmgtimer_maxTime
-_imp_player_dmgtimer_maxTime: .long _player_dmgtimer_maxTime
+_imp_player_dmgtimer_maxTime: .long _eng_player_dmgtimer_maxTime
 .globl _imp_player_dmgtimer_minScale
-_imp_player_dmgtimer_minScale: .long _player_dmgtimer_minScale
+_imp_player_dmgtimer_minScale: .long _eng_player_dmgtimer_minScale
 .globl _imp_player_dmgtimer_stumbleTime
-_imp_player_dmgtimer_stumbleTime: .long _player_dmgtimer_stumbleTime
+_imp_player_dmgtimer_stumbleTime: .long _eng_player_dmgtimer_stumbleTime
 .globl _imp_player_dmgtimer_timePerPoint
-_imp_player_dmgtimer_timePerPoint: .long _player_dmgtimer_timePerPoint
+_imp_player_dmgtimer_timePerPoint: .long _eng_player_dmgtimer_timePerPoint
 .globl _imp_player_footstepsThreshhold
-_imp_player_footstepsThreshhold: .long _player_footstepsThreshhold
+_imp_player_footstepsThreshhold: .long _eng_player_footstepsThreshhold
 .globl _imp_player_meleeHeight
 _imp_player_meleeHeight: .long _player_meleeHeight
 .globl _imp_player_meleeRange
@@ -1474,23 +1474,23 @@ _imp_player_meleeRange: .long _player_meleeRange
 .globl _imp_player_meleeWidth
 _imp_player_meleeWidth: .long _player_meleeWidth
 .globl _imp_player_moveThreshhold
-_imp_player_moveThreshhold: .long _player_moveThreshhold
+_imp_player_moveThreshhold: .long _eng_player_moveThreshhold
 .globl _imp_player_scopeExitOnDamage
-_imp_player_scopeExitOnDamage: .long _player_scopeExitOnDamage
+_imp_player_scopeExitOnDamage: .long _eng_player_scopeExitOnDamage
 .globl _imp_player_spectateSpeedScale
-_imp_player_spectateSpeedScale: .long _player_spectateSpeedScale
+_imp_player_spectateSpeedScale: .long _eng_player_spectateSpeedScale
 .globl _imp_player_strafeSpeedScale
-_imp_player_strafeSpeedScale: .long _player_strafeSpeedScale
+_imp_player_strafeSpeedScale: .long _eng_player_strafeSpeedScale
 .globl _imp_player_toggleBinoculars
-_imp_player_toggleBinoculars: .long _player_toggleBinoculars
+_imp_player_toggleBinoculars: .long _eng_player_toggleBinoculars
 .globl _imp_player_turnAnims
-_imp_player_turnAnims: .long _player_turnAnims
+_imp_player_turnAnims: .long _eng_player_turnAnims
 .globl _imp_player_view_pitch_down
-_imp_player_view_pitch_down: .long _player_view_pitch_down
+_imp_player_view_pitch_down: .long _eng_player_view_pitch_down
 .globl _imp_player_view_pitch_up
-_imp_player_view_pitch_up: .long _player_view_pitch_up
+_imp_player_view_pitch_up: .long _eng_player_view_pitch_up
 .globl _imp_pmoveHandlers
-_imp_pmoveHandlers: .long _pmoveHandlers
+_imp_pmoveHandlers: .long _eng_pmoveHandlers
 .globl _imp_privateEffectActiveCountBolt
 _imp_privateEffectActiveCountBolt: .long _privateEffectActiveCountBolt
 .globl _imp_privateEffectActiveCountNonBolt
@@ -1752,7 +1752,7 @@ _imp_scr_const: .long _scr_const
 .globl _imp_sharedUiInfo
 _imp_sharedUiInfo: .long _sharedUiInfo
 .globl _imp_singleClientEvents
-_imp_singleClientEvents: .long _singleClientEvents
+_imp_singleClientEvents: .long _eng_singleClientEvents
 .globl _imp_snd_bits
 _imp_snd_bits: .long _snd_bits
 .globl _imp_snd_enableReverb
@@ -1776,7 +1776,7 @@ _imp_speex_uwb_mode: .long _speex_uwb_mode
 .globl _imp_speex_wb_mode
 _imp_speex_wb_mode: .long _speex_wb_mode
 .globl _imp_stopspeed
-_imp_stopspeed: .long _stopspeed
+_imp_stopspeed: .long _eng_stopspeed
 .globl _imp_sunFlareArray
 _imp_sunFlareArray: .long _sunFlareArray
 .globl _imp_sv

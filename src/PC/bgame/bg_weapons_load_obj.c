@@ -95,7 +95,8 @@ __attribute__((used, packed, aligned(4)))
 const char *weaponDefFields[] = {
 #    include "bg_weapons_load_obj_weaponDefFields.inc"
 };
-#    define weaponDefFields ((cspField_t *)weaponDefFields)
+#    undef weaponDefFields  /* engine_bgame_names.h: the array is eng_weaponDefFields */
+#    define weaponDefFields ((cspField_t *)eng_weaponDefFields)
 #endif
 
 int BG_GetWeaponSlotForName(const char *pszSlotName);
