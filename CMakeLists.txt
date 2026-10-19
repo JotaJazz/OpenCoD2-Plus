@@ -107,17 +107,21 @@ else()
 endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
-# the generated bridge in src/compat (scripts/gen_script_bridge.py), and
-# cod2_plus_script_client with the bridge's calls into what CoD2rev-Plus's game
-# and core replace in the dedicated server, for the executables without them
-# (src/compat/client_script_*.cpp).
+# the generated bridge in src/compat (scripts/gen_script_bridge.py), and the
+# bridge's calls into src/PC for the executables without one of CoD2rev-Plus's
+# groups: cod2_plus_script_game when CoD2rev-Plus's server, game and bgame are
+# not linked, cod2_plus_script_core when its core (universal, qcommon, xanim)
+# is not.
 function(cod2_plus_script)
-  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp ${COD2_SRC_DIR}/compat/script_*.cpp)
-  add_library(cod2_plus_script OBJECT ${src})
+  file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/script/*.cpp)
+  add_library(cod2_plus_script OBJECT ${src} ${COD2_SRC_DIR}/compat/script_exports.cpp
+    ${COD2_SRC_DIR}/compat/script_imports.cpp ${COD2_SRC_DIR}/compat/script_missing.cpp)
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
-  add_library(cod2_plus_script_client OBJECT ${COD2_SRC_DIR}/compat/client_script_imports.cpp
-    ${COD2_SRC_DIR}/compat/client_script_missing.cpp)
-  target_compile_definitions(cod2_plus_script_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  add_library(cod2_plus_script_game OBJECT ${COD2_SRC_DIR}/compat/script_game_imports.cpp)
+  target_compile_definitions(cod2_plus_script_game PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  add_library(cod2_plus_script_core OBJECT ${COD2_SRC_DIR}/compat/script_core_imports.cpp
+    ${COD2_SRC_DIR}/compat/script_core_missing.cpp)
+  target_compile_definitions(cod2_plus_script_core PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
@@ -398,7 +402,7 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
 elseif(COD2_PLUS_SCRIPT)
-  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
+  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
@@ -643,8 +647,8 @@ add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 set(COD2_CLIENT_SERVER_OBJS "")
 set(COD2_DED_SERVER_OBJS "")
 if(COD2_PLUS_SCRIPT)
-  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
-  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_client>)
+  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
+  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 if(COD2_PLUS_SERVER)
   cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})

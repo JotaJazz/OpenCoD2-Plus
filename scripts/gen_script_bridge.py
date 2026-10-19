@@ -345,15 +345,18 @@ SERVER_STRUCT_RETURN_OK = set()
 # objects: the module's objects (globs in CMakeFiles), whose imports the bridge
 # defines; others: objects whose definitions the module may use directly. The
 # module's own generated bridge is in neither, so regenerating it keeps every
-# import. client_only: objects only the dedicated server links; the imports they
-# define go to src/compat/client_<module>_imports.cpp, which only the client
-# links (it calls src/PC's C functions the dedicated server does not have).
+# import. groups: groups of CoD2rev-Plus objects that some executables link
+# and others do not; the imports a group defines go to
+# src/compat/<module>_<group>_imports.cpp, which the executables without that
+# group link (it calls src/PC's C functions instead). The client has the game
+# group (CoD2rev-Plus's server, game and bgame) but not the core.
 MODULES = {
     'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=[], header=SCRIPT_HEADER,
                    overloads=OVERLOADS, extra_args=EXTRA_ARGS, renamed=RENAMED, provided=PROVIDED,
                    export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM,
-                   client_only=['cod2_plus_server.dir/src/' + d + '/*.o'
-                                for d in ('game', 'universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32')]),
+                   groups={'game': ['cod2_plus_server.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')],
+                           'core': ['cod2_plus_server.dir/src/' + d + '/*.o'
+                                    for d in ('universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32')]}),
     'server': dict(objects=['cod2_plus_server.dir/src/server/*.o', 'cod2_plus_server.dir/src/game/*.o',
                             'cod2_plus_server.dir/src/bgame/*.o', 'cod2_plus_server.dir/src/universal/*.o',
                             'cod2_plus_server.dir/src/qcommon/*.o', 'cod2_plus_server.dir/src/stringed/*.o',
@@ -576,21 +579,25 @@ def read_module(module, builds):
     return defined, exports, imports, interface
 
 
-def split_imports(imports, client_only):
-    """(imports both executables need, imports only the client needs): the
-    latter are the names in client_only."""
-    return ({k: v for k, v in imports.items() if k not in client_only},
-            {k: v for k, v in imports.items() if k in client_only})
+def split_imports(imports, groups):
+    """(imports every executable needs, {group: imports only the executables
+    without that group need}); groups maps a group to the names it defines."""
+    parts = {group: {k: v for k, v in imports.items() if k in names} for group, names in groups.items()}
+    grouped = set().union(*groups.values()) if groups else set()
+    return {k: v for k, v in imports.items() if k not in grouped}, parts
 
 
-def client_only_names(module, builds):
-    """The function names the module's client_only objects define."""
-    names = set()
-    for build in builds:
-        objects = sorted(o for g in MODULES[module].get('client_only', []) for p in (g, g[:-2] + '.obj')
-                         for o in glob.glob(os.path.join(build, 'CMakeFiles', p)))
-        names |= set(signatures([s for s in nm(['-g', '--defined-only'], objects) if s.startswith('_Z')]))
-    return names
+def group_names(module, builds):
+    """{group: the function names its objects define}, for the module's groups."""
+    out = {}
+    for group, globs in MODULES[module].get('groups', {}).items():
+        names = set()
+        for build in builds:
+            objects = sorted(o for g in globs for p in (g, g[:-2] + '.obj')
+                             for o in glob.glob(os.path.join(build, 'CMakeFiles', p)))
+            names |= set(signatures([s for s in nm(['-g', '--defined-only'], objects) if s.startswith('_Z')]))
+        out[group] = names
+    return out
 
 
 def crossing_names(module, build):
@@ -636,10 +643,10 @@ def main():
     with open(os.path.join(ROOT, 'src', 'compat', f'{args.module}_exports.cpp'), 'w') as f:
         f.write('\n'.join(out))
 
-    shared, client = split_imports(imports, client_only_names(args.module, args.build))
-    for path, part in ((f'{args.module}_imports.cpp', shared), (f'client_{args.module}_imports.cpp', client)):
-        if path.startswith('client_') and 'client_only' not in cfg:
-            continue
+    shared, parts = split_imports(imports, group_names(args.module, args.build))
+    files = [(f'{args.module}_imports.cpp', shared)] + [(f'{args.module}_{group}_imports.cpp', part)
+                                                         for group, part in sorted(parts.items())]
+    for path, part in files:
         out = [cfg['header']]
         for name in sorted(part):
             out.append(import_thunk(name, choose_overload(name, part[name], cfg), cfg, abi.get(name)))

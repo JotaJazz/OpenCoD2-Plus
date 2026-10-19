@@ -148,12 +148,6 @@ class Modules(unittest.TestCase):
         missing = [p for p in paths if not os.path.exists(os.path.join(root, p))]
         self.assertEqual(missing, [])
 
-    def test_client_only_imports(self):
-        # the dedicated server's game defines Scr_GetFunction in C++, so its
-        # thunk to src/PC/game_mp's C function goes only into the client
-        shared, client = g.split_imports({'Scr_GetFunction': ['a'], 'Com_Printf': ['b']}, {'Scr_GetFunction'})
-        self.assertEqual(shared, {'Com_Printf': ['b']})
-        self.assertEqual(client, {'Scr_GetFunction': ['a']})
 
     def test_game_exports_keep_the_engine_returns(self):
         # src/PC/game_mp returned 0 from G_AnimScriptSound and nothing from
@@ -162,12 +156,21 @@ class Modules(unittest.TestCase):
         self.assertIn('return 0;', custom['G_AnimScriptSound'])
         self.assertRegex(custom['G_RegisterWeapon'], r'void cod2x_G_RegisterWeapon\(int weapIndex\)\n\{\n\s+G_RegisterWeapon\(weapIndex\);\n\}')
 
-    def test_script_module_splits_on_plus_code(self):
-        # what CoD2rev-Plus's game or core defines in the dedicated server, the
-        # VM's thunks into src/PC give only the client
-        client_only = g.MODULES['script']['client_only']
-        for d in ('game', 'universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32'):
-            self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', client_only)
+    def test_script_module_splits_by_group(self):
+        # the VM's thunks into src/PC go to one file per group of CoD2rev-Plus
+        # modules, linked by the executables without that group: the client
+        # has CoD2rev-Plus's game but not its core
+        groups = g.MODULES['script']['groups']
+        for d in ('server', 'game', 'bgame'):
+            self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', groups['game'])
+        for d in ('universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32'):
+            self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', groups['core'])
+
+    def test_split_imports_by_group(self):
+        shared, parts = g.split_imports({'Scr_GetFunction': ['a'], 'Com_Printf': ['b'], 'XAnimInit': ['c']},
+                                        {'game': {'Scr_GetFunction'}, 'core': {'Com_Printf', 'XAnimInit'}})
+        self.assertEqual(shared, {})
+        self.assertEqual(parts, {'game': {'Scr_GetFunction': ['a']}, 'core': {'Com_Printf': ['b'], 'XAnimInit': ['c']}})
 
     def test_fatal_exports_need_no_interface_line(self):
         self.assertEqual(g.export_names(['A', 'B'], {'C', 'A'}), ['A', 'B', 'C'])

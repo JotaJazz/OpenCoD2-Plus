@@ -35,9 +35,9 @@ class CheckCLinkage(unittest.TestCase):
         self.compile('g++', '.cpp', 'extern "C" int foo(void){return 0;}\n')
         self.assertEqual(self.run_check().returncode, 0)
 
-    def test_script_client_bridge_skipped(self):
+    def test_script_group_bridges_skipped(self):
         # the VM's calls into src/PC/game_mp are C++ definitions by design
-        obj_dir = os.path.join(self.dir, 'CMakeFiles', 'cod2_plus_script_client.dir')
+        obj_dir = os.path.join(self.dir, 'CMakeFiles', 'cod2_plus_script_core.dir')
         os.makedirs(obj_dir)
         src = os.path.join(self.dir, 'foo.cpp')
         with open(src, 'w') as f:

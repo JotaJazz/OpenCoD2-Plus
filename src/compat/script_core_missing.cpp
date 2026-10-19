@@ -1,6 +1,6 @@
 // Functions CoD2rev-Plus's script VM calls that this engine does not have,
-// for the executables without CoD2rev-Plus's universal, qcommon and xanim (the
-// client): in the dedicated server those define them. Same behaviour as
+// for the executables without CoD2rev-Plus's core (universal, qcommon, xanim:
+// the client), which defines them in the dedicated server. Same behaviour as
 // CoD2rev-Plus's.
 #include "../qcommon/qcommon.h"
 #include "../script/script_public.h"
