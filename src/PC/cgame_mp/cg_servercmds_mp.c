@@ -1140,15 +1140,17 @@ static void CG_AddToTeamChat_impl(const char *str)
     chatCount = cgs->teamChatPos;
     row = chatCount % chatHeight;
 
-    dst = (char *)((byte *)cgs + 0xb170 + row * 0x10f);
+    /* cgs.teamChatMsgs[row]: the binary's cgs + 0xb17c is 0x1c180 short of
+     * it in this 1.3 cgs_t, where CG_DrawTeamChat reads it */
+    dst = cgs->teamChatMsgs[row];
 
-    dst[0xc] = '\0';
+    dst[0] = '\0';
 
     len = 0;
     lastcolor = 0x37;
     ls = NULL;
     p = str;
-    dst = (char *)((byte *)cgs + 0xb170 + row * 0x10f + 0xc);
+    dst = cgs->teamChatMsgs[row];
 
     while (*p != '\0') {
         char ch;
@@ -1175,7 +1177,7 @@ static void CG_AddToTeamChat_impl(const char *str)
             cgs->teamChatPos = chatCount;
 
             row = chatCount % chatHeight;
-            dst = (char *)((byte *)cgs + 0xb170 + row * 0x10f + 0xc);
+            dst = cgs->teamChatMsgs[row];
 
             *dst++ = '^';
             *dst++ = (char)(lastcolor & 0xff);
