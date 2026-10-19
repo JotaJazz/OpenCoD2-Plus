@@ -762,6 +762,11 @@ void SV_Shutdown( const char *finalmsg )
 
 	Com_Printf("---------------------------\n");
 
+#ifndef DEDICATED
+	if ( CL_GetLocalClientActive(0) )
+		CL_Disconnect();
+#endif
+
 	if ( !bLoading )
 	{
 		return;
@@ -863,6 +868,10 @@ void SV_SpawnServer( char *server )
 	Scr_ParseGameTypeList();
 	SV_SetGametype();
 
+#ifndef DEDICATED
+	CL_InitLoad(server, sv_gametype->current.string);
+#endif
+
 #if LIBCOD_COMPILE_GRAPH == 1
 	// graphs hold map coordinates, so they don't survive a map change
 	extern void gsc_graph_cleanup_on_spawn_server(void);
@@ -894,6 +903,12 @@ void SV_SpawnServer( char *server )
 
 	// set serverinfo visible name
 	Dvar_SetStringByName("mapname", server);
+
+#ifndef DEDICATED
+	// the local client leaves the current map and frees what it loaded for it
+	CL_MapLoading(server);
+	CL_ShutdownAll();
+#endif
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
@@ -934,6 +949,10 @@ void SV_SpawnServer( char *server )
 
 	Com_sprintf(mapname, sizeof(mapname), "maps/mp/%s.%s", server, GetBspExtension());
 	SV_SetExpectedHunkUsage(mapname);
+
+#ifndef DEDICATED
+	CL_StartLoading(server, sv.gametype);
+#endif
 
 	// allocate empty config strings
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ )

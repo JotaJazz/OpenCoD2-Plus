@@ -967,7 +967,7 @@ void SV_ShutdownGameProgs()
 	sv.state = SS_DEAD;
 
 #ifndef DEDICATED
-	Com_UnloadSoundAliases(2);
+	Com_UnloadSoundAliases(SASYS_GAME);
 #endif
 
 	if ( !gameInitialized )

@@ -14,8 +14,11 @@
 
 #include "../universal/universal_public.h"
 
-// We only care about dedicated server
+// We only care about dedicated server; LISTEN_SERVER builds the server into a
+// client, which runs it for its local games
+#ifndef LISTEN_SERVER
 #define DEDICATED
+#endif
 
 #ifndef MAXPRINTMSG
 #define MAXPRINTMSG 4096

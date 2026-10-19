@@ -525,3 +525,26 @@ void SV_FreeClientScriptPers();
 float SV_FX_GetVisibility(const vec3_t start, const vec3_t end);
 int SV_GetCurrentClientInfo(int clientNum, playerState_s *ps, clientState_t *cs);
 void SV_MatchEnd( void );
+
+#ifndef DEDICATED
+// the client's side of a local game (LISTEN_SERVER)
+enum snd_alias_system_t
+{
+	SASYS_UI,
+	SASYS_CGAME,
+	SASYS_GAME,
+	SASYS_COUNT
+};
+
+void Com_LoadSoundAliases( const char *loadspec, const char *loadspecCurGame, snd_alias_system_t system );
+void Com_UnloadSoundAliases( snd_alias_system_t system );
+void FX_FreeSystem( void );
+void FX_InitServer( void );
+void Sys_LoadingKeepAlive( void );
+void CL_InitLoad( const char *mapname, const char *gametype );
+void CL_MapLoading( const char *mapname );
+void CL_ShutdownAll( void );
+void CL_StartLoading( const char *mapname, const char *gametype );
+qboolean CL_GetLocalClientActive( int localClientNum );
+void CL_Disconnect( void );
+#endif
