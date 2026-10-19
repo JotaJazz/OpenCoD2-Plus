@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include <math.h>
 
 #ifdef _WIN32
 #ifdef __cplusplus
@@ -30,9 +31,12 @@ int Sys_MillisecondsRaw(void)
     return timeGetTime();
 }
 
+/* to the nearest integer, as the original's fistp and CoD2rev-Plus's rint:
+ * the server snaps the playerstate's velocity with it, and the client's
+ * prediction must snap it alike */
 void Sys_SnapVector(float *v)
 {
-    v[0] = (float)(int)v[0];
-    v[1] = (float)(int)v[1];
-    v[2] = (float)(int)v[2];
+    v[0] = rintf(v[0]);
+    v[1] = rintf(v[1]);
+    v[2] = rintf(v[2]);
 }
