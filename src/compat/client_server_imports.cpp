@@ -973,6 +973,10 @@ static_assert(cod2_abi_slot<char const*>() == 4, "FS_iwIwd: parameter 1 differs 
 extern "C" cod2_abi_int<decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())), 4> cod2c_FS_iwIwd(char* a0, char const* a1) __asm__(COD2_SYM("FS_iwIwd"));
 decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())) FS_iwIwd(char* a0, char const* a1) { return (decltype(FS_iwIwd(std::declval<char*>(), std::declval<char const*>())))cod2c_FS_iwIwd(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(FX_CreateDefaultEffect())>() == 'v', "FX_CreateDefaultEffect: return class differs from the engine");
+extern "C" decltype(FX_CreateDefaultEffect()) cod2c_FX_CreateDefaultEffect() __asm__(COD2_SYM("FX_CreateDefaultEffect"));
+decltype(FX_CreateDefaultEffect()) FX_CreateDefaultEffect() { return cod2c_FX_CreateDefaultEffect(); }
+
 static_assert(cod2_abi_class<decltype(FX_FreeSystem())>() == 'v', "FX_FreeSystem: return class differs from the engine");
 extern "C" decltype(FX_FreeSystem()) cod2c_FX_FreeSystem() __asm__(COD2_SYM("FX_FreeSystem"));
 decltype(FX_FreeSystem()) FX_FreeSystem() { return cod2c_FX_FreeSystem(); }
@@ -980,6 +984,11 @@ decltype(FX_FreeSystem()) FX_FreeSystem() { return cod2c_FX_FreeSystem(); }
 static_assert(cod2_abi_class<decltype(FX_InitServer())>() == 'v', "FX_InitServer: return class differs from the engine");
 extern "C" decltype(FX_InitServer()) cod2c_FX_InitServer() __asm__(COD2_SYM("FX_InitServer"));
 decltype(FX_InitServer()) FX_InitServer() { return cod2c_FX_InitServer(); }
+
+static_assert(cod2_abi_class<decltype(FX_InitSystem(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(FX_InitSystem(std::declval<int>()))>() == 'v', "FX_InitSystem: return class differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "FX_InitSystem: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(FX_InitSystem(std::declval<int>())), 4> cod2c_FX_InitSystem(int a0) __asm__(COD2_SYM("FX_InitSystem"));
+decltype(FX_InitSystem(std::declval<int>())) FX_InitSystem(int a0) { return (decltype(FX_InitSystem(std::declval<int>())))cod2c_FX_InitSystem(a0); }
 
 static_assert(cod2_abi_class<decltype(GetBspExtension())>() == 'i' || cod2_abi_class<decltype(GetBspExtension())>() == 'v', "GetBspExtension: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(GetBspExtension()), 4> cod2c_GetBspExtension() __asm__(COD2_SYM("GetBspExtension"));

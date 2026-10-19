@@ -64,7 +64,6 @@ Com_DPrintf v0 4 ...
 Com_DvarDump v0 4
 Com_EndRedirect v0 -
 Com_FindSoundAlias i4 4
-Com_FreeWeaponInfoMemory v0 4
 Com_GetArgCountOnLine i4 4
 Com_GetCurrentParseLine i4 -
 Com_GetServerDObj i4 4
@@ -78,7 +77,6 @@ Com_Restart v0 -
 Com_SafeServerDObjFree v0 4
 Com_ServerDObjCreate v0 4,4,4,4
 Com_SetCSV v0 4
-Com_SetWeaponInfoMemory v0 4
 Com_Shutdown v0 4
 Com_SkipRestOfLine v0 4
 Com_SurfaceTypeToName i4 4
@@ -156,8 +154,10 @@ FS_Shutdown v0 4
 FS_Write i4 4,4,4
 FS_WriteFile i4 4,4,4
 FS_iwIwd i4 4,4
+FX_CreateDefaultEffect v0 -
 FX_FreeSystem v0 -
 FX_InitServer v0 -
+FX_InitSystem i4 4
 GScr_LoadConsts v0 -
 G_AnimScriptSound i4 4,4
 G_FreeEntity v0 4
