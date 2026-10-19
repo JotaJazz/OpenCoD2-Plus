@@ -12,11 +12,13 @@ distributions than the build machine) and the dedicated server needs none of
 the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
 server, and the Linux client, must get no C name both from CoD2rev-Plus and
 from the engine (scripts/check_duplicates.py), and no engine object of them may
-still define a function their bridge exports (scripts/check_single_impl.py).
+still define a function their bridge exports (scripts/check_single_impl.py), and
+no bridge import may call an engine symbol that is data
+(scripts/check_bridge_symbols.py).
 On Linux no engine source of the client may name a renamed bgame global without
 its eng_ name in effect (scripts/check_bgame_names.py).
 """
-import argparse, os, re, subprocess, sys
+import argparse, glob, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
@@ -88,6 +90,14 @@ def duplicates(variant, build_dir):
                                   '--nm', nm] + extra, capture_output=True, text=True)
             if run.returncode != 0:
                 errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+        executable = os.path.join(build_dir, target + ('.exe' if variant == 'mingw' else ''))
+        if os.path.exists(executable):
+            bridges = sorted(glob.glob(os.path.join(ROOT, 'src', 'compat', '*_imports.cpp')))
+            run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_bridge_symbols.py'),
+                                  executable] + bridges + ['--nm', nm, '--prefix', prefix],
+                                 capture_output=True, text=True)
+            if run.returncode != 0:
+                errors += [f'{target}: import calls data: {line}' for line in run.stdout.splitlines()[:-1]]
     return errors
 
 

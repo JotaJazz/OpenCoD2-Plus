@@ -167,13 +167,14 @@ class Modules(unittest.TestCase):
             self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', groups['core'])
 
     def test_client_server_module(self):
-        # the client links CoD2rev-Plus's server, game and bgame on the engine's
-        # core: its bridge reads those objects only, and leaves to the VM's
-        # core thunks the engine functions both call
+        # the client links CoD2rev-Plus's server, game, bgame and collision on
+        # the engine's other core: its bridge reads those objects only, and
+        # leaves to the VM's core thunks the engine functions both call
         cfg = g.MODULES['client_server']
         for d in ('server', 'game', 'bgame'):
             self.assertIn(f'cod2_plus_server_client.dir/src/{d}/*.o', cfg['objects'])
-        self.assertFalse([o for o in cfg['objects'] if '/src/qcommon/' in o or '/src/universal/' in o])
+        core = [o for o in cfg['objects'] if '/src/qcommon/' in o or '/src/universal/' in o]
+        self.assertEqual(core, ['cod2_plus_server_client.dir/src/qcommon/cm_*.o'])
         self.assertIn('cod2_plus_script_core.dir/src/compat/*.o', cfg['others'])
 
     def test_split_imports_by_group(self):
