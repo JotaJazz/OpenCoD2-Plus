@@ -1922,80 +1922,140 @@ static void XAnimCalcAccumulateLeafLocal(const DObj *obj, const XAnimTree_s *tre
     }
 }
 
-static void XAnimCalcNormalizeBonesLocal(const DObj *obj, DObjAnimMat *rotTransArray, float weightScale,
-                                         const XAnimCalcAnimInfo *info)
+/* The weight of a child of animIndex, 0 when it has no info. */
+static float XAnimCalcChildWeightLocal(const XAnimTree_s *tree, unsigned int childIndex)
 {
-    int boneIndex;
+    unsigned short infoIndex = tree->infoArray[childIndex];
 
-    for (boneIndex = 0; boneIndex < obj->numBones; ++boneIndex) {
-        if (!XAnimCalcBitTestLocal(info->ignorePartBits, boneIndex)) {
-            XAnimCalcNormalizeRotTransLocal(&rotTransArray[boneIndex], weightScale);
-        }
-    }
+    return infoIndex ? g_xAnimInfo[infoIndex].s.weight : 0.0f;
 }
 
+/* As CoD2rev-Plus's XAnimCalc: a node with one child of weight passes it its
+ * own weight; two or more are blended, at their weights, in a buffer (the
+ * array itself when bClear), then normalized into the array at the node's
+ * weight. The root (bNormQuat 0) divides by the weight it gathered. */
 void XANIM_CALC_ABI XAnimCalc(const DObj *obj, unsigned int animIndex, float weightScale, XAnimPart (*rotTransArray)(), int bClear, int bNormQuat, XAnimCalcAnimInfo *info, int rotTransArrayIndex)
 {
     XAnimTree_s *tree;
-    XAnim *anims;
     const XAnimEntry *anim;
     DObjAnimMat *matArray = (DObjAnimMat *)rotTransArray;
-    unsigned int childCount;
+    DObjAnimMat *calcBuffer;
     unsigned int childBase;
-    unsigned int childIndex;
-    int usedChild = 0;
+    unsigned int numAnims;
+    unsigned int first;
+    unsigned int second;
+    unsigned int k;
     int boneIndex;
-
-    (void)rotTransArrayIndex;
 
     if (!obj || !obj->tree || !matArray || !info) {
         return;
     }
 
     tree = (XAnimTree_s *)obj->tree;
-    anims = tree->anims;
-    anim = &anims->entries[animIndex];
-    childCount = anim->numAnims;
+    anim = &tree->anims->entries[animIndex];
+    numAnims = anim->numAnims;
 
-    if (bClear) {
-        for (boneIndex = 0; boneIndex < obj->numBones; ++boneIndex) {
-            if (!XAnimCalcBitTestLocal(info->ignorePartBits, boneIndex)) {
-                XAnimCalcClearRotTransLocal(&matArray[boneIndex]);
+    if (!numAnims) {
+        if (bClear) {
+            for (boneIndex = 0; boneIndex < obj->numBones; ++boneIndex) {
+                if (!XAnimCalcBitTestLocal(info->ignorePartBits, boneIndex)) {
+                    XAnimCalcClearRotTransLocal(&matArray[boneIndex]);
+                }
             }
         }
-    }
-
-    if (!childCount) {
         XAnimCalcAccumulateLeafLocal(obj, tree, animIndex, anim, weightScale, matArray, info);
         return;
     }
 
     childBase = anim->u.s.children;
-    for (childIndex = 0; childIndex < childCount; ++childIndex) {
-        unsigned int subAnimIndex = childBase + childIndex;
-        unsigned short infoIndex = tree->infoArray[subAnimIndex];
-        float childWeight;
 
-        if (!infoIndex) {
-            continue;
-        }
-
-        childWeight = g_xAnimInfo[infoIndex].s.weight;
-        if (childWeight == 0.0f) {
-            continue;
-        }
-
-        XAnimCalc(obj, subAnimIndex, weightScale * childWeight, (XAnimPart (*)())matArray,
-                  bClear && !usedChild, bNormQuat, info, rotTransArrayIndex);
-        usedChild = 1;
+    for (first = 0; first < numAnims && XAnimCalcChildWeightLocal(tree, childBase + first) == 0.0f; ++first) {
     }
-
-    if (!usedChild) {
+    if (first >= numAnims) {
+        if (bClear) {
+            for (boneIndex = 0; boneIndex < obj->numBones; ++boneIndex) {
+                if (!XAnimCalcBitTestLocal(info->ignorePartBits, boneIndex)) {
+                    XAnimCalcClearRotTransLocal(&matArray[boneIndex]);
+                }
+            }
+        }
         return;
     }
 
-    if (bNormQuat) {
-        XAnimCalcNormalizeBonesLocal(obj, matArray, weightScale, info);
+    for (second = first + 1; second < numAnims && XAnimCalcChildWeightLocal(tree, childBase + second) == 0.0f; ++second) {
+    }
+    if (second >= numAnims) {
+        XAnimCalc(obj, childBase + first, weightScale, (XAnimPart (*)())matArray, bClear, bNormQuat, info,
+                  rotTransArrayIndex);
+        return;
+    }
+
+    if (bClear) {
+        calcBuffer = matArray;
+    } else {
+        calcBuffer = &info->rotTransArray[rotTransArrayIndex];
+        rotTransArrayIndex += obj->numBones;
+        if (rotTransArrayIndex > 512) {
+            Com_Printf("MAX_CALC_ANIM_BUFFER exceeded\n");
+            return;
+        }
+    }
+
+    XAnimCalc(obj, childBase + first, XAnimCalcChildWeightLocal(tree, childBase + first), (XAnimPart (*)())calcBuffer,
+              1, 1, info, rotTransArrayIndex);
+    XAnimCalc(obj, childBase + second, XAnimCalcChildWeightLocal(tree, childBase + second), (XAnimPart (*)())calcBuffer,
+              0, 1, info, rotTransArrayIndex);
+    for (k = second + 1; k < numAnims; ++k) {
+        float weight = XAnimCalcChildWeightLocal(tree, childBase + k);
+
+        if (weight != 0.0f) {
+            XAnimCalc(obj, childBase + k, weight, (XAnimPart (*)())calcBuffer, 0, 1, info, rotTransArrayIndex);
+        }
+    }
+
+    for (boneIndex = 0; boneIndex < obj->numBones; ++boneIndex) {
+        DObjAnimMat *mat = &matArray[boneIndex];
+        const DObjAnimMat *calc = &calcBuffer[boneIndex];
+
+        if (XAnimCalcBitTestLocal(info->ignorePartBits, boneIndex)) {
+            continue;
+        }
+
+        if (!bNormQuat) {
+            if (mat->transWeight != 0.0f) {
+                const float scale = 1.0f / mat->transWeight;
+
+                mat->quat[0] *= scale;
+                mat->quat[1] *= scale;
+                mat->quat[2] *= scale;
+                mat->quat[3] *= scale;
+                mat->trans[0] *= scale;
+                mat->trans[1] *= scale;
+                mat->trans[2] *= scale;
+            }
+        } else if (bClear) {
+            XAnimCalcNormalizeRotTransLocal(mat, weightScale);
+        } else {
+            const float lenSq = calc->quat[0] * calc->quat[0] + calc->quat[1] * calc->quat[1] +
+                                calc->quat[2] * calc->quat[2] + calc->quat[3] * calc->quat[3];
+
+            if (lenSq != 0.0f) {
+                const float scale = XAnimCalcInvSqrtLocal(lenSq) * weightScale;
+
+                mat->quat[0] += calc->quat[0] * scale;
+                mat->quat[1] += calc->quat[1] * scale;
+                mat->quat[2] += calc->quat[2] * scale;
+                mat->quat[3] += calc->quat[3] * scale;
+            }
+            if (calc->transWeight != 0.0f) {
+                const float scale = weightScale / calc->transWeight;
+
+                mat->trans[0] += calc->trans[0] * scale;
+                mat->trans[1] += calc->trans[1] * scale;
+                mat->trans[2] += calc->trans[2] * scale;
+                mat->transWeight += weightScale;
+            }
+        }
     }
 }
 
