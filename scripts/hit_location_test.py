@@ -75,6 +75,7 @@ Callback_PlayerConnect()
 	if(self.name != "hittarget" && self.name != "hitshooter")
 	{
 		// the host of a local game, out of the way
+		level.host = self;
 		spawnpoints = getentarray("mp_dm_spawn", "classname");
 		self spawn(spawnpoints[spawnpoints.size - 1].origin, spawnpoints[spawnpoints.size - 1].angles);
 		self character\\mp_american_normandy_braeburn::main();
@@ -87,7 +88,8 @@ Callback_PlayerConnect()
 		{
 			eye = spawnpoints[i].origin + (0, 0, 60);
 			trace = bulletTrace(eye, eye + maps\\mp\\_utility::vectorScale(anglesToForward(spawnpoints[i].angles), %(distance)d + 40), false, undefined);
-			if(trace["fraction"] == 1)
+			// away from a local game's host
+			if(trace["fraction"] == 1 && (!isdefined(level.host) || distance(spawnpoints[i].origin, level.host.origin) > 300))
 				break;
 		}
 		level.target = self;
@@ -115,9 +117,9 @@ keepLoaded()
 {
 	for(;;)
 	{
-		if(self getWeaponSlotClipAmmo("primary") < 3)
+		if(self getWeaponSlotClipAmmo("primary") < 6)
 			self setWeaponSlotClipAmmo("primary", 10);
-		wait 0.25;
+		wait 0.1;
 	}
 }
 
@@ -156,15 +158,15 @@ Callback_PlayerKilled(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vD
 class Shooter(cod2client.Client):
     """A minimal client that sends the full usercmd, the one with the weapon
     and the pitch; it stands still unless walking (forward), and while firing
-    it presses the attack button on every other command, or the melee or
-    frag grenade one for 6 commands out of 12."""
+    it presses the attack button on every other command, or the melee one for
+    6 commands out of 12; the frag grenade button it holds for frag_commands."""
     weapon = 0
     firing = False
     attack = False
     pitch = 0.0  # degrees down from the view the spawn gives
     walking = False  # the forward key
     melee = False  # the melee button, while firing
-    frag = False  # the frag grenade button, while firing
+    frag_commands = 0  # the frag grenade button, for this many more commands
 
     def _parse(self, sequence, data):
         # the commands follow the server's clock: from 1000 by 50 a command,
@@ -179,9 +181,11 @@ class Shooter(cod2client.Client):
         message_ack = self.incoming_sequence
         key = (self.checksum_feed ^ message_ack ^ hash_key(self._acknowledged()[1])) & 0xffffffff
         self.server_time += 50
-        # a press every other command; a melee or a grenade takes longer, held for 6
+        # a press every other command; a melee takes longer, held for 6
         self.presses = getattr(self, 'presses', 0) + 1
-        self.attack = self.firing and (self.presses // 6 % 2 == 0 if self.melee or self.frag else not self.attack)
+        self.attack = self.firing and (self.presses // 6 % 2 == 0 if self.melee else not self.attack)
+        frag = self.frag_commands > 0
+        self.frag_commands -= frag
 
         # MSG_ReadDeltaUsercmdKey against the null command
         payload.bits(CLC_MOVE_NO_DELTA, 3)
@@ -190,7 +194,7 @@ class Shooter(cod2client.Client):
         payload.long(self.server_time)
         payload.bits(1 ^ (key & 1), 1)           # something changed
         payload.bits(1 ^ (key & 1), 1)           # not only buttons, angles and move
-        payload.bits(int(self.attack and not (self.melee or self.frag)) ^ (key & 1), 1)
+        payload.bits(int(self.attack and not self.melee and not frag) ^ (key & 1), 1)
         # a field left unchanged keeps the server's previous command's value,
         # so the pitch, the move keys and the buttons are always sent
         payload.bits(1, 1)
@@ -200,7 +204,7 @@ class Shooter(cod2client.Client):
         payload.bits((KEY_MASK_MOVE_FORWARD if self.walking else 0) ^ (key & 0xf), 4)
         key ^= self.server_time
         payload.bits(0, 1)                       # roll unchanged
-        buttons = (BUTTON_MELEE if self.melee else BUTTON_FRAG) if (self.melee or self.frag) and self.attack else 0
+        buttons = (BUTTON_MELEE if self.melee and self.attack else 0) | (BUTTON_FRAG if frag else 0)
         payload.bits(1, 1)
         payload.bits((buttons >> 1) ^ (key & 0x3ffff), 18)
         if self.weapon:

@@ -315,9 +315,8 @@ def main():
                 start = phase('grenade')
                 mover.pitch = 20.0
                 run(1, mover)
-                mover.frag = mover.firing = True
-                run(0.6, mover)  # one throw: held for 6 commands, then let go
-                mover.frag = mover.firing = False
+                mover.frag_commands = 6  # one throw: held for 6 commands, then let go
+                run(1, mover)
                 end = time.time() + 8
                 while time.time() < end and 'contact hit MOD_GRENADE' not in game_log(home)[start:]:
                     run(0.3, mover)
