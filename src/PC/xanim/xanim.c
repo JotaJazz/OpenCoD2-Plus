@@ -1752,6 +1752,21 @@ static int XAnimCalcBadFramesLocal(unsigned int size, const void *frames)
 #endif
 }
 
+/* The key and lerp of a channel with size keys (frames[0..size]). At the
+ * anim's end (time 1, or no frames) it is the last key, frames[size], as
+ * CoD2rev-Plus's XAnimCalcNonLoopEnd reads it; the time index would stop one
+ * frame short. */
+static void XAnimCalcGetKeyLocal(const XAnimTime *animTime, const XAnimDynamicIndices *indices,
+                                 int size, int *keyFrameIndex, float *keyFrameLerpFrac)
+{
+    if (animTime->time == 1.0f || !animTime->frameCount) {
+        *keyFrameIndex = size - 1;
+        *keyFrameLerpFrac = 1.0f;
+        return;
+    }
+    XAnimCalcGetFrameIndexLocal(animTime, indices, size, keyFrameIndex, keyFrameLerpFrac);
+}
+
 static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQuat *quat,
                                              const XAnimTime *animTime, float scale)
 {
@@ -1773,7 +1788,7 @@ static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQu
         if (XAnimCalcBadFramesLocal(quat->size, frames))
             return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
-        XAnimCalcGetFrameIndexLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
+        XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
         mat->quat[0] += ((float)frames[frameIndex][0] + ((float)frames[frameIndex + 1][0] - (float)frames[frameIndex][0]) * lerpFrac) * scale;
         mat->quat[1] += ((float)frames[frameIndex][1] + ((float)frames[frameIndex + 1][1] - (float)frames[frameIndex][1]) * lerpFrac) * scale;
@@ -1801,7 +1816,7 @@ static void XAnimCalcAccumulateSimpleQuatLocal(DObjAnimMat *mat, const XAnimPart
         if (XAnimCalcBadFramesLocal(quat->size, frames))
             return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
-        XAnimCalcGetFrameIndexLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
+        XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
         mat->quat[2] += ((float)frames[frameIndex][0] + ((float)frames[frameIndex + 1][0] - (float)frames[frameIndex][0]) * lerpFrac) * scale;
         mat->quat[3] += ((float)frames[frameIndex][1] + ((float)frames[frameIndex + 1][1] - (float)frames[frameIndex][1]) * lerpFrac) * scale;
@@ -1831,7 +1846,7 @@ static void XAnimCalcAccumulateTransLocal(DObjAnimMat *mat, const XAnimPartTrans
                 return;
             }
 
-            XAnimCalcGetFrameIndexLocal(animTime, &trans->u.frames.indices, trans->size, &frameIndex, &lerpFrac);
+            XAnimCalcGetKeyLocal(animTime, &trans->u.frames.indices, trans->size, &frameIndex, &lerpFrac);
             if (frameIndex < 0 || frameIndex >= (int)trans->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
             mat->trans[0] += (frames[frameIndex][0] + (frames[frameIndex + 1][0] - frames[frameIndex][0]) * lerpFrac) * weightScale;
             mat->trans[1] += (frames[frameIndex][1] + (frames[frameIndex + 1][1] - frames[frameIndex][1]) * lerpFrac) * weightScale;
