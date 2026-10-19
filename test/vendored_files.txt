@@ -129,3 +129,10 @@ src/stringed/stringed_hooks.cpp
 src/zlib/unzip.c
 src/zlib/ioapi.c
 src/zlib/crypt.h
+src/xanim/dobj.cpp
+src/xanim/xanim_calc.cpp
+src/xanim/xanim.cpp
+src/xanim/xanim_load_obj.cpp
+src/xanim/xmodel.cpp
+src/xanim/xmodel_load_obj.cpp
+src/xanim/xmodel_utils.cpp

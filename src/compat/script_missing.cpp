@@ -5,14 +5,6 @@
 #include "script_bridge.h"
 #include <math.h>
 
-extern "C" void *cod2c_Hunk_AllocAlignInternal(int size, int alignment) __asm__(COD2_SYM("Hunk_AllocAlignInternal"));
-
-// xanim.cpp
-void *Hunk_AllocXAnimTreePrecache(int size)
-{
-	return cod2c_Hunk_AllocAlignInternal(size, 4);
-}
-
 // The data blobs refer to VM_Execute by the original binary's C++ name, whose
 // third argument is unsigned int; CoD2rev-Plus's takes unsigned long. The
 // label is the raw assembler name, as src/PC/script had it: MinGW's --defsym

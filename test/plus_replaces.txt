@@ -36,6 +36,8 @@ src/PC/qcommon/com_bsp_load_obj.c
 src/PC/qcommon/com_fileaccess.c
 # zlib's unzip (CoD2rev-Plus's has the 64-bit API it uses)
 src/PC/zlib/unzip.c
+# xanim (animations, DObjs and xmodels)
+src/PC/xanim/
 # stringed (the current language)
 src/PC/stringed/stringed_hooks.c
 # platform (src/unix in Linux, src/win32 in MinGW)

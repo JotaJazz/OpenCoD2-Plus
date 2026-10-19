@@ -3,27 +3,3 @@
 #include "../script/script_public.h"
 #include "script_bridge.h"
 #include "script_decls.h"
-
-extern "C" decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2c_XAnimBlend(XAnim_s* a0, unsigned int a1, char const* a2, unsigned int a3, unsigned int a4, unsigned int a5) __asm__(COD2_SYM("XAnimBlend"));
-decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>())) XAnimBlend(XAnim_s* a0, unsigned int a1, char const* a2, unsigned int a3, unsigned int a4, unsigned int a5) { return cod2c_XAnimBlend(a0, a1, a2, a3, a4, a5); }
-
-extern "C" decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>())) cod2c_XAnimCreate(XAnim_s* a0, unsigned int a1, char const* a2) __asm__(COD2_SYM("XAnimCreate"));
-decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>())) XAnimCreate(XAnim_s* a0, unsigned int a1, char const* a2) { return cod2c_XAnimCreate(a0, a1, a2); }
-
-extern "C" decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>())) cod2c_XAnimCreateAnims(char const* a0, int a1, void* (*a2)(int)) __asm__(COD2_SYM("XAnimCreateAnims"));
-decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>())) XAnimCreateAnims(char const* a0, int a1, void* (*a2)(int)) { return cod2c_XAnimCreateAnims(a0, a1, a2); }
-
-extern "C" decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>())) cod2c_XAnimGetAnimDebugName(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetAnimDebugName"));
-decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>())) XAnimGetAnimDebugName(XAnim_s const* a0, unsigned int a1) { return cod2c_XAnimGetAnimDebugName(a0, a1); }
-
-extern "C" decltype(XAnimGetAnimTreeDebugName(std::declval<XAnim_s const*>())) cod2c_XAnimGetAnimTreeDebugName(XAnim_s const* a0) __asm__(COD2_SYM("XAnimGetAnimTreeDebugName"));
-decltype(XAnimGetAnimTreeDebugName(std::declval<XAnim_s const*>())) XAnimGetAnimTreeDebugName(XAnim_s const* a0) { return cod2c_XAnimGetAnimTreeDebugName(a0); }
-
-extern "C" decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>())) cod2c_XAnimGetAnims(XAnimTree_s const* a0) __asm__(COD2_SYM("XAnimGetAnims"));
-decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>())) XAnimGetAnims(XAnimTree_s const* a0) { return cod2c_XAnimGetAnims(a0); }
-
-extern "C" decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>())) cod2c_XAnimPrecache(char const* a0, void* (*a1)(int)) __asm__(COD2_SYM("XAnimPrecache"));
-decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>())) XAnimPrecache(char const* a0, void* (*a1)(int)) { return cod2c_XAnimPrecache(a0, a1); }
-
-extern "C" decltype(XAnimSetupSyncNodes(std::declval<XAnim_s*>())) cod2c_XAnimSetupSyncNodes(XAnim_s* a0) __asm__(COD2_SYM("XAnimSetupSyncNodes"));
-decltype(XAnimSetupSyncNodes(std::declval<XAnim_s*>())) XAnimSetupSyncNodes(XAnim_s* a0) { return cod2c_XAnimSetupSyncNodes(a0); }

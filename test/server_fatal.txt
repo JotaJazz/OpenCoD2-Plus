@@ -81,3 +81,11 @@ Field_Clear
 # Only linux_input.c, the client's SDL input, feeds these to the Mac input layer.
 CCallOfDutyEngine_DoMouseWheel
 CCallOfDutyEngine_DoTextInput
+# xanim functions CoD2rev-Plus does not have; only cgame_mp and client_mp call them.
+DObjGetClientNotifyList
+DObjUpdateClientInfo
+XAnimHasFinished
+# xanim functions CoD2rev-Plus has with another return type; only cgame_mp calls them.
+XAnimSetGoalWeight
+XAnimSetCompleteGoalWeightKnobAll
+DObjSetControlTagAngles

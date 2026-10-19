@@ -43,4 +43,28 @@ void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptr
 int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f );            /* unix/unix_main.cpp */
 void Sys_ShowIP( void );                                                              /* unix/unix_net.cpp */
 
+/* CoD2rev-Plus's src/xanim defines these without declaring them in a header;
+ * the engine calls them by their C names (cgame, gfx, EffectsCore). The
+ * signatures are copied from the definitions. */
+bool DObjBad( DObj *obj );                                                                /* xanim/dobj.cpp */
+void DObjCompleteHierarchyBits( const DObj *obj, int *partBits );                         /* xanim/dobj.cpp */
+void DObjGetBoneInfo( DObj *obj, XBoneInfo **boneInfo );                                  /* xanim/dobj.cpp */
+int DObjGetLodForDist( const DObj *obj, int modelIndex, float dist );                     /* xanim/dobj.cpp */
+float DObjGetLodOutDist( const DObj *obj );                                               /* xanim/dobj.cpp */
+int DObjGetMatOffset( const DObj *obj, int modelIndex );                                  /* xanim/dobj.cpp */
+XModel* DObjGetModel( DObj *obj, int modelIndex );                                        /* xanim/dobj.cpp */
+int DObjGetNumModels( const DObj *obj );                                                  /* xanim/dobj.cpp */
+int DObjGetNumSurfaces( const DObj *obj, char *lods );                                    /* xanim/dobj.cpp */
+XSurface_s* DObjGetSurface( const DObj* obj, int modelIndex, int subMatIndex, int lod );  /* xanim/dobj.cpp */
+const char* DObjGetSurfaceName( DObj *obj, int modelIndex, int subMatIndex, int lod );    /* xanim/dobj.cpp */
+int DObjGetSurfaces( const DObj *obj, DSurface_s *surfaces, int *partBits, char *lods );  /* xanim/dobj.cpp */
+void DObjSetModel( DObj *obj, const XModel *model );                                      /* xanim/dobj.cpp */
+const DObjAnimMat* XModelGetBasePoseBone( const XModel *model, int skelMatBoneOffset );   /* xanim/xmodel_utils.cpp */
+const char * XModelGetLodName( const XModel *model, int lod );                            /* xanim/xmodel.cpp */
+int XModelGetMemUsage( const XModel *model );                                             /* xanim/xmodel.cpp */
+const trXSkin_t* XModelGetSkins( const XModel *model );                                   /* xanim/xmodel.cpp */
+const char* XModelGetSurfaceName( const XModel *model, int subMatIndex, int lod );        /* xanim/xmodel_utils.cpp */
+int XModelGetSurfaces( XModel *model, XSurface_s **surfaces, int lod, int **partBits );   /* xanim/xmodel_utils.cpp */
+void XModelSetTestLods( int lodLevel, float dist );                                       /* xanim/xmodel_utils.cpp */
+
 #endif

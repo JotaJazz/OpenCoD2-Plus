@@ -124,11 +124,13 @@ BSSINT s_hunkTotal;
 unsigned char com_hunkData[8];
 unsigned char com_fileDataHashTable[4096];
 unsigned char s_origHunkData[96];
+#if !COD2_PLUS_SERVER  /* defined by src/xanim */
 unsigned char g_xAnimInfo[163840];
 unsigned char g_notifyListSize[32];
 unsigned char g_notifyList[1536];
 unsigned char g_end[5];
 unsigned char g_anim_developer[91];
+#endif
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 unsigned char scrStringGlob[65664];
 #endif
@@ -182,7 +184,9 @@ unsigned char objFreeCount[128];
 unsigned char objAlloced[2048];
 unsigned char objBuf[204800];
 #endif
+#if !COD2_PLUS_SERVER  /* defined by src/xanim */
 unsigned char g_empty[128];
+#endif
 unsigned char localization[32];
 unsigned char language_buffer[4192];
 BSSINT shouldQuitOnError;
@@ -252,7 +256,9 @@ short unsigned int vq2[16384];
 short unsigned int vq4[65536];
 short unsigned int vq8[262144];
 unsigned char sAspyrIntroPlayed[32];
+#if !COD2_PLUS_SERVER  /* defined by src/xanim */
 unsigned char g_testLods[128];
+#endif
 unsigned char szReference[1024];
 #if !COD2_PLUS_SCRIPT /* CoD2rev-Plus's src/script defines it */
 int currentPos;
@@ -699,7 +705,9 @@ unsigned char com_fileAccessed[96];
 dvar_t *com_dedicated;   /* dvar pointer-blob retype */
 #endif
 struct scrMemTreePub_t scrMemTreePub;
+#if !COD2_PLUS_SERVER  /* defined by src/xanim */
 struct XModelDefault g_default;
+#endif
 const dvar_t *snd_touchStreamFilesOnLoad;
 const dvar_t *snd_enableReverb;
 const dvar_t *snd_enableStream;

@@ -1,10 +1,19 @@
 // Functions CoD2rev-Plus's script VM calls that this engine does not have,
-// for the executables without CoD2rev-Plus's universal and qcommon (the client):
-// in the dedicated server those define them. Same behaviour as CoD2rev-Plus's.
+// for the executables without CoD2rev-Plus's universal, qcommon and xanim (the
+// client): in the dedicated server those define them. Same behaviour as
+// CoD2rev-Plus's.
 #include "../qcommon/qcommon.h"
 #include "../script/script_public.h"
 #include "script_bridge.h"
 #include <math.h>
+
+extern "C" void *cod2c_Hunk_AllocAlignInternal(int size, int alignment) __asm__(COD2_SYM("Hunk_AllocAlignInternal"));
+
+// xanim.cpp
+void *Hunk_AllocXAnimTreePrecache(int size)
+{
+	return cod2c_Hunk_AllocAlignInternal(size, 4);
+}
 
 // com_math.cpp
 int Q_rint(float in)

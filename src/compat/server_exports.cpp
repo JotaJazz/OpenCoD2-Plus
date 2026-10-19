@@ -2299,8 +2299,495 @@ extern "C" cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4> cod2
 cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4> cod2x_Z_MallocInternal(int a0) { return (cod2_abi_int<decltype(Z_MallocInternal(std::declval<int>())), 4>)Z_MallocInternal(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(Com_SurfaceTypeToName(std::declval<int>()))>::value, "Com_SurfaceTypeToName returns a struct");
-extern "C" decltype(Com_SurfaceTypeToName(std::declval<int>())) cod2x_Com_SurfaceTypeToName(int a0) __asm__(COD2_SYM("Com_SurfaceTypeToName"));
-decltype(Com_SurfaceTypeToName(std::declval<int>())) cod2x_Com_SurfaceTypeToName(int a0) { return Com_SurfaceTypeToName(a0); }
+static_assert(cod2_abi_class<decltype(Com_SurfaceTypeToName(std::declval<int>()))>() == 'i', "Com_SurfaceTypeToName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "Com_SurfaceTypeToName: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(Com_SurfaceTypeToName(std::declval<int>())), 4> cod2x_Com_SurfaceTypeToName(int a0) __asm__(COD2_SYM("Com_SurfaceTypeToName"));
+cod2_abi_int<decltype(Com_SurfaceTypeToName(std::declval<int>())), 4> cod2x_Com_SurfaceTypeToName(int a0) { return (cod2_abi_int<decltype(Com_SurfaceTypeToName(std::declval<int>())), 4>)Com_SurfaceTypeToName(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(Com_ValidXModelName(std::declval<char const*>()))>::value, "Com_ValidXModelName returns a struct");
+static_assert(cod2_abi_class<decltype(Com_ValidXModelName(std::declval<char const*>()))>() == 'i', "Com_ValidXModelName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "Com_ValidXModelName: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(Com_ValidXModelName(std::declval<char const*>())), 4> cod2x_Com_ValidXModelName(char const* a0) __asm__(COD2_SYM("Com_ValidXModelName"));
+cod2_abi_int<decltype(Com_ValidXModelName(std::declval<char const*>())), 4> cod2x_Com_ValidXModelName(char const* a0) { return (cod2_abi_int<decltype(Com_ValidXModelName(std::declval<char const*>())), 4>)Com_ValidXModelName(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjBad(std::declval<DObj_s*>()))>::value, "DObjBad returns a struct");
+static_assert(cod2_abi_class<decltype(DObjBad(std::declval<DObj_s*>()))>() == 'i', "DObjBad: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjBad: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjBad(std::declval<DObj_s*>())), 4> cod2x_DObjBad(DObj_s* a0) __asm__(COD2_SYM("DObjBad"));
+cod2_abi_int<decltype(DObjBad(std::declval<DObj_s*>())), 4> cod2x_DObjBad(DObj_s* a0) { return (cod2_abi_int<decltype(DObjBad(std::declval<DObj_s*>())), 4>)DObjBad(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjCalcAnim(std::declval<DObj_s const*>(), std::declval<int*>()))>::value, "DObjCalcAnim returns a struct");
+static_assert(cod2_abi_class<decltype(DObjCalcAnim(std::declval<DObj_s const*>(), std::declval<int*>()))>() == 'v', "DObjCalcAnim: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjCalcAnim: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjCalcAnim: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(DObjCalcAnim(std::declval<DObj_s const*>(), std::declval<int*>())) cod2x_DObjCalcAnim(DObj_s const* a0, int* a1) __asm__(COD2_SYM("DObjCalcAnim"));
+decltype(DObjCalcAnim(std::declval<DObj_s const*>(), std::declval<int*>())) cod2x_DObjCalcAnim(DObj_s const* a0, int* a1) { return DObjCalcAnim(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjCalcSkel(std::declval<DObj_s*>(), std::declval<int*>()))>::value, "DObjCalcSkel returns a struct");
+static_assert(cod2_abi_class<decltype(DObjCalcSkel(std::declval<DObj_s*>(), std::declval<int*>()))>() == 'v', "DObjCalcSkel: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjCalcSkel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjCalcSkel: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(DObjCalcSkel(std::declval<DObj_s*>(), std::declval<int*>())) cod2x_DObjCalcSkel(DObj_s* a0, int* a1) __asm__(COD2_SYM("DObjCalcSkel"));
+decltype(DObjCalcSkel(std::declval<DObj_s*>(), std::declval<int*>())) cod2x_DObjCalcSkel(DObj_s* a0, int* a1) { return DObjCalcSkel(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjCompleteHierarchyBits(std::declval<DObj_s const*>(), std::declval<int*>()))>::value, "DObjCompleteHierarchyBits returns a struct");
+static_assert(cod2_abi_class<decltype(DObjCompleteHierarchyBits(std::declval<DObj_s const*>(), std::declval<int*>()))>() == 'v', "DObjCompleteHierarchyBits: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjCompleteHierarchyBits: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjCompleteHierarchyBits: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(DObjCompleteHierarchyBits(std::declval<DObj_s const*>(), std::declval<int*>())) cod2x_DObjCompleteHierarchyBits(DObj_s const* a0, int* a1) __asm__(COD2_SYM("DObjCompleteHierarchyBits"));
+decltype(DObjCompleteHierarchyBits(std::declval<DObj_s const*>(), std::declval<int*>())) cod2x_DObjCompleteHierarchyBits(DObj_s const* a0, int* a1) { return DObjCompleteHierarchyBits(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned int>(), std::declval<XAnimTree_s*>(), std::declval<DObj_s*>(), std::declval<unsigned int>()))>::value, "DObjCreate returns a struct");
+static_assert(cod2_abi_class<decltype(DObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned int>(), std::declval<XAnimTree_s*>(), std::declval<DObj_s*>(), std::declval<unsigned int>()))>() == 'v', "DObjCreate: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObjModel_s*>() == 4, "DObjCreate: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "DObjCreate: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "DObjCreate: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjCreate: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "DObjCreate: parameter 4 differs from src/PC/server_mp");
+extern "C" decltype(DObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned int>(), std::declval<XAnimTree_s*>(), std::declval<DObj_s*>(), std::declval<unsigned int>())) cod2x_DObjCreate(DObjModel_s* a0, unsigned int a1, XAnimTree_s* a2, DObj_s* a3, unsigned int a4) __asm__(COD2_SYM("DObjCreate"));
+decltype(DObjCreate(std::declval<DObjModel_s*>(), std::declval<unsigned int>(), std::declval<XAnimTree_s*>(), std::declval<DObj_s*>(), std::declval<unsigned int>())) cod2x_DObjCreate(DObjModel_s* a0, unsigned int a1, XAnimTree_s* a2, DObj_s* a3, unsigned int a4) { return DObjCreate(a0, a1, a2, a3, a4); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjCreateSkel(std::declval<DObj_s*>(), std::declval<DSkel_t*>(), std::declval<int>()))>::value, "DObjCreateSkel returns a struct");
+static_assert(cod2_abi_class<decltype(DObjCreateSkel(std::declval<DObj_s*>(), std::declval<DSkel_t*>(), std::declval<int>()))>() == 'v', "DObjCreateSkel: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjCreateSkel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DSkel_t*>() == 4, "DObjCreateSkel: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjCreateSkel: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(DObjCreateSkel(std::declval<DObj_s*>(), std::declval<DSkel_t*>(), std::declval<int>())) cod2x_DObjCreateSkel(DObj_s* a0, DSkel_t* a1, int a2) __asm__(COD2_SYM("DObjCreateSkel"));
+decltype(DObjCreateSkel(std::declval<DObj_s*>(), std::declval<DSkel_t*>(), std::declval<int>())) cod2x_DObjCreateSkel(DObj_s* a0, DSkel_t* a1, int a2) { return DObjCreateSkel(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjDisplayAnim(std::declval<DObj_s*>()))>::value, "DObjDisplayAnim returns a struct");
+static_assert(cod2_abi_class<decltype(DObjDisplayAnim(std::declval<DObj_s*>()))>() == 'v', "DObjDisplayAnim: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjDisplayAnim: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(DObjDisplayAnim(std::declval<DObj_s*>())) cod2x_DObjDisplayAnim(DObj_s* a0) __asm__(COD2_SYM("DObjDisplayAnim"));
+decltype(DObjDisplayAnim(std::declval<DObj_s*>())) cod2x_DObjDisplayAnim(DObj_s* a0) { return DObjDisplayAnim(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetAllocSkelSize(std::declval<DObj_s const*>()))>::value, "DObjGetAllocSkelSize returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetAllocSkelSize(std::declval<DObj_s const*>()))>() == 'i', "DObjGetAllocSkelSize: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetAllocSkelSize: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetAllocSkelSize(std::declval<DObj_s const*>())), 4> cod2x_DObjGetAllocSkelSize(DObj_s const* a0) __asm__(COD2_SYM("DObjGetAllocSkelSize"));
+cod2_abi_int<decltype(DObjGetAllocSkelSize(std::declval<DObj_s const*>())), 4> cod2x_DObjGetAllocSkelSize(DObj_s const* a0) { return (cod2_abi_int<decltype(DObjGetAllocSkelSize(std::declval<DObj_s const*>())), 4>)DObjGetAllocSkelSize(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetBoneIndex(std::declval<DObj_s const*>(), std::declval<unsigned int>()))>::value, "DObjGetBoneIndex returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetBoneIndex(std::declval<DObj_s const*>(), std::declval<unsigned int>()))>() == 'i', "DObjGetBoneIndex: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetBoneIndex: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "DObjGetBoneIndex: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetBoneIndex(std::declval<DObj_s const*>(), std::declval<unsigned int>())), 4> cod2x_DObjGetBoneIndex(DObj_s const* a0, unsigned int a1) __asm__(COD2_SYM("DObjGetBoneIndex"));
+cod2_abi_int<decltype(DObjGetBoneIndex(std::declval<DObj_s const*>(), std::declval<unsigned int>())), 4> cod2x_DObjGetBoneIndex(DObj_s const* a0, unsigned int a1) { return (cod2_abi_int<decltype(DObjGetBoneIndex(std::declval<DObj_s const*>(), std::declval<unsigned int>())), 4>)DObjGetBoneIndex(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetBoneInfo(std::declval<DObj_s*>(), std::declval<XBoneInfo**>()))>::value, "DObjGetBoneInfo returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetBoneInfo(std::declval<DObj_s*>(), std::declval<XBoneInfo**>()))>() == 'v', "DObjGetBoneInfo: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjGetBoneInfo: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XBoneInfo**>() == 4, "DObjGetBoneInfo: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(DObjGetBoneInfo(std::declval<DObj_s*>(), std::declval<XBoneInfo**>())) cod2x_DObjGetBoneInfo(DObj_s* a0, XBoneInfo** a1) __asm__(COD2_SYM("DObjGetBoneInfo"));
+decltype(DObjGetBoneInfo(std::declval<DObj_s*>(), std::declval<XBoneInfo**>())) cod2x_DObjGetBoneInfo(DObj_s* a0, XBoneInfo** a1) { return DObjGetBoneInfo(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetBounds(std::declval<DObj_s const*>(), std::declval<float*>(), std::declval<float*>()))>::value, "DObjGetBounds returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetBounds(std::declval<DObj_s const*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "DObjGetBounds: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetBounds: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "DObjGetBounds: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "DObjGetBounds: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(DObjGetBounds(std::declval<DObj_s const*>(), std::declval<float*>(), std::declval<float*>())) cod2x_DObjGetBounds(DObj_s const* a0, float* a1, float* a2) __asm__(COD2_SYM("DObjGetBounds"));
+decltype(DObjGetBounds(std::declval<DObj_s const*>(), std::declval<float*>(), std::declval<float*>())) cod2x_DObjGetBounds(DObj_s const* a0, float* a1, float* a2) { return DObjGetBounds(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetHierarchyBits(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int*>()))>::value, "DObjGetHierarchyBits returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetHierarchyBits(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int*>()))>() == 'v', "DObjGetHierarchyBits: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjGetHierarchyBits: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetHierarchyBits: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjGetHierarchyBits: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(DObjGetHierarchyBits(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int*>())) cod2x_DObjGetHierarchyBits(DObj_s* a0, int a1, int* a2) __asm__(COD2_SYM("DObjGetHierarchyBits"));
+decltype(DObjGetHierarchyBits(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int*>())) cod2x_DObjGetHierarchyBits(DObj_s* a0, int a1, int* a2) { return DObjGetHierarchyBits(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetLodForDist(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<float>()))>::value, "DObjGetLodForDist returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetLodForDist(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<float>()))>() == 'i', "DObjGetLodForDist: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetLodForDist: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetLodForDist: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "DObjGetLodForDist: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetLodForDist(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<float>())), 4> cod2x_DObjGetLodForDist(DObj_s const* a0, int a1, float a2) __asm__(COD2_SYM("DObjGetLodForDist"));
+cod2_abi_int<decltype(DObjGetLodForDist(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<float>())), 4> cod2x_DObjGetLodForDist(DObj_s const* a0, int a1, float a2) { return (cod2_abi_int<decltype(DObjGetLodForDist(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<float>())), 4>)DObjGetLodForDist(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetLodOutDist(std::declval<DObj_s const*>()))>::value, "DObjGetLodOutDist returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetLodOutDist(std::declval<DObj_s const*>()))>() == 'f', "DObjGetLodOutDist: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(DObjGetLodOutDist(std::declval<DObj_s const*>()))>() == 4, "DObjGetLodOutDist: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetLodOutDist: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(DObjGetLodOutDist(std::declval<DObj_s const*>())) cod2x_DObjGetLodOutDist(DObj_s const* a0) __asm__(COD2_SYM("DObjGetLodOutDist"));
+decltype(DObjGetLodOutDist(std::declval<DObj_s const*>())) cod2x_DObjGetLodOutDist(DObj_s const* a0) { return DObjGetLodOutDist(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetMatOffset(std::declval<DObj_s const*>(), std::declval<int>()))>::value, "DObjGetMatOffset returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetMatOffset(std::declval<DObj_s const*>(), std::declval<int>()))>() == 'i', "DObjGetMatOffset: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetMatOffset: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetMatOffset: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetMatOffset(std::declval<DObj_s const*>(), std::declval<int>())), 4> cod2x_DObjGetMatOffset(DObj_s const* a0, int a1) __asm__(COD2_SYM("DObjGetMatOffset"));
+cod2_abi_int<decltype(DObjGetMatOffset(std::declval<DObj_s const*>(), std::declval<int>())), 4> cod2x_DObjGetMatOffset(DObj_s const* a0, int a1) { return (cod2_abi_int<decltype(DObjGetMatOffset(std::declval<DObj_s const*>(), std::declval<int>())), 4>)DObjGetMatOffset(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetModel(std::declval<DObj_s*>(), std::declval<int>()))>::value, "DObjGetModel returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetModel(std::declval<DObj_s*>(), std::declval<int>()))>() == 'i', "DObjGetModel: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjGetModel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetModel: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetModel(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjGetModel(DObj_s* a0, int a1) __asm__(COD2_SYM("DObjGetModel"));
+cod2_abi_int<decltype(DObjGetModel(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjGetModel(DObj_s* a0, int a1) { return (cod2_abi_int<decltype(DObjGetModel(std::declval<DObj_s*>(), std::declval<int>())), 4>)DObjGetModel(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetNumModels(std::declval<DObj_s const*>()))>::value, "DObjGetNumModels returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetNumModels(std::declval<DObj_s const*>()))>() == 'i', "DObjGetNumModels: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetNumModels: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetNumModels(std::declval<DObj_s const*>())), 4> cod2x_DObjGetNumModels(DObj_s const* a0) __asm__(COD2_SYM("DObjGetNumModels"));
+cod2_abi_int<decltype(DObjGetNumModels(std::declval<DObj_s const*>())), 4> cod2x_DObjGetNumModels(DObj_s const* a0) { return (cod2_abi_int<decltype(DObjGetNumModels(std::declval<DObj_s const*>())), 4>)DObjGetNumModels(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetNumSurfaces(std::declval<DObj_s const*>(), std::declval<char*>()))>::value, "DObjGetNumSurfaces returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetNumSurfaces(std::declval<DObj_s const*>(), std::declval<char*>()))>() == 'i', "DObjGetNumSurfaces: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetNumSurfaces: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char*>() == 4, "DObjGetNumSurfaces: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetNumSurfaces(std::declval<DObj_s const*>(), std::declval<char*>())), 4> cod2x_DObjGetNumSurfaces(DObj_s const* a0, char* a1) __asm__(COD2_SYM("DObjGetNumSurfaces"));
+cod2_abi_int<decltype(DObjGetNumSurfaces(std::declval<DObj_s const*>(), std::declval<char*>())), 4> cod2x_DObjGetNumSurfaces(DObj_s const* a0, char* a1) { return (cod2_abi_int<decltype(DObjGetNumSurfaces(std::declval<DObj_s const*>(), std::declval<char*>())), 4>)DObjGetNumSurfaces(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetRotTransArray(std::declval<DObj_s const*>()))>::value, "DObjGetRotTransArray returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetRotTransArray(std::declval<DObj_s const*>()))>() == 'i', "DObjGetRotTransArray: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetRotTransArray: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetRotTransArray(std::declval<DObj_s const*>())), 4> cod2x_DObjGetRotTransArray(DObj_s const* a0) __asm__(COD2_SYM("DObjGetRotTransArray"));
+cod2_abi_int<decltype(DObjGetRotTransArray(std::declval<DObj_s const*>())), 4> cod2x_DObjGetRotTransArray(DObj_s const* a0) { return (cod2_abi_int<decltype(DObjGetRotTransArray(std::declval<DObj_s const*>())), 4>)DObjGetRotTransArray(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetSurface(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>::value, "DObjGetSurface returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetSurface(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>() == 'i', "DObjGetSurface: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetSurface: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurface: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurface: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurface: parameter 3 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetSurface(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_DObjGetSurface(DObj_s const* a0, int a1, int a2, int a3) __asm__(COD2_SYM("DObjGetSurface"));
+cod2_abi_int<decltype(DObjGetSurface(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_DObjGetSurface(DObj_s const* a0, int a1, int a2, int a3) { return (cod2_abi_int<decltype(DObjGetSurface(std::declval<DObj_s const*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4>)DObjGetSurface(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetSurfaceName(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>::value, "DObjGetSurfaceName returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetSurfaceName(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>() == 'i', "DObjGetSurfaceName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjGetSurfaceName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurfaceName: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurfaceName: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjGetSurfaceName: parameter 3 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetSurfaceName(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_DObjGetSurfaceName(DObj_s* a0, int a1, int a2, int a3) __asm__(COD2_SYM("DObjGetSurfaceName"));
+cod2_abi_int<decltype(DObjGetSurfaceName(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_DObjGetSurfaceName(DObj_s* a0, int a1, int a2, int a3) { return (cod2_abi_int<decltype(DObjGetSurfaceName(std::declval<DObj_s*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4>)DObjGetSurfaceName(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetSurfaces(std::declval<DObj_s const*>(), std::declval<DSurface_s*>(), std::declval<int*>(), std::declval<char*>()))>::value, "DObjGetSurfaces returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetSurfaces(std::declval<DObj_s const*>(), std::declval<DSurface_s*>(), std::declval<int*>(), std::declval<char*>()))>() == 'i', "DObjGetSurfaces: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetSurfaces: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DSurface_s*>() == 4, "DObjGetSurfaces: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjGetSurfaces: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char*>() == 4, "DObjGetSurfaces: parameter 3 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetSurfaces(std::declval<DObj_s const*>(), std::declval<DSurface_s*>(), std::declval<int*>(), std::declval<char*>())), 4> cod2x_DObjGetSurfaces(DObj_s const* a0, DSurface_s* a1, int* a2, char* a3) __asm__(COD2_SYM("DObjGetSurfaces"));
+cod2_abi_int<decltype(DObjGetSurfaces(std::declval<DObj_s const*>(), std::declval<DSurface_s*>(), std::declval<int*>(), std::declval<char*>())), 4> cod2x_DObjGetSurfaces(DObj_s const* a0, DSurface_s* a1, int* a2, char* a3) { return (cod2_abi_int<decltype(DObjGetSurfaces(std::declval<DObj_s const*>(), std::declval<DSurface_s*>(), std::declval<int*>(), std::declval<char*>())), 4>)DObjGetSurfaces(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjGetTree(std::declval<DObj_s const*>()))>::value, "DObjGetTree returns a struct");
+static_assert(cod2_abi_class<decltype(DObjGetTree(std::declval<DObj_s const*>()))>() == 'i', "DObjGetTree: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjGetTree: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjGetTree(std::declval<DObj_s const*>())), 4> cod2x_DObjGetTree(DObj_s const* a0) __asm__(COD2_SYM("DObjGetTree"));
+cod2_abi_int<decltype(DObjGetTree(std::declval<DObj_s const*>())), 4> cod2x_DObjGetTree(DObj_s const* a0) { return (cod2_abi_int<decltype(DObjGetTree(std::declval<DObj_s const*>())), 4>)DObjGetTree(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjNumBones(std::declval<DObj_s const*>()))>::value, "DObjNumBones returns a struct");
+static_assert(cod2_abi_class<decltype(DObjNumBones(std::declval<DObj_s const*>()))>() == 'i', "DObjNumBones: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjNumBones: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjNumBones(std::declval<DObj_s const*>())), 4> cod2x_DObjNumBones(DObj_s const* a0) __asm__(COD2_SYM("DObjNumBones"));
+cod2_abi_int<decltype(DObjNumBones(std::declval<DObj_s const*>())), 4> cod2x_DObjNumBones(DObj_s const* a0) { return (cod2_abi_int<decltype(DObjNumBones(std::declval<DObj_s const*>())), 4>)DObjNumBones(a0); }
+
+extern "C" void cod2x_DObjSetControlTagAngles(void) __asm__(COD2_SYM("DObjSetControlTagAngles"));
+void cod2x_DObjSetControlTagAngles(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "DObjSetControlTagAngles" );
+}
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjSetModel(std::declval<DObj_s*>(), std::declval<XModel const*>()))>::value, "DObjSetModel returns a struct");
+static_assert(cod2_abi_class<decltype(DObjSetModel(std::declval<DObj_s*>(), std::declval<XModel const*>()))>() == 'v', "DObjSetModel: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjSetModel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "DObjSetModel: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(DObjSetModel(std::declval<DObj_s*>(), std::declval<XModel const*>())) cod2x_DObjSetModel(DObj_s* a0, XModel const* a1) __asm__(COD2_SYM("DObjSetModel"));
+decltype(DObjSetModel(std::declval<DObj_s*>(), std::declval<XModel const*>())) cod2x_DObjSetModel(DObj_s* a0, XModel const* a1) { return DObjSetModel(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>()))>::value, "DObjSkelAreBonesUpToDate returns a struct");
+static_assert(cod2_abi_class<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>()))>() == 'i', "DObjSkelAreBonesUpToDate: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s const*>() == 4, "DObjSkelAreBonesUpToDate: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int*>() == 4, "DObjSkelAreBonesUpToDate: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>())), 4> cod2x_DObjSkelAreBonesUpToDate(DObj_s const* a0, int* a1) __asm__(COD2_SYM("DObjSkelAreBonesUpToDate"));
+cod2_abi_int<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>())), 4> cod2x_DObjSkelAreBonesUpToDate(DObj_s const* a0, int* a1) { return (cod2_abi_int<decltype(DObjSkelAreBonesUpToDate(std::declval<DObj_s const*>(), std::declval<int*>())), 4>)DObjSkelAreBonesUpToDate(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjSkelExists(std::declval<DObj_s*>(), std::declval<int>()))>::value, "DObjSkelExists returns a struct");
+static_assert(cod2_abi_class<decltype(DObjSkelExists(std::declval<DObj_s*>(), std::declval<int>()))>() == 'i', "DObjSkelExists: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjSkelExists: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjSkelExists: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjSkelExists(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjSkelExists(DObj_s* a0, int a1) __asm__(COD2_SYM("DObjSkelExists"));
+cod2_abi_int<decltype(DObjSkelExists(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjSkelExists(DObj_s* a0, int a1) { return (cod2_abi_int<decltype(DObjSkelExists(std::declval<DObj_s*>(), std::declval<int>())), 4>)DObjSkelExists(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(DObjSkelIsBoneUpToDate(std::declval<DObj_s*>(), std::declval<int>()))>::value, "DObjSkelIsBoneUpToDate returns a struct");
+static_assert(cod2_abi_class<decltype(DObjSkelIsBoneUpToDate(std::declval<DObj_s*>(), std::declval<int>()))>() == 'i', "DObjSkelIsBoneUpToDate: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<DObj_s*>() == 4, "DObjSkelIsBoneUpToDate: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "DObjSkelIsBoneUpToDate: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(DObjSkelIsBoneUpToDate(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjSkelIsBoneUpToDate(DObj_s* a0, int a1) __asm__(COD2_SYM("DObjSkelIsBoneUpToDate"));
+cod2_abi_int<decltype(DObjSkelIsBoneUpToDate(std::declval<DObj_s*>(), std::declval<int>())), 4> cod2x_DObjSkelIsBoneUpToDate(DObj_s* a0, int a1) { return (cod2_abi_int<decltype(DObjSkelIsBoneUpToDate(std::declval<DObj_s*>(), std::declval<int>())), 4>)DObjSkelIsBoneUpToDate(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "XAnimBlend returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'v', "XAnimBlend: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s*>() == 4, "XAnimBlend: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimBlend: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "XAnimBlend: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimBlend: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimBlend: parameter 4 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimBlend: parameter 5 differs from src/PC/server_mp");
+extern "C" decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_XAnimBlend(XAnim_s* a0, unsigned int a1, char const* a2, unsigned int a3, unsigned int a4, unsigned int a5) __asm__(COD2_SYM("XAnimBlend"));
+decltype(XAnimBlend(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_XAnimBlend(XAnim_s* a0, unsigned int a1, char const* a2, unsigned int a3, unsigned int a4, unsigned int a5) { return XAnimBlend(a0, a1, a2, a3, a4, a5); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>()))>::value, "XAnimCalcAbsDelta returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "XAnimCalcAbsDelta: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimCalcAbsDelta: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimCalcAbsDelta: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcAbsDelta: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float*>() == 4, "XAnimCalcAbsDelta: parameter 3 differs from src/PC/server_mp");
+extern "C" decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>())) cod2x_XAnimCalcAbsDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3) __asm__(COD2_SYM("XAnimCalcAbsDelta"));
+decltype(XAnimCalcAbsDelta(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float*>(), std::declval<float*>())) cod2x_XAnimCalcAbsDelta(XAnimTree_s* a0, unsigned int a1, float* a2, float* a3) { return XAnimCalcAbsDelta(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimClearTreeGoalWeights(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>::value, "XAnimClearTreeGoalWeights returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimClearTreeGoalWeights(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>() == 'v', "XAnimClearTreeGoalWeights: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimClearTreeGoalWeights: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimClearTreeGoalWeights: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimClearTreeGoalWeights: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(XAnimClearTreeGoalWeights(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimClearTreeGoalWeights(XAnimTree_s* a0, unsigned int a1, float a2) __asm__(COD2_SYM("XAnimClearTreeGoalWeights"));
+decltype(XAnimClearTreeGoalWeights(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimClearTreeGoalWeights(XAnimTree_s* a0, unsigned int a1, float a2) { return XAnimClearTreeGoalWeights(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>::value, "XAnimClearTreeGoalWeightsStrict returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>() == 'v', "XAnimClearTreeGoalWeightsStrict: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimClearTreeGoalWeightsStrict: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimClearTreeGoalWeightsStrict(XAnimTree_s* a0, unsigned int a1, float a2) __asm__(COD2_SYM("XAnimClearTreeGoalWeightsStrict"));
+decltype(XAnimClearTreeGoalWeightsStrict(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimClearTreeGoalWeightsStrict(XAnimTree_s* a0, unsigned int a1, float a2) { return XAnimClearTreeGoalWeightsStrict(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>()))>::value, "XAnimCloneAnimTree returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>()))>() == 'v', "XAnimCloneAnimTree: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s const*>() == 4, "XAnimCloneAnimTree: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimCloneAnimTree: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>())) cod2x_XAnimCloneAnimTree(XAnimTree_s const* a0, XAnimTree_s* a1) __asm__(COD2_SYM("XAnimCloneAnimTree"));
+decltype(XAnimCloneAnimTree(std::declval<XAnimTree_s const*>(), std::declval<XAnimTree_s*>())) cod2x_XAnimCloneAnimTree(XAnimTree_s const* a0, XAnimTree_s* a1) { return XAnimCloneAnimTree(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>()))>::value, "XAnimCreate returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>()))>() == 'v', "XAnimCreate: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s*>() == 4, "XAnimCreate: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimCreate: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "XAnimCreate: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>())) cod2x_XAnimCreate(XAnim_s* a0, unsigned int a1, char const* a2) __asm__(COD2_SYM("XAnimCreate"));
+decltype(XAnimCreate(std::declval<XAnim_s*>(), std::declval<unsigned int>(), std::declval<char const*>())) cod2x_XAnimCreate(XAnim_s* a0, unsigned int a1, char const* a2) { return XAnimCreate(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>()))>::value, "XAnimCreateAnims returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>()))>() == 'i', "XAnimCreateAnims: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "XAnimCreateAnims: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XAnimCreateAnims: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XAnimCreateAnims: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimCreateAnims(char const* a0, int a1, void* (*a2)(int)) __asm__(COD2_SYM("XAnimCreateAnims"));
+cod2_abi_int<decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimCreateAnims(char const* a0, int a1, void* (*a2)(int)) { return (cod2_abi_int<decltype(XAnimCreateAnims(std::declval<char const*>(), std::declval<int>(), std::declval<void* (*)(int)>())), 4>)XAnimCreateAnims(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>()))>::value, "XAnimCreateTree returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>()))>() == 'i', "XAnimCreateTree: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s*>() == 4, "XAnimCreateTree: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XAnimCreateTree: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimCreateTree(XAnim_s* a0, void* (*a1)(int)) __asm__(COD2_SYM("XAnimCreateTree"));
+cod2_abi_int<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimCreateTree(XAnim_s* a0, void* (*a1)(int)) { return (cod2_abi_int<decltype(XAnimCreateTree(std::declval<XAnim_s*>(), std::declval<void* (*)(int)>())), 4>)XAnimCreateTree(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>()))>::value, "XAnimFreeTree returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>()))>() == 'v', "XAnimFreeTree: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimFreeTree: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void (*)(void*, int)>() == 4, "XAnimFreeTree: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>())) cod2x_XAnimFreeTree(XAnimTree_s* a0, void (*a1)(void*, int)) __asm__(COD2_SYM("XAnimFreeTree"));
+decltype(XAnimFreeTree(std::declval<XAnimTree_s*>(), std::declval<void (*)(void*, int)>())) cod2x_XAnimFreeTree(XAnimTree_s* a0, void (*a1)(void*, int)) { return XAnimFreeTree(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>::value, "XAnimGetAnimDebugName returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'i', "XAnimGetAnimDebugName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetAnimDebugName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetAnimDebugName: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetAnimDebugName(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetAnimDebugName"));
+cod2_abi_int<decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetAnimDebugName(XAnim_s const* a0, unsigned int a1) { return (cod2_abi_int<decltype(XAnimGetAnimDebugName(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4>)XAnimGetAnimDebugName(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>()))>::value, "XAnimGetAnims returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>()))>() == 'i', "XAnimGetAnims: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s const*>() == 4, "XAnimGetAnims: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>())), 4> cod2x_XAnimGetAnims(XAnimTree_s const* a0) __asm__(COD2_SYM("XAnimGetAnims"));
+cod2_abi_int<decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>())), 4> cod2x_XAnimGetAnims(XAnimTree_s const* a0) { return (cod2_abi_int<decltype(XAnimGetAnims(std::declval<XAnimTree_s const*>())), 4>)XAnimGetAnims(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "XAnimGetChildAt returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>() == 'i', "XAnimGetChildAt: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetChildAt: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetChildAt: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetChildAt: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetChildAt(XAnim_s const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("XAnimGetChildAt"));
+cod2_abi_int<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetChildAt(XAnim_s const* a0, unsigned int a1, unsigned int a2) { return (cod2_abi_int<decltype(XAnimGetChildAt(std::declval<XAnim_s const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())), 4>)XAnimGetChildAt(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetLengthMsec(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>::value, "XAnimGetLengthMsec returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetLengthMsec(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'i', "XAnimGetLengthMsec: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetLengthMsec: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetLengthMsec: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimGetLengthMsec(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetLengthMsec(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetLengthMsec"));
+cod2_abi_int<decltype(XAnimGetLengthMsec(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetLengthMsec(XAnim_s const* a0, unsigned int a1) { return (cod2_abi_int<decltype(XAnimGetLengthMsec(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4>)XAnimGetLengthMsec(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>::value, "XAnimGetNumChildren returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'i', "XAnimGetNumChildren: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimGetNumChildren: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetNumChildren: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetNumChildren(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetNumChildren"));
+cod2_abi_int<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4> cod2x_XAnimGetNumChildren(XAnim_s const* a0, unsigned int a1) { return (cod2_abi_int<decltype(XAnimGetNumChildren(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 4>)XAnimGetNumChildren(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>()))>::value, "XAnimGetWeight returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>()))>() == 'f', "XAnimGetWeight: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>()))>() == 4, "XAnimGetWeight: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s const*>() == 4, "XAnimGetWeight: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimGetWeight: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>())) cod2x_XAnimGetWeight(XAnimTree_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimGetWeight"));
+decltype(XAnimGetWeight(std::declval<XAnimTree_s const*>(), std::declval<unsigned int>())) cod2x_XAnimGetWeight(XAnimTree_s const* a0, unsigned int a1) { return XAnimGetWeight(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimIsLooped(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>::value, "XAnimIsLooped returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimIsLooped(std::declval<XAnim_s const*>(), std::declval<unsigned int>()))>() == 'i', "XAnimIsLooped: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnim_s const*>() == 4, "XAnimIsLooped: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimIsLooped: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimIsLooped(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 1> cod2x_XAnimIsLooped(XAnim_s const* a0, unsigned int a1) __asm__(COD2_SYM("XAnimIsLooped"));
+cod2_abi_int<decltype(XAnimIsLooped(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 1> cod2x_XAnimIsLooped(XAnim_s const* a0, unsigned int a1) { return (cod2_abi_int<decltype(XAnimIsLooped(std::declval<XAnim_s const*>(), std::declval<unsigned int>())), 1>)XAnimIsLooped(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>()))>::value, "XAnimPrecache returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>()))>() == 'i', "XAnimPrecache: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "XAnimPrecache: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XAnimPrecache: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimPrecache(char const* a0, void* (*a1)(int)) __asm__(COD2_SYM("XAnimPrecache"));
+cod2_abi_int<decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>())), 4> cod2x_XAnimPrecache(char const* a0, void* (*a1)(int)) { return (cod2_abi_int<decltype(XAnimPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>())), 4>)XAnimPrecache(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimSetCompleteGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>()))>::value, "XAnimSetCompleteGoalWeight returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimSetCompleteGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>()))>() == 'v', "XAnimSetCompleteGoalWeight: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimSetCompleteGoalWeight: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetCompleteGoalWeight: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetCompleteGoalWeight: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetCompleteGoalWeight: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetCompleteGoalWeight: parameter 4 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetCompleteGoalWeight: parameter 5 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetCompleteGoalWeight: parameter 6 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XAnimSetCompleteGoalWeight: parameter 7 differs from src/PC/server_mp");
+extern "C" decltype(XAnimSetCompleteGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>())) cod2x_XAnimSetCompleteGoalWeight(XAnimTree_s* a0, unsigned int a1, float a2, float a3, float a4, unsigned int a5, unsigned int a6, int a7) __asm__(COD2_SYM("XAnimSetCompleteGoalWeight"));
+decltype(XAnimSetCompleteGoalWeight(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<unsigned int>(), std::declval<unsigned int>(), std::declval<int>())) cod2x_XAnimSetCompleteGoalWeight(XAnimTree_s* a0, unsigned int a1, float a2, float a3, float a4, unsigned int a5, unsigned int a6, int a7) { return XAnimSetCompleteGoalWeight(a0, a1, a2, a3, a4, a5, a6, a7); }
+
+extern "C" void cod2x_XAnimSetCompleteGoalWeightKnobAll(void) __asm__(COD2_SYM("XAnimSetCompleteGoalWeightKnobAll"));
+void cod2x_XAnimSetCompleteGoalWeightKnobAll(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "XAnimSetCompleteGoalWeightKnobAll" );
+}
+
+extern "C" void cod2x_XAnimSetGoalWeight(void) __asm__(COD2_SYM("XAnimSetGoalWeight"));
+void cod2x_XAnimSetGoalWeight(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "XAnimSetGoalWeight" );
+}
+
+static_assert(cod2_bridge_returns_scalar<decltype(XAnimSetTime(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>::value, "XAnimSetTime returns a struct");
+static_assert(cod2_abi_class<decltype(XAnimSetTime(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>()))>() == 'v', "XAnimSetTime: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XAnimTree_s*>() == 4, "XAnimSetTime: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<unsigned int>() == 4, "XAnimSetTime: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XAnimSetTime: parameter 2 differs from src/PC/server_mp");
+extern "C" decltype(XAnimSetTime(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimSetTime(XAnimTree_s* a0, unsigned int a1, float a2) __asm__(COD2_SYM("XAnimSetTime"));
+decltype(XAnimSetTime(std::declval<XAnimTree_s*>(), std::declval<unsigned int>(), std::declval<float>())) cod2x_XAnimSetTime(XAnimTree_s* a0, unsigned int a1, float a2) { return XAnimSetTime(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelBad(std::declval<XModel const*>()))>::value, "XModelBad returns a struct");
+static_assert(cod2_abi_class<decltype(XModelBad(std::declval<XModel const*>()))>() == 'i', "XModelBad: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelBad: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelBad(std::declval<XModel const*>())), 4> cod2x_XModelBad(XModel const* a0) __asm__(COD2_SYM("XModelBad"));
+cod2_abi_int<decltype(XModelBad(std::declval<XModel const*>())), 4> cod2x_XModelBad(XModel const* a0) { return (cod2_abi_int<decltype(XModelBad(std::declval<XModel const*>())), 4>)XModelBad(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetBasePose(std::declval<XModel const*>()))>::value, "XModelGetBasePose returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetBasePose(std::declval<XModel const*>()))>() == 'i', "XModelGetBasePose: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetBasePose: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetBasePose(std::declval<XModel const*>())), 4> cod2x_XModelGetBasePose(XModel const* a0) __asm__(COD2_SYM("XModelGetBasePose"));
+cod2_abi_int<decltype(XModelGetBasePose(std::declval<XModel const*>())), 4> cod2x_XModelGetBasePose(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetBasePose(std::declval<XModel const*>())), 4>)XModelGetBasePose(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetBasePoseBone(std::declval<XModel const*>(), std::declval<int>()))>::value, "XModelGetBasePoseBone returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetBasePoseBone(std::declval<XModel const*>(), std::declval<int>()))>() == 'i', "XModelGetBasePoseBone: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetBasePoseBone: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelGetBasePoseBone: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetBasePoseBone(std::declval<XModel const*>(), std::declval<int>())), 4> cod2x_XModelGetBasePoseBone(XModel const* a0, int a1) __asm__(COD2_SYM("XModelGetBasePoseBone"));
+cod2_abi_int<decltype(XModelGetBasePoseBone(std::declval<XModel const*>(), std::declval<int>())), 4> cod2x_XModelGetBasePoseBone(XModel const* a0, int a1) { return (cod2_abi_int<decltype(XModelGetBasePoseBone(std::declval<XModel const*>(), std::declval<int>())), 4>)XModelGetBasePoseBone(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetFlags(std::declval<XModel const*>()))>::value, "XModelGetFlags returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetFlags(std::declval<XModel const*>()))>() == 'i', "XModelGetFlags: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetFlags: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetFlags(std::declval<XModel const*>())), 1> cod2x_XModelGetFlags(XModel const* a0) __asm__(COD2_SYM("XModelGetFlags"));
+cod2_abi_int<decltype(XModelGetFlags(std::declval<XModel const*>())), 1> cod2x_XModelGetFlags(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetFlags(std::declval<XModel const*>())), 1>)XModelGetFlags(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetLodForDist(std::declval<XModel const*>(), std::declval<float>()))>::value, "XModelGetLodForDist returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetLodForDist(std::declval<XModel const*>(), std::declval<float>()))>() == 'i', "XModelGetLodForDist: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetLodForDist: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XModelGetLodForDist: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetLodForDist(std::declval<XModel const*>(), std::declval<float>())), 4> cod2x_XModelGetLodForDist(XModel const* a0, float a1) __asm__(COD2_SYM("XModelGetLodForDist"));
+cod2_abi_int<decltype(XModelGetLodForDist(std::declval<XModel const*>(), std::declval<float>())), 4> cod2x_XModelGetLodForDist(XModel const* a0, float a1) { return (cod2_abi_int<decltype(XModelGetLodForDist(std::declval<XModel const*>(), std::declval<float>())), 4>)XModelGetLodForDist(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetLodName(std::declval<XModel const*>(), std::declval<int>()))>::value, "XModelGetLodName returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetLodName(std::declval<XModel const*>(), std::declval<int>()))>() == 'i', "XModelGetLodName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetLodName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelGetLodName: parameter 1 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetLodName(std::declval<XModel const*>(), std::declval<int>())), 4> cod2x_XModelGetLodName(XModel const* a0, int a1) __asm__(COD2_SYM("XModelGetLodName"));
+cod2_abi_int<decltype(XModelGetLodName(std::declval<XModel const*>(), std::declval<int>())), 4> cod2x_XModelGetLodName(XModel const* a0, int a1) { return (cod2_abi_int<decltype(XModelGetLodName(std::declval<XModel const*>(), std::declval<int>())), 4>)XModelGetLodName(a0, a1); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetLodOutDist(std::declval<XModel const*>()))>::value, "XModelGetLodOutDist returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetLodOutDist(std::declval<XModel const*>()))>() == 'f', "XModelGetLodOutDist: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_size<decltype(XModelGetLodOutDist(std::declval<XModel const*>()))>() == 4, "XModelGetLodOutDist: return size differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetLodOutDist: parameter 0 differs from src/PC/server_mp");
+extern "C" decltype(XModelGetLodOutDist(std::declval<XModel const*>())) cod2x_XModelGetLodOutDist(XModel const* a0) __asm__(COD2_SYM("XModelGetLodOutDist"));
+decltype(XModelGetLodOutDist(std::declval<XModel const*>())) cod2x_XModelGetLodOutDist(XModel const* a0) { return XModelGetLodOutDist(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetMemUsage(std::declval<XModel const*>()))>::value, "XModelGetMemUsage returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetMemUsage(std::declval<XModel const*>()))>() == 'i', "XModelGetMemUsage: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetMemUsage: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetMemUsage(std::declval<XModel const*>())), 4> cod2x_XModelGetMemUsage(XModel const* a0) __asm__(COD2_SYM("XModelGetMemUsage"));
+cod2_abi_int<decltype(XModelGetMemUsage(std::declval<XModel const*>())), 4> cod2x_XModelGetMemUsage(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetMemUsage(std::declval<XModel const*>())), 4>)XModelGetMemUsage(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetName(std::declval<XModel const*>()))>::value, "XModelGetName returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetName(std::declval<XModel const*>()))>() == 'i', "XModelGetName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetName: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetName(std::declval<XModel const*>())), 4> cod2x_XModelGetName(XModel const* a0) __asm__(COD2_SYM("XModelGetName"));
+cod2_abi_int<decltype(XModelGetName(std::declval<XModel const*>())), 4> cod2x_XModelGetName(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetName(std::declval<XModel const*>())), 4>)XModelGetName(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetNumLods(std::declval<XModel const*>()))>::value, "XModelGetNumLods returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetNumLods(std::declval<XModel const*>()))>() == 'i', "XModelGetNumLods: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetNumLods: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetNumLods(std::declval<XModel const*>())), 4> cod2x_XModelGetNumLods(XModel const* a0) __asm__(COD2_SYM("XModelGetNumLods"));
+cod2_abi_int<decltype(XModelGetNumLods(std::declval<XModel const*>())), 4> cod2x_XModelGetNumLods(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetNumLods(std::declval<XModel const*>())), 4>)XModelGetNumLods(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetSkins(std::declval<XModel const*>()))>::value, "XModelGetSkins returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetSkins(std::declval<XModel const*>()))>() == 'i', "XModelGetSkins: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetSkins: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetSkins(std::declval<XModel const*>())), 4> cod2x_XModelGetSkins(XModel const* a0) __asm__(COD2_SYM("XModelGetSkins"));
+cod2_abi_int<decltype(XModelGetSkins(std::declval<XModel const*>())), 4> cod2x_XModelGetSkins(XModel const* a0) { return (cod2_abi_int<decltype(XModelGetSkins(std::declval<XModel const*>())), 4>)XModelGetSkins(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetSurfaceName(std::declval<XModel const*>(), std::declval<int>(), std::declval<int>()))>::value, "XModelGetSurfaceName returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetSurfaceName(std::declval<XModel const*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "XModelGetSurfaceName: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelGetSurfaceName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelGetSurfaceName: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelGetSurfaceName: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetSurfaceName(std::declval<XModel const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_XModelGetSurfaceName(XModel const* a0, int a1, int a2) __asm__(COD2_SYM("XModelGetSurfaceName"));
+cod2_abi_int<decltype(XModelGetSurfaceName(std::declval<XModel const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_XModelGetSurfaceName(XModel const* a0, int a1, int a2) { return (cod2_abi_int<decltype(XModelGetSurfaceName(std::declval<XModel const*>(), std::declval<int>(), std::declval<int>())), 4>)XModelGetSurfaceName(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelGetSurfaces(std::declval<XModel*>(), std::declval<XSurface_s**>(), std::declval<int>(), std::declval<int**>()))>::value, "XModelGetSurfaces returns a struct");
+static_assert(cod2_abi_class<decltype(XModelGetSurfaces(std::declval<XModel*>(), std::declval<XSurface_s**>(), std::declval<int>(), std::declval<int**>()))>() == 'i', "XModelGetSurfaces: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel*>() == 4, "XModelGetSurfaces: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XSurface_s**>() == 4, "XModelGetSurfaces: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelGetSurfaces: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int**>() == 4, "XModelGetSurfaces: parameter 3 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelGetSurfaces(std::declval<XModel*>(), std::declval<XSurface_s**>(), std::declval<int>(), std::declval<int**>())), 4> cod2x_XModelGetSurfaces(XModel* a0, XSurface_s** a1, int a2, int** a3) __asm__(COD2_SYM("XModelGetSurfaces"));
+cod2_abi_int<decltype(XModelGetSurfaces(std::declval<XModel*>(), std::declval<XSurface_s**>(), std::declval<int>(), std::declval<int**>())), 4> cod2x_XModelGetSurfaces(XModel* a0, XSurface_s** a1, int a2, int** a3) { return (cod2_abi_int<decltype(XModelGetSurfaces(std::declval<XModel*>(), std::declval<XSurface_s**>(), std::declval<int>(), std::declval<int**>())), 4>)XModelGetSurfaces(a0, a1, a2, a3); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelNumBones(std::declval<XModel const*>()))>::value, "XModelNumBones returns a struct");
+static_assert(cod2_abi_class<decltype(XModelNumBones(std::declval<XModel const*>()))>() == 'i', "XModelNumBones: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<XModel const*>() == 4, "XModelNumBones: parameter 0 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelNumBones(std::declval<XModel const*>())), 4> cod2x_XModelNumBones(XModel const* a0) __asm__(COD2_SYM("XModelNumBones"));
+cod2_abi_int<decltype(XModelNumBones(std::declval<XModel const*>())), 4> cod2x_XModelNumBones(XModel const* a0) { return (cod2_abi_int<decltype(XModelNumBones(std::declval<XModel const*>())), 4>)XModelNumBones(a0); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>()))>::value, "XModelPrecache returns a struct");
+static_assert(cod2_abi_class<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>()))>() == 'i', "XModelPrecache: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<char const*>() == 4, "XModelPrecache: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XModelPrecache: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<void* (*)(int)>() == 4, "XModelPrecache: parameter 2 differs from src/PC/server_mp");
+extern "C" cod2_abi_int<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())), 4> cod2x_XModelPrecache(char const* a0, void* (*a1)(int), void* (*a2)(int)) __asm__(COD2_SYM("XModelPrecache"));
+cod2_abi_int<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())), 4> cod2x_XModelPrecache(char const* a0, void* (*a1)(int), void* (*a2)(int)) { return (cod2_abi_int<decltype(XModelPrecache(std::declval<char const*>(), std::declval<void* (*)(int)>(), std::declval<void* (*)(int)>())), 4>)XModelPrecache(a0, a1, a2); }
+
+static_assert(cod2_bridge_returns_scalar<decltype(XModelSetTestLods(std::declval<int>(), std::declval<float>()))>::value, "XModelSetTestLods returns a struct");
+static_assert(cod2_abi_class<decltype(XModelSetTestLods(std::declval<int>(), std::declval<float>()))>() == 'v', "XModelSetTestLods: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<int>() == 4, "XModelSetTestLods: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<float>() == 4, "XModelSetTestLods: parameter 1 differs from src/PC/server_mp");
+extern "C" decltype(XModelSetTestLods(std::declval<int>(), std::declval<float>())) cod2x_XModelSetTestLods(int a0, float a1) __asm__(COD2_SYM("XModelSetTestLods"));
+decltype(XModelSetTestLods(std::declval<int>(), std::declval<float>())) cod2x_XModelSetTestLods(int a0, float a1) { return XModelSetTestLods(a0, a1); }
 
 extern "C" void cod2x_CCallOfDutyEngine_DoMouseWheel(void) __asm__(COD2_SYM("CCallOfDutyEngine_DoMouseWheel"));
 void cod2x_CCallOfDutyEngine_DoMouseWheel(void)
@@ -2372,6 +2859,18 @@ extern "C" void cod2x_Com_TouchMemory(void) __asm__(COD2_SYM("Com_TouchMemory"))
 void cod2x_Com_TouchMemory(void)
 {
     Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Com_TouchMemory" );
+}
+
+extern "C" void cod2x_DObjGetClientNotifyList(void) __asm__(COD2_SYM("DObjGetClientNotifyList"));
+void cod2x_DObjGetClientNotifyList(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "DObjGetClientNotifyList" );
+}
+
+extern "C" void cod2x_DObjUpdateClientInfo(void) __asm__(COD2_SYM("DObjUpdateClientInfo"));
+void cod2x_DObjUpdateClientInfo(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "DObjUpdateClientInfo" );
 }
 
 extern "C" void cod2x_Dvar_AnyLatchedValues(void) __asm__(COD2_SYM("Dvar_AnyLatchedValues"));
@@ -2636,6 +3135,12 @@ extern "C" void cod2x_Sys_StartProcess(void) __asm__(COD2_SYM("Sys_StartProcess"
 void cod2x_Sys_StartProcess(void)
 {
     Com_Error( ERR_FATAL, "%s is not in the dedicated server", "Sys_StartProcess" );
+}
+
+extern "C" void cod2x_XAnimHasFinished(void) __asm__(COD2_SYM("XAnimHasFinished"));
+void cod2x_XAnimHasFinished(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "XAnimHasFinished" );
 }
 
 extern "C" void cod2x_ZN10LargeLocalD1Ev(void) __asm__(COD2_SYM("ZN10LargeLocalD1Ev"));

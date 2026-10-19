@@ -118,6 +118,7 @@ class Modules(unittest.TestCase):
         # the game links with the server, so the server's bridge covers it
         objects = g.MODULES['server']['objects']
         self.assertTrue(any(o.endswith('src/game/*.o') for o in objects), objects)
+        self.assertIn('cod2_plus_server.dir/src/xanim/*.o', objects)
 
     def test_file_type_is_portable(self):
         # glibc demangles FILE as _IO_FILE and MinGW as _iobuf: one signature
@@ -165,7 +166,7 @@ class Modules(unittest.TestCase):
         # what CoD2rev-Plus's game or core defines in the dedicated server, the
         # VM's thunks into src/PC give only the client
         client_only = g.MODULES['script']['client_only']
-        for d in ('game', 'universal', 'qcommon', 'stringed', 'unix', 'win32'):
+        for d in ('game', 'universal', 'qcommon', 'stringed', 'xanim', 'unix', 'win32'):
             self.assertIn(f'cod2_plus_server.dir/src/{d}/*.o', client_only)
 
     def test_fatal_exports_need_no_interface_line(self):
