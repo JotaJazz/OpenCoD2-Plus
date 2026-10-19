@@ -1150,6 +1150,12 @@ void DObjCalcSkel(const DObj *obj, int *partBits)
 
     DObjCalcAnim(obj, partBits);
 
+    /* the bones of a model melded without a tag (a player's head and helmet)
+     * copy the ones they duplicate: CoD2rev-Plus creates the list here */
+    if (!obj->duplicateParts) {
+        DObjCreateDuplicateParts(obj);
+    }
+
     if (obj->duplicateParts) {
         const char *duplicateString = SL_ConvertToString(obj->duplicateParts);
         duplicateParts = (const unsigned char *)duplicateString + 16;
