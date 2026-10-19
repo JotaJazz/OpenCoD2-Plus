@@ -1737,6 +1737,21 @@ static const unsigned char *XAnimCalcGetAnimToModelLocal(const DObj *obj, const 
     return (const unsigned char *)SL_ConvertToString(stringValue);
 }
 
+/* x64 only: a size or frames pointer no real anim has (see
+ * XAnimCalcAccumulateTransLocal). On 32 bits every pointer is below 4 GB, so
+ * the pointer test would drop every animated channel. */
+static int XAnimCalcBadFramesLocal(unsigned int size, const void *frames)
+{
+#if defined(COD2_X64)
+    return size > 4096u || (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
+           (uintptr_t)frames >= 0x800000000000ULL;
+#else
+    (void)size;
+    (void)frames;
+    return 0;
+#endif
+}
+
 static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQuat *quat,
                                              const XAnimTime *animTime, float scale)
 {
@@ -1755,9 +1770,7 @@ static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQu
         float lerpFrac;
         const XQuat *frames = (const XQuat *)quat->u.frames.u.frames;
 
-        if ((unsigned)quat->size > 4096u ||
-            (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
-            (uintptr_t)frames >= 0x800000000000ULL)
+        if (XAnimCalcBadFramesLocal(quat->size, frames))
             return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetFrameIndexLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
@@ -1785,9 +1798,7 @@ static void XAnimCalcAccumulateSimpleQuatLocal(DObjAnimMat *mat, const XAnimPart
         float lerpFrac;
         const XQuat2 *frames = (const XQuat2 *)quat->u.frames.u.frames2;
 
-        if ((unsigned)quat->size > 4096u ||
-            (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
-            (uintptr_t)frames >= 0x800000000000ULL)
+        if (XAnimCalcBadFramesLocal(quat->size, frames))
             return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetFrameIndexLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
@@ -1815,9 +1826,7 @@ static void XAnimCalcAccumulateTransLocal(DObjAnimMat *mat, const XAnimPartTrans
                frames pointer (truncated OR mid-range non-canonical). The .xanim loader is
                x64-correct, so the corruption is post-load (anim tree/DObj bone path).
                Skip this bone's trans accumulation to avoid dereferencing bad data. */
-            if ((unsigned)trans->size > 4096u ||
-                (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
-                (uintptr_t)frames >= 0x800000000000ULL) {
+            if (XAnimCalcBadFramesLocal(trans->size, frames)) {
                 mat->transWeight += weightScale;
                 return;
             }
