@@ -153,11 +153,12 @@ function(cod2_plus_server)
 endfunction()
 
 # cod2_plus_server_client(): the OBJECT library with CoD2rev-Plus's server,
-# game and bgame for the client's local games, on the engine's core and xanim,
-# and its bridge (src/compat/client_server_*.cpp).
+# game and bgame for the client's local games, and its collision (cm_*) for
+# all the client, on the engine's other core and xanim, and its bridge
+# (src/compat/client_server_*.cpp).
 function(cod2_plus_server_client)
   file(GLOB src CONFIGURE_DEPENDS ${COD2_SRC_DIR}/server/*.cpp ${COD2_SRC_DIR}/game/*.cpp
-    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/compat/client_server_*.cpp)
+    ${COD2_SRC_DIR}/bgame/*.cpp ${COD2_SRC_DIR}/qcommon/cm_*.cpp ${COD2_SRC_DIR}/compat/client_server_*.cpp)
   add_library(cod2_plus_server_client OBJECT ${src})
   # LISTEN_SERVER: CoD2rev-Plus's code for a server inside a client (its
   # #ifndef DEDICATED blocks)
@@ -675,7 +676,7 @@ endif()
 if(COD2_PLUS_SERVER)
   if(COD2_PLUS_CLIENT_SERVER)
     # the client runs CoD2rev-Plus's server, game and bgame instead
-    list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/")
+    list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
     cod2_plus_server_client()
     set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
   endif()
@@ -697,7 +698,8 @@ add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD
   src/unix/linux_ded_stubs.c)
 target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
   $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)
-target_compile_definitions(cod2_linux PRIVATE $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_GAME=1>)
+target_compile_definitions(cod2_linux PRIVATE $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_GAME=1>
+  $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_CM=1>)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})
 target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})
 

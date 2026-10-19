@@ -370,8 +370,8 @@ MODULES = {
                    export_fatal=SERVER_EXPORT_FATAL),
 }
 
-# The client runs CoD2rev-Plus's server, game and bgame on the engine's core
-# and xanim: their imports come back, and the functions that core lacks are
+# The client runs CoD2rev-Plus's server, game, bgame and collision (cm_*) on
+# the engine's other core and xanim: their imports come back, and the functions that core lacks are
 # written by hand in src/compat/client_server_missing.cpp. The VM's core thunks
 # (cod2_plus_script_core) already define the engine functions both call.
 CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet',
@@ -379,10 +379,33 @@ CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck',
                           'FS_RotateHomeFile', 'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString',
                           'MSG_ReadStringLine', 'RoundFloatArray', 'SetConfigString', 'SetConfigString2',
                           'SnapAngles', 'Vec2Length', 'Vec2LengthSq', 'Vec3Lerp', 'VectorInverse', 'VectorLength',
-                          'VectorLengthSquared', 'Com_SetWeaponInfoMemory', 'Com_FreeWeaponInfoMemory'}
+                          'VectorLengthSquared', 'Com_SetWeaponInfoMemory', 'Com_FreeWeaponInfoMemory',
+                          'Com_GetBspLump', 'Com_BspHasLump', 'LittleShort', 'LittleLong', 'LittleFloat', 'Hunk_ClearTempMemoryInternal',
+                          'CreateRotationMatrix', 'TransposeMatrix', 'RotatePoint'}
+# The engine's CM_BoxTrace and CM_TransformedBoxTraceExternal return an int
+# nothing reads; CoD2rev-Plus's return nothing.
+CLIENT_SERVER_EXPORT_CUSTOM = dict(SERVER_EXPORT_CUSTOM)
+CLIENT_SERVER_EXPORT_CUSTOM.update({
+    'CM_BoxTrace': '''extern "C" int cod2x_CM_BoxTrace(trace_t *results, const float *start, const float *end, const float *mins, const float *maxs, clipHandle_t model, int brushmask) __asm__(COD2_SYM("CM_BoxTrace"));
+int cod2x_CM_BoxTrace(trace_t *results, const float *start, const float *end, const float *mins, const float *maxs, clipHandle_t model, int brushmask)
+{
+    CM_BoxTrace(results, start, end, mins, maxs, model, brushmask);
+    return 0;
+}
+''',
+    'CM_TransformedBoxTraceExternal': '''extern "C" int cod2x_CM_TransformedBoxTraceExternal(trace_t *results, const float *start, const float *end, const float *mins, const float *maxs, clipHandle_t model, int brushmask, const float *origin, const float *angles) __asm__(COD2_SYM("CM_TransformedBoxTraceExternal"));
+int cod2x_CM_TransformedBoxTraceExternal(trace_t *results, const float *start, const float *end, const float *mins, const float *maxs, clipHandle_t model, int brushmask, const float *origin, const float *angles)
+{
+    CM_TransformedBoxTraceExternal(results, start, end, mins, maxs, model, brushmask, origin, angles);
+    return 0;
+}
+''',
+})
 MODULES['client_server'] = dict(
     MODULES['server'],
+    export_custom=CLIENT_SERVER_EXPORT_CUSTOM,
     objects=['cod2_plus_server_client.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')]
+    + ['cod2_plus_server_client.dir/src/qcommon/cm_*.o']
     + ['cod2_plus_server_client.dir/src/compat/client_server_missing.cpp.o'],
     others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o',
             'cod2_plus_script_core.dir/src/compat/*.o'],

@@ -8,6 +8,8 @@
 #include "../server/server.h"
 #include "../game/g_shared.h"
 #include "server_decls.h"
+#include "../qcommon/cm_local.h"
+#include "script_bridge.h"
 
 extern searchpath_t *fs_searchpaths;  // src/PC/universal/com_files.c
 extern char fs_gamedir[];             // src/PC/universal/com_files.c
@@ -396,4 +398,146 @@ void Com_FreeWeaponInfoMemory( int iSource )
 		iWeaponInfoSource = 0;
 		BG_ShutdownWeaponDefFiles();
 	}
+}
+
+// The client runs CoD2rev-Plus's collision (qcommon/cm_*) too, on the engine's
+// BSP loader and memory.
+
+// qcommon/threads.cpp: one per thread context; q_shared.c points the thread
+// value 3 at the context's entry, and CM_InitThreadData fills it
+TraceThreadInfo g_traceThreadInfo[NUMTHREADS];
+
+// qcommon/com_bsp_load_obj.cpp, which only defines it there
+struct lump_t
+{
+	int filelen;
+	int fileofs;
+};
+
+struct dheader_t
+{
+	int ident;
+	int version;
+	lump_t lumps[LUMP_COUNT];
+};
+
+// qcommon/com_bsp_load_obj.cpp: over the BSP the engine's Com_LoadBsp loaded
+byte* Com_GetBspLump( int type, int elemSize, int *count )
+{
+	int fileSize;
+	dheader_t *header = Com_GetBsp(&fileSize, NULL);
+	int offset = header->lumps[type].fileofs;
+	int length = header->lumps[type].filelen;
+
+	if ( length )
+	{
+		if ( type == LUMP_ENTITIES && length + offset > fileSize )
+		{
+			*count = ( length / elemSize ) + ( fileSize - ( length + offset ) );
+			return (byte *)header + offset;
+		}
+
+		if ( length + offset > fileSize )
+		{
+			Com_Error(ERR_DROP, "CM_LoadMap: lump %i extends past end of file", type);
+		}
+
+		*count = length / elemSize;
+
+		if ( elemSize * *count != length )
+		{
+			Com_Error(ERR_DROP, "CM_LoadMap: lump %i has funny size", type);
+		}
+
+		return (byte *)header + offset;
+	}
+
+	*count = 0;
+	return NULL;
+}
+
+// qcommon/com_bsp_load_obj.cpp
+bool Com_BspHasLump( int type )
+{
+	int count;
+
+	Com_GetBspLump(type, 1, &count);
+
+	return count != 0;
+}
+
+// universal/q_shared.cpp: a little-endian host (the engine's LittleShort and
+// LittleLong are function pointers, which an import would call as code)
+short LittleShort( short l )
+{
+	return l;
+}
+
+// universal/q_shared.cpp
+int LittleLong( int l )
+{
+	return l;
+}
+
+// universal/q_shared.cpp
+float LittleFloat( float l )
+{
+	return l;
+}
+
+// universal/com_memory.cpp: the engine's low hunk keeps its temporary
+// allocations itself
+extern "C" void cod2_engine_Hunk_ClearTempMemory( void ) __asm__(COD2_SYM("Hunk_ClearTempMemory"));
+void Hunk_ClearTempMemoryInternal()
+{
+	cod2_engine_Hunk_ClearTempMemory();
+}
+
+// universal/com_math.cpp
+void CreateRotationMatrix( const vec3_t angles, vec3_t matrix[3] )
+{
+	AngleVectors( angles, matrix[0], matrix[1], matrix[2] );
+	VectorInverse( matrix[1] );
+}
+
+// universal/com_math.cpp
+void TransposeMatrix( const vec3_t matrix[3], vec3_t transpose[3] )
+{
+	int i, j;
+
+	for ( i = 0; i < 3; i++ )
+	{
+		for ( j = 0; j < 3; j++ )
+		{
+			transpose[i][j] = matrix[j][i];
+		}
+	}
+}
+
+// universal/com_math.cpp
+void RotatePoint( vec3_t point, const vec3_t matrix[3] )
+{
+	vec3_t tvec;
+
+	VectorCopy( point, tvec );
+
+	point[0] = DotProduct( matrix[0], tvec );
+	point[1] = DotProduct( matrix[1], tvec );
+	point[2] = DotProduct( matrix[2], tvec );
+}
+
+// The engine's collision functions CoD2rev-Plus does not have, which the
+// client's renderer and the blobs' imp_ pointers call by their C names.
+
+// src/PC/qcommon/cm_load_obj.c
+extern "C" cplane_t *CM_GetPlaneNum( int planeNum )
+{
+	return &cm.planes[planeNum];
+}
+
+// src/PC/qcommon/cm_load.c rewrites a lump of the map's BSP: a developer tool
+// only the imp_ pointers name, which nothing runs
+extern "C" void CM_SaveLump( int lumpnum, byte *newLump, int size, int *checksum )
+{
+	Com_Error(ERR_FATAL, "CM_SaveLump is not in this build");
 }

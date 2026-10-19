@@ -61,3 +61,9 @@ entityHandler_t
 # info through Sys_SetValue). The engine's other readers take dvar_t pointers
 # (only the fields compared above) or addresses.
 TraceThreadInfo
+# Types the client's engine code (cgame, the renderer, FX, xmodel) passes to
+# CoD2rev-Plus's collision. trace_t's material is a dmaterial_t * there, whose
+# name the engine reads as a string: the name is its first field.
+trace_t:fraction,normal,surfaceFlags,contents,material,entityNum,partName,partGroup,allsolid,startsolid
+TraceExtents:start,end,invDelta
+cplane_t:normal,dist,type,signbits

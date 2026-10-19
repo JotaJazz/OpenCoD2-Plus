@@ -234,7 +234,7 @@ unsigned char token_004ed380[1024];
 unsigned char statCount[32];
 unsigned char stats[96];
 unsigned char initialized[128];
-#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
+#if !COD2_PLUS_SERVER && !COD2_PLUS_CM  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 unsigned char cm_world[24704];
 #endif
 #if defined(COD2_X64) || defined(__x86_64__)
@@ -597,7 +597,7 @@ unsigned char g_NoTextureID[127];
 unsigned char __ZN6CFence15sUnusedFenceIDsE[128];
 unsigned char __ZN13CMemoryBuffer20sDelayedFreeRequestsE[128];
 unsigned char __ZN7COpenGL7sOpenGLE[4096];
-#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
+#if !COD2_PLUS_SERVER && !COD2_PLUS_CM  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64) || defined(__x86_64__)
 TraceThreadInfo g_traceThreadInfo[1];   /* x86 blob 28; x64 sizeof 48 (pointer fields grow) */
 #else
@@ -786,7 +786,7 @@ const dvar_t *bg_foliagesnd_fastinterval;
 const dvar_t *bg_foliagesnd_slowinterval;
 const dvar_t *bg_foliagesnd_maxspeed;
 const dvar_t *bg_foliagesnd_minspeed;
-#if !COD2_PLUS_SERVER  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
+#if !COD2_PLUS_SERVER && !COD2_PLUS_CM  /* defined by CoD2rev-Plus's universal, qcommon or platform code */
 #if defined(COD2_X64)
 /* x86 sizeof(clipMap_t)=384; on x64 its many pointer fields grow so the struct is
    larger -> the byte blob put nodes/planes/leafs at wrong offsets and overflowed
