@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Players bump into each other, a knife hits, and an explosion reaches a player.
+"""Players bump into each other, a knife hits, and explosions reach a player.
 
     python3 scripts/contact_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--listen]
 
@@ -13,6 +13,9 @@ mod polls:
   width. Player against player clipping goes through the world's sectors.
 - melee: it stands next to the target and presses the melee button; the target
   must take MOD_MELEE hits.
+- grenade: it stands farther, aims down and throws a frag grenade, whose
+  splash must hit the target; the grenade flies and bounces on the world's
+  collision.
 - radius: the mod calls radiusDamage next to the target, which must take a
   MOD_EXPLOSIVE hit; the explosion finds it through the world's sectors too.
 
@@ -44,6 +47,7 @@ Callback_StartGameType()
 {
 	character\\mp_american_normandy_braeburn::precache();
 	precacheItem("%(weapon)s");
+	precacheItem("frag_grenade_american_mp");
 	setcvar("contact_phase", "");
 }
 
@@ -84,6 +88,9 @@ Callback_PlayerConnect()
 		self giveWeapon("%(weapon)s");
 		self giveMaxAmmo("%(weapon)s");
 		self setSpawnWeapon("%(weapon)s");
+		self giveWeapon("frag_grenade_american_mp");
+		self setWeaponClipAmmo("frag_grenade_american_mp", 3);
+		self switchToOffhand("frag_grenade_american_mp");
 		logPrint("contact mover " + self getEntityNumber() + "\\n");
 		self thread phases();
 	}
@@ -121,6 +128,11 @@ phases()
 		else if(phase == "melee")
 		{
 			origin = self place(40);
+			self thread hold(origin);
+		}
+		else if(phase == "grenade")
+		{
+			origin = self place(200);
 			self thread hold(origin);
 		}
 		else if(phase == "radius")
@@ -271,6 +283,20 @@ def main():
                 hits = re.findall(r'contact hit (\S+) (\S*) (\d+)', game_log(home)[start:])
                 check('the knife hits the target', any(h[0] == 'MOD_MELEE' for h in hits),
                       ', '.join(f'{h[0]} {h[1]}' for h in hits) or 'no hit')
+
+                start = phase('grenade')
+                mover.pitch = 20.0
+                run(1, mover)
+                mover.frag = mover.firing = True
+                run(0.6, mover)  # one throw: held for 6 commands, then let go
+                mover.frag = mover.firing = False
+                end = time.time() + 8
+                while time.time() < end and 'contact hit MOD_GRENADE' not in game_log(home)[start:]:
+                    run(0.3, mover)
+                mover.pitch = 0.0
+                hits = re.findall(r'contact hit (\S+) (\S*) (\d+)', game_log(home)[start:])
+                check('a thrown grenade blasts the target', any(h[0] == 'MOD_GRENADE_SPLASH' for h in hits),
+                      ', '.join(f'{h[0]} {h[2]}' for h in hits) or 'no hit')
 
                 start = phase('radius')
                 run(1, mover)

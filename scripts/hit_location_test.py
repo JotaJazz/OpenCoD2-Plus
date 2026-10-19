@@ -31,7 +31,7 @@ DEFAULT_BINARY = {
     (115, True): 'build/check-linux-10/cod2_linux', (118, True): 'build/check-linux/cod2_linux',
 }
 RCON = 'hitpw'
-BUTTON_MELEE = 4  # q_shared.h
+BUTTON_MELEE, BUTTON_FRAG = 4, 65536  # q_shared.h
 PREFERENCES = os.path.expanduser('~/.cod2/preferences')
 WEAPON = 'g43_mp'  # 10 rounds: enough for both aims without a reload
 DISTANCE = 120
@@ -133,13 +133,15 @@ Callback_PlayerKilled(eInflictor, eAttacker, iDamage, sMeansOfDeath, sWeapon, vD
 class Shooter(cod2client.Client):
     """A minimal client that sends the full usercmd, the one with the weapon
     and the pitch; it stands still unless walking (forward), and while firing
-    it presses the attack button, or the melee one, on every other command."""
+    it presses the attack button on every other command, or the melee or
+    frag grenade one for 6 commands out of 12."""
     weapon = 0
     firing = False
     attack = False
     pitch = 0.0  # degrees down from the view the spawn gives
     walking = False  # the forward key
     melee = False  # the melee button, while firing
+    frag = False  # the frag grenade button, while firing
 
     def _parse(self, sequence, data):
         # the commands follow the server's clock: from 1000 by 50 a command,
@@ -154,9 +156,9 @@ class Shooter(cod2client.Client):
         message_ack = self.incoming_sequence
         key = (self.checksum_feed ^ message_ack ^ hash_key(self._acknowledged()[1])) & 0xffffffff
         self.server_time += 50
-        # a press every other command; a melee takes longer, held for 6
+        # a press every other command; a melee or a grenade takes longer, held for 6
         self.presses = getattr(self, 'presses', 0) + 1
-        self.attack = self.firing and (self.presses // 6 % 2 == 0 if self.melee else not self.attack)
+        self.attack = self.firing and (self.presses // 6 % 2 == 0 if self.melee or self.frag else not self.attack)
 
         # MSG_ReadDeltaUsercmdKey against the null command
         payload.bits(CLC_MOVE_NO_DELTA, 3)
@@ -165,7 +167,7 @@ class Shooter(cod2client.Client):
         payload.long(self.server_time)
         payload.bits(1 ^ (key & 1), 1)           # something changed
         payload.bits(1 ^ (key & 1), 1)           # not only buttons, angles and move
-        payload.bits(int(self.attack and not self.melee) ^ (key & 1), 1)
+        payload.bits(int(self.attack and not (self.melee or self.frag)) ^ (key & 1), 1)
         if self.pitch:
             payload.bits(1, 1)
             payload.bits((int(self.pitch * 65536 / 360) & 0xffff) ^ (key & 0xffff), 16)
@@ -179,9 +181,9 @@ class Shooter(cod2client.Client):
             payload.bits(0, 1)                   # no move keys
         key ^= self.server_time
         payload.bits(0, 1)                       # roll unchanged
-        if self.melee and self.attack:
+        if (self.melee or self.frag) and self.attack:
             payload.bits(1, 1)
-            payload.bits((BUTTON_MELEE >> 1) ^ (key & 0x3ffff), 18)
+            payload.bits(((BUTTON_MELEE if self.melee else BUTTON_FRAG) >> 1) ^ (key & 0x3ffff), 18)
         else:
             payload.bits(0, 1)                   # no other buttons
         if self.weapon:
