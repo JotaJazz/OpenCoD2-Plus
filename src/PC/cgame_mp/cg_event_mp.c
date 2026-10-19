@@ -86,7 +86,6 @@ extern const char *va(const char *fmt, ...);
 #define CENT_LERPORIGIN 0x1ec
 #define CENT_ETYPE 0xf4
 
-#define CG_CLIENTINFO 0xe0900
 
 #define SNAP_FLAGS 0x18
 #define SNAP_PS_CLIENTNUM 0xd8
@@ -113,8 +112,6 @@ extern const char *va(const char *fmt, ...);
 #define CGS_SND_BULLET_FLESH 0xbcec
 #define CGS_SND_GRENADE_BOUNCE 0xbd48
 #define CGS_FXLOOKUP 0xc200
-#define CGS_FX_CUSTOM 0x5f80
-#define CGS_FX_DEATHFX 0x67c0
 
 static const float f_0_01 = 0.009999999776482582f;
 static const float f_4_0 = 4.0f;
@@ -177,8 +174,8 @@ static void CG_Obituary(centity_t *cent)
     float iconWidth;
     const char *iconShader;
     int iconHorzFlip;
-    char *victimCI;
-    char *attackerCI;
+    clientInfo_t *victimCI;
+    clientInfo_t *attackerCI;
 
     attackerColor[0] = 1.0f;
     attackerColor[1] = 1.0f;
@@ -276,37 +273,35 @@ static void CG_Obituary(centity_t *cent)
 
     }
     {
-        char *clientInfoBase = (char *)cg + CG_CLIENTINFO + target * 1208;
-        victimCI = ((char *)clientInfoBase + offsetof(clientInfo_t, name[8]));
+        /* by field: CG_CLIENTINFO (cg + 0xe0900) and its offsets missed
+         * this cg_t's bgs.clientinfo by 0x1014 */
+        victimCI = &cg->bgs.clientinfo[target];
 
-        if (((clientInfo_t *)clientInfoBase)->infoValid == 0)
+        if (victimCI->infoValid == 0)
             return;
 
-        I_strncpyz(targetName, ((char *)clientInfoBase + offsetof(clientInfo_t, name[20])), 0x20);
+        I_strncpyz(targetName, victimCI->name, 0x20);
 
         I_strncat(targetName, 0x22, (const char *)"^7");
 
-        CG_DrawScoreboard_GetTeamColor(*(int *)(((char *)victimCI + offsetof(clientInfo_t, oldteam)) - 0x14), victimColor);
+        CG_DrawScoreboard_GetTeamColor(victimCI->team, victimColor);
 
-        int localClient = cg->clientNum;
-        char *localCI = (char *)cg + CG_CLIENTINFO + localClient * 1208;
-        if (((clientInfo_t *)localCI)->infoValid == 0)
+        if (cg->bgs.clientinfo[cg->clientNum].infoValid == 0)
             return;
     }
 
     if ((unsigned int)attacker <= 63) {
 
-        char *atkInfoBase = (char *)cg + CG_CLIENTINFO + attacker * 1208;
-        attackerCI = ((char *)atkInfoBase + offsetof(clientInfo_t, name[8]));
+        attackerCI = &cg->bgs.clientinfo[attacker];
 
-        if (((clientInfo_t *)atkInfoBase)->infoValid == 0)
+        if (attackerCI->infoValid == 0)
             return;
 
-        I_strncpyz(attackerName, ((char *)atkInfoBase + offsetof(clientInfo_t, name[20])), 0x20);
+        I_strncpyz(attackerName, attackerCI->name, 0x20);
 
         I_strncat(attackerName, 0x22, (const char *)"^7");
 
-        CG_DrawScoreboard_GetTeamColor(*(int *)(((char *)attackerCI + offsetof(clientInfo_t, oldteam)) - 0x14), attackerColor);
+        CG_DrawScoreboard_GetTeamColor(attackerCI->team, attackerColor);
 
         snap = (char *)cg->nextSnap;
         if (target == *(int *)(snap + SNAP_PS_CLIENTNUM)) {
@@ -317,7 +312,7 @@ static void CG_Obituary(centity_t *cent)
 
         attackerName[0] = '\0';
         attacker = 0x3fe;
-        attackerCI = (char *)0;
+        attackerCI = NULL;
     }
 
     if (attacker == target) {
@@ -330,9 +325,9 @@ static void CG_Obituary(centity_t *cent)
 
         if (attacker == localClientNum) {
 
-            if (attackerCI != (char *)0) {
-                int atkTeam = *(int *)(((char *)attackerCI + offsetof(clientInfo_t, oldteam)) - 0x14);
-                if (atkTeam != 0 && atkTeam == *(int *)(((char *)victimCI + offsetof(clientInfo_t, oldteam)) - 0x14)) {
+            if (attackerCI != NULL) {
+                int atkTeam = attackerCI->team;
+                if (atkTeam != 0 && atkTeam == victimCI->team) {
 
                     const char *msg = va((const char *)"CGAME_YOUKILLED\x15^1&&2^7 %s\x14%s", targetName, (const char *)"CGAME_TEAMMATE");
 
@@ -354,9 +349,9 @@ static void CG_Obituary(centity_t *cent)
             }
         } else if (target == localClientNum) {
 
-            if (attackerCI != (char *)0) {
-                int atkTeam = *(int *)(((char *)attackerCI + offsetof(clientInfo_t, oldteam)) - 0x14);
-                if (atkTeam != 0 && atkTeam == *(int *)(((char *)victimCI + offsetof(clientInfo_t, oldteam)) - 0x14)) {
+            if (attackerCI != NULL) {
+                int atkTeam = attackerCI->team;
+                if (atkTeam != 0 && atkTeam == victimCI->team) {
 
                     const char *msg = va((const char *)"CGAME_YOUWEREKILLED\x15^1&&2^7 %s\x14%s", attackerName, (const char *)"CGAME_TEAMMATE");
                     if (cg->inKillCam == 0) {
@@ -1482,7 +1477,7 @@ void CG_EntityEvent(centity_t *cent, int event)
                 return;
             }
 
-            EffectTemplate *effect = *(EffectTemplate **)((char *)cgs + CGS_FX_DEATHFX + fxIdx * 4);
+            EffectTemplate *effect = cgs->fxs[fxIdx];
 
             AngleVectors(angles, forward, 0, up);
 
@@ -1498,8 +1493,10 @@ void CG_EntityEvent(centity_t *cent, int event)
             {
                 signed char c0 = csStr2[0];
                 signed char c1 = csStr2[1];
-                int fxIdx2 = c1 + c0 * 10;
-                EffectTemplate *effect = *(EffectTemplate **)((char *)cgs + CGS_FX_CUSTOM + fxIdx2 * 4);
+                /* two digits: the binary's cgs + 0x5f80 + (c0 * 10 + c1) * 4 is
+                 * fxs[(c0 - '0') * 10 + c1 - '0'] with '0' * 11 folded in */
+                int fxIdx2 = (c0 - '0') * 10 + (c1 - '0');
+                EffectTemplate *effect = cgs->fxs[fxIdx2];
                 FxBoltInfo boltInfo;
                 scr_string_t tagName;
 

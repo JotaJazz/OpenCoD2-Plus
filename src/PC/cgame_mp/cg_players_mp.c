@@ -195,16 +195,18 @@ void CG_PlayerSprites(centity_t *cent)
     int height;
     MaterialHandle material;
 
-    ci = (byte *)((char *)cg + cent->nextState.clientNum * CI_STRIDE);
-    if (!*(int *)(ci + 0xe0914))
+    /* by field: cg + 0xe0914 + n * 1208 missed this cg_t's
+     * bgs.clientinfo[n] by 0x1000 */
+    ci = (byte *)&cg->bgs.clientinfo[cent->nextState.clientNum];
+    if (!((clientInfo_t *)ci)->infoValid)
         return;
-    iTeam = *(int *)(ci + 0xe0940);
+    iTeam = ((clientInfo_t *)ci)->team;
 
     snap = (*(byte **)&cg->nextSnap);
-    ci = (byte *)((char *)cg + ((snapshot_t *)snap)->ps.clientNum * CI_STRIDE);
-    if (!*(int *)(ci + 0xe0914))
+    ci = (byte *)&cg->bgs.clientinfo[((snapshot_t *)snap)->ps.clientNum];
+    if (!((clientInfo_t *)ci)->infoValid)
         return;
-    localTeam = *(int *)(ci + 0xe0940);
+    localTeam = ((clientInfo_t *)ci)->team;
 
     {
         int headicon = cent->nextState.iHeadIcon;

@@ -152,8 +152,6 @@ void CG_DrawScoreboard_GetTeamColor(int team, vec_t *color)
     color[3] = savedAlpha;
 }
 
-#define CG_SCOREBOARD_CLIENTINFO_OFFSET 0xe0914
-
 static int CG_ScoreboardBannerHeight(void)
 {
     const dvar_t *dvar = cg_scoreboardBannerHeight;
@@ -165,7 +163,7 @@ static clientInfo_t *CG_ScoreboardClientInfo(cg_t *cg, int clientNum)
     if (!cg || clientNum < 0 || clientNum >= 64)
         return 0;
 
-    return &((clientInfo_t *)((byte *)cg + CG_SCOREBOARD_CLIENTINFO_OFFSET))[clientNum];
+    return &cg->bgs.clientinfo[clientNum];
 }
 
 static int CG_Scoreboard_BeginVisibleLine(cg_t *cg, int *drawLine, float y, float lineHeight, float *nextY)
