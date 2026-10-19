@@ -125,6 +125,7 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
   - A bone a controller turns (`DObjSetControlTagAngles`: a player's torso and head after the view, a turret's aim) is composed as bone * parent, not parent * bone: a player looking up had its head elsewhere, and in a local game level shots at it hit nothing.
   - An unrotated bone with simple quats adds its anim's weight to the identity, not the weight scaled for shorts, which made such an anim count for almost nothing in a blend.
   - An anim at its end (time 1) or without frames takes each channel's last key, `frames[size]`, as `XAnimCalcNonLoopEnd` does; the time index stopped one key short.
+  - `DObjCalcSkel` creates a model's duplicate parts when they are missing, so the bones of a model melded without a tag (a player's head and helmet) copy the body's on a local server too.
   - `DObjGetHierarchyBits` no longer prints `[ckpt]` lines for every bone query.
   - `CM_PointContents` returns 0 for a leaf without brushes, and `CM_SortNode` adds an entity's link contents to the sector it moves it into.
 - **The crash report lists the top of the stack** on 32-bit Linux, the only way back to the caller when `eip` is bad.
@@ -154,4 +155,4 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 - The MinGW dedicated server builds with CoD2rev-Plus's server, game, bgame, core and `win32` platform code, and its types match CoD2rev-Plus's (`scripts/layout_parity.py --variant mingw`), but it has not been run (no Wine here).
 - The MSVC build is not checked by the scripts above and still compiles C with the reconstructed VM and server.
 - The engine's trace core, which the client's local server runs, is simpler than CoD2rev-Plus's: players and other box entities are traced as boxes, not capsules (their corners collide about 21 units out instead of 15), world brushes are expanded as for a box, a trace stops on a face without the 0.125 gap, a trace that does not move does not test terrain, a sight trace through the world lists at most 1024 leaves instead of walking the tree, and a sight trace against a box entity is a placeholder (players hardly block `sightTracePassed`). Matching them means porting CoD2rev-Plus's `CM_Trace` and `CM_SightTrace` paths into `src/PC/qcommon`.
-- The engine's `XAnimCalc` does not normalize blended translations by their weight, and its `DObjCalcSkel` and `DObjTraceline` do not create a model's duplicate parts, as CoD2rev-Plus's do; a looping anim that wraps in a server frame skips the notetracks just after its start.
+- The engine's `XAnimCalc` does not normalize blended translations by their weight, and a looping anim that wraps in a server frame skips the notetracks just after its start.
