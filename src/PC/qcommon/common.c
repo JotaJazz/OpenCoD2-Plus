@@ -3,6 +3,7 @@
 #include "bytematch.h"
 #include "cod2_feature_config.h"
 #include <stdarg.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <time.h>
 /* dvar globals */
@@ -1392,6 +1393,35 @@ void Com_ExecStartupConfigs(const char *configFile)
     Cbuf_Execute();
 }
 
+#if defined(COD2_PLUS_LIBCOD) && !COD2_IS_PATCH_13
+/* libcod's server, built as 1.0, takes the clients of protocols 115 to 119
+ * (SV_DirectConnect in src/server/sv_client_mp.cpp): CoD2rev-Plus's core then
+ * speaks each one's netchan and stats. The client's local server runs on the
+ * engine's core, which speaks 1.0 only, so a connect of another protocol is
+ * refused here, with the reply of the server without libcod. */
+static qboolean Com_RefuseOtherProtocol(netadr_t from, const msg_t *msg)
+{
+    extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
+    extern int I_strnicmp(const char *s1, const char *s2, size_t count);
+    char line[1024];
+    const char *protocol;
+    int len;
+
+    if (msg->cursize < 4 + 7 || *(const int *)msg->data != -1)
+        return 0;
+    len = msg->cursize - 4 < (int)sizeof(line) - 1 ? msg->cursize - 4 : (int)sizeof(line) - 1;
+    memcpy(line, msg->data + 4, len);
+    line[len] = '\0';
+    if (I_strnicmp(line, "connect", 7) != 0)
+        return 0;
+    protocol = strstr(line, "\\protocol\\");
+    if (protocol && atoi(protocol + 10) == COD2_PROTOCOL_VERSION)
+        return 0;
+    NET_OutOfBandPrint((netsrc_t)1, from, va("error\nEXE_SERVER_IS_DIFFERENT_VER\x15%s\n", "1.0"));
+    return 1;
+}
+#endif
+
 int Com_EventLoop(void)
 {
     extern void CL_KeyEvent(int key, int down, int time);
@@ -1495,6 +1525,10 @@ int Com_EventLoop(void)
             memcpy(buf.data, (char *)evPtr + sizeof(netadr_t), dataLen);
             Z_FreeInternal(evPtr);
             CL_SwitchToLocalClient(0);
+#if defined(COD2_PLUS_LIBCOD) && !COD2_IS_PATCH_13
+            if (com_sv_running->current.enabled && Com_RefuseOtherProtocol(evFrom, &buf))
+                break;
+#endif
             if (com_sv_running->current.enabled)
                 SV_PacketEvent(evFrom, &buf);
             else

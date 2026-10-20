@@ -118,7 +118,9 @@ endif()
 # games. Their LIBCOD blocks in the server, game, bgame, core and script VM
 # are compiled in with it.
 option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server and the client's local games" ON)
-if(NOT COD2_PLUS_SERVER)
+if(NOT COD2_PLUS_SERVER OR (COD2_WIN32_CLIENT AND NOT COD2_PLUS_CLIENT_SERVER))
+  # a MinGW client's configuration has no dedicated server: libcod only with
+  # its local server
   set(COD2_PLUS_LIBCOD OFF)
 endif()
 # the client too: then the script VM, which both share, has libcod's blocks;
@@ -522,13 +524,16 @@ elseif(COD2_PLUS_CLIENT_SERVER)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
   if(COD2_LIBCOD_CLIENT)
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
-    add_compile_definitions(COD2_PLUS_LIBCOD=1)  # the engine's Com_Frame feeds libcod's hitch callback
   endif()
 elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
+if(COD2_LIBCOD_CLIENT)
+  # the engine's Com_Frame and Com_EventLoop (common.c) work for libcod
+  target_compile_definitions(${W32_EXE} PRIVATE COD2_PLUS_LIBCOD=1)
+endif()
 if(COD2_PLUS_LIBCOD)
   # Mbed TLS: BCryptGenRandom for its entropy, the system store for its CAs
   target_link_libraries(${W32_EXE} PRIVATE bcrypt crypt32)
@@ -717,7 +722,7 @@ if(COD2_PLUS_SERVER)
   cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
   add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
   if(COD2_LIBCOD_CLIENT)
-    # the engine's Com_Frame (common.c, here) feeds libcod's hitch callback
+    # the engine's Com_Frame and Com_EventLoop (common.c, here) work for libcod
     target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
   endif()
   cod2_plus_server()
