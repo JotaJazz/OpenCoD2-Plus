@@ -1524,7 +1524,8 @@ void MSG_WriteDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 
     serverTimeDelta = to->serverTime - from->serverTime;
 
-    if (serverTimeDelta < 256) {
+    /* unsigned: a time that went back is written in full */
+    if ((unsigned int)serverTimeDelta < 256) {
         MSG_WriteBit1_core(msg);
         MSG_WriteByte_core(msg, serverTimeDelta);
     } else {

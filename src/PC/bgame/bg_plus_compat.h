@@ -53,6 +53,7 @@ static inline int I_clamp(const int val, const int min, const int max) { return 
 static inline float I_fabs(const float value) { return fabs(value); }
 static inline float I_sqrt(const float value) { return sqrt(value); }
 static inline int FloatSign(const float x) { return -2 * (x < 0.0f) + 1; }
+static inline int Q_rint(float in) { return floor(in + 0.5); }
 static inline float VectorLength(const vec_t *v) { return I_sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); }
 static inline float VectorLengthSquared(const vec_t *v) { return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]; }
 static inline float Vec2LengthSq(const vec_t *v) { return v[0] * v[0] + v[1] * v[1]; }

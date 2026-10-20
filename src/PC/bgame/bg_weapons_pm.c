@@ -165,7 +165,7 @@ qboolean BG_SetPlayerWeaponForSlot( playerState_t *ps, unsigned int slot, int iW
 		return qfalse;
 	}
 
-	if ( BG_GetWeaponDef(iWeaponIndex)->weapSlot - 1 > 1 )
+	if ( (unsigned int)BG_GetWeaponDef(iWeaponIndex)->weapSlot - 1 > 1 )
 	{
 		return qfalse;
 	}

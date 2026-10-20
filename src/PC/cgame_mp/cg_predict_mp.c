@@ -20,7 +20,7 @@ extern int CM_TransformedBoxTraceExternal(trace_t *results, const vec_t *start, 
 extern float CM_RadiusOfModel(unsigned int model);
 extern int CL_GetCurrentCmdNumber(void);
 extern qboolean CL_GetUserCmd(int cmdNumber, usercmd_t *ucmd);
-extern void PM_UpdateViewAngles(playerState_t *ps, const usercmd_t *cmd, int, int);
+extern void PM_UpdateViewAngles(playerState_t *ps, float msec, usercmd_t *cmd, byte handler);
 extern const float LerpAngle(const float from, const float to, const float frac);
 extern void Pmove(pmove_t *pm);
 extern void CG_TransitionPlayerState(playerState_t *ps, playerState_t *ops);
@@ -128,7 +128,7 @@ static void CG_InterpolatePlayerState(qboolean grabAngles)
     if (grabAngles) {
         int cmdNum = CL_GetCurrentCmdNumber();
         CL_GetUserCmd(cmdNum, &cmd);
-        PM_UpdateViewAngles(out, &cmd, 0, 0);
+        PM_UpdateViewAngles(out, 0, &cmd, 0);
     }
 
     if (next->serverTime <= prev->serverTime)
