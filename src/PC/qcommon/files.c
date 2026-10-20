@@ -1117,8 +1117,11 @@ qboolean FS_CompareIwds(char *needediwds, int len, qboolean dlstring)
 
         if (!dlstring) {
 
+            /* as the original (0x43bb00): the name, ".iwd", a note when a
+             * file of that name is there with another checksum, a line
+             * break; the reconstruction had " " and "@" for them */
             I_strncat(needediwds, len, iwdName);
-            I_strncat(needediwds, len, " ");
+            I_strncat(needediwds, len, ".iwd");
 
             {
                 char *iwdFile = va("%s.iwd", iwdName);
@@ -1131,17 +1134,19 @@ qboolean FS_CompareIwds(char *needediwds, int len, qboolean dlstring)
                     if (f != NULL) {
                         FS_FileClose(f);
 
-                        I_strncat(needediwds, len, "@");
+                        I_strncat(needediwds, len, " (local file exists with wrong checksum)");
                     }
                 }
             }
 
-            I_strncat(needediwds, len, " ");
+            I_strncat(needediwds, len, "\n");
         } else {
 
+            /* "@remote.iwd@local.iwd", the local name a new one when a
+             * file of that name is there with another checksum */
             I_strncat(needediwds, len, "@");
             I_strncat(needediwds, len, iwdName);
-            I_strncat(needediwds, len, " ");
+            I_strncat(needediwds, len, ".iwd");
 
             I_strncat(needediwds, len, "@");
 
@@ -1161,12 +1166,10 @@ qboolean FS_CompareIwds(char *needediwds, int len, qboolean dlstring)
                     } else {
 
                         I_strncat(needediwds, len, iwdName);
-                        I_strncat(needediwds, len, " ");
+                        I_strncat(needediwds, len, ".iwd");
                     }
                 }
             }
-
-            I_strncat(needediwds, len, " ");
         }
 
     next_iwd:
