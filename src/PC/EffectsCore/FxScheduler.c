@@ -154,6 +154,51 @@ EffectTemplate *FX_TryRegisterEffect(const char *name)
     return registeredTemplate;
 }
 
+/* fxRestart frees every template's primitives (FX_FreeSystem, as the
+ * original) while the cgame, the weapon definitions and the entities keep
+ * pointers to the templates, which then played primitives without materials
+ * and crashed the client. The templates themselves are on the hunk and stay:
+ * FX_KeepTemplates notes them before the restart, and FX_ReloadTemplates
+ * registers them again after it and parses each file into its old template,
+ * so every pointer to it plays the effect as the file now has it. */
+static EffectTemplate *keptTemplates[256];
+static int keptTemplateCount;
+
+void FX_KeepTemplates(void)
+{
+    memcpy(keptTemplates, effectTemplateArray, sizeof(keptTemplates));
+    keptTemplateCount = effectTemplateArrayCount;
+}
+
+void FX_ReloadTemplates(void)
+{
+    GenericParser2 parser;
+    EffectTemplate *fx;
+    EffectTemplate *old;
+    int i;
+
+    /* first all of them, so the effects one file names (impact, death,
+     * emitted) resolve to the old templates too */
+    memcpy(effectTemplateArray, keptTemplates, sizeof(effectTemplateArray));
+    effectTemplateArrayCount = keptTemplateCount;
+
+    for (i = 0; i < keptTemplateCount; i++) {
+        old = keptTemplates[i];
+        GenericParser2_GenericParser2(&parser);
+        fx = FX_ParseEffect(&parser, old->mEffectName);
+        if (fx) {
+            old->mPrimitiveCount = fx->mPrimitiveCount;
+            memcpy(old->mPrimitives, fx->mPrimitives, sizeof(old->mPrimitives));
+        } else {
+            /* left empty: it plays nothing */
+            FX_Print("^1FX Error, could not reload effect '%s'\n", old->mEffectName);
+            old->mPrimitiveCount = 0;
+        }
+        ZN14GenericParser2D1Ev(&parser);
+    }
+    keptTemplateCount = 0;
+}
+
 static void GLOBAL__I__ZN17PrimitiveTemplate8gmMemMgrE(void)
 {
 }

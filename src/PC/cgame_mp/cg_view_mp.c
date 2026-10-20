@@ -40,6 +40,8 @@ extern vec3_t maxs;
 
 extern void Com_Printf(const char *fmt, ...);
 extern void FX_FreeSystem(void);
+extern void FX_KeepTemplates(void);
+extern void FX_ReloadTemplates(void);
 extern int FX_InitSystem(int maxEffects);
 extern int Cmd_Argc(void);
 extern const char *CG_Argv(int arg);
@@ -92,8 +94,10 @@ qboolean CG_DrawActiveFrame(int serverTime, DemoType demoType, CubemapShot cubem
 void CG_FxRestart(void)
 {
     Com_Printf((const char *)"FX Restarting so off-line changes are loaded.\n");
+    FX_KeepTemplates();
     FX_FreeSystem();
     FX_InitSystem(1);
+    FX_ReloadTemplates();
 }
 
 void CG_FxTest(void)
