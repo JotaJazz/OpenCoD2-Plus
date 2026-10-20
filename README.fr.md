@@ -157,6 +157,7 @@ python3 scripts/build_check.py all                      # linux (1.3), linux-10 
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # chaque appel du moteur correspond aux types de sa définition
+python3 scripts/check_var_sizes.py build/check-linux    # aucune globale n'est utilisée plus grande qu'elle n'est définie
 python3 scripts/opencod2_smoke.py /path/to/CoD2 --protocol 118
 python3 scripts/two_players_test.py /path/to/CoD2 --protocol 118
 python3 scripts/listen_test.py /path/to/CoD2 --protocol 118

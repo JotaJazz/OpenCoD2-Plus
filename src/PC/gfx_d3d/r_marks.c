@@ -16,7 +16,7 @@ typedef struct ClipPoint {
 } ClipPoint;
 
 extern r_global_permanent_t rgp;
-extern r_globals_t tr;
+extern r_globals_t rg; /* "tr" was a 64-byte stub; the renderer's globals are rg */
 
 extern int BoxOnPlaneSide(const vec_t *mins, const vec_t *maxs, const cplane_t *plane);
 extern void ClearBounds(vec_t *mins, vec_t *maxs);
@@ -113,9 +113,9 @@ static void R_MARKS_REGPARM3_ABI R_CellSurfaces(GfxCell *cell, const vec_t *mins
     int cullGroupIndex;
     GfxAabbTree *tree;
 
-    if (cell->writable.markCount == tr.markCount)
+    if (cell->writable.markCount == rg.markCount)
         return;
-    cell->writable.markCount = tr.markCount;
+    cell->writable.markCount = rg.markCount;
 
     world = rgp.world;
 
@@ -266,7 +266,7 @@ int R_MarkFragments(vec3_t *points, const vec_t *origin, vec3_t *axis, float rad
         AddPointToBounds(xyz, mins, maxs);
     }
 
-    tr.markCount++;
+    rg.markCount++;
 
     surfCount = 0;
     world = rgp.world;

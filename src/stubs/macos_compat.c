@@ -156,7 +156,7 @@ __attribute__((constructor)) static void init_rune_locale(void)
 }
 
 extern void *sDisplayList[3];   /* matches the real def (void*[3]); was [12] (x86 4-byte slots) */
-extern int sInWindowMode;
+extern unsigned char sInWindowMode; /* MacDisplay.c's Boolean, one byte: an int wrote the three after it */
 
 struct DisplayMode {
     unsigned int width;

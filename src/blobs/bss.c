@@ -1310,12 +1310,13 @@ ping_t cl_pinglist[16];
 unsigned char cl_pinglist[16704];
 #endif
 Bool g_waitingForServer;
+/* as large as the clientStatic_t the client uses: the 1.0 binary's size
+   (2755264) is 162 KB short of it, and cls.debug, among others, lay over
+   the next globals (the renderer's entity lighting wrote over it) */
 #if defined(COD2_X64) || defined(__x86_64__)
-clientStatic_t cls;   /* x86 blob 2755264; x64 sizeof(clientStatic_t)=2756928 -> overflow */
-#elif COD2_IS_PATCH_13
-unsigned char cls[0x2c8a18];
+clientStatic_t cls;
 #else
-unsigned char cls[2755264];
+unsigned char cls[sizeof(clientStatic_t)] __attribute__((aligned(16)));
 #endif
 
 unsigned char clientConnections[sizeof(clientConnection_t)];

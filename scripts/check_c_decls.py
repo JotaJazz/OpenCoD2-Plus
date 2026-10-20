@@ -94,8 +94,9 @@ def parse(readelf, path):
         if tag in ('DW_TAG_pointer_type', 'DW_TAG_reference_type', 'DW_TAG_rvalue_reference_type',
                    'DW_TAG_array_type', 'DW_TAG_subroutine_type'):
             return 'ptr'
-        size = re.findall(r'(\d+)', a.get('DW_AT_byte_size', ''))
-        size = size[-1] if size else '?'
+        # readelf prints the larger sizes in hex
+        size = re.search(r'(0x[0-9a-f]+|\d+)\s*$', a.get('DW_AT_byte_size', ''))
+        size = str(int(size.group(1), 0)) if size else '?'
         if tag == 'DW_TAG_base_type':
             enc = a.get('DW_AT_encoding', '')
             if 'float' in enc:
