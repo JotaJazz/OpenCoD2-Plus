@@ -112,7 +112,7 @@ extern void StatMon_Warning(int type, int timeout, const char *msg);
 extern void Sys_ShowConsole(int visLevel, qboolean quitOnClose);
 extern void Sys_NormalExit(void);
 extern void SV_AddDedicatedCommands(void);
-extern qboolean Com_HasPlayerProfile(void);
+extern Bool Com_HasPlayerProfile(void);
 extern void Com_BuildPlayerProfilePath(char *buf, int bufsize, const char *suffix);
 
 extern const dvar_t *Dvar_RegisterInt(const char *name, int value, int min, int max, int flags);
@@ -523,7 +523,7 @@ static void Com_Crash_f(void)
 void Com_WriteCDKey(void)
 {
     extern qboolean CL_CDKeyValidate(const char *key, const char *checksum);
-    extern unsigned char MacPreferences_PutString(const char *key, const char *value);
+    extern void MacPreferences_PutString(const char *key, const char *value);
     char regkey[21];
 
     if (!CL_CDKeyValidate(cl_cdkey, cl_cdkeychecksum)) {
@@ -870,7 +870,7 @@ void Com_SetRecommended(qboolean restart)
     extern int atoi(const char *s);
     extern void Cbuf_AddText(const char *text);
     extern void Cbuf_Execute(void);
-    extern qboolean Dvar_AnyLatchedValues(void);
+    extern Bool Dvar_AnyLatchedValues(void);
 
     SysInfo info;
     void *csv = 0;
@@ -1091,8 +1091,8 @@ void Com_CheckSetRecommended(void)
 {
     extern int FS_ReadFile(const char *path, void **buffer);
     extern void FS_FreeFile(void *buffer);
-    extern qboolean Sys_HasConfigureChecksumChanged(int checksum);
-    extern qboolean Sys_HasInfoChanged(void);
+    extern Bool Sys_HasConfigureChecksumChanged(int checksum);
+    extern Bool Sys_HasInfoChanged(void);
     extern void Dvar_SetBool(const dvar_t *dvar, int value);
 
     int needSet;
@@ -1131,7 +1131,7 @@ void Com_CheckSetRecommended(void)
 
 void Com_ReadCDKey(void)
 {
-    extern qboolean MacPreferences_GetString(const char *key, char *buf, int bufsize, int defaultVal);
+    extern unsigned char MacPreferences_GetString(const char *key, char *buf, int bufsize, const char *defaultVal);
     extern qboolean CL_CDKeyValidate(const char *key, const char *checksum);
     char regkey[21];
 
@@ -1272,7 +1272,7 @@ static BM_NOINLINE void Com_ErrorCleanup(void)
     extern void Cbuf_Init(void);
     extern qboolean UI_SetActiveMenu(int menu);
     extern void CL_ConsoleFixPosition(void);
-    extern qboolean QuitOnError(void);
+    extern Bool QuitOnError(void);
     extern void I_strncpyz(char *dest, const char *src, int destsize);
     extern const char *SEH_LocalizeTextMessage(const char *msg, const char *context, int flag);
 

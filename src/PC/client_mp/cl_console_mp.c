@@ -62,7 +62,7 @@ extern void SCR_DrawSmallStringExt(int x, int y, const char *str, const float *c
 extern void SCR_DrawConsoleString(int x, int y, const short int *text, int len, const float *color);
 extern int SEH_PrintStrlen(const char *str);
 extern const char *getBuildNumber(void);
-extern int Sys_IsMainThread(void);
+extern Bool Sys_IsMainThread(void);
 extern int Sys_Milliseconds(void);
 extern void Com_StripExtension(const char *in, char *out);
 #ifndef _WIN32

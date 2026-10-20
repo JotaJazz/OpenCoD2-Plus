@@ -212,7 +212,7 @@ extern void LAN_MarkServerDirty(int source, int index, int dirty);
 extern int LAN_UpdateDirtyPings(int source);
 extern void LAN_GetServerAddressString(int source, int index, char *addr, int addrSize);
 extern void LAN_RemoveServer(int source, const char *addr);
-extern int LAN_LoadCachedServers(void);
+extern void LAN_LoadCachedServers(void);
 extern e_status CIN_StopCinematic(int handle);
 extern int CIN_PlayCinematic(const char *name, int x, int y, int w, int h, int flags);
 extern e_status CIN_RunCinematic(int handle);

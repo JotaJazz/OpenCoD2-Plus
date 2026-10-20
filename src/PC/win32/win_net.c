@@ -42,7 +42,7 @@ extern int ioctlsocket(int s, long cmd, unsigned long *argp);
 #else
 extern int ioctl(int fd, unsigned long request, void *arg); /* win32_stubs.c */
 #endif
-extern qboolean I_isdigit(int c);
+extern Bool I_isdigit(int c);
 extern int I_stricmp(const char *s1, const char *s2);
 
 typedef struct {
@@ -63,7 +63,7 @@ static qboolean NET_GetDvars(void);
 void NET_Sleep(int msec);
 qboolean Sys_StringToAdr(const char *s, netadr_t *a);
 qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message);
-void Sys_SendPacket(int length, const void *data, netadr_t to);
+Bool Sys_SendPacket(int length, const void *data, netadr_t to);
 void NET_OpenIP(void);
 void NET_Config(qboolean enableNetworking);
 void NET_Init(void);
@@ -310,7 +310,8 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
     return 0;
 }
 
-void Sys_SendPacket(int length, const void *data, netadr_t to)
+/* sent or not, as CoD2rev-Plus's: NET_SendPacket returns it */
+Bool Sys_SendPacket(int length, const void *data, netadr_t to)
 {
     int net_socket;
     struct sockaddr_in addr;
@@ -319,13 +320,13 @@ void Sys_SendPacket(int length, const void *data, netadr_t to)
 
     if (to.type != NA_BROADCAST && to.type != NA_IP) {
         Com_Error(0, "Sys_SendPacket: bad address type");
-        return;
+        return 0;
     }
 
     net_socket = ip_socket;
 
     if (!net_socket) {
-        return;
+        return 0;
     }
 
     memset(&addr, 0, sizeof(addr));
@@ -343,7 +344,7 @@ void Sys_SendPacket(int length, const void *data, netadr_t to)
     if (usingSocks && to.type == NA_IP) {
         if (length > (int)sizeof(socksBuf) - 10) {
             Com_Printf("Sys_SendPacket: SOCKS packet too large (%i bytes)\n", length);
-            return;
+            return 0;
         }
         socksBuf[0] = 0;
         socksBuf[1] = 0;
@@ -358,21 +359,22 @@ void Sys_SendPacket(int length, const void *data, netadr_t to)
     }
 
     if (ret != -1) {
-        return;
+        return 1;
     }
 
     err = WSAGetLastError();
     if (err == 10035) {
-        return;
+        return 0;
     }
 
     if (err == 10049) {
         if (to.type == NA_BROADCAST) {
-            return;
+            return 0;
         }
     }
 
     Com_Printf("Sys_SendPacket: %s\n", strerror(errno));
+    return 1;
 }
 
 void NET_OpenIP(void)

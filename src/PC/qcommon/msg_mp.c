@@ -875,7 +875,7 @@ void MSG_WriteLong(msg_t *msg, int c)
 }
 
 extern void Huff_Init(huffman_t *huff);
-extern void Huff_addRef(void *huff, int ch);
+extern void Huff_addRef(void *huff, int ch, msg_t *mbuf, int offset);
 void MSG_Init(msg_t *buf, byte *data, int length)
 {
     int i, j;
@@ -885,9 +885,9 @@ void MSG_Init(msg_t *buf, byte *data, int length)
         Huff_Init(&msgHuff);
         for (i = 0; i < 256; i++) {
             for (j = 0; j < msg_hData[i]; j++) {
-                Huff_addRef(&msgHuff, (byte)i);
+                Huff_addRef(&msgHuff, (byte)i, NULL, 0);
 
-                Huff_addRef(&msgHuff.decompressor, (byte)i);
+                Huff_addRef(&msgHuff.decompressor, (byte)i, NULL, 0);
             }
         }
     }

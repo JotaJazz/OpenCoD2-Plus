@@ -96,7 +96,7 @@ extern void *__Znam(int size);
 extern float flrand(float min, float max);
 extern void Particle_Particle(const Particle *particle);
 extern void Particle_IntegrateTotalVelocity(const Particle *particle, int time, vec_t *velSum);
-extern void Cloud_Cloud(void *cloud);
+extern void Cloud_Cloud(void *cloud, const void *other);
 extern void Cylinder_Cylinder(const Cylinder *_this);
 extern void Light_Light(const Light *_this);
 extern const orientation_t *FxBoltFrame_GetOrientation(const FxBoltFrame *_this);
@@ -962,13 +962,13 @@ static Bool FX_AddPrimitive(EffectPrimitive *prim, Effect *particle, const vec_t
     return FX_AddPrimitive_impl((byte *)prim, particle, origin);
 }
 
-extern void Cloud_Cloud(void *cloud);
+extern void Cloud_Cloud(void *cloud, const void *other);
 void FX_AddCloud(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
     Effect *p = (Effect *)__Znam(sizeof(Cloud));
     if (p)
         memset(p, 0, sizeof(Cloud));
-    Cloud_Cloud(p);
+    Cloud_Cloud(p, NULL);
     if (!p)
         return;
     int added = FX_AddPrimitive(prim, p, origin);
@@ -1955,7 +1955,7 @@ int FX_Restore(MemoryFile *memFile)
             Cylinder_Cylinder( (const Cylinder *)(eff));
             break;
         case 6:
-            Cloud_Cloud(eff);
+            Cloud_Cloud(eff, NULL);
             break;
         case 7:
             OrientedParticle_OrientedParticle((const OrientedParticle *)(eff));

@@ -3032,7 +3032,7 @@ int g_rb_skip_reason = 0;
 extern void RB_DecideDefaultSamplerState(void);
 extern void RB_SetAnisotropy(void);
 extern void RB_SetAlphaAntiAliasingState(int state);
-extern qboolean R_RecoverLostDevice(void);
+extern Bool R_RecoverLostDevice(void);
 extern void RB_DrawDebug(const GfxViewParms *viewParms);
 extern void RB_ChangeIndices(int value);
 extern void RB_ClearAllStreamSources(void);

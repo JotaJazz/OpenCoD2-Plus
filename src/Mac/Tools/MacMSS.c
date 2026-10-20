@@ -25,8 +25,8 @@ int CSoundEngine_mixer_count_3D(CSoundEngine *engine);
 void CSoundEngine_set_digital_master_room_type(CSoundEngine *engine, long int room_type);
 void CSoundEngine_set_digital_master_reverb_levels(CSoundEngine *engine, float dry_level, float wet_level);
 long int CSoundEngine_minimum_sample_buffer_size(CSoundEngine *engine, long int playback_rate, long int format);
-long int CSoundEngine_size_processed_digital_audio(CSoundEngine *engine, long unsigned int dest_rate, long unsigned int dest_format);
-long int CSoundEngine_process_digital_audio(CSoundEngine *engine, void *dest_buffer, long int dest_buffer_size, long unsigned int dest_rate, long unsigned int dest_format);
+long int CSoundEngine_size_processed_digital_audio(CSoundEngine *engine, long unsigned int dest_rate, long unsigned int dest_format, const AILMIXINFO *src);
+long int CSoundEngine_process_digital_audio(CSoundEngine *engine, void *dest_buffer, long int dest_buffer_size, long unsigned int dest_rate, long unsigned int dest_format, const AILMIXINFO *src);
 char *CSoundEngine_device_name(CSoundEngine *engine);
 void CSoundEngine_set_3D_room_type(CSoundEngine *engine, long int room_type);
 
@@ -56,7 +56,7 @@ float CSoundObject_get_sample_volume(void *obj);
 void CSoundObject_set_sample_position(void *obj, long unsigned int pos);
 long unsigned int CSoundObject_get_sample_length(void *obj);
 long int CSoundObject_set_sample_info(void *obj, const void *info);
-int CSoundObject_Is3DSound(void *obj);
+Boolean CSoundObject_Is3DSound(void *obj);
 void CSoundObject_set_3D_position(void *obj, float X, float Y, float Z);
 void CSoundObject_set_3D_sample_distances(void *obj, float max_dist, float min_dist);
 void CSoundObject_set_file_callbacks(void *cb1, void *cb2, void *cb3, void *cb4);
@@ -516,12 +516,12 @@ void AIL_set_file_callbacks(AIL_file_open_callback opencb, AIL_file_close_callba
 
 long int AIL_size_processed_digital_audio(long unsigned int dest_rate, long unsigned int dest_format, long int num_srcs, const AILMIXINFO *src)
 {
-    return CSoundEngine_size_processed_digital_audio(sSoundEngine, dest_rate, dest_format);
+    return CSoundEngine_size_processed_digital_audio(sSoundEngine, dest_rate, dest_format, src);
 }
 
 long int AIL_process_digital_audio(void *dest_buffer, long int dest_buffer_size, long unsigned int dest_rate, long unsigned int dest_format, long int num_srcs, char **(*src)())
 {
-    return CSoundEngine_process_digital_audio(sSoundEngine, dest_buffer, dest_buffer_size, dest_rate, dest_format);
+    return CSoundEngine_process_digital_audio(sSoundEngine, dest_buffer, dest_buffer_size, dest_rate, dest_format, NULL);
 }
 
 long int AIL_enumerate_3D_providers(HPROENUM *next, HPROVIDER *dest, char **name)

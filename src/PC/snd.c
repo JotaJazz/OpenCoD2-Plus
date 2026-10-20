@@ -58,7 +58,7 @@ void Com_Printf(const char *fmt, ...);
 void Com_DPrintf(const char *fmt, ...);
 void Z_FreeInternal(void *ptr);
 void AxisCopy(vec3_t *in, vec3_t *out);
-unsigned int Voice_Shutdown(void);
+void Voice_Shutdown(void);
 void Com_UnloadSoundAliases(snd_alias_system_t system);
 void SND_ShutdownDriver(void);
 void Cmd_RemoveCommand(const char *cmdName);

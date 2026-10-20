@@ -19,7 +19,7 @@ extern void Material_FinishLoading(void);
 extern void R_AddCmdTouchAllImages(void);
 extern void R_InitImages(void);
 extern void Material_Init(void);
-extern int R_InitFonts(void);
+extern void R_InitFonts(void);
 extern void R_InitLightDefs(void);
 extern void R_ClearFogs(void);
 extern void R_InitDebug(void);

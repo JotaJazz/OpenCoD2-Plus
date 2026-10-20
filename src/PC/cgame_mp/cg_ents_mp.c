@@ -27,7 +27,7 @@ extern const float AngleSubtract(const float a1, const float a2);
 extern const float LerpAngle(const float from, const float to, const float frac);
 extern int DObjSetControlTagAngles(const struct DObj_s *obj, int *partBits, unsigned int tagName, float *angles);
 extern struct XAnimTree_s *DObjGetTree(const struct DObj_s *obj);
-extern void XAnimSetCompleteGoalWeightKnobAll(void *tree, int animIndex, float goalWeight, float goalTime, float rate, int notifyType, int notifyClient);
+extern int XAnimSetCompleteGoalWeightKnobAll(void *tree, unsigned int animIndex, unsigned int rootIndex, float goalWeight, float goalTime, float rate, unsigned int notifyName, int bRestart);
 extern void BG_Player_DoControllers(const struct DObj_s *pDObj, const entityState_t *es, int *partBits, clientInfo_t *ci, int frametime);
 extern int DObjGetClientNotifyList(XAnimNotify **notifyList);
 extern int stricmp(const char *s1, const char *s2);
@@ -190,7 +190,7 @@ static void CG_mg42_DoControllers(const centity_t *cent, int *partBits)
         float goalWeight = 1.0f;
         float goalTime = 0.1f;
         float rate = 1.0f;
-        XAnimSetCompleteGoalWeightKnobAll(tree, animIndex, goalWeight, goalTime, rate, 0, 0);
+        XAnimSetCompleteGoalWeightKnobAll(tree, animIndex, 0, goalWeight, goalTime, rate, 0, 0);
     }
 }
 

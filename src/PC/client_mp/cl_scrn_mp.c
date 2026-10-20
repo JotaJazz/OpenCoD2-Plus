@@ -76,7 +76,7 @@ extern void CL_LookupColor(int colorIndex, float *outColor);
 extern void Con_DrawConsole(void);
 extern void SND_StopSounds(snd_stopsounds_arg_t flags);
 extern void SCR_DrawCinematic(void);
-extern qboolean Sys_IsMainThread(void);
+extern Bool Sys_IsMainThread(void);
 extern void Sys_LoadingKeepAlive(void);
 extern void Net_DisplayProfile(void);
 extern int FS_FTell(int fh);

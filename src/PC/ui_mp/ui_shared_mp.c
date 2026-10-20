@@ -55,14 +55,14 @@ extern qboolean UI_ClientIsInGame(void);
 extern void UI_Pause(qboolean pause);
 extern void UI_DrawHandlePic(float x, float y, float w, float h, int horzAlign, int vertAlign, const vec_t *color, MaterialHandle hMaterial);
 extern void UI_DrawRect(float x, float y, float w, float h, int horzAlign, int vertAlign, float size, const vec_t *color);
-extern float UI_FillRect(float x, float y, float w, float h, int horzAlign, int vertAlign, const vec_t *color);
+extern void UI_FillRect(float x, float y, float w, float h, int horzAlign, int vertAlign, const vec_t *color);
 extern void UI_DrawSides(float x, float y, float w, float h, int horzAlign, int vertAlign, float size, const vec_t *color);
 extern void UI_DrawTopBottom(float x, float y, float w, float h, int horzAlign, int vertAlign, float size, const vec_t *color);
 extern void UI_DrawLoadBar(float x, float y, float w, float h, int horzAlign, int vertAlign, const vec_t *color, MaterialHandle material);
 extern int UI_TextWidth(const char *text, int maxChars, FontHandle font, float scale);
 extern int UI_TextHeight(FontHandle font, float scale);
 extern const char *UI_SafeTranslateString(const char *key);
-extern int UI_OwnerDrawWidth(int ownerDraw, float scale);
+extern int UI_OwnerDrawWidth(int ownerDraw, FontHandle font, float scale);
 extern qboolean UI_OwnerDrawVisible(int flags);
 extern void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAlign, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, FontHandle font, float scale, vec_t *color, MaterialHandle shader, int textStyle);
 extern qboolean UI_OwnerDrawHandleKey(int ownerDraw, int flags, int *special, int key);
@@ -1221,7 +1221,7 @@ compute:;
     if (itemType == 8) {
         int alignment = (((itemDef_s*)(it))->textalignment);
         if (alignment == 1 || alignment == 2)
-            originalWidth += UI_OwnerDrawWidth(((itemDef_t *)it)->window.ownerDraw, scale);
+            originalWidth += UI_OwnerDrawWidth(((itemDef_t *)it)->window.ownerDraw, font, scale);
     } else if (itemType <= 0x12 && ((1 << itemType) & 0x70210)) {
         if ((((itemDef_s*)(it))->textalignment) == 1 && (*(void **)&((itemDef_t *)it)->dvar)) {
             originalWidth += UI_TextWidth(Dvar_GetVariantString(item->dvar), 0, font, scale);

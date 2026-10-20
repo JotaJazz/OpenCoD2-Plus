@@ -444,7 +444,7 @@ snd_alias_list_t R_LoadEntities_stub(void)
 
 extern void *Hunk_AllocateTempMemoryInternal(int size);
 extern void Hunk_ClearTempMemory(void);
-extern int XModelGetFlags(struct XModel *model);
+extern unsigned char XModelGetFlags(struct XModel *model);
 extern void R_PrepareStaticModelLightingCache(GfxWorld *world, int smodelCount);
 extern void R_CreateStaticModel(GfxWorld *world, struct XModel *model, const vec_t *origin, const vec_t *angles, vec_t scale, GfxStaticModelInstance *smodelInst);
 extern void R_GetStaticModelLightingFromGrid(const GfxWorld *world, GfxStaticModelInstance *smodelInst, float *sunVisibility, vec4_t *colorForDir);

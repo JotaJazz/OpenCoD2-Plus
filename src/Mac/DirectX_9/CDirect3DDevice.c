@@ -92,8 +92,8 @@ extern void *imp___ZN13COpenGLMatrix9sIdentityE;
 
 extern void *CDirect3D_GetDirect3DInterface(void);
 
-extern int MacDisplay_GetSupportsSeparateBlendFunc(void);
-extern int MacDisplay_GetSupportsAnisotropicFiltering(void);
+extern Boolean MacDisplay_GetSupportsSeparateBlendFunc(void);
+extern Boolean MacDisplay_GetSupportsAnisotropicFiltering(void);
 extern float MacDisplay_GetMaxSupportedAnisotropy(void);
 extern int MacDisplay_GetMaxTextureImageUnits(void);
 extern int MacDisplay_GetMaxTextureUnits(void);

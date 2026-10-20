@@ -173,7 +173,7 @@ extern void MSG_Init(msg_t *msg, byte *data, int length);
 extern void MSG_WriteLong(msg_t *msg, int value);
 extern void MSG_WriteShort(msg_t *msg, int value);
 extern void MSG_WriteByte(msg_t *msg, int value);
-extern void MSG_WriteBigString(void *msg, const char *s);
+extern void MSG_WriteBigString(void *sb, const char *s, msg_t *msg, int key, int oldV, int bits);
 extern void MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int force);
 extern int MSG_ReadLong(msg_t *msg);
 extern char *MSG_ReadStringLine(msg_t *msg);
@@ -1485,7 +1485,7 @@ void CL_Record_f(void)
 
         MSG_WriteByte(&buf, 2);
         MSG_WriteShort(&buf, i);
-        MSG_WriteBigString(&buf, active->gameState.stringData + offset);
+        MSG_WriteBigString(&buf, active->gameState.stringData + offset, NULL, 0, 0, 0);
     }
 
     memset(&nullstate, 0, sizeof(nullstate));

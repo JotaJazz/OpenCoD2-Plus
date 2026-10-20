@@ -50,7 +50,7 @@ extern void MatrixTransformVector44(const float *vec, const float (*mat)[4], flo
 extern Bool RB_GetViewport(GfxViewport *viewport);
 extern void MacOpenGLUtils_ConvertD3DProjectionMatrixToOpenGL(void *proj, float width, float height);
 extern void RB_UpdateViewport(void);
-extern int RB_SetIteratorFog(void);
+extern void RB_SetIteratorFog(void);
 extern int RB_DeriveEntityLights(vec4_t *colorForDir, float sunVisibility, const Material *material, D3DLIGHT9 *lights, int maxLights);
 extern void RB_SetupEntityLighting(const GfxEntity *ent, GfxEntityLighting *lighting);
 extern void RB_SetCodeConstant(int constant, vec_t x, vec_t y, vec_t z, vec_t w);

@@ -19,7 +19,7 @@ extern void *Hunk_AllocateTempMemoryInternal(int size);
 extern void Hunk_FreeTempMemory(void *buf);
 extern void R_LoadJpg(const char *filepath, byte **file, byte **pic, int *width, int *height, D3DFORMAT *imageFormat);
 extern void R_GenerateOutdoorImage(GfxImage *image);
-extern void Image_BuildSpecularityMap(int unused, byte *pic);
+extern void Image_BuildSpecularityMap(float shift, byte *pic);
 
 extern GfxImage *Image_Alloc(const char *name, int category, int semantic, int imageTrack);
 static vec3_t lightGridLookupMatrix[3];

@@ -81,7 +81,7 @@ float MacOpenGLUtils_SquareRootLowPrecision(float fp0);
 int MacOpenGLUtils_ConvertD3DProjectionMatrixToOpenGL(float *m, float ViewportWidth, float ViewportHeight);
 UINT32 MacOpenGLUtils_GetImageSizeInBytes(UINT32 Width, UINT32 Height, UINT32 Depth, UINT32 LevelCount, const D3DFORMAT *f);
 int MacDisplay_GetCardType(void);
-int MacDisplay_IsGLExtensionSupported(const char *ext);
+Boolean MacDisplay_IsGLExtensionSupported(const char *ext);
 UINT32 MacDisplay_GetPCPixelShaderVersion(void);
 
 bool MacOpenGLUtils_IsGLExtensionSupported(const char *pExtension)
