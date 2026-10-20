@@ -385,6 +385,21 @@ static void R_DownsamplePixelData(int oldSize, int newSize, int stride, int byte
     }
 }
 
+/* GL reads the frame back as R, G, B (glReadPixels GL_RGBA), where a TGA
+   holds B, G, R: Direct3D's surfaces, which the original copied, are in that
+   order already */
+static void R_SwapRedBlue(byte *pixels, int count, int bytesPerPixel)
+{
+    int i;
+    byte t;
+
+    for (i = 0; i < count; i++, pixels += bytesPerPixel) {
+        t = pixels[0];
+        pixels[0] = pixels[2];
+        pixels[2] = t;
+    }
+}
+
 static byte *R_TakeResampledScreenshot(int width, int height, int bytesPerPixel, int headerSize)
 {
     int oldWidth, oldHeight;
@@ -486,6 +501,7 @@ void R_LevelShot(void)
 
     buffer = R_TakeResampledScreenshot(128, 128, 3, 18);
     if (buffer) {
+        R_SwapRedBlue(buffer + 18, 128 * 128, 3);
 
         *(int *)(buffer + 0) = 0;
         *(int *)(buffer + 4) = 0;
@@ -543,9 +559,9 @@ void R_SaveCubemapShot(const char *filename, const CubemapShot shotIndex, const 
                 for (colIndex = 0; colIndex < res; colIndex++) {
                     int srcOffset = (rowIndex * res + colIndex) * 4;
                     byte *dst = targa + 18 + srcOffset;
-                    dst[2] = srcBuffer[srcOffset + 2];
+                    dst[2] = srcBuffer[srcOffset + 0];
                     dst[1] = srcBuffer[srcOffset + 1];
-                    dst[0] = srcBuffer[srcOffset + 0];
+                    dst[0] = srcBuffer[srcOffset + 2];
                     dst[3] = srcBuffer[srcOffset + 3];
                 }
             }
@@ -817,6 +833,7 @@ static void R_CaptureScreenshotNow(GfxScreenshotType type, const char *filename,
         buffer[17] = 32;
 
         if (R_GetFrontBufferData(width, height, 3, buffer + 18)) {
+            R_SwapRedBlue(buffer + 18, width * height, 3);
             ri.FS_WriteFile(filename, buffer, fileSize);
         }
         ri.Z_FreeInternal(buffer);
