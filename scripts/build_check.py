@@ -16,7 +16,9 @@ still define a function their bridge exports (scripts/check_single_impl.py), and
 no bridge import may call an engine symbol that is data
 (scripts/check_bridge_symbols.py).
 On Linux no engine source of the client may name a renamed bgame global without
-its eng_ name in effect (scripts/check_bgame_names.py).
+its eng_ name in effect (scripts/check_bgame_names.py), and the constants the
+engine's bgame takes from CoD2rev-Plus's must be current
+(scripts/bgame_plus_consts.py --check).
 """
 import argparse, os, re, subprocess, sys
 
@@ -119,6 +121,16 @@ def bgame_names(build_dir):
     return ['cod2_linux: ' + line for line in lines]
 
 
+def bgame_plus_consts():
+    """src/PC/bgame/bg_plus_consts.h against the values of CoD2rev-Plus's
+    headers."""
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'bgame_plus_consts.py'), '--check'],
+                         capture_output=True, text=True)
+    if run.returncode == 0:
+        return []
+    return (run.stdout.strip().splitlines() or run.stderr.strip().splitlines() or ['bgame_plus_consts.py failed'])[-3:]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
@@ -141,7 +153,7 @@ def main():
         if not errors:
             errors = duplicates(variant, build_dir)
         if not errors and variant.startswith('linux'):
-            errors = bgame_names(build_dir)
+            errors = bgame_names(build_dir) + bgame_plus_consts()
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')
