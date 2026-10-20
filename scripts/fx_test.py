@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """A client draws effects: each one changes the picture where it plays.
 
-    python3 scripts/fx_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--effects FX,...] [--keep DIR]
+    python3 scripts/fx_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--effects FX,...] [--spot 'X Y Z YAW'] [--keep DIR]
 
 Starts a client (cod2_linux) on its own game of mp_toujane with a gametype
-that spawns the player at a fixed spot as it connects, hides the HUD and the
-gun, and
-takes screenshots (TGA) by a config file. For each effect it takes two shots
-without it, to measure how much the picture changes by itself (the last
-effect's smoke drifting by), then one after fxTest has played the effect
-again and again in front of the player (fxSetTestPosition) for a while. Counts the
-pixels that differ from the first shot by more than DIFF in some channel.
-Exits with 0 when every effect changes over MIN_PIXELS pixels more than the
-second shot without it, and the client still runs and leaves no crash
-report. --keep copies the screenshots to DIR.
-The client opens a window and needs a CD key in ~/.cod2/preferences; without
-one the test is skipped (exit 0).
+that spawns the player at a fixed spot as it connects, looking up at the sky,
+hides the HUD and the gun, and takes screenshots (TGA) by a config file. For
+each effect it takes two shots without it, 12 frames apart, to measure how
+much the picture changes by itself (the last effect's smoke drifting by), then
+one 12 frames after fxTest started playing the effect again and again in
+front of the player (fxSetTestPosition). Counts the pixels of a shot that
+differ from the one before it by more than DIFF in some channel. Exits with 0
+when every effect changes over MIN_PIXELS pixels more than the picture does
+by itself, every effect loads (an effect that fails plays the placeholder
+instead), and the client still runs and leaves no crash report. --keep copies
+the screenshots and the log to DIR. The client opens a window and needs a CD
+key in ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
-import argparse, glob, os, shutil, struct, subprocess, sys, tempfile, time
+import argparse, glob, os, shutil, struct, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -64,7 +64,7 @@ Callback_PlayerConnect()
 '''
 DIFF = 40
 MIN_PIXELS = 500
-SECONDS = 240
+SECONDS = 300
 
 
 def tga(path):
@@ -95,11 +95,10 @@ def config(effects):
         # two shots without the effect (the last one's smoke may still drift
         # by), then one after it has played every 0.2 s for a while, so the
         # shot sees it whatever its life; fxTest without a time plays it once
-        # more and stops repeating it, then the smoke has ten seconds to clear
+        # more and stops repeating it, then the smoke has 15 seconds to clear
         lines += [f'screenshot fx_{n}_none', 'wait 12', f'screenshot fx_{n}_still',
-                  f'fxTest {fx} 0.2', 'wait 12', f'screenshot fx_{n}', f'fxTest {fx}', 'wait 200']
+                  f'fxTest {fx} 0.2', 'wait 12', f'screenshot fx_{n}', f'fxTest {fx}', 'wait 300']
     return '\n'.join(lines + ['quit']) + '\n'
-
 
 
 def main():
@@ -160,6 +159,8 @@ def main():
         text = open(log_path, encoding='latin-1').read() if os.path.exists(log_path) else ''
         reports = [n for n in os.listdir(home) if n.startswith('cod2_crash_')]
         check('no crash report from the client', 'CRASH REPORT' not in text and not reports, ', '.join(reports))
+        failed = [l.strip() for l in text.splitlines() if 'FX Error' in l or 'Effect file load failed' in l]
+        check('every effect loads', not failed, '; '.join(failed[:3]))
         shot = lambda name: os.path.join(shots, f'{name}.tga')
         for n, fx in enumerate(effects):
             names = (f'fx_{n}_none', f'fx_{n}_still', f'fx_{n}')
@@ -168,7 +169,7 @@ def main():
                 continue
             # how much the picture changes by itself over as many frames
             noise = changed(shot(names[0]), shot(names[1]))
-            pixels = changed(shot(names[0]), shot(names[2]))
+            pixels = changed(shot(names[1]), shot(names[2]))
             check(f'{fx} is drawn', pixels - noise > MIN_PIXELS, f'{pixels} pixels, {noise} without it')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0

@@ -542,16 +542,12 @@ static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, const vec_t *or
         AxisTransformVector(ax, x, y, z, org);
     }
 
-    /* the offset is from the effect's origin, as Raven's
-     * CFxScheduler::CreateEffect: "We always add our calculated offset to
-     * the passed in origin, unless relative"; a primitive has a bolt frame
-     * only when it is relative and the effect has a bolt
-     * (FX_GetBoltingFrame), and is then placed from it each frame */
-    if (!((EffectPrimitive *)prim)->boltFrame.value) {
-        org[0] += origin[0];
-        org[1] += origin[1];
-        org[2] += origin[2];
-    }
+    /* the offset is from the effect's origin (CoD2MP_s.exe 1.3 adds it at
+     * 0x4a0bf3); a bolted primitive's is then taken into the bolt's space
+     * below */
+    org[0] += origin[0];
+    org[1] += origin[1];
+    org[2] += origin[2];
 
     orgOut[0] = org[0];
     orgOut[1] = org[1];

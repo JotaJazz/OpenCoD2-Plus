@@ -2029,7 +2029,6 @@ Bool Emitter_Update(const Emitter *_this)
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
 
     if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
         return 1;
     }
 
@@ -2162,7 +2161,6 @@ Bool Cylinder_Update(const Cylinder *_this)
     ((Effect *)self)->mRefEnt.radius[1] = radius2;
 
     if (radius1 == 0.0f && radius2 == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
         return 1;
     }
 
@@ -2243,10 +2241,6 @@ Bool Tail_Update(const Tail *_this)
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
     ((Effect *)self)->mRefEnt.radius[1] = radius;
 
-    if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
-        return 1;
-    }
 
     Particle_UpdateRGB((const Particle *)_this);
     Particle_UpdateAlpha((const Particle *)_this);
@@ -2318,10 +2312,6 @@ Bool Line_Update(const Line *_this)
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
     ((Effect *)self)->mRefEnt.radius[1] = radius;
 
-    if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
-        return 1;
-    }
 
     Particle_UpdateRGB((const Particle *)_this);
     Particle_UpdateAlpha((const Particle *)_this);
@@ -2385,7 +2375,6 @@ Bool Cloud_Update(const Cloud *_this)
     }
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
     if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
         return 1;
     }
 
@@ -2398,7 +2387,6 @@ Bool Cloud_Update(const Cloud *_this)
     }
     ((Effect *)self)->mRefEnt.radius[1] = height;
     if (height == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
         return 1;
     }
 
@@ -2418,88 +2406,7 @@ Bool Cloud_Update(const Cloud *_this)
     return 1;
 }
 
-Bool OrientedParticle_Update(const OrientedParticle *_this)
-{
-
-    byte *self = (byte *)_this;
-    int startTime = (((Effect *)(self))->mTimeStart);
-    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
-
-    if (startTime > curTime)
-        return 0;
-
-    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
-    ((Effect *)self)->normTime = normTime;
-    if (normTime > 1.0f)
-        ((Effect *)self)->normTime = 1.0f;
-    if (0.0f > ((Effect *)self)->normTime)
-        return 0;
-    normTime = ((Effect *)self)->normTime;
-
-    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
-    const orientation_t *orient = NULL;
-    if (boltFrame) {
-        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
-        if (boneIdx >= 0) {
-            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
-            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
-                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
-                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
-                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
-                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
-                }
-            }
-            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
-                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
-        }
-    }
-
-    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
-        return 0;
-
-    if (orient) {
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)&((OrientedParticle *)self)->_base[124]);
-
-        OrientationDirFromWorldDir(orient, (vec_t *)(self + 0x24c), (vec_t *)&((OrientedParticle *)self)->_base[156]);
-    } else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
-        ((Effect *)self)->mRefEnt.endpos[0] = (((Tail *)(self))->endpoint[0]);
-        ((Effect *)self)->mRefEnt.endpos[1] = (((Tail *)(self))->endpoint[1]);
-        ((Effect *)self)->mRefEnt.endpos[2] = (((Tail *)(self))->endpoint[2]);
-    }
-
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        radius = (EvalCurve1( (byte *)(((char *)self + offsetof(OrientedParticle, _base[372]))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(OrientedParticle, _base[384])), normTime) - EvalCurve1((byte *)((char *)self + offsetof(OrientedParticle, _base[372])), normTime)) * bf) * *(float *)(((char *)self + offsetof(OrientedParticle, _base[372])) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(OrientedParticle, _base[372]))), normTime) * *(float *)(((char *)self + offsetof(OrientedParticle, _base[372])) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-    if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
-        return 1;
-    }
-
-    if ((*(byte *)&((OrientedParticle *)self)->_base[170]) & 1) {
-        float rot;
-        if ((*(byte *)&((OrientedParticle *)self)->_base[170]) & 0x10) {
-            float bf = (((Particle *)(self))->blendWeight[4]);
-            rot = (EvalCurve1( (byte *)(((char *)self + offsetof(OrientedParticle, _base[396]))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(OrientedParticle, _base[408])), normTime) - EvalCurve1((byte *)((char *)self + offsetof(OrientedParticle, _base[396])), normTime)) * bf) * *(float *)(((char *)self + offsetof(OrientedParticle, _base[396])) + 8);
-        } else {
-            rot = EvalCurve1( (byte *)(((char *)self + offsetof(OrientedParticle, _base[396]))), normTime) * *(float *)(((char *)self + offsetof(OrientedParticle, _base[396])) + 8);
-        }
-        ((Effect *)self)->mRefEnt.radius[1] = rot;
-    }
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-    return 1;
-}
-
-extern void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
+extern void OrientationDirToWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
 extern int FxHelper_GetMaterialSubimageCount(const FxHelper *_this, MaterialHandle handle);
 
 /* turns the particle by its rotation delta curve (blended with its random
@@ -2553,6 +2460,101 @@ static void Particle_UpdateSequence(const Particle *_this)
     }
 }
 
+#define PART_CHANNEL(self, field) ((byte *)(self) + offsetof(Particle, field.curveIterator.master))
+
+/* a channel's value at normTime, blended with its random channel by weight
+   when the flag is set, times the channel's scale (CoD2MP_s.exe 1.3's
+   0x4938c0 and the inline curve reads) */
+static float Particle_EvalChannel(byte *self, byte *channel, byte *randChannel, int randFlag, float weight, float normTime)
+{
+    float v = EvalCurve1(channel, normTime);
+    if (((Effect *)self)->mFlags & randFlag)
+        v += (EvalCurve1(randChannel, normTime) - v) * weight;
+    return v * ((FxChannelInstance *)channel)->scale;
+}
+
+/* the first radius, from size (useRandomSize), as 0x495bf0 */
+static void Particle_UpdateSize(const Particle *_this)
+{
+    byte *self = (byte *)_this;
+    ((Effect *)self)->mRefEnt.radius[0] = Particle_EvalChannel(self, PART_CHANNEL(self, sizeChannelInstance), PART_CHANNEL(self, sizeRandChannelInstance),
+                                                               0x8000, ((Particle *)self)->blendWeight[2], ((Effect *)self)->normTime);
+}
+
+/* the second radius: size2 when the scale is not uniform (useRandomSize2),
+   else the first, as 0x495c80 */
+static void Particle_UpdateSize2(const Particle *_this)
+{
+    byte *self = (byte *)_this;
+    if (((Particle *)self)->nonUniformScale)
+        ((Effect *)self)->mRefEnt.radius[1] = Particle_EvalChannel(self, PART_CHANNEL(self, size2ChannelInstance), PART_CHANNEL(self, size2RandChannelInstance),
+                                                                   0x10000, ((Particle *)self)->blendWeight[3], ((Effect *)self)->normTime);
+    else
+        ((Effect *)self)->mRefEnt.radius[1] = ((Effect *)self)->mRefEnt.radius[0];
+}
+
+/* as CoD2MP_s.exe 1.3 (0x496970): a particle drawn facing its normal, which
+   becomes the scene entity's forward axis */
+Bool OrientedParticle_Update(const OrientedParticle *_this)
+{
+
+    byte *self = (byte *)_this;
+    int startTime = (((Effect *)(self))->mTimeStart);
+    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+
+    if (startTime > curTime)
+        return 0;
+
+    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
+    ((Effect *)self)->normTime = normTime;
+    if (normTime > 1.0f)
+        ((Effect *)self)->normTime = 1.0f;
+    if (0.0f > ((Effect *)self)->normTime)
+        return 0;
+
+    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
+    const orientation_t *orient = NULL;
+    if (boltFrame) {
+        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
+        if (boneIdx >= 0) {
+            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
+            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
+                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
+                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
+                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
+                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
+                }
+            }
+            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
+                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
+        }
+    }
+
+    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
+        return 0;
+
+    Particle_UpdateSize((const Particle *)_this);
+    Particle_UpdateSize2((const Particle *)_this);
+    Particle_UpdateRGB((const Particle *)_this);
+    Particle_UpdateAlpha((const Particle *)_this);
+    Particle_UpdateRotation((const Particle *)_this);
+    Particle_UpdateSequence((const Particle *)_this);
+
+    if (orient) {
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+        OrientationDirToWorldDir(orient, (vec_t *)(self + 0x24c), ((Effect *)self)->mRefEnt.axis[0]);
+    } else {
+        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
+        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
+        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
+        ((Effect *)self)->mRefEnt.axis[0][0] = ((Tail *)self)->endpoint[0];
+        ((Effect *)self)->mRefEnt.axis[0][1] = ((Tail *)self)->endpoint[1];
+        ((Effect *)self)->mRefEnt.axis[0][2] = ((Tail *)self)->endpoint[2];
+    }
+    return 1;
+}
+
+extern void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
 Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud *_this_2)
 {
     (void)_this_1;
@@ -2608,41 +2610,13 @@ Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud
         (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
     }
 
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-
-        float blendFactor = (((Particle *)(self))->blendWeight[2]);
-        float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, sizeChannelInstance.curveIterator.master))), normTime);
-        float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, sizeRandChannelInstance.curveIterator.master))), normTime);
-        radius = (v0 + (v1 - v0) * blendFactor) * *(float *)(((char *)self + offsetof(Particle, sizeChannelInstance.curveIterator.master)) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, sizeChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, sizeChannelInstance.curveIterator.master)) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-
-    /* a particle without size is not drawn but keeps moving (0x01000000
-     * would stop its origin) */
-    if (radius == 0.0f)
+    /* nothing more for a particle without size, which is not drawn
+     * (0x494680) */
+    Particle_UpdateSize(_this);
+    if ((((Effect *)(self))->mRefEnt.radius[0]) == 0.0f)
         return 1;
-
-    /* the second radius: size2 when the scale is not uniform (blended with
-     * size2Rand by useRandomSize2), else the first, as CoD2MP_s.exe 1.3
-     * (0x495c80) */
-    float radius2;
-    if ((((Particle *)(self))->nonUniformScale)) {
-        if (((Effect *)self)->mFlags & 0x10000) {
-            float blendFactor = (((Particle *)(self))->blendWeight[3]);
-            float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master))), normTime);
-            float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2RandChannelInstance.curveIterator.master))), normTime);
-            radius2 = (v0 + (v1 - v0) * blendFactor) * *(float *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master)) + 8);
-        } else {
-            radius2 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master)) + 8);
-        }
-    } else {
-        radius2 = radius;
-    }
-    ((Effect *)self)->mRefEnt.radius[1] = radius2;
-    if (radius2 == 0.0f)
+    Particle_UpdateSize2(_this);
+    if ((((Effect *)(self))->mRefEnt.radius[1]) == 0.0f)
         return 1;
 
     Particle_UpdateRGB(_this);

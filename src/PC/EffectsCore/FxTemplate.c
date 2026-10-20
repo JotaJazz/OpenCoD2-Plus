@@ -171,15 +171,6 @@ static inline __attribute__((always_inline)) void EnsureMinMax(float *a, float *
     }
 }
 
-static inline __attribute__((always_inline)) float AbsCeil(float val)
-{
-    int iv = (int)val;
-    if (iv <= -1) {
-        iv = -iv;
-    }
-    return (float)iv;
-}
-
 /* a flat curve of value / divisor, scaled by scale: CoD2MP_s.exe 1.3's
    0x49c630 (the curve is 0 when the divisor is) */
 static void CreateFlatChannel(byte *_this, int channelId, float value, float divisor, float scale)
@@ -751,7 +742,7 @@ Bool PrimitiveTemplate_ParseRotationDelta(const PrimitiveTemplate *_this, const 
 
     EnsureMinMax(&minVal, &maxVal);
 
-    float absMin = AbsCeil(minVal);
+    float absMin = fabsf(minVal);
     float keyScaleVal = absMin;
     if (keyScaleVal < maxVal)
         keyScaleVal = maxVal;

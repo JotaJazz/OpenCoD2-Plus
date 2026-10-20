@@ -352,6 +352,8 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
             return;
         if (!FX_GetBoneOrientation(bolt, &or_))
             return;
+        /* along the bone's axis (0x499932 passes or_.axis) */
+        AxisCopy((vec3_t (*))((const vec_t *)or_.axis), (vec3_t (*))((vec_t *)ax));
     } else {
 
         if (origin) {
