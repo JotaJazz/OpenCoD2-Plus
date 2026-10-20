@@ -56,7 +56,8 @@ extern int BG_GetNumWeapons(void);
 extern int CG_PlaySoundAlias(int entitynum, const vec_t *origin, snd_alias_list_t *aliasList);
 extern int FX_GetBoneIndex(const int entNum, unsigned int bone);
 extern void FX_PlayEntityEffect(EffectTemplate *fx, const vec_t *org, vec3_t *axis, const FxBoltInfo *bolt);
-extern void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd, ...);
+extern void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd);
+extern void FX_PlayOrientedEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd, const vec_t *up);
 extern void FX_PlaySimpleEffect(EffectTemplate *fx, const vec_t *org);
 extern void Com_Printf(const char *fmt, ...);
 extern void ByteToDir(const int b, vec_t *dir);
@@ -856,7 +857,7 @@ static void CG_PlayLoopedFx(centity_t *cent)
             up[1] += scale * forward[1];
             up[2] += scale * forward[2];
             Vec3Normalize(up);
-            FX_PlayEffect(fx, cent->lerpOrigin, forward, up);
+            FX_PlayOrientedEffect(fx, cent->lerpOrigin, forward, up);
         } else {
             FX_PlayEffect(fx, cent->lerpOrigin, forward);
         }

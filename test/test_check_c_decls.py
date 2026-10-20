@@ -39,6 +39,14 @@ class Differs(unittest.TestCase):
     def test_stub_without_parameters(self):
         self.assertIsNone(c.differs(('int4', (), False), ('void', ('int4', 'int4'), False)))
 
+    def test_empty_declaration_is_no_parameters(self):
+        # f() is f(void) in the engine's C++: FX_AddScheduledEffects
+        self.assertIsNotNone(c.differs(('void', ('ptr', 'ptr'), False), ('void', (), False)))
+
+    def test_variadic_fixed_part(self):
+        self.assertIsNotNone(c.differs(('void', ('ptr', 'float4'), False), ('void', ('ptr', 'int4'), True)))
+        self.assertIsNone(c.differs(('void', ('ptr', 'ptr', 'ptr'), False), ('void', ('ptr',), True)))
+
     def test_extra_arguments(self):
         self.assertIsNone(c.differs(('void', ('ptr',), False), ('void', ('ptr', 'int4'), False)))
 

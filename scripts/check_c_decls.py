@@ -34,7 +34,9 @@ def objects(build_dir):
         entries = json.load(f)
     for e in entries:
         m = re.search(r'-o (\S+)', e.get('command', ''))
-        if not m or any(t in m.group(1) for t in CXX_TARGETS) or 'import_pointers' in m.group(1):
+        # import_pointers and surfaceflags.c only take addresses
+        if not m or any(t in m.group(1) for t in CXX_TARGETS) or 'import_pointers' in m.group(1) \
+                or 'surfaceflags' in m.group(1):
             continue
         path = os.path.join(e['directory'], m.group(1))
         if os.path.exists(path):
@@ -43,8 +45,11 @@ def objects(build_dir):
 
 def parse(readelf, path):
     """[(name, is_declaration, signature)] of the object's C functions."""
-    out = subprocess.run([readelf, '--debug-dump=info', '-W', path], capture_output=True, text=True,
-                         errors='replace').stdout
+    run = subprocess.run([readelf, '--debug-dump=info', '-W', path], capture_output=True, text=True,
+                         errors='replace')
+    if run.returncode != 0:
+        raise RuntimeError(f'{readelf} failed on {path}: {run.stderr.strip()[:200]}')
+    out = run.stdout
     dies = {}
     order = []
     cur = None
@@ -109,7 +114,7 @@ def parse(readelf, path):
         if 'DW_AT_linkage_name' in a or 'DW_AT_specification' in a or 'DW_AT_abstract_origin' in a:
             continue
         name = a.get('DW_AT_name', '')
-        name = name.split(':')[-1].strip()
+        name = re.sub(r'^\([^)]*\)\s*', '', name.split('):')[-1].strip())
         if not name or 'DW_AT_external' not in a:
             continue
         ret = kind(ref(a.get('DW_AT_type', ''))) if 'DW_AT_type' in a else 'void'
@@ -161,10 +166,16 @@ def differs(defn, decl):
                    (d.startswith('eax') and c.startswith('eax') and int(d[3:]) >= int(c[3:]))
         if not harmless:
             return f'returns {dret}, called as {cret}'
-    if dvar or cvar or not dparams or not cparams:
-        return None  # variadic, a stub without parameters or an unprototyped call
+    if not dparams and not dvar:
+        return None  # a stub without parameters: the arguments go unread
     dp = [param_class(k) for k in dparams]
     cp = [param_class(k) for k in cparams]
+    if dvar or cvar:
+        # variadic: the fixed parameters still have to agree
+        n = min(len(dp), len(cp))
+        if dp[:n] != cp[:n]:
+            return 'the fixed parameters differ'
+        return None  # a K&R import declared (...) passes the call's arguments as they are
     if len(dp) != len(cp):
         if dp[:min(len(dp), len(cp))] == cp[:min(len(dp), len(cp))] and len(cp) > len(dp):
             return None  # extra arguments the callee never reads (cdecl)
@@ -184,8 +195,14 @@ def main():
     args = ap.parse_args()
 
     objs = list(objects(args.build_dir))
+    if not objs:
+        print('no objects in compile_commands.json')
+        return 1
     with ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as pool:
         results = list(pool.map(lambda o: (o, parse(args.readelf, o)), objs))
+    if not any(funcs for obj, funcs in results):
+        print('no DWARF in the objects (built without -g?)')
+        return 1
     defs = {}
     decls = {}
     for obj, funcs in results:

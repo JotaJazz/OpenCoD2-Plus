@@ -14,7 +14,7 @@ extern void *imp___ZN7COpenGL7sOpenGLE;
 extern void *imp___ZTV15CColorConverter;
 
 extern int MacDisplay_GetCardType(void);
-extern Boolean MacFeatures_IsAltiVecAvailable(void);
+extern Boolean MacFeatures_IsAltiVecAvailable(UInt8 *outMajor, UInt8 *outMinor, UInt8 *outBug);
 void __ZdlPv(void *ptr);
 
 static UINT32 CColorConverter_RotateRight32(UINT32 value, unsigned int shift)
@@ -304,14 +304,14 @@ void ATI4CompsConverterARGB_ArrayConvert4f4ubG3(const ATI4CompsConverterARGB *_t
 
 void ATI4CompsConverterARGB_ArrayConvert4f4ub(const ATI4CompsConverterARGB *_this, const void *pRawDst, const float *pSrc, UINT32 NumVertices)
 {
-    if (!MacFeatures_IsAltiVecAvailable()) {
+    if (!MacFeatures_IsAltiVecAvailable(NULL, NULL, NULL)) {
         ATI4CompsConverterARGB_ArrayConvert4f4ubG3(_this, pRawDst, pSrc, NumVertices);
     }
 }
 
 void StdConverterARGB_ArrayConvert4f4ub(const StdConverterARGB *_this, const void *pRawDst, const float *pSrc, UINT32 NumVertices)
 {
-    if (!MacFeatures_IsAltiVecAvailable()) {
+    if (!MacFeatures_IsAltiVecAvailable(NULL, NULL, NULL)) {
         StdConverterARGB_ArrayConvert4f4ubG3(_this, pRawDst, pSrc, NumVertices);
     }
 }

@@ -25,6 +25,23 @@ extern int privateEffectActiveCountNonBolt;
 int FX_GetBoneIndex(const int entNum, unsigned int bone);
 void FX_PlaySimpleEffect(EffectTemplate *fx, const vec_t *org);
 void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd);
+/* along a direction with its up: forward, left (up x forward) and up, the
+ * axis convention of the scheduler */
+void FX_PlayOrientedEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd, const vec_t *up)
+{
+    extern void Vec3Cross(const vec_t *v0, const vec_t *v1, vec_t *cross);
+    vec3_t axis[3];
+
+    axis[0][0] = fwd[0];
+    axis[0][1] = fwd[1];
+    axis[0][2] = fwd[2];
+    Vec3Cross(up, fwd, axis[1]);
+    axis[2][0] = up[0];
+    axis[2][1] = up[1];
+    axis[2][2] = up[2];
+    FxScheduler_PlayEffect(*(void **)*(void **)&fx_scheduler_ptr, fx, org, (MediaHandles *(*)[4])axis, (const FxBoltInfo *)0);
+}
+
 void FX_PlayEntityEffect(EffectTemplate *fx, const vec_t *org, vec3_t *axis, const FxBoltInfo *bolt);
 int FX_InitSystem(int rendererExists);
 void FX_FreeSystem(void);

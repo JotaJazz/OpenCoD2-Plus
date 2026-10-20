@@ -61,7 +61,7 @@ MOVES_SECONDS = 100
 # in mp_toujane, in front of a ledge with a mantle_on brush (x 2403 to 2494,
 # y 2233 to 2301, top at 107), facing it: the moves start with a mantle
 SPOT = '2450 2200 80 90'
-# 14 to 34 in 1.3 and 1.0 when the client's prediction follows the server's
+# 12 to 34 in 1.3 and 1.0 when the client's prediction follows the server's
 # code; 119 to 153 before
 MAX_MISSES = 60
 
@@ -78,6 +78,8 @@ def main():
     ap.add_argument('--spot', default=SPOT, help="'x y z yaw' to put the client at when it joins (the mod's spot phase); "
                     "'' leaves it where it spawns")
     args = ap.parse_args()
+    if args.spot and len(args.spot.split()) != 4:
+        ap.error("--spot takes 'x y z yaw'")
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
@@ -157,7 +159,9 @@ def main():
                             if ent and 'pos.trBase' in ent:
                                 pos = ent['pos.trBase']
                                 if last is not None:
-                                    path += sum((a - b) ** 2 for a, b in zip(pos, last)) ** 0.5
+                                    step = sum((a - b) ** 2 for a, b in zip(pos, last)) ** 0.5
+                                    # the spot phase's teleport is not a move
+                                    path += step if step < 100 else 0
                                 start = start or pos
                                 last = pos
                     check('the client still runs', client.poll() is None, f'exit code {client.poll()}')
