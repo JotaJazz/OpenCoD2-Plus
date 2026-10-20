@@ -2315,17 +2315,25 @@ static void __attribute_regparm__(3) __attribute_sseregparm__
     notifyInfo = &parts->notify[notifyIndex];
 
     if (oldTime > time) {
-        while (notifyIndex < parts->notifyCount && time > notifyInfo->time) {
-            Scr_AddConstString(notifyInfo->name);
-            Scr_NotifyNum(tree_s->entnum - 1, 0, info->notifyName, 1);
-            ++notifyIndex;
-            ++notifyInfo;
-        }
-
-        notifyInfo = &parts->notify[info->notifyIndex];
-        notifyIndex = info->notifyIndex;
-        if (oldTime <= notifyInfo->time) {
-            while (notifyIndex < parts->notifyCount) {
+        /* the anim wrapped: the notes to its end, then those from its start
+         * to the new time, as CoD2rev-Plus's XAnimProcessServerNotify (the
+         * notes after the start were skipped) */
+        if (time <= notifyInfo->time) {
+            if (oldTime <= notifyInfo->time) {
+                const XAnimNotifyInfo *iter;
+                while (notifyIndex < parts->notifyCount) {
+                    Scr_AddConstString(notifyInfo->name);
+                    Scr_NotifyNum(tree_s->entnum - 1, 0, info->notifyName, 1);
+                    ++notifyIndex;
+                    ++notifyInfo;
+                }
+                for (iter = parts->notify; time > iter->time; ++iter) {
+                    Scr_AddConstString(iter->name);
+                    Scr_NotifyNum(tree_s->entnum - 1, 0, info->notifyName, 1);
+                }
+            }
+        } else {
+            while (notifyIndex < parts->notifyCount && time > notifyInfo->time) {
                 Scr_AddConstString(notifyInfo->name);
                 Scr_NotifyNum(tree_s->entnum - 1, 0, info->notifyName, 1);
                 ++notifyIndex;
