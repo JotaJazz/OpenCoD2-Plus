@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include <stdio.h>
 /* dvar globals */
 extern const dvar_t *com_statmon;
 extern const dvar_t *fx_sort;
@@ -174,12 +175,44 @@ static const char *s_aspectRatioNames[5] = {
     "wide 16:9",
     0,
 };
-static const char *s_displayModeNames[] = {
+/* r_mode's names: the display's modes (R_EnumDisplayModes), as the original
+ * lists the adapter's; these three when there are none */
+#define R_MAX_DISPLAY_MODES 64
+static char s_displayModeText[R_MAX_DISPLAY_MODES][16];
+static const char *s_displayModeNames[R_MAX_DISPLAY_MODES + 1] = {
     "640x480",
     "800x600",
     "1024x768",
     0,
 };
+
+extern int Sys_EnumDisplayModes(int *widths, int *heights, int max);
+
+static void R_EnumDisplayModes(void)
+{
+    int widths[R_MAX_DISPLAY_MODES];
+    int heights[R_MAX_DISPLAY_MODES];
+    int count = Sys_EnumDisplayModes(widths, heights, R_MAX_DISPLAY_MODES);
+    int i;
+
+    if (count <= 0)
+        return;
+    for (i = 0; i < count; i++) {
+        snprintf(s_displayModeText[i], sizeof(s_displayModeText[i]), "%ix%i", widths[i], heights[i]);
+        s_displayModeNames[i] = s_displayModeText[i];
+    }
+    s_displayModeNames[count] = 0;
+}
+
+/* the width and height r_mode names, 640x480 if it names none */
+void R_GetModeSize(int *width, int *height)
+{
+    *width = 640;
+    *height = 480;
+    if (r_mode && r_mode->current.integer >= 0 && r_mode->current.integer < R_MAX_DISPLAY_MODES
+        && s_displayModeNames[r_mode->current.integer])
+        sscanf(s_displayModeNames[r_mode->current.integer], "%ix%i", width, height);
+}
 static const char *s_displayRefreshNames[] = {
     "60",
     0,
@@ -516,6 +549,7 @@ void R_RegisterDvars(void)
 
     r_monitor = ri.Dvar_RegisterInt("r_monitor", 0, 0, 8, 0x2021);
 
+    R_EnumDisplayModes();
     r_mode = ri.Dvar_RegisterEnum("r_mode", s_displayModeNames, 0, 0x2021);
 
     r_displayRefresh = ri.Dvar_RegisterEnum("r_displayRefresh", s_displayRefreshNames, 0, 0x2021);

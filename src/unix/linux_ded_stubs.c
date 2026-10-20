@@ -100,6 +100,10 @@ int SDL_GL_SetAttribute(void) { return 0; }
 int SDL_GL_SwapWindow(void) { return 0; }
 int SDL_GetError(void) { return 0; }
 int SDL_GetWindowWMInfo(void) { return 0; }
+int SDL_GetNumDisplayModes(void) { return 0; }
+int SDL_GetDisplayMode(void) { return -1; }
+int SDL_InitSubSystem(void) { return -1; }  /* no video: r_mode keeps its fixed list */
+int SDL_WasInit(void) { return 0; }
 int SDL_IsTextInputActive(void) { return 0; }
 int SDL_PollEvent(void) { return 0; }
 int SDL_PumpEvents(void) { return 0; }

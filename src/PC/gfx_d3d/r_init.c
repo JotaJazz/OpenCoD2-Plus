@@ -763,8 +763,12 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
         }
 
         {
+            extern void R_GetModeSize(int *width, int *height);
             int d3dpp[14];
-            int width = 640, height = 480;
+            int width, height;
+
+            /* the mode r_mode names, not 640x480 always */
+            R_GetModeSize(&width, &height);
 
             memset(d3dpp, 0, sizeof(d3dpp));
             d3dpp[0] = width;

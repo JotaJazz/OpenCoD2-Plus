@@ -228,6 +228,40 @@ SDL_Window *sdl_gl_window = NULL;
 int sdl_gl_width = 640;
 int sdl_gl_height = 480;
 
+/* The display's modes, at least 640x480, each width and height once, from
+ * the smallest: what the original's renderer lists in r_mode from the
+ * adapter's modes (EnumAdapterModes). Returns their count, 0 without SDL's
+ * video. */
+int Sys_EnumDisplayModes(int *widths, int *heights, int max)
+{
+    int count = 0;
+    int i, j, n;
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO) && SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+        return 0;
+    n = SDL_GetNumDisplayModes(0);
+    for (i = 0; i < n && count < max; i++) {
+        SDL_DisplayMode mode;
+        int seen = 0;
+        if (SDL_GetDisplayMode(0, i, &mode) != 0 || mode.w < 640 || mode.h < 480)
+            continue;
+        for (j = 0; j < count; j++)
+            if (widths[j] == mode.w && heights[j] == mode.h)
+                seen = 1;
+        if (seen)
+            continue;
+        /* insertion by width, then height */
+        for (j = count; j > 0 && (widths[j - 1] > mode.w || (widths[j - 1] == mode.w && heights[j - 1] > mode.h)); j--) {
+            widths[j] = widths[j - 1];
+            heights[j] = heights[j - 1];
+        }
+        widths[j] = mode.w;
+        heights[j] = mode.h;
+        count++;
+    }
+    return count;
+}
+
 static int sdl_quit_watch(void *ud, SDL_Event *e)
 {
     (void)ud;
@@ -710,4 +744,15 @@ void MacDisplay_FadeOut(float duration)
 #    ifndef __EMSCRIPTEN__
 #    endif
 
+#endif
+
+#if defined(_WIN32) && !defined(W32_CLIENT)
+/* the MinGW dedicated server has no SDL video: r_mode keeps its fixed list */
+int Sys_EnumDisplayModes(int *widths, int *heights, int max)
+{
+    (void)widths;
+    (void)heights;
+    (void)max;
+    return 0;
+}
 #endif
