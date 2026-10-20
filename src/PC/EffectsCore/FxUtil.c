@@ -1366,12 +1366,12 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
     ((Emitter *)p)->initialVel[1] = vel[1];
     ((Emitter *)p)->initialVel[2] = vel[2];
 
-    ((Emitter *)p)->spawnSize = ang0;
-    (*(float *)&((Emitter *)p)->_gap2[0]) = ang1;
-    (*(float *)&((Emitter *)p)->_gap2[4]) = ang2;
-    ((Emitter *)p)->spawnDensity = pos0;
-    (*(float *)&((Emitter *)p)->_gap3[0]) = pos1;
-    ((Emitter *)p)->spawnStep = pos2;
+    ((Emitter *)p)->angles[0] = ang0;
+    ((Emitter *)p)->angles[1] = ang1;
+    ((Emitter *)p)->angles[2] = ang2;
+    ((Emitter *)p)->angleDelta[0] = pos0;
+    ((Emitter *)p)->angleDelta[1] = pos1;
+    ((Emitter *)p)->angleDelta[2] = pos2;
 
     (*(void **)&((Emitter *)p)->_base[180]) = material;
     ((Emitter *)p)->emitFx = effect;

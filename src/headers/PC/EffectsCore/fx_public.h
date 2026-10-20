@@ -45,11 +45,8 @@ struct Emitter {
     vec3_t velocityDelta;
     int emitLastTime;
     float emitStep;
-    float spawnSize;
-    char _gap2[8];
-    float spawnDensity;
-    char _gap3[4];
-    float spawnStep;
+    vec3_t angles;      /* the model's, turned by angleDelta (0x498190) */
+    vec3_t angleDelta;
     void *emitFx;
     float spawnVariance;
     char _tail[4];
@@ -105,7 +102,7 @@ struct Cloud {
 
     struct Particle base;
     vec3_t randomDirection;
-    char _gap[4];
+    float length;
     Bool useLengthFlag;
     char _pad[3];
     float randomLengthBlend;
@@ -129,11 +126,8 @@ COD2_ASSERT_FIELD(struct Emitter, _base, 0x000);
 COD2_ASSERT_FIELD(struct Emitter, emitPos, 0x24c);
 COD2_ASSERT_FIELD(struct Emitter, initialVel, 0x258);
 COD2_ASSERT_FIELD(struct Emitter, velocityDelta, 0x264);
-COD2_ASSERT_FIELD(struct Emitter, spawnSize, 0x278);
-COD2_ASSERT_FIELD(struct Emitter, _gap2, 0x27c);
-COD2_ASSERT_FIELD(struct Emitter, spawnDensity, 0x284);
-COD2_ASSERT_FIELD(struct Emitter, _gap3, 0x288);
-COD2_ASSERT_FIELD(struct Emitter, spawnStep, 0x28c);
+COD2_ASSERT_FIELD(struct Emitter, angles, 0x278);
+COD2_ASSERT_FIELD(struct Emitter, angleDelta, 0x284);
 COD2_ASSERT_FIELD(struct Emitter, spawnVariance, 0x294);
 COD2_ASSERT_FIELD(struct Emitter, _tail, 0x298);
 COD2_ASSERT_FIELD(struct FxBoltFrame, refCount, 0x00);
@@ -150,7 +144,7 @@ COD2_ASSERT_FIELD(struct Light, sizeRandChannelInstance, 0xf0);
 COD2_ASSERT_FIELD(struct OrientedParticle, _base, 0x000);
 COD2_ASSERT_FIELD(struct OrientedParticle, normal, 0x1C4);
 COD2_ASSERT_FIELD(struct Cloud, base, 0x000);
-COD2_ASSERT_FIELD(struct Cloud, _gap, 0x258);
+COD2_ASSERT_FIELD(struct Cloud, length, 0x258);
 COD2_ASSERT_FIELD(struct Cloud, _pad, 0x25d);
 COD2_ASSERT_FIELD(struct Tail, base, 0x000);
 COD2_ASSERT_FIELD(struct Tail, endpoint, 0x24c);

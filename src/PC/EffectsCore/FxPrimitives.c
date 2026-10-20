@@ -1975,7 +1975,7 @@ Bool Emitter_Update(const Emitter *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
     normTime = ((Effect *)self)->normTime;
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
@@ -1995,6 +1995,9 @@ Bool Emitter_Update(const Emitter *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     vec3_t previous;
     previous[0] = PART_ANCHOR_X(self);
@@ -2005,8 +2008,8 @@ Bool Emitter_Update(const Emitter *_this)
 
     /* a model that stopped spins down; it turns by its angle deltas, which
      * give its axes (0x497970, 0x498190) */
-    float *angles = (float *)(self + 0x278);
-    float *angleDelta = (float *)(self + 0x284);
+    float *angles = ((Emitter *)self)->angles;
+    float *angleDelta = ((Emitter *)self)->angleDelta;
     if (previous[0] == PART_ANCHOR_X(self) && previous[1] == PART_ANCHOR_Y(self) && previous[2] == PART_ANCHOR_Z(self)) {
         angleDelta[0] *= 0.7f;
         angleDelta[1] *= 0.7f;
@@ -2024,36 +2027,37 @@ Bool Emitter_Update(const Emitter *_this)
         ((Effect *)self)->mRefEnt.axis[1][2] = 0.0f - right[2];
     }
     Particle_UpdateSize((const Particle *)_this);
-    ((Effect *)self)->mRefEnt.scale = ((Effect *)self)->mRefEnt.radius[0];
 
+    /* the model (useModel) goes into the world with its scale; with a bolt,
+     * what the emitted effects inherit is how far the bolt moved since the
+     * last emission (0x497a3d to 0x497b06; the emission, 0x497b50, is not
+     * checked against the original yet) */
     vec3_t bindVelocity = { 0, 0, 0 };
-    if (orient) {
-
-        FxHelper *helper = *(FxHelper **)imp_theFxHelper;
-        int frameTime = helper->mFrameTime;
-        vec3_t local[3];
-        int i;
-        for (i = 0; i < 3; i++) {
-            local[i][0] = ((Effect *)self)->mRefEnt.axis[i][0];
-            local[i][1] = ((Effect *)self)->mRefEnt.axis[i][1];
-            local[i][2] = ((Effect *)self)->mRefEnt.axis[i][2];
-            OrientationDirToWorldDir(orient, local[i], ((Effect *)self)->mRefEnt.axis[i]);
+    if (((Effect *)self)->mFlags & 0x10) {
+        if (orient) {
+            vec3_t local[3];
+            int i;
+            OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+            for (i = 0; i < 3; i++) {
+                local[i][0] = ((Effect *)self)->mRefEnt.axis[i][0];
+                local[i][1] = ((Effect *)self)->mRefEnt.axis[i][1];
+                local[i][2] = ((Effect *)self)->mRefEnt.axis[i][2];
+                OrientationDirToWorldDir(orient, local[i], ((Effect *)self)->mRefEnt.axis[i]);
+            }
+            ((Effect *)self)->mRefEnt.scale = ((Effect *)self)->mRefEnt.radius[0];
+            int now = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+            if (((Emitter *)self)->emitLastTime < now) {
+                float dt = (float)(now - ((Emitter *)self)->emitLastTime) * 0.001f;
+                bindVelocity[0] = (orient->origin[0] - ((Emitter *)self)->velocityDelta[0]) * dt;
+                bindVelocity[1] = (orient->origin[1] - ((Emitter *)self)->velocityDelta[1]) * dt;
+                bindVelocity[2] = (orient->origin[2] - ((Emitter *)self)->velocityDelta[2]) * dt;
+            }
+        } else {
+            (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
+            (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
+            (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
+            ((Effect *)self)->mRefEnt.scale = ((Effect *)self)->mRefEnt.radius[0];
         }
-        vec3_t worldPos;
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), worldPos);
-        if (frameTime > 0) {
-            float invFt = 1.0f / ((float)frameTime * 0.001f);
-            bindVelocity[0] = (worldPos[0] - (((Effect *)(self))->mRefEnt.origin[0])) * invFt;
-            bindVelocity[1] = (worldPos[1] - (((Effect *)(self))->mRefEnt.origin[1])) * invFt;
-            bindVelocity[2] = (worldPos[2] - (((Effect *)(self))->mRefEnt.origin[2])) * invFt;
-        }
-        (((Effect *)(self))->mRefEnt.origin[0]) = worldPos[0];
-        (((Effect *)(self))->mRefEnt.origin[1]) = worldPos[1];
-        (((Effect *)(self))->mRefEnt.origin[2]) = worldPos[2];
-    } else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
     }
 
     Emitter_UpdateEmitFx(_this, bindVelocity, (const orientation_t *)orient);
@@ -2211,7 +2215,7 @@ Bool Cylinder_Update(const Cylinder *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
     const orientation_t *orient = NULL;
@@ -2230,6 +2234,9 @@ Bool Cylinder_Update(const Cylinder *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     Particle_UpdateSize((const Particle *)_this);
     Particle_UpdateSize2((const Particle *)_this);
@@ -2274,7 +2281,7 @@ Bool Tail_Update(const Tail *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
     const orientation_t *orient = NULL;
@@ -2293,6 +2300,9 @@ Bool Tail_Update(const Tail *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     ((Tail *)self)->endpoint[0] = PART_ANCHOR_X(self);
     ((Tail *)self)->endpoint[1] = PART_ANCHOR_Y(self);
@@ -2333,7 +2343,7 @@ Bool Line_Update(const Line *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
     normTime = ((Effect *)self)->normTime;
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
@@ -2353,6 +2363,9 @@ Bool Line_Update(const Line *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     if (orient) {
         OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
@@ -2392,7 +2405,7 @@ Bool Cloud_Update(const Cloud *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
     const orientation_t *orient = NULL;
@@ -2411,6 +2424,9 @@ Bool Cloud_Update(const Cloud *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     vec3_t previous;
     previous[0] = PART_ANCHOR_X(self);
@@ -2419,7 +2435,7 @@ Bool Cloud_Update(const Cloud *_this)
     if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
         return 0;
 
-    float *length = (float *)(self + 0x258);
+    float *length = &((Cloud *)self)->length;
     Particle_UpdateSize((const Particle *)_this);
     Particle_UpdateSize2((const Particle *)_this);
     if (((Cloud *)self)->useLengthFlag)
@@ -2469,7 +2485,7 @@ Bool OrientedParticle_Update(const OrientedParticle *_this)
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
     const orientation_t *orient = NULL;
@@ -2488,6 +2504,9 @@ Bool OrientedParticle_Update(const OrientedParticle *_this)
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
         return 0;
@@ -2530,7 +2549,7 @@ Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud
     if (normTime > 1.0f)
         ((Effect *)self)->normTime = 1.0f;
     if (0.0f > ((Effect *)self)->normTime)
-        return 0;
+        ((Effect *)self)->normTime = 0.0f; /* 0x4940d0 clamps it */
     normTime = ((Effect *)self)->normTime;
 
     byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
@@ -2553,6 +2572,9 @@ Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud
                 orient = (&((FxBoltFrame *)(boltFrame))->orientation);
         }
     }
+    /* a primitive whose bolt is gone dies (0x494020) */
+    if (boltFrame && !orient)
+        return 0;
 
     if (!Particle_UpdateOrigin(_this, (const orientation_t *)orient))
         return 0;
@@ -3230,10 +3252,10 @@ void *__ZTV8Cylinder[14] = {
     (void *)&Cylinder_Draw,
     (void *)&Particle_GetVisibility,
     (void *)&Particle_AddVisibility,
-    (void *)&Particle_CreateChannelInstances,
+    (void *)&Tail_CreateChannelInstances, /* its length channels, as 0x5b115c */
     (void *)&Cylinder_TypeID,
     (void *)&Cylinder_Archive,
-    (void *)&Particle_FixupArchiveLoad
+    (void *)&Tail_FixupArchiveLoad
 };
 
 void *__ZTV7Emitter[14] = {

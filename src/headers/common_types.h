@@ -6164,11 +6164,8 @@ struct Emitter {
     vec3_t velocityDelta;
     int emitLastTime;
     float emitStep;
-    float spawnSize;
-    char _gap2[8];
-    float spawnDensity;
-    char _gap3[4];
-    float spawnStep;
+    vec3_t angles;      /* the model's, turned by angleDelta (0x498190) */
+    vec3_t angleDelta;
     void *emitFx;
     float spawnVariance;
     char _tail[4];
@@ -8088,7 +8085,7 @@ struct Cloud {
 
     struct Particle base;
     vec3_t randomDirection;
-    char _gap[4];
+    float length;
     Bool useLengthFlag;
     char _pad[3];
     float randomLengthBlend;

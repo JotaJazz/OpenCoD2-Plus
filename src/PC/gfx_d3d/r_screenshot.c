@@ -411,12 +411,15 @@ static byte *R_TakeResampledScreenshot(int width, int height, int bytesPerPixel,
     int i;
     int maxWidth, maxHeight;
 
+    /* the whole frame is read in first, then shrunk or grown in place: the
+     * buffer holds the larger of the two (the smaller overran it, by 2 MB
+     * for a 128x128 levelshot of a 1024x768 window) */
     maxWidth = vidConfig.width;
-    if (width < maxWidth) {
+    if (width > maxWidth) {
         maxWidth = width;
     }
     maxHeight = vidConfig.height;
-    if (height < maxHeight) {
+    if (height > maxHeight) {
         maxHeight = height;
     }
 
@@ -658,9 +661,11 @@ void R_LightingFromCubemapShots(const vec_t *baseColor)
                 for (y = 0; y < height; y++) {
                     for (x = 0; x < height; x++) {
                         byte *srcPixel = cubeShotPtr[faceIdx - 1] + pixelIndex * 4;
-                        faceLinear[pixelIndex * 3 + 0] = (float)pow((double)((float)srcPixel[2] * (1.0f / 255.0f)), 2.2);
+                        /* the shots are R, G, B, A as GL reads them back (the
+                         * original's Direct3D surfaces were B, G, R, A) */
+                        faceLinear[pixelIndex * 3 + 0] = (float)pow((double)((float)srcPixel[0] * (1.0f / 255.0f)), 2.2);
                         faceLinear[pixelIndex * 3 + 1] = (float)pow((double)((float)srcPixel[1] * (1.0f / 255.0f)), 2.2);
-                        faceLinear[pixelIndex * 3 + 2] = (float)pow((double)((float)srcPixel[0] * (1.0f / 255.0f)), 2.2);
+                        faceLinear[pixelIndex * 3 + 2] = (float)pow((double)((float)srcPixel[2] * (1.0f / 255.0f)), 2.2);
                         pixelIndex++;
                     }
                 }

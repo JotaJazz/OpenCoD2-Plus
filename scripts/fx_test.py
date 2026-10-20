@@ -26,11 +26,15 @@ from hit_location_test import PREFERENCES
 DEFAULT_CLIENT = {115: 'build/check-linux-10/cod2_linux', 118: 'build/check-linux/cod2_linux'}
 # a single particle (the placeholder sprite), 50 units at its largest,
 # rising; the dust of a bullet's impact (a decal, delayed particles and
-# runners); a vehicle's explosion (smoke, dirt and fireballs, most of them
-# delayed, and velocities with random ranges); a tank's (emitters flinging
-# parts that play effects, and the vehicle's explosion through a runner); a
-# boat's wake (oriented particles facing up)
-EFFECTS = 'fx/misc/missing_fx,fx/impacts/default_hit,fx/explosions/large_vehicle_explosion,fx/explosions/tank_explosion,fx/misc/wake_buffalo'
+# runners); a grenade's water splash (oriented particles among others); a
+# mine's dirt plumes (lines); a vehicle's explosion (smoke, dirt and
+# fireballs, most of them delayed, and velocities with random ranges); a
+# tank's (emitters flinging models that play effects, and the vehicle's
+# explosion through a runner). The explosions go last: their smoke lingers.
+EFFECTS = 'fx/misc/missing_fx,fx/impacts/default_hit,fx/explosions/grenadeExp_water,fx/impacts/minefield,fx/explosions/large_vehicle_explosion,fx/explosions/tank_explosion'
+# effects the stock effects name and the stock iwds lack (minefield's death
+# effects): their load failures are the data's
+MISSING = ('fx/impacts/fluff1.efx', 'fx/impacts/dirthit_mortar.efx')
 # in mp_toujane, on the spawn point farthest from the map's ambient effects
 # (mp_toujane_fx.gsc's wind blown dust), looking up at the sky
 SPOT = '3051 2178 80 210'
@@ -65,7 +69,7 @@ Callback_PlayerConnect()
 '''
 DIFF = 40
 MIN_PIXELS = 500
-SECONDS = 360
+SECONDS = 420
 
 
 def tga(path):
@@ -97,7 +101,9 @@ def config(effects):
         # by), then one after it has played every 0.2 s for a while, so the
         # shot sees it whatever its life; fxTest without a time plays it once
         # more and stops repeating it, then the smoke has 15 seconds to clear
-        lines += [f'screenshot fx_{n}_none', 'wait 12', f'screenshot fx_{n}_still',
+        # (a screenshot is taken a few frames after its command, so the
+        # effect starts 6 frames after the second one)
+        lines += [f'screenshot fx_{n}_none', 'wait 12', f'screenshot fx_{n}_still', 'wait 6',
                   f'fxTest {fx} 0.2', 'wait 12', f'screenshot fx_{n}', f'fxTest {fx}', 'wait 300']
     return '\n'.join(lines + ['quit']) + '\n'
 
@@ -160,7 +166,8 @@ def main():
         text = open(log_path, encoding='latin-1').read() if os.path.exists(log_path) else ''
         reports = [n for n in os.listdir(home) if n.startswith('cod2_crash_')]
         check('no crash report from the client', 'CRASH REPORT' not in text and not reports, ', '.join(reports))
-        failed = [l.strip() for l in text.splitlines() if 'FX Error' in l or 'Effect file load failed' in l]
+        failed = [l.strip() for l in text.splitlines() if ('FX Error' in l or 'Effect file load failed' in l)
+                  and not any(m in l for m in MISSING)]
         check('every effect loads', not failed, '; '.join(failed[:3]))
         shot = lambda name: os.path.join(shots, f'{name}.tga')
         for n, fx in enumerate(effects):
