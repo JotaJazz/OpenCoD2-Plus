@@ -94,7 +94,7 @@ cmake --build build-win32 --target gfxdll
 # -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
 ```
 
-A ponte entre o renderizador e o motor está pré-gerada e incluída no repositório em `build/gfxdll/`; a compilação é apenas compilar e ligar. Experimental e não testada exaustivamente.
+A ponte entre o renderizador e o motor está pré-gerada e incluída no repositório em `build/gfxdll/`; a compilação é apenas compilar e ligar. Experimental: de momento não liga, porque a sua ponte pré-gerada ficou para trás do motor (ver os problemas conhecidos em `docs/CHANGES.md`).
 
 ### Windows (MSVC, nativo)
 

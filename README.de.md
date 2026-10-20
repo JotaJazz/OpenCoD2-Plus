@@ -94,7 +94,7 @@ cmake --build build-win32 --target gfxdll
 # -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
 ```
 
-Die Brücke zwischen Renderer und Engine ist vorab generiert und unter `build/gfxdll/` eingecheckt; der Build besteht nur aus Kompilieren und Linken. Experimentell und nicht umfassend getestet.
+Die Brücke zwischen Renderer und Engine ist vorab generiert und unter `build/gfxdll/` eingecheckt; der Build besteht nur aus Kompilieren und Linken. Experimentell: Derzeit lässt es sich nicht linken, weil die vorab generierte Brücke hinter der Engine zurückgeblieben ist (siehe die bekannten Probleme in `docs/CHANGES.md`).
 
 ### Windows (MSVC, nativ)
 

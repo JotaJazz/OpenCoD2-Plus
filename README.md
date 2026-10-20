@@ -94,7 +94,7 @@ cmake --build build-win32 --target gfxdll
 # -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
 ```
 
-The renderer–engine bridge is pre-generated and committed under `build/gfxdll/`; the build is pure compile and link. Experimental and not exhaustively tested.
+The renderer–engine bridge is pre-generated and committed under `build/gfxdll/`; the build is pure compile and link. Experimental: it does not link at present, its pre-generated bridge having fallen behind the engine (see Known problems in `docs/CHANGES.md`).
 
 ### Windows (MSVC, native)
 

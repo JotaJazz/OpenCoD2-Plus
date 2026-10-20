@@ -94,7 +94,7 @@ cmake --build build-win32 --target gfxdll
 # -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
 ```
 
-Le pont entre le moteur de rendu et le moteur est pré-généré et versionné dans `build/gfxdll/` ; la compilation n'est que compilation et édition de liens. Expérimental et pas testé de manière exhaustive.
+Le pont entre le moteur de rendu et le moteur est pré-généré et versionné dans `build/gfxdll/` ; la compilation n'est que compilation et édition de liens. Expérimental : pour l'instant il ne se lie pas, son pont pré-généré étant en retard sur le moteur (voir les problèmes connus dans `docs/CHANGES.md`).
 
 ### Windows (MSVC, natif)
 
