@@ -228,6 +228,21 @@ SDL_Window *sdl_gl_window = NULL;
 int sdl_gl_width = 640;
 int sdl_gl_height = 480;
 
+#ifdef _WIN32
+/* the game window's HWND, for Miles's DirectSound (src/PC/win32/mss32_dll.c) */
+void *Sys_GetGameWindow(void)
+{
+    SDL_SysWMinfo info;
+
+    if (!sdl_gl_window)
+        return NULL;
+    SDL_VERSION(&info.version);
+    if (!SDL_GetWindowWMInfo(sdl_gl_window, &info))
+        return NULL;
+    return (void *)info.info.win.window;
+}
+#endif
+
 /* The display's modes, at least 640x480, each width and height once, from
  * the smallest: what the original's renderer lists in r_mode from the
  * adapter's modes (EnumAdapterModes). Returns their count, 0 without SDL's

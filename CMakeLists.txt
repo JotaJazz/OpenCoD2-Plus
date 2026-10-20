@@ -477,6 +477,10 @@ list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast
 list(APPEND WIN_C src/blobs/bss.c src/unix/sysdiff_statehash.c)
 if(COD2_WIN32_CLIENT)
   list(APPEND WIN_C src/unix/linux_input.c)   # pure-SDL2 event pump, works on win32
+  # Miles: the game's own mss32.dll (src/PC/win32/mss32_dll.c) instead of the
+  # Mac port's engine
+  list(REMOVE_ITEM WIN_C src/Mac/Tools/MacMSS.c)
+  add_compile_definitions(COD2_MSS32_DLL=1)
 else()
   list(REMOVE_ITEM WIN_C src/win32/gl_loader.c)  # client-only (real GL loader)
 endif()

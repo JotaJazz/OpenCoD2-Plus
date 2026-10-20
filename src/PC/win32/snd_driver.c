@@ -81,6 +81,10 @@ extern void AIL_set_digital_master_room_type(void *dig, int room_type);
 extern void AIL_set_digital_master_reverb_levels(void *dig, float dry, float wet);
 extern void AIL_set_3D_room_type(void *provider, int room_type);
 extern int AIL_startup(int flags);
+/* the sound globals themselves: imp_g_snd is their address, which this file
+ * read as a pointer to them (their first word, 0), crashing as soon as Miles
+ * started */
+extern struct snd_local_t g_snd;
 extern void AIL_set_redist_directory(const char *dir);
 extern void *AIL_open_digital_driver(int freq, int bits, int channels, int flags);
 extern int AIL_set_preference(int pref, int value);
@@ -123,10 +127,18 @@ static struct MssLocal milesGlob;
 
 static HSAMPLE handle_2D_004a3ad4[8];
 
-static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
-static void MSS_FileCloseCallback(long unsigned int hFileHandle);
-static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
-static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
+/* Miles calls its file callbacks __stdcall (AILCALLBACK): the original's
+ * pop their arguments (ret 8, 4, 0xc, 0xc). The Mac port's MacMSS.c calls
+ * them as plain functions. */
+#ifdef COD2_MSS32_DLL
+#define MSS_CALLBACK __stdcall
+#else
+#define MSS_CALLBACK
+#endif
+static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
+static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle);
+static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
+static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
 void SND_ShutdownDriver(void);
 int SND_GetDriverCPUPercentage(void);
 void SND_Stop2DChannel(int index);
@@ -180,18 +192,18 @@ Bool SND_InitDriver(void);
 void SND_SetStreamChannelFromSaveInfo(int index, snd_save_stream_t *info);
 void SND_DriverPostUpdate(int frametime);
 
-static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
+static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
 {
 
     return ((unsigned int)FS_FOpenFileReadStream(pszFilename, phFileHandle, 1) >> 31) ^ 1;
 }
 
-static void MSS_FileCloseCallback(long unsigned int hFileHandle)
+static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle)
 {
     FS_FCloseFile((int)hFileHandle);
 }
 
-static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
+static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
 {
     switch (type) {
     case 0:
@@ -208,7 +220,7 @@ static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int off
     }
 }
 
-static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
+static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
 {
     return FS_Read(pBuffer, (int)bytes, (int)hFileHandle);
 }
@@ -1125,7 +1137,7 @@ int SND_StartAlias2DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
     AIL_set_sample_address(handle, (void *)((MssSound *)sound)->info.data_ptr, (int)((MssSound *)sound)->info.data_len);
     AIL_set_sample_adpcm_block_size(handle, (int)((MssSound *)sound)->info.block_size);
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     AIL_set_sample_playback_rate(handle, (int)floorf((float)(int)((MssSound *)sound)->info.rate * pitch * sndGlob->timescale + 0.5f));
 
     aliasFlags = pAlias0->flags;
@@ -1169,7 +1181,7 @@ int SND_StartAlias2DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
     AIL_set_sample_ms_position(handle, start_msec);
 
     if (startDelay == 0) {
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         aliasFlags = pAlias0->flags;
         channel = (aliasFlags & 0x780) >> 7;
         if (sndGlob->paused == 0 || sndGlob->pauseSettings[channel] == 0) {
@@ -1223,13 +1235,13 @@ int SND_StartAlias3DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
 
     {
         int listenerIdx = SND_GetListenerIndexNearestToOrigin(org);
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         dist = Vec3Distance(org, sndGlob->listeners[listenerIdx].orient.origin);
     }
     attenuation = SND_Attenuate(pAlias0->volumeFalloffCurve, dist, fDistMin, fDistMax);
 
     aliasFlags = pAlias0->flags;
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     volTable = (float *)sndGlob->channelvol;
     channel = (aliasFlags & 0x780) >> 7;
     scaledVol = attenuation * volume * volTable[channel * 3] * sndGlob->volume;
@@ -1242,7 +1254,7 @@ int SND_StartAlias3DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
     AIL_set_3D_sample_distances(handle, pAlias0->fDistMin, pAlias0->fDistMax);
 
     playbackRate = AIL_3D_sample_playback_rate(handle);
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     AIL_set_3D_sample_playback_rate(handle, (int)floorf((float)playbackRate * pitch * sndGlob->timescale + 0.5f));
     SND_Set3DPosition(index, org);
 
@@ -1279,7 +1291,7 @@ int SND_StartAlias3DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
     }
 
     if (startDelay == 0) {
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         aliasFlags = pAlias0->flags;
         channel = (aliasFlags & 0x780) >> 7;
         if (sndGlob->paused == 0 || sndGlob->pauseSettings[channel] == 0) {
@@ -1353,7 +1365,7 @@ got_handle:
     srcChannelCount = (filetype & 2) ? 2 : 1;
 
     baserate = AIL_stream_playback_rate(handle);
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     AIL_set_stream_playback_rate(handle, (int)floorf((float)baserate * pitch * sndGlob->timescale + 0.5f));
 
     aliasFlags = pAlias0->flags;
@@ -1406,7 +1418,7 @@ got_handle:
     AIL_set_stream_ms_position(handle, start_msec);
 
     if (startDelay == 0) {
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         aliasFlags = pAlias0->flags;
         channel = (aliasFlags & 0x780) >> 7;
         if (sndGlob->paused == 0 || sndGlob->pauseSettings[channel] == 0) {
@@ -1423,7 +1435,7 @@ got_handle:
     }
 
     {
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         to = sndGlob->chaninfo[index].org;
         to[0] = org[0];
         to[1] = org[1];
@@ -1433,7 +1445,7 @@ got_handle:
     SND_SetChannelInfo(index, entnum, pAlias0, pAlias1, lerp, org, volume, pitch, srcChannelCount, baserate, (int)total_msec, start_msec, startDelay, master, (int)system);
 
     {
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         int chFlags = sndGlob->chaninfo[index].pAlias0->flags;
         channel = (chFlags & 0x780) >> 7;
     }
@@ -1443,7 +1455,7 @@ got_handle:
         MSS_SpatializeStreamImpl(streamIdx, &volume, &pan);
 
         if (AIL_is_3D_stream(milesGlob.handle_stream[streamIdx])) {
-            sndGlob = *(snd_local_t **)imp_g_snd;
+            sndGlob = &g_snd;
             to = sndGlob->chaninfo[index].org;
             {
                 int listenerIdx = SND_GetListenerIndexNearestToOrigin(to);
@@ -1462,7 +1474,7 @@ got_handle:
             pan = 0.5f;
         }
 
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         aliasFlags = pAlias0->flags;
         scaledVol = sndGlob->volume * volume;
         volTable = (float *)sndGlob->channelvol;
@@ -1498,7 +1510,7 @@ void SND_Update3DChannel(int i, int frametime)
     float scaledVol;
     int startDelay, newDelay;
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     ch = (byte *)&sndGlob->chaninfo[i];
 
     {
@@ -1526,13 +1538,13 @@ void SND_Update3DChannel(int i, int frametime)
 
         {
             int listenerIdx = SND_GetListenerIndexNearestToOrigin(org);
-            sndGlob = *(snd_local_t **)imp_g_snd;
+            sndGlob = &g_snd;
             dist = Vec3Distance(org, sndGlob->listeners[listenerIdx].orient.origin);
         }
         attenuation = SND_Attenuate(pAlias0->volumeFalloffCurve, dist, fDistMin, fDistMax);
         volume *= attenuation;
 
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         if (sndGlob->slaveLerp != 0.0f && ci->master == 0) {
             aliasFlags = pAlias0->flags;
             if (aliasFlags & 4) {
@@ -1543,7 +1555,7 @@ void SND_Update3DChannel(int i, int frametime)
             aliasFlags = pAlias0->flags;
         }
 
-        sndGlob = *(snd_local_t **)imp_g_snd;
+        sndGlob = &g_snd;
         volTable = (float *)sndGlob->channelvol;
         channel = (aliasFlags & 0x780) >> 7;
         scaledVol = volume * volTable[channel * 3] * sndGlob->volume;
@@ -1663,7 +1675,7 @@ Bool SND_InitDriver(void)
         goto shutdown_and_fail;
     }
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     sndGlob->Initialized2d = 1;
     sndGlob->max_2D_channels = 8;
     sndGlob->max_stream_channels = 0xd;
@@ -1739,7 +1751,7 @@ Bool SND_InitDriver(void)
 
 configure_provider:
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     sndGlob->Initialized3d = 1;
     AIL_3D_provider_attribute( (void *)(milesGlob.provider_3D), (const char *)"Maximum supported samples", (void *)&sndGlob->max_3D_channels);
     if (sndGlob->max_3D_channels > 0x20) {
@@ -1752,7 +1764,7 @@ configure_provider:
     }
     AIL_set_3D_rolloff_factor( (void *)(milesGlob.provider_3D), 0.0f);
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     for (i = 0; i < sndGlob->max_2D_channels; i++) {
         handle_2D_004a3ad4[i] = (HSAMPLE)(AIL_allocate_sample_handle( (void *)(milesGlob.driver_2D)));
         if (handle_2D_004a3ad4[i] == NULL) {
@@ -1760,7 +1772,7 @@ configure_provider:
         }
     }
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     for (i = 0; i < sndGlob->max_3D_channels; i++) {
         milesGlob.handle_3D[i] = AIL_allocate_3D_sample_handle( (void *)(milesGlob.provider_3D));
         if (milesGlob.handle_3D[i] == NULL) {
@@ -1768,7 +1780,7 @@ configure_provider:
         }
     }
 
-    sndGlob = *(snd_local_t **)imp_g_snd;
+    sndGlob = &g_snd;
     sndGlob->ambient_track = 2;
     return 1;
 
@@ -1788,7 +1800,7 @@ void SND_SetStreamChannelFromSaveInfo(int index, snd_save_stream_t *info)
 {
     float pan = info->pan;
     float vol = info->volume * g_snd.volume;
-    snd_local_t *sndGlob = *(snd_local_t **)imp_g_snd;
+    snd_local_t *sndGlob = &g_snd;
     if (sndGlob->chaninfo[index].srcChannelCount == 2) {
         const snd_alias_t *pA = sndGlob->chaninfo[index].pAlias0;
         int ch = (pA->flags & 0x780) >> 7;

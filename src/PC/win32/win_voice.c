@@ -46,6 +46,7 @@ extern char old_rec_source[256];
 extern float voice_current_voicelevel;
 extern float voice_current_scaler;
 extern int g_voice_initialized;
+extern void Com_Printf(const char *fmt, ...);
 extern float levelSamples[6];
 extern int sampleCount;
 static int count;
@@ -55,6 +56,7 @@ static recordingSample_t *currentRecordingSample;
 
 static short unsigned int *(*s_clientSamples[128])[4];
 static int s_clientTalkTime[64];
+static int s_voiceBandwidth;
 
 Bool Voice_Init(void);
 float Voice_GetVoiceLevel(void);
@@ -75,7 +77,19 @@ Bool Voice_Init(void)
     winvoice_save_voice = Dvar_RegisterBool("winvoice_save_voice", 0, 0x1001);
     winvoice_mic_scaler = Dvar_RegisterFloat("winvoice_mic_scaler", 1.0f, 0.25f, 2.0f, 0x1001);
 
-    freq = *(int **)&voice_freq_ptr;
+    /* Voice chat is not in this build yet: its recording, encoding and
+     * decoding still read zeroed stand-ins for the original's data
+     * (record_callback_ptr, encode_vol_ptr, voice_scale_ptr,
+     * voice_maxframe_ptr, the speex mode and quality pointers) as pointers,
+     * and wrote through NULL as soon as the game's sound started. The rest
+     * of the sound runs without it. */
+    Com_Printf("Voice chat is not available in this build\n");
+    return 0;
+
+    /* the original zeroes a global it then hands Encode_Init and Decode_Init
+     * (0x19a1c2c); the reconstruction read voice_freq_ptr, a zeroed blob,
+     * as a pointer to it and wrote through NULL */
+    freq = &s_voiceBandwidth;
     *freq = 0;
 
     if (!Record_Init(0, 0))
@@ -168,6 +182,9 @@ void Voice_IncomingVoiceData(int talker, unsigned char *data, int packetDataSize
 
     talkerIdx = (unsigned char)talker;
     s_clientTalkTime[talkerIdx] = Sys_Milliseconds();
+
+    if (!g_voice_initialized)
+        return;  /* the talker is shown, but there is nothing to play it with */
 
     decodedLen = 0;
     if (packetDataSize > 0) {
