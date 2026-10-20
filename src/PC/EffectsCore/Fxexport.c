@@ -62,9 +62,12 @@ int FX_GetBoneIndex(const int entNum, unsigned int bone)
 
 void FX_PlaySimpleEffect(EffectTemplate *fx, const vec_t *org)
 {
-    /* no orientation, no bolt: pass explicit NULLs so the trailing axis/bolt args
-       aren't garbage x64 registers (was UB: too few args for the 5-param callee). */
-    FxScheduler_PlayEffect(*(void **)*(void **)&fx_scheduler_ptr, fx, org, (MediaHandles *(*)[4])0, (const FxBoltInfo *)0);
+    /* an effect's forward is up (its x axis is the normal it plays along), as
+     * CoD2MP_s.exe 1.3 (0x499500): forward (0, 0, 1), then (1, 0, 0) and
+     * (0, 1, 0); no bolt */
+    vec3_t axis[3] = { { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } };
+
+    FxScheduler_PlayEffect(*(void **)*(void **)&fx_scheduler_ptr, fx, org, (MediaHandles *(*)[4])axis, (const FxBoltInfo *)0);
 }
 
 void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd)

@@ -213,7 +213,8 @@ void FxScheduler_CreateEffect(const FxScheduler *_this, const EffectTemplate *fx
 
     AxisCopy( (vec3_t (*))((const vec_t *)axis), (vec3_t (*))((vec_t *)ax));
 
-    if (primTemp->mSpawnFlags & 1) {
+    /* randrotaroundfwd (CoD2MP_s.exe 1.3 tests 0x100 at 0x49a001) */
+    if (primTemp->mSpawnFlags & 0x100) {
         vec3_t rotated;
         float angle = flrand(0.0f, 360.0f);
         RotatePointAroundVector(rotated, (const vec_t *)ax, (const vec_t *)axis + 3, angle);
@@ -320,7 +321,7 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
     int rangeCheck;
     float culldist;
 
-    helper = *(FxHelper **)&imp_theFxHelper;
+    helper = *(FxHelper **)imp_theFxHelper;
 
     seed = FxHelper_GetSeed(helper);
     ((FxScheduler *)_this)->mSeed = seed;
@@ -417,7 +418,8 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
             }
         }
 
-        if (prim->mSpawnFlags & 4) {
+        /* frustumCull (0x400, at 0x49986f) */
+        if (prim->mSpawnFlags & 0x400) {
             if (FxHelper_CullSpherePreviousFrame(helper, origin, prim->spawnFrustumCullRadius)) {
                 continue;
             }
@@ -486,8 +488,11 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
 
                 AxisCopy( (vec3_t (*))((const vec_t *)ax), (vec3_t (*))((vec_t *)sfx->mAxis));
 
-                sfx->mScheduledNext = ((FxScheduler *)_this)->mScheduledCount;
-                ((FxScheduler *)_this)->mScheduledCount = (int)(size_t)sfx;
+                /* onto the list FX_AddScheduledEffects walks, as FxScheduler's
+                 * restore does: it went into the count, and the effect was
+                 * lost */
+                sfx->mScheduledNext = (int)(size_t)((FxScheduler *)_this)->mScheduledHead;
+                ((FxScheduler *)_this)->mScheduledHead = sfx;
                 ((FxScheduler *)_this)->mScheduledCount += 1;
             } else {
 

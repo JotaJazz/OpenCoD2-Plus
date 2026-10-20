@@ -125,7 +125,7 @@ void FX_CalcOrigin2(const PrimitiveTemplate *primTemp, vec_t *org, vec_t *org2, 
 Bool FX_GetBoneOrientation(const FxBoltInfo *bolt, orientation_t *orient);
 void FX_AddScheduledEffects(const vec_t *start, const vec_t *end);
 float FX_GetServerVisibility(const vec_t *start, const vec_t *end);
-static void FX_CalcOriginAndAxis(EffectPrimitive *prim, vec_t *orgOut, vec3_t *ax);
+static void FX_CalcOriginAndAxis(EffectPrimitive *prim, vec_t *orgOut, const vec_t *origin, vec3_t *ax);
 static void FX_InitParticle(EffectPrimitive *prim, Particle *particle, vec_t *newOrigin, const vec_t *origin, vec3_t *ax, int indexInBatch);
 void FX_AddCameraShake(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddFxRunner(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
@@ -518,10 +518,9 @@ extern void Vec3Cross(const vec_t *a, const vec_t *b, vec_t *out);
 extern void MakeNormalVectors(const vec_t *forward, vec_t *right, vec_t *up);
 extern void AxisTransformVector(vec3_t *axes, const vec_t x, const vec_t y, const vec_t z, vec_t *out);
 extern void OrientationPosFromWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
-static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, vec3_t *ax)
+static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, const vec_t *origin, vec3_t *ax)
 {
     byte *primTemp = *(byte **)(prim + 4);
-    const vec_t *origin = (const vec_t *)((byte *)prim + 4);
 
     vec3_t up = { 0.0f, 0.0f, 1.0f };
     int flags = (((PrimitiveTemplate *)(primTemp))->mSpawnFlags);
@@ -541,6 +540,17 @@ static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, vec3_t *ax)
         float y = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mOrigin1Y))));
         float x = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mOrigin1X))));
         AxisTransformVector(ax, x, y, z, org);
+    }
+
+    /* the offset is from the effect's origin, as Raven's
+     * CFxScheduler::CreateEffect: "We always add our calculated offset to
+     * the passed in origin, unless relative"; a primitive has a bolt frame
+     * only when it is relative and the effect has a bolt
+     * (FX_GetBoltingFrame), and is then placed from it each frame */
+    if (!((EffectPrimitive *)prim)->boltFrame.value) {
+        org[0] += origin[0];
+        org[1] += origin[1];
+        org[2] += origin[2];
     }
 
     orgOut[0] = org[0];
@@ -638,9 +648,9 @@ static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, vec3_t *ax)
     }
 }
 
-static inline __attribute__((always_inline)) void FX_CalcOriginAndAxis(EffectPrimitive *prim, vec_t *orgOut, vec3_t *ax)
+static inline __attribute__((always_inline)) void FX_CalcOriginAndAxis(EffectPrimitive *prim, vec_t *orgOut, const vec_t *origin, vec3_t *ax)
 {
-    FX_CalcOriginAndAxis_impl((byte *)prim, orgOut, ax);
+    FX_CalcOriginAndAxis_impl((byte *)prim, orgOut, origin, ax);
 }
 
 extern void AxisTransformVector(vec3_t *axes, const vec_t x, const vec_t y, const vec_t z, vec_t *out);
@@ -674,7 +684,7 @@ static void FX_InitParticle_impl(byte *prim, Effect *particle, vec_t *newOrigin,
     (((Particle *)(particle))->gravity) = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mGravity))));
     (((Particle *)(particle))->windModifier) = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mWindModifier))));
 
-    FX_CalcOriginAndAxis_impl(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis_impl(prim, newOrigin, origin, ax);
     Particle_SetAxis( (const Particle *)(particle), ax);
 
     (((Particle *)(particle))->nonUniformScale) = ((PrimitiveTemplate *)primTemp)->mNonUniformScale;
@@ -694,7 +704,7 @@ void FX_AddCameraShake(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, c
     (void)lateTime;
     (void)indexInBatch;
     vec3_t newOrigin;
-    FX_CalcOriginAndAxis(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis(prim, newOrigin, origin, ax);
     byte *primTemp = (byte *)prim->primTemp;
     float duration = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mLife))));
     float fadeTime = FxRange_GetVal((const FxRange *)(((char *)primTemp + offsetof(PrimitiveTemplate, mRadius))));
@@ -710,7 +720,7 @@ void FX_AddFxRunner(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, cons
     (void)lateTime;
     (void)indexInBatch;
     vec3_t newOrigin;
-    FX_CalcOriginAndAxis(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis(prim, newOrigin, origin, ax);
     byte *primTemp = (byte *)prim->primTemp;
     void *bolt = (void *)prim->boltFrame.value;
     void *effect = MediaHandles_GetEffect((const MediaHandles *)(((char *)primTemp + offsetof(PrimitiveTemplate, mPlayFxHandles))));
@@ -730,7 +740,7 @@ void FX_AddDecal(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const i
     (void)lateTime;
     (void)indexInBatch;
     vec3_t newOrigin;
-    FX_CalcOriginAndAxis(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis(prim, newOrigin, origin, ax);
     FxScheduler_CreateDecalEffect(*(void **)imp_theFxScheduler, (void *)prim->primTemp, newOrigin, ax);
 }
 
@@ -1067,7 +1077,7 @@ void FX_AddLight(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const i
     }
 
     vec3_t newOrigin;
-    FX_CalcOriginAndAxis(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis(prim, newOrigin, origin, ax);
     PART_ANCHOR_X(light) = newOrigin[0];
     PART_ANCHOR_Y(light) = newOrigin[1];
     PART_ANCHOR_Z(light) = newOrigin[2];
@@ -1151,7 +1161,7 @@ void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const in
     vec3_t newOrigin;
     vec3_t org2;
     vec3_t worldEnd;
-    FX_CalcOriginAndAxis(prim, newOrigin, ax);
+    FX_CalcOriginAndAxis(prim, newOrigin, origin, ax);
 
     Particle_SetAxis( (const Particle *)(p), ax);
 
@@ -1867,6 +1877,10 @@ void FX_DrawScheduledEffects(void)
             count = privateEffectActiveCountBolt;
         }
     }
+
+    /* then culls, sorts and draws them: CoD2MP_s.exe 1.3's version
+     * (0x4a2950, which the renderer calls) ends jumping to it */
+    FX_DrawAll();
 }
 
 extern void FxArchive_FxArchive(const FxArchive *arch);
