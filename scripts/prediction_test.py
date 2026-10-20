@@ -26,7 +26,8 @@ from hit_location_test import PREFERENCES, RCON, join
 DEFAULT_CLIENT = {115: 'build/check-linux-10/cod2_linux', 118: 'build/check-linux/cod2_linux'}
 DEFAULT_SERVER = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-linux/cod2_lnxded'}
 
-# frames at the client's framerate (about 20 under WSLg): 'wait 30' is over a second
+# frames at the client's framerate, which the test holds at 20 (com_maxfps):
+# 'wait 20' is a second
 MOVES = '''wait 300
 +forward; wait 60; -forward
 +back; wait 60; -back
@@ -58,6 +59,7 @@ def main():
     ap.add_argument('--server')
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--max-misses', type=int, default=None, help='fail above this many misses')
+    ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
     args = ap.parse_args()
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
@@ -83,7 +85,7 @@ def main():
             f.write(GAMETYPE)
         os.makedirs(os.path.join(client_home, 'main'))
         with open(os.path.join(client_home, 'main', 'moves.cfg'), 'w') as f:
-            f.write(MOVES)
+            f.write(open(args.moves).read() if args.moves else MOVES)
         client_log = os.path.join(client_home, 'out.log')
         try:
             server = subprocess.Popen([server_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath', home,
@@ -98,11 +100,20 @@ def main():
             check('the server runs the map', up)
             if up:
                 target, why = join(port, args.protocol, 'contacttarget')
+                if target:
+                    # the first player in the game is the target: the real
+                    # client must be the second, on the target's spawn point
+                    end = time.time() + 30
+                    while time.time() < end and 'contact target' not in game_log(home):
+                        target.read_frames(0.5, False)
+                    if 'contact target' not in game_log(home):
+                        target.close()
+                        target, why = None, 'not in the game'
                 check('the target joins', target is not None, why)
             if target:
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'r_fullscreen', '0', '+set', 'cg_showmiss', '1',
+                                               client_home, '+set', 'r_fullscreen', '0', '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', '20',
                                                '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
@@ -116,10 +127,23 @@ def main():
                 if joined:
                     # the moves take about a minute at WSLg's framerate; the
                     # client writes its log at exit, so it is read after
+                    mover = int(re.search(r'contact mover (\d+)', game_log(home)).group(1))
+                    path, last, start = 0.0, None, None
                     end = time.time() + MOVES_SECONDS
                     while time.time() < end and client.poll() is None:
-                        target.read_frames(0.5, False)
+                        for frame in target.read_frames(0.5, False):
+                            ent = frame['entities'].get(mover)
+                            if ent and 'pos.trBase' in ent:
+                                pos = ent['pos.trBase']
+                                if last is not None:
+                                    path += sum((a - b) ** 2 for a, b in zip(pos, last)) ** 0.5
+                                start = start or pos
+                                last = pos
                     check('the client still runs', client.poll() is None, f'exit code {client.poll()}')
+                    # the target sees the mover walk (no misses mean nothing
+                    # if it did not)
+                    where = ' '.join(f'{c:.0f}' for c in start) if start else 'unseen'
+                    check('the client moves', path > 300, f'{path:.0f} units from {where}')
         finally:
             if target:
                 target.close()
