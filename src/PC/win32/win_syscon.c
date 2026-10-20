@@ -3,6 +3,7 @@
 
 #    include <stdio.h>
 #    include <string.h>
+#    include <stdlib.h>
 #    include <float.h>
 
 #    if defined(COD2_VC71_COMPAT_H)
@@ -307,10 +308,19 @@ void Conbuf_AppendText(const char *pMsg)
     bufLen = (int)(b - buffer);
     (void)i;
 
-    if (!s_wcd.hwndBuffer) {
-        fputs(buffer, stdout);
-        fflush(stdout);
-        return;
+    {
+        /* without its window the console goes to stdout; with it,
+         * COD2_CONSOLE_STDOUT copies it there too, to read a client run
+         * under Wine or from a script */
+        static int toStdout = -1;
+        if (toStdout < 0)
+            toStdout = getenv("COD2_CONSOLE_STDOUT") != NULL;
+        if (!s_wcd.hwndBuffer || toStdout) {
+            fputs(buffer, stdout);
+            fflush(stdout);
+        }
+        if (!s_wcd.hwndBuffer)
+            return;
     }
 
     if (bufLen > 0) {

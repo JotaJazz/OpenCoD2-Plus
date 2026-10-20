@@ -62,7 +62,7 @@ def client(binary, game_dir, home, args, log, wine=None):
         return subprocess.Popen([wine, binary, '+set', 'fs_basepath', wine_path(game_dir), '+set', 'fs_homepath',
                                  wine_path(home), '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log,
                                 stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                env=dict(os.environ, COD2_CONSOLE_STDOUT='1'))
+                                env=dict(os.environ, COD2_CONSOLE_STDOUT='1', COD2_CRASH_NOPOPUP='1'))
     return subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(game_dir), '+set', 'fs_homepath', home,
                              '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log, stderr=subprocess.STDOUT,
                             stdin=subprocess.DEVNULL)
@@ -82,7 +82,11 @@ def main():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
     binary = os.path.abspath(args.binary or os.path.join(ROOT, DEFAULT_BINARY[args.protocol]))
+    if args.host_wine and not args.host_binary:
+        ap.error('--host-wine runs --host-binary, a Windows client')
     host_binary = os.path.abspath(args.host_binary) if args.host_binary else binary
+    # the clients run from their home folders: a relative command would not be found
+    host_wine = os.path.abspath(args.host_wine) if args.host_wine and os.sep in args.host_wine else args.host_wine
     port = smoke_test.free_port()
     run = Run()
     procs = []
@@ -94,7 +98,7 @@ def main():
                 host = client(host_binary, args.game_dir, host_home,
                               ['+set', 'net_port', str(port), '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'tdm',
                                '+set', 'sv_maxclients', '8', '+set', 'g_speed', G_SPEED, '+map', args.map], log,
-                              wine=args.host_wine)
+                              wine=host_wine)
             procs.append(host)
             up = wait_for(lambda: host.poll() is None and smoke_test.query(port, 'getinfo x'), 150)
             run.check('the host serves its game', bool(up), f'exit code {host.poll()}' if not up else '')

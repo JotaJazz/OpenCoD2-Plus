@@ -173,17 +173,6 @@ void Sys_NormalExit(void)
 
 void Sys_Print(const char *msg)
 {
-#ifdef _WIN32
-    /* the console window is all Windows gets; COD2_CONSOLE_STDOUT copies it
-     * to stdout too, to read a client run under Wine or from a script */
-    static int toStdout = -1;
-    if (toStdout < 0)
-        toStdout = getenv("COD2_CONSOLE_STDOUT") != NULL;
-    if (toStdout) {
-        fputs(msg, stdout);
-        fflush(stdout);
-    }
-#endif
     Conbuf_AppendText(msg);
 }
 

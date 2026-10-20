@@ -43,6 +43,7 @@ Cmd_Args i4 4
 Cmd_Argv i4 4
 Cmd_ArgvBuffer v0 4,4,4
 Cmd_ExecuteString v0 4
+Cmd_RemoveCommand v0 4
 Cmd_SetAutoComplete v0 4,4,4
 Cmd_TokenizeString v0 4
 ColorIndex i4 4

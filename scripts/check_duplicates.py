@@ -26,7 +26,8 @@ def link_objects(build_dir, target):
     objects = []
     for path in files:
         with open(path) as f:
-            objects += [t for t in f.read().split() if t.endswith(('.o', '.obj'))]
+            # MinGW's response files quote some paths
+            objects += [t.strip('"') for t in f.read().split() if t.strip('"').endswith(('.o', '.obj'))]
     return [o if os.path.isabs(o) else os.path.join(build_dir, o) for o in objects]
 
 

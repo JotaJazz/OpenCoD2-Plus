@@ -25,8 +25,10 @@ cd "$dir/debs"
 apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks \
     --no-replaces --no-enhances wine32:i386 | grep -v '^ ' | grep -v '^<' | grep ':i386$' | sort -u |
     while read -r pkg; do dpkg -s "$pkg" >/dev/null 2>&1 || echo "$pkg"; done > ../need.txt
-echo wine32:i386 >> ../need.txt
-echo libz-mingw-w64 >> ../need.txt
+# always these: wine's own packages may be installed already, but their
+# files are needed under DIR
+printf '%s\n' wine32:i386 libwine:i386 libz-mingw-w64 >> ../need.txt
+sort -u -o ../need.txt ../need.txt
 apt-get download $(cat ../need.txt)
 for deb in *.deb; do dpkg -x "$deb" "$root"; done
 
@@ -36,18 +38,20 @@ for deb in *.deb; do dpkg -x "$deb" "$root"; done
 mkdir -p "$dir/fake/server"
 cp "$root/usr/lib/wine/wineserver32" "$dir/fake/server/wineserver"
 ln -sfn "$root/usr/share/wine/nls" "$dir/fake/nls"
-sed -i "s|^wineserver32=.*|wineserver32=$dir/fake/server/wineserver|" "$root/usr/lib/wine/wineserver"
+printf '#!/bin/sh\nexec %q -p0 "$@"\n' "$dir/fake/server/wineserver" > "$root/usr/lib/wine/wineserver"
+chmod +x "$root/usr/lib/wine/wineserver"
 
-cat > "$dir/wine.sh" <<EOF
-#!/bin/bash
-export LD_LIBRARY_PATH=$root/usr/lib/i386-linux-gnu:$root/lib/i386-linux-gnu:$root/usr/lib/i386-linux-gnu/wine/i386-unix\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}
-export WINEDLLPATH=$root/usr/lib/i386-linux-gnu/wine/i386-windows:$root/usr/lib/i386-linux-gnu/wine/i386-unix:$root/usr/i686-w64-mingw32/lib
-export WINESERVER=$dir/fake/server/wineserver
-export WINELOADER=$root/usr/lib/wine/wine
-export WINEPREFIX=\${WINEPREFIX:-$dir/prefix}
-export WINEDEBUG=\${WINEDEBUG:--all}
-exec $root/usr/lib/wine/wine "\$@"
-EOF
+q() { printf '%q' "$1"; }
+{
+    echo '#!/bin/bash'
+    echo "export LD_LIBRARY_PATH=$(q "$root/usr/lib/i386-linux-gnu:$root/lib/i386-linux-gnu:$root/usr/lib/i386-linux-gnu/wine/i386-unix")\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
+    echo "export WINEDLLPATH=$(q "$root/usr/lib/i386-linux-gnu/wine/i386-windows:$root/usr/lib/i386-linux-gnu/wine/i386-unix:$root/usr/i686-w64-mingw32/lib")"
+    echo "export WINESERVER=$(q "$dir/fake/server/wineserver")"
+    echo "export WINELOADER=$(q "$root/usr/lib/wine/wine")"
+    echo "export WINEPREFIX=\${WINEPREFIX:-$(q "$dir/prefix")}"
+    echo 'export WINEDEBUG=${WINEDEBUG:--all}'
+    echo "exec $(q "$root/usr/lib/wine/wine") \"\$@\""
+} > "$dir/wine.sh"
 chmod +x "$dir/wine.sh"
 
 # create the prefix, then give it Windows' zlib, which user32 imports and wine

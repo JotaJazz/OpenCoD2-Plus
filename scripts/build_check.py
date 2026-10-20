@@ -86,7 +86,8 @@ def client_libraries(build_dir):
 def duplicates(variant, build_dir):
     """The C names an executable with CoD2rev-Plus's code gets both from it and
     from the engine, and the exported functions an engine object of it still
-    defines: the dedicated server, and the Linux client's local server."""
+    defines: the dedicated servers, and the Linux and Windows clients' local
+    servers."""
     nm, prefix = ('i686-w64-mingw32-nm', '_') if variant.startswith('mingw') else ('nm', '')
     targets = {'mingw': [('cod2_win32_ded', 'server')], 'mingw-client': [('cod2_win32', 'client_server')]}.get(
         variant, [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')])
