@@ -18,7 +18,7 @@ reads as dvar_developer) it prints "Prediction miss: <distance>" when they
 differ by more than 0.1. Prints the number of misses and their total and
 largest distance, and exits with 0 when the client still runs, walked over
 300 units (as the target sees it), left no crash report, and the misses are
-at most --max-misses. The client opens a window and needs a CD key in
+at most --max-misses (40). The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
 import argparse, os, re, subprocess, sys, tempfile, time
@@ -55,6 +55,9 @@ gostand; wait 30
 wait 30
 '''
 MOVES_SECONDS = 100
+# 14 to 29 in 1.3 and 1.0 when the client's prediction follows the server's
+# code; 119 to 153 before
+MAX_MISSES = 40
 
 
 def main():
@@ -64,7 +67,7 @@ def main():
     ap.add_argument('--binary', help='the client')
     ap.add_argument('--server')
     ap.add_argument('--map', default='mp_toujane')
-    ap.add_argument('--max-misses', type=int, default=None, help='fail above this many misses')
+    ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
     args = ap.parse_args()
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
@@ -161,11 +164,11 @@ def main():
                     except subprocess.TimeoutExpired:
                         p.kill()
         text = open(client_log, encoding='latin-1').read() if os.path.exists(client_log) else ''
-        check('no crash report from the client', 'CRASH REPORT' not in text)
+        reports = [n for n in os.listdir(client_home) if n.startswith('cod2_crash_')]
+        check('no crash report from the client', 'CRASH REPORT' not in text and not reports, ', '.join(reports))
         misses = [float(m) for m in re.findall(r'Prediction miss: ([0-9.]+)', text)]
         print(f'misses: {len(misses)}, total {sum(misses):.1f}, largest {max(misses, default=0):.1f}')
-        if args.max_misses is not None:
-            check(f'at most {args.max_misses} prediction misses', len(misses) <= args.max_misses, f'{len(misses)}')
+        check(f'at most {args.max_misses} prediction misses', len(misses) <= args.max_misses, f'{len(misses)}')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
 
