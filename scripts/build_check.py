@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-client|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-10|mingw-client|mingw-client-10|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
-(cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib. The engine compiles as C++ unless --c is given; with --c,
+(cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
+the -10 ones build 1.0. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -37,6 +38,8 @@ VARIANTS = {
     'mingw': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake'],
     'mingw-client': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake', '-DCOD2_WIN32_CLIENT=ON'],
 }
+for _v in ('mingw', 'mingw-client'):
+    VARIANTS[_v + '-10'] = VARIANTS[_v] + ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10']
 # the MinGW client links the static SDL2 the user supplies
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
@@ -48,7 +51,7 @@ def build(variant, extra):
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
     # the client's own target: its renderer DLL variant (gfxdll) is experimental
-    target = ['--target', 'cod2_win32'] if variant == 'mingw-client' else []
+    target = ['--target', 'cod2_win32'] if variant.startswith('mingw-client') else []
     result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4)] + target + ['--', '-k'],
                             cwd=ROOT, capture_output=True, text=True)
     output = result.stdout + result.stderr
@@ -89,8 +92,12 @@ def duplicates(variant, build_dir):
     defines: the dedicated servers, and the Linux and Windows clients' local
     servers."""
     nm, prefix = ('i686-w64-mingw32-nm', '_') if variant.startswith('mingw') else ('nm', '')
-    targets = {'mingw': [('cod2_win32_ded', 'server')], 'mingw-client': [('cod2_win32', 'client_server')]}.get(
-        variant, [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')])
+    if variant.startswith('mingw-client'):
+        targets = [('cod2_win32', 'client_server')]
+    elif variant.startswith('mingw'):
+        targets = [('cod2_win32_ded', 'server')]
+    else:
+        targets = [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')]
     errors = []
     for target, module in targets:
         if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
@@ -174,7 +181,7 @@ def main():
 
     failed = False
     for variant in variants:
-        if variant == 'mingw-client' and not os.path.exists(SDL2_MINGW):
+        if variant.startswith('mingw-client') and not os.path.exists(SDL2_MINGW):
             print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
             continue
         errors = build(variant, extra)

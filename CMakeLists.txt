@@ -322,6 +322,11 @@ elseif(WIN32)
 # ----------------------------------------------------------------------------
 option(COD2_WIN32_CLIENT "SDL2/GL client (needs static SDL2 libs) instead of the headless server" OFF)
 option(COD2_WIN32_REAL_D3D9 "Real IDirect3DDevice9 renderer path (Wine d3d9.dll)" OFF)
+# feature gates as on Linux (-DCOD2_PATCH_10 builds 1.0): CoD2rev-Plus's
+# PROTOCOL_VERSION already follows them, so the engine has to see them too
+set(COD2_FEATURE_CFLAGS "" CACHE STRING "Pass-through feature gates, e.g. -DCOD2_PATCH_10")
+separate_arguments(COD2_FEATURE_LIST UNIX_COMMAND "${COD2_FEATURE_CFLAGS}")
+add_compile_options(${COD2_FEATURE_LIST})
 
 # win32 C flags (mirror Makefile.win32 WCFLAGS); -fcommon is essential (tentative
 # BSS defs in both bss.c and the reconstructed .c rely on the pre-GCC-10 merge).
