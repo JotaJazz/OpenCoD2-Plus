@@ -8,9 +8,8 @@ symbols by their C names, so a function or a global compiled as C++ without C
 linkage (a _Z... name) breaks them. Exits with 0 when no object defines a
 mangled global symbol other than those in the allowlist (one name per line,
 or re:<regex>; # comments; default test/c_linkage_allowlist.txt). The objects
-of cod2_plus_script, cod2_plus_script_game, cod2_plus_script_core,
-cod2_plus_server and cod2_plus_server_client (CoD2rev-Plus's C++ code and
-its bridges) are skipped: their C++ names are meant to be C++.
+of the targets in check_duplicates.PLUS_TARGETS (CoD2rev-Plus's C++ code,
+libcod and its bridges) are skipped: their C++ names are meant to be C++.
 """
 import argparse, os, re, subprocess, sys
 

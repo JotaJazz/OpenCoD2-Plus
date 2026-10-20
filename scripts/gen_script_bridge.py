@@ -362,7 +362,10 @@ MODULES = {
                             'cod2_plus_server.dir/src/qcommon/*.o', 'cod2_plus_server.dir/src/stringed/*.o',
                             'cod2_plus_server.dir/src/xanim/*.o', 'cod2_plus_server.dir/src/unix/*.o',
                             'cod2_plus_server.dir/src/win32/*.o'],
-                   others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o'],
+                   # libcod (COD2_PLUS_LIBCOD), which the server's LIBCOD blocks call, and
+                   # the dedicated server's VM built with it
+                   others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o',
+                           'cod2_plus_script_ded.dir/src/script/*.o', 'cod2_plus_libcod.dir/src/libcod/*.o'],
                    header=SERVER_HEADER, overloads=SERVER_OVERLOADS, extra_args=SERVER_EXTRA_ARGS,
                    renamed=SERVER_RENAMED, provided=SERVER_PROVIDED, export_custom=SERVER_EXPORT_CUSTOM,
                    export_renamed=SERVER_EXPORT_RENAMED, struct_return_ok=SERVER_STRUCT_RETURN_OK,

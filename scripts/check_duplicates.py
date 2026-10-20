@@ -3,9 +3,9 @@
 
     python3 scripts/check_duplicates.py <build_dir> <target> [--nm NM]
 
-The objects of cod2_plus_script, cod2_plus_script_game, cod2_plus_script_core,
-cod2_plus_server and cod2_plus_server_client (CoD2rev-Plus's code and its
-bridges) define globals by their C names, and the
+The objects of the targets in PLUS_TARGETS (cod2_plus_script and its game,
+core and dedicated variants, cod2_plus_server, cod2_plus_server_client and
+cod2_plus_libcod: CoD2rev-Plus's code and its bridges) define globals by their C names, and the
 data blobs must leave those to them. MinGW links with
 --allow-multiple-definition, so a blob that still defines one wins without an
 error. Reads the objects the target links (CMakeFiles/<target>.dir/objects*.rsp,

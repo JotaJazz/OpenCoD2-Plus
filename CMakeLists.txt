@@ -117,7 +117,7 @@ endif()
 # server, game, bgame, core and script VM are compiled in for the dedicated
 # server only; the client keeps them out.
 option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server" ON)
-if(NOT COD2_PLUS_SERVER)
+if(NOT COD2_PLUS_SERVER OR COD2_WIN32_CLIENT)  # the MinGW client's configuration has no dedicated server
   set(COD2_PLUS_LIBCOD OFF)
 endif()
 set(COD2_LIBCOD_DEFS "")
