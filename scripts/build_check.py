@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-client|all ...] [--c [--cxx-dirs "a;b"]]
 
-linux is the default 1.3 build, linux-10 the 1.0 one and mingw the Windows
-cross-compile. The engine compiles as C++ unless --c is given; with --c,
+linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
+cross-compile of the dedicated server and mingw-client that of the client
+(cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
 distributions than the build machine) and the dedicated server needs none of
 the client's libraries (CLIENT_LIBRARIES). On every variant the dedicated
-server, and the Linux client, must get no C name both from CoD2rev-Plus and
+server, and the Linux and Windows clients, must get no C name both from CoD2rev-Plus and
 from the engine (scripts/check_duplicates.py), and no engine object of them may
 still define a function their bridge exports (scripts/check_single_impl.py), and
 no bridge import may call an engine symbol that is data
@@ -34,7 +35,10 @@ VARIANTS = {
     'linux': [],
     'linux-10': ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10'],
     'mingw': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake'],
+    'mingw-client': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake', '-DCOD2_WIN32_CLIENT=ON'],
 }
+# the MinGW client links the static SDL2 the user supplies
+SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
 
 def build(variant, extra):
@@ -43,7 +47,9 @@ def build(variant, extra):
                                cwd=ROOT, capture_output=True, text=True)
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
-    result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4), '--', '-k'],
+    # the client's own target: its renderer DLL variant (gfxdll) is experimental
+    target = ['--target', 'cod2_win32'] if variant == 'mingw-client' else []
+    result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4)] + target + ['--', '-k'],
                             cwd=ROOT, capture_output=True, text=True)
     output = result.stdout + result.stderr
     errors = [line for line in output.splitlines() if 'error:' in line or 'undefined reference' in line]
@@ -81,9 +87,9 @@ def duplicates(variant, build_dir):
     """The C names an executable with CoD2rev-Plus's code gets both from it and
     from the engine, and the exported functions an engine object of it still
     defines: the dedicated server, and the Linux client's local server."""
-    nm, prefix = ('i686-w64-mingw32-nm', '_') if variant == 'mingw' else ('nm', '')
-    targets = [('cod2_win32_ded', 'server')] if variant == 'mingw' else \
-        [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')]
+    nm, prefix = ('i686-w64-mingw32-nm', '_') if variant.startswith('mingw') else ('nm', '')
+    targets = {'mingw': [('cod2_win32_ded', 'server')], 'mingw-client': [('cod2_win32', 'client_server')]}.get(
+        variant, [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')])
     errors = []
     for target, module in targets:
         if not os.path.isdir(os.path.join(build_dir, 'CMakeFiles', target + '.dir')):
@@ -95,7 +101,7 @@ def duplicates(variant, build_dir):
                                   '--nm', nm] + extra, capture_output=True, text=True)
             if run.returncode != 0:
                 errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
-        executable = os.path.join(build_dir, target + ('.exe' if variant == 'mingw' else ''))
+        executable = os.path.join(build_dir, target + ('.exe' if variant.startswith('mingw') else ''))
         if os.path.exists(executable):
             # the imports the target links: the client's server and collision
             # with the VM's core thunks, the dedicated server's own
@@ -167,6 +173,9 @@ def main():
 
     failed = False
     for variant in variants:
+        if variant == 'mingw-client' and not os.path.exists(SDL2_MINGW):
+            print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
+            continue
         errors = build(variant, extra)
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):

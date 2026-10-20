@@ -1810,7 +1810,7 @@ _str_002157b8: .byte 0  /* empty string */
 /* Missing global variables */
 .data
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/bgame/bg_misctables.cpp defines it */
+#if !COD2_PLUS_GAME /* CoD2rev-Plus's src/bgame/bg_misctables.cpp defines it */
 .globl _bg_numItems
 _bg_numItems: .long 0
 #endif

@@ -100,11 +100,12 @@ option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server, game and bgame (src/server, 
 if(NOT COD2_PLUS_SCRIPT)
   set(COD2_PLUS_SERVER OFF)
 endif()
-# CoD2rev-Plus's server, game and bgame for the Linux client's local games, on
-# the engine's core and xanim; cgame keeps the engine's bgame, whose globals
-# have their eng_ names (scripts/bgame_names.py). It needs COD2_PLUS_SERVER.
-option(COD2_PLUS_CLIENT_SERVER "Use CoD2rev-Plus's server, game and bgame in the Linux client's local games" ON)
-if(NOT COD2_PLUS_SERVER OR WIN32)
+# CoD2rev-Plus's server, game and bgame for the client's local games (Linux,
+# and MinGW with COD2_WIN32_CLIENT), on the engine's core and xanim; cgame
+# keeps the engine's bgame, whose globals have their eng_ names
+# (scripts/bgame_names.py). It needs COD2_PLUS_SERVER.
+option(COD2_PLUS_CLIENT_SERVER "Use CoD2rev-Plus's server, game and bgame in the client's local games" ON)
+if(NOT COD2_PLUS_SERVER OR (WIN32 AND NOT COD2_WIN32_CLIENT))
   set(COD2_PLUS_CLIENT_SERVER OFF)
 endif()
 if(COD2_PLUS_CLIENT_SERVER)
@@ -365,6 +366,11 @@ if(COD2_WIN32_CLIENT)
   list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)
+  if(COD2_PLUS_CLIENT_SERVER)
+    # one executable per configure: the blobs leave the game's and the
+    # collision's globals to CoD2rev-Plus's code, as cod2_linux's do
+    add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1)
+  endif()
 else()
   add_compile_definitions(DEDICATED)
   set(W32_EXE cod2_win32_ded)
@@ -428,6 +434,12 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
   cod2_plus_replaced(WIN_C replaced)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+elseif(COD2_PLUS_CLIENT_SERVER)
+  # the client runs CoD2rev-Plus's server, game, bgame and collision
+  # instead, as cod2_linux does
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
+  cod2_plus_server_client()
+  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
 elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()

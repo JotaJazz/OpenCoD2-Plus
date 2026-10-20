@@ -181,6 +181,9 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_ExecuteString: parameter 0
 extern "C" decltype(Cmd_ExecuteString(std::declval<char const*>())) cod2c_Cmd_ExecuteString(char const* a0) __asm__(COD2_SYM("Cmd_ExecuteString"));
 decltype(Cmd_ExecuteString(std::declval<char const*>())) Cmd_ExecuteString(char const* a0) { return cod2c_Cmd_ExecuteString(a0); }
 
+extern "C" decltype(Cmd_RemoveCommand(std::declval<char const*>())) cod2c_Cmd_RemoveCommand(char const* a0) __asm__(COD2_SYM("Cmd_RemoveCommand"));
+decltype(Cmd_RemoveCommand(std::declval<char const*>())) Cmd_RemoveCommand(char const* a0) { return cod2c_Cmd_RemoveCommand(a0); }
+
 static_assert(cod2_abi_class<decltype(Cmd_SetAutoComplete(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "Cmd_SetAutoComplete: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_SetAutoComplete: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Cmd_SetAutoComplete: parameter 1 differs from the engine");

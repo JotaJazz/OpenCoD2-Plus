@@ -505,7 +505,7 @@ _TheStringPackage:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _bg_itemlist
 .align 4
 _bg_itemlist:
@@ -5647,7 +5647,7 @@ _chatField:
     .byte 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* CoD2rev-Plus's src/server defines it */
 .globl _sv_serverId_value
 .align 4
 _sv_serverId_value:
@@ -6278,7 +6278,7 @@ _kbitmask:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* the client commands of src/PC/server_mp; src/server has its own */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _ucmds
 .align 4
 _ucmds:
@@ -6631,14 +6631,14 @@ _staticNULL:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _playerMaxs
 .align 4
 _playerMaxs:
     .byte 0x00, 0x00, 0x70, 0x41, 0x00, 0x00, 0x70, 0x41, 0x00, 0x00, 0x8c, 0x42
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* CoD2rev-Plus's src/game defines it */
 .globl _playerMins
 .align 4
 _playerMins:
@@ -6661,7 +6661,7 @@ _pm_str_endparty:
     .asciz "endparty"
     .align 4
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _functions
 .align 4
 _functions:
@@ -7102,7 +7102,7 @@ _functions:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _methods_003138c0
 .globl _methods
 .align 4
@@ -7288,7 +7288,7 @@ _methods_003138c0:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _spawns
 .align 4
 _spawns:
@@ -7660,7 +7660,7 @@ _menuParseKeywords:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _entityHandlers
 .align 4
 _entityHandlers:
@@ -7750,7 +7750,7 @@ _entityHandlers:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_he_vertalign
 .align 4
 _g_he_vertalign:
@@ -7764,7 +7764,7 @@ _g_he_vertalign:
     .long _str_002b4d08
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_he_horzalign
 .align 4
 _g_he_horzalign:
@@ -7778,7 +7778,7 @@ _g_he_horzalign:
     .long _str_002b4d08
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_he_aligny
 .align 4
 _g_he_aligny:
@@ -7787,7 +7787,7 @@ _g_he_aligny:
     .long _str_002b4cec
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_he_alignx
 .align 4
 _g_he_alignx:
@@ -7796,7 +7796,7 @@ _g_he_alignx:
     .long _str_002b4d28
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_he_font
 .align 4
 _g_he_font:
@@ -7818,7 +7818,7 @@ _offhandStrings:
     .byte 0x00, 0x00, 0x00, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _hintStrings
 .align 4
 _hintStrings:
@@ -7831,7 +7831,7 @@ _hintStrings:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _actorLocationalMaxs
 .align 4
 _actorLocationalMaxs:
@@ -7840,7 +7840,7 @@ _actorLocationalMaxs:
 #endif
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's src/server defines it */
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* CoD2rev-Plus's src/server defines it */
 .globl _actorLocationalMins
 .align 4
 _actorLocationalMins:
@@ -7849,7 +7849,7 @@ _actorLocationalMins:
 #endif
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _modNames
 .align 4
 _modNames:
@@ -7870,7 +7870,7 @@ _modNames:
     .long _str_002b65c0
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _riflePriorityMap
 .align 4
 _riflePriorityMap:
@@ -7878,7 +7878,7 @@ _riflePriorityMap:
     .byte 0x03, 0x03, 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* CoD2rev-Plus's src/game defines it */
 .globl _bulletPriorityMap
 .align 4
 _bulletPriorityMap:
@@ -7888,7 +7888,7 @@ _bulletPriorityMap:
     .byte 0x00
 #endif
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _g_HitLocNames
 .align 4
 _g_HitLocNames:
@@ -8066,7 +8066,7 @@ _cg_localEntities:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-#if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
+#if !COD2_PLUS_GAME /* the game's: CoD2rev-Plus's code defines it */
 .globl _accuracyDirName
 .align 4
 _accuracyDirName:

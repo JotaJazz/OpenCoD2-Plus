@@ -654,15 +654,18 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--module', default='script', choices=list(MODULES))
     ap.add_argument('--build', action='append', help='a build to read; repeat it to join builds '
-                    '(default: build/check-linux and, when it exists, build/check-mingw)')
+                    '(default: build/check-linux and, when they exist, build/check-mingw and check-mingw-client)')
     ap.add_argument('--names', action='store_true', help='print the imports and exports and write nothing')
     args = ap.parse_args()
     cfg = MODULES[args.module]
     if not args.build:
         args.build = [os.path.join(ROOT, 'build', 'check-linux')]
-        mingw = os.path.join(ROOT, 'build', 'check-mingw')
-        if glob.glob(os.path.join(mingw, 'CMakeFiles', cfg['objects'][0][:-2] + '.obj')):
-            args.build.append(mingw)
+        # the Windows builds' objects too: MinGW compiles without optimizing
+        # and keeps calls GCC drops on Linux (an unused static function's)
+        for mingw in ('check-mingw', 'check-mingw-client'):
+            mingw = os.path.join(ROOT, 'build', mingw)
+            if glob.glob(os.path.join(mingw, 'CMakeFiles', cfg['objects'][0][:-2] + '.obj')):
+                args.build.append(mingw)
 
     defined, exports, imports, interface = read_module(args.module, args.build)
     if args.names:
