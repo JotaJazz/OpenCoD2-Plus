@@ -212,6 +212,16 @@ extern const char *SEH_LocalizeTextMessage(const char *ref, const char *defaultT
 extern refexport_t re;
 extern const clientActive_t *cl;
 extern const clientConnection_t *clc;
+/* Where the download's state lives: 1.3 keeps it in clientStatic_t (the
+ * original's CL_BeginDownload, CL_InitDownloads, CL_ParseDownload and
+ * CL_WWWDownload all use cls's fields, at 0x966db0 on), 1.0 in
+ * clientConnection_t. The reconstruction used 1.0's in 1.3 too, so a download
+ * the server redirected to HTTP started from cls's empty names. */
+#if COD2_IS_PATCH_13
+#define CL_DL (&cls)
+#else
+#define CL_DL (&clientConnections[0])
+#endif
 extern struct clientStatic_t cls;
 extern const dvar_t *cl_nodelta;
 extern const dvar_t *cl_noprint;
@@ -1625,6 +1635,134 @@ int lastUpdateKeyAuthTime;
 
 static const char cl_getKeyAuthorizeFmt_13[] = "getKeyAuthorize %i %s PB %s";
 
+/* The original's CL_BuildMd5StrFromCDKey (0x40cfc0) hashes the key with MD5
+ * (its transform 0x4bc3b0, update 0x4bcd10 and final 0x4bce10 are RSA's)
+ * from another initial state, and prints the digest as 32 hex digits, which
+ * getKeyAuthorize sends after "PB": without it the authorize server never
+ * answered for the key, and servers left the client at "Awaiting
+ * connection". */
+#define CL_MD5_F(x, y, z) (z ^ (x & (y ^ z)))
+#define CL_MD5_G(x, y, z) (y ^ (z & (x ^ y)))
+#define CL_MD5_H(x, y, z) (x ^ y ^ z)
+#define CL_MD5_I(x, y, z) (y ^ (x | ~z))
+#define CL_MD5_STEP(f, w, x, y, z, data, s) \
+    (w += f(x, y, z) + data, w = w << s | w >> (32 - s), w += x)
+
+static void CL_MD5Transform(unsigned int buf[4], const unsigned int in[16])
+{
+    unsigned int a = buf[0], b = buf[1], c = buf[2], d = buf[3];
+
+    CL_MD5_STEP(CL_MD5_F, a, b, c, d, in[0] + 0xd76aa478, 7);
+    CL_MD5_STEP(CL_MD5_F, d, a, b, c, in[1] + 0xe8c7b756, 12);
+    CL_MD5_STEP(CL_MD5_F, c, d, a, b, in[2] + 0x242070db, 17);
+    CL_MD5_STEP(CL_MD5_F, b, c, d, a, in[3] + 0xc1bdceee, 22);
+    CL_MD5_STEP(CL_MD5_F, a, b, c, d, in[4] + 0xf57c0faf, 7);
+    CL_MD5_STEP(CL_MD5_F, d, a, b, c, in[5] + 0x4787c62a, 12);
+    CL_MD5_STEP(CL_MD5_F, c, d, a, b, in[6] + 0xa8304613, 17);
+    CL_MD5_STEP(CL_MD5_F, b, c, d, a, in[7] + 0xfd469501, 22);
+    CL_MD5_STEP(CL_MD5_F, a, b, c, d, in[8] + 0x698098d8, 7);
+    CL_MD5_STEP(CL_MD5_F, d, a, b, c, in[9] + 0x8b44f7af, 12);
+    CL_MD5_STEP(CL_MD5_F, c, d, a, b, in[10] + 0xffff5bb1, 17);
+    CL_MD5_STEP(CL_MD5_F, b, c, d, a, in[11] + 0x895cd7be, 22);
+    CL_MD5_STEP(CL_MD5_F, a, b, c, d, in[12] + 0x6b901122, 7);
+    CL_MD5_STEP(CL_MD5_F, d, a, b, c, in[13] + 0xfd987193, 12);
+    CL_MD5_STEP(CL_MD5_F, c, d, a, b, in[14] + 0xa679438e, 17);
+    CL_MD5_STEP(CL_MD5_F, b, c, d, a, in[15] + 0x49b40821, 22);
+
+    CL_MD5_STEP(CL_MD5_G, a, b, c, d, in[1] + 0xf61e2562, 5);
+    CL_MD5_STEP(CL_MD5_G, d, a, b, c, in[6] + 0xc040b340, 9);
+    CL_MD5_STEP(CL_MD5_G, c, d, a, b, in[11] + 0x265e5a51, 14);
+    CL_MD5_STEP(CL_MD5_G, b, c, d, a, in[0] + 0xe9b6c7aa, 20);
+    CL_MD5_STEP(CL_MD5_G, a, b, c, d, in[5] + 0xd62f105d, 5);
+    CL_MD5_STEP(CL_MD5_G, d, a, b, c, in[10] + 0x02441453, 9);
+    CL_MD5_STEP(CL_MD5_G, c, d, a, b, in[15] + 0xd8a1e681, 14);
+    CL_MD5_STEP(CL_MD5_G, b, c, d, a, in[4] + 0xe7d3fbc8, 20);
+    CL_MD5_STEP(CL_MD5_G, a, b, c, d, in[9] + 0x21e1cde6, 5);
+    CL_MD5_STEP(CL_MD5_G, d, a, b, c, in[14] + 0xc33707d6, 9);
+    CL_MD5_STEP(CL_MD5_G, c, d, a, b, in[3] + 0xf4d50d87, 14);
+    CL_MD5_STEP(CL_MD5_G, b, c, d, a, in[8] + 0x455a14ed, 20);
+    CL_MD5_STEP(CL_MD5_G, a, b, c, d, in[13] + 0xa9e3e905, 5);
+    CL_MD5_STEP(CL_MD5_G, d, a, b, c, in[2] + 0xfcefa3f8, 9);
+    CL_MD5_STEP(CL_MD5_G, c, d, a, b, in[7] + 0x676f02d9, 14);
+    CL_MD5_STEP(CL_MD5_G, b, c, d, a, in[12] + 0x8d2a4c8a, 20);
+
+    CL_MD5_STEP(CL_MD5_H, a, b, c, d, in[5] + 0xfffa3942, 4);
+    CL_MD5_STEP(CL_MD5_H, d, a, b, c, in[8] + 0x8771f681, 11);
+    CL_MD5_STEP(CL_MD5_H, c, d, a, b, in[11] + 0x6d9d6122, 16);
+    CL_MD5_STEP(CL_MD5_H, b, c, d, a, in[14] + 0xfde5380c, 23);
+    CL_MD5_STEP(CL_MD5_H, a, b, c, d, in[1] + 0xa4beea44, 4);
+    CL_MD5_STEP(CL_MD5_H, d, a, b, c, in[4] + 0x4bdecfa9, 11);
+    CL_MD5_STEP(CL_MD5_H, c, d, a, b, in[7] + 0xf6bb4b60, 16);
+    CL_MD5_STEP(CL_MD5_H, b, c, d, a, in[10] + 0xbebfbc70, 23);
+    CL_MD5_STEP(CL_MD5_H, a, b, c, d, in[13] + 0x289b7ec6, 4);
+    CL_MD5_STEP(CL_MD5_H, d, a, b, c, in[0] + 0xeaa127fa, 11);
+    CL_MD5_STEP(CL_MD5_H, c, d, a, b, in[3] + 0xd4ef3085, 16);
+    CL_MD5_STEP(CL_MD5_H, b, c, d, a, in[6] + 0x04881d05, 23);
+    CL_MD5_STEP(CL_MD5_H, a, b, c, d, in[9] + 0xd9d4d039, 4);
+    CL_MD5_STEP(CL_MD5_H, d, a, b, c, in[12] + 0xe6db99e5, 11);
+    CL_MD5_STEP(CL_MD5_H, c, d, a, b, in[15] + 0x1fa27cf8, 16);
+    CL_MD5_STEP(CL_MD5_H, b, c, d, a, in[2] + 0xc4ac5665, 23);
+
+    CL_MD5_STEP(CL_MD5_I, a, b, c, d, in[0] + 0xf4292244, 6);
+    CL_MD5_STEP(CL_MD5_I, d, a, b, c, in[7] + 0x432aff97, 10);
+    CL_MD5_STEP(CL_MD5_I, c, d, a, b, in[14] + 0xab9423a7, 15);
+    CL_MD5_STEP(CL_MD5_I, b, c, d, a, in[5] + 0xfc93a039, 21);
+    CL_MD5_STEP(CL_MD5_I, a, b, c, d, in[12] + 0x655b59c3, 6);
+    CL_MD5_STEP(CL_MD5_I, d, a, b, c, in[3] + 0x8f0ccc92, 10);
+    CL_MD5_STEP(CL_MD5_I, c, d, a, b, in[10] + 0xffeff47d, 15);
+    CL_MD5_STEP(CL_MD5_I, b, c, d, a, in[1] + 0x85845dd1, 21);
+    CL_MD5_STEP(CL_MD5_I, a, b, c, d, in[8] + 0x6fa87e4f, 6);
+    CL_MD5_STEP(CL_MD5_I, d, a, b, c, in[15] + 0xfe2ce6e0, 10);
+    CL_MD5_STEP(CL_MD5_I, c, d, a, b, in[6] + 0xa3014314, 15);
+    CL_MD5_STEP(CL_MD5_I, b, c, d, a, in[13] + 0x4e0811a1, 21);
+    CL_MD5_STEP(CL_MD5_I, a, b, c, d, in[4] + 0xf7537e82, 6);
+    CL_MD5_STEP(CL_MD5_I, d, a, b, c, in[11] + 0xbd3af235, 10);
+    CL_MD5_STEP(CL_MD5_I, c, d, a, b, in[2] + 0x2ad7d2bb, 15);
+    CL_MD5_STEP(CL_MD5_I, b, c, d, a, in[9] + 0xeb86d391, 21);
+
+    buf[0] += a;
+    buf[1] += b;
+    buf[2] += c;
+    buf[3] += d;
+}
+
+static void CL_KeyMD5(const char *text, char *md5Str)
+{
+    unsigned int state[4] = { 0x6f1cd602, 0x226c74be, 0xb31c088d, 0x555a9639 };
+    unsigned int words[16];
+    unsigned char block[64];
+    unsigned int len = (unsigned int)strlen(text);
+    unsigned int done = 0;
+    int i, last = 0;
+
+    /* blocks of the text, then of 0x80, zeros and the length in bits */
+    while (!last) {
+        unsigned int n = len - done < 64 ? len - done : 64;
+        memset(block, 0, sizeof(block));
+        if (done <= len)
+            memcpy(block, text + done, n);
+        if (done + 64 > len) {
+            if (done <= len)
+                block[n] = 0x80;
+            if (n < 56 || done > len) {
+                unsigned int bits = len * 8;
+                block[56] = (unsigned char)bits;
+                block[57] = (unsigned char)(bits >> 8);
+                block[58] = (unsigned char)(bits >> 16);
+                block[59] = (unsigned char)(bits >> 24);
+                last = 1;
+            }
+        }
+        for (i = 0; i < 16; i++)
+            words[i] = block[i * 4] | block[i * 4 + 1] << 8 | block[i * 4 + 2] << 16 | (unsigned int)block[i * 4 + 3] << 24;
+        CL_MD5Transform(state, words);
+        done += 64;
+    }
+
+    for (i = 0; i < 16; i++)
+        sprintf(md5Str + i * 2, "%02x", (state[i / 4] >> (8 * (i % 4))) & 0xff);
+}
+
 static void CL_BuildMd5StrFromCDKey(char *md5Str)
 {
     char nums[64];
@@ -1661,10 +1799,7 @@ static void CL_BuildMd5StrFromCDKey(char *md5Str)
         memmove(nums, p, (size_t)(e - p) + 1);
     strupr(nums);
 
-#    if COD2_FEATURE_PUNKBUSTER
-
-    md5Str[0] = '\0';
-#    endif
+    CL_KeyMD5(nums, md5Str);
 }
 #endif
 
@@ -2549,13 +2684,13 @@ void CL_Disconnect(void)
     if (conn->demorecording)
         CL_StopRecord_f();
 
-    if (conn->download) {
-        FS_FCloseFile(conn->download);
-        conn->download = 0;
+    if (CL_DL->download) {
+        FS_FCloseFile(CL_DL->download);
+        CL_DL->download = 0;
     }
 
-    conn->downloadName[0] = '\0';
-    conn->downloadTempName[0] = '\0';
+    CL_DL->downloadName[0] = '\0';
+    CL_DL->downloadTempName[0] = '\0';
     legacy->cl_downloadName[0] = 0;
 
     if (conn->demofile) {
@@ -2916,8 +3051,8 @@ void CL_DownloadsComplete(void)
     char cmd[1024];
     int i;
 
-    if (clientConnections[0].downloadRestart) {
-        clientConnections[0].downloadRestart = 0;
+    if (CL_DL->downloadRestart) {
+        CL_DL->downloadRestart = 0;
         FS_Restart(clc->checksumFeed);
         CL_AddReliableCommand_core((const char *)"donedl");
         return;
@@ -2989,15 +3124,15 @@ void CL_BeginDownload(const char *localName, const char *remoteName)
 
     Com_DPrintf((const char *)"***** CL_BeginDownload *****\nLocalname: %s\nRemotename: %s\n****************************\n", localName, remoteName);
     conn = (clientConnection_t *)clc;
-    I_strncpyz(conn->downloadName, localName, sizeof(conn->downloadName));
-    Com_sprintf(conn->downloadTempName, sizeof(conn->downloadTempName), (const char *)"%s.tmp", localName);
+    I_strncpyz(CL_DL->downloadName, localName, sizeof(CL_DL->downloadName));
+    Com_sprintf(CL_DL->downloadTempName, sizeof(CL_DL->downloadTempName), (const char *)"%s.tmp", localName);
 
     I_strncpyz(legacyHacks->cl_downloadName, remoteName, 0x40);
     legacyHacks->cl_downloadSize = 0;
     legacyHacks->cl_downloadCount = 0;
     legacyHacks->cl_downloadTime = cls.realtime;
 
-    ((clientConnection_t *)conn)->downloadBlock = 0;
+    CL_DL->downloadBlock = 0;
     ((clientConnection_t *)conn)->downloadCount = 0;
 
     cmd = va((const char *)"download %s", remoteName);
@@ -3016,12 +3151,12 @@ void CL_NextDownload(void)
     char *localName;
     char *next;
 
-    if (!clientConnections[0].downloadList[0]) {
+    if (!CL_DL->downloadList[0]) {
         CL_DownloadsComplete();
         return;
     }
 
-    remoteName = clientConnections[0].downloadList;
+    remoteName = CL_DL->downloadList;
     if (*remoteName == '@')
         ++remoteName;
 
@@ -3040,8 +3175,8 @@ void CL_NextDownload(void)
 
     CL_BeginDownload(localName, remoteName);
     conn = (clientConnection_t *)clc;
-    conn->downloadRestart = 1;
-    memmove(conn->downloadList, next, strlen(next) + 1);
+    CL_DL->downloadRestart = 1;
+    memmove(CL_DL->downloadList, next, strlen(next) + 1);
 }
 
 void CL_InitDownloads(void)
@@ -3061,13 +3196,13 @@ void CL_InitDownloads(void)
     }
 
     conn = (clientConnection_t *)clc;
-    if (!FS_CompareIwds(conn->downloadList, sizeof(conn->downloadList), 1)) {
+    if (!FS_CompareIwds(CL_DL->downloadList, sizeof(CL_DL->downloadList), 1)) {
         CL_DownloadsComplete();
         return;
     }
 
-    Com_Printf((const char *)"Need iwds: %s\n", conn->downloadList);
-    if (!conn->downloadList[0]) {
+    Com_Printf((const char *)"Need iwds: %s\n", CL_DL->downloadList);
+    if (!CL_DL->downloadList[0]) {
         CL_DownloadsComplete();
         return;
     }

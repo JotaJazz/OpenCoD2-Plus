@@ -20,6 +20,16 @@ void CL_WWWDownload(void);
 void CL_ParseWWWDownload(msg_t *msg);
 extern int CL_ClearStaticDownload(void);
 #endif
+/* Where the download's state lives: 1.3 keeps it in clientStatic_t (the
+ * original's CL_BeginDownload, CL_InitDownloads, CL_ParseDownload and
+ * CL_WWWDownload all use cls's fields, at 0x966db0 on), 1.0 in
+ * clientConnection_t. The reconstruction used 1.0's in 1.3 too, so a download
+ * the server redirected to HTTP started from cls's empty names. */
+#if COD2_IS_PATCH_13
+#define CL_DL (&cls)
+#else
+#define CL_DL ((clientConnection_t *)*clc_ptr)
+#endif
 
 extern int cl_connectedToPureServer;
 
@@ -317,11 +327,11 @@ void CL_ParseDownload(msg_t *msg)
     if (block == 0) {
 
         clc = (clientConnection_t *)*clc_ptr;
-        clc->downloadSize = MSG_ReadLong(msg);
+        CL_DL->downloadSize = MSG_ReadLong(msg);
 
-        *(int *)((*download_ui_ptr) + 0x10) = clc->downloadSize;
+        *(int *)((*download_ui_ptr) + 0x10) = CL_DL->downloadSize;
 
-        size = clc->downloadSize;
+        size = CL_DL->downloadSize;
         if (size < 0) {
 
             Com_Error(1, "%s", va("%s", MSG_ReadString(msg)));
@@ -338,16 +348,16 @@ void CL_ParseDownload(msg_t *msg)
     }
 
     clc = (clientConnection_t *)*clc_ptr;
-    if (clc->downloadBlock != block) {
+    if (CL_DL->downloadBlock != block) {
 
         Com_DPrintf("CL_ParseDownload: Expected block %d, got %d\n",
-                    clc->downloadBlock, block);
+                    CL_DL->downloadBlock, block);
 
-        if (block > clc->downloadBlock) {
+        if (block > CL_DL->downloadBlock) {
 
             Com_DPrintf("CL_ParseDownload: Sending retransmit request to get the missed block\n");
 
-            CL_AddReliableCommand(va("retransdl %d", clc->downloadBlock));
+            CL_AddReliableCommand(va("retransdl %d", CL_DL->downloadBlock));
         }
         ZN10LargeLocalD1Ev(&data_large_local);
         return;
@@ -355,31 +365,31 @@ void CL_ParseDownload(msg_t *msg)
 
 #if COD2_FEATURE_NET_HARDENING
 
-    if (clc->downloadTempName[0] &&
-        !NetHardening_ValidDownloadName(clc->downloadTempName, 0)) {
+    if (CL_DL->downloadTempName[0] &&
+        !NetHardening_ValidDownloadName(CL_DL->downloadTempName, 0)) {
         Com_Printf("WARNING: refusing malicious download temp path '%s'\n",
-                   clc->downloadTempName);
+                   CL_DL->downloadTempName);
         CL_AddReliableCommand("stopdl");
-        clc->downloadName[0] = 0;
-        clc->downloadTempName[0] = 0;
+        CL_DL->downloadName[0] = 0;
+        CL_DL->downloadTempName[0] = 0;
         ZN10LargeLocalD1Ev(&data_large_local);
         return;
     }
-    if (clc->downloadName[0] &&
-        !NetHardening_ValidDownloadName(clc->downloadName, 1)) {
+    if (CL_DL->downloadName[0] &&
+        !NetHardening_ValidDownloadName(CL_DL->downloadName, 1)) {
         Com_Printf("WARNING: refusing malicious download name '%s'\n",
-                   clc->downloadName);
+                   CL_DL->downloadName);
         CL_AddReliableCommand("stopdl");
-        clc->downloadName[0] = 0;
-        clc->downloadTempName[0] = 0;
+        CL_DL->downloadName[0] = 0;
+        CL_DL->downloadTempName[0] = 0;
         ZN10LargeLocalD1Ev(&data_large_local);
         return;
     }
 #endif
 
-    if (clc->download == 0) {
+    if (CL_DL->download == 0) {
 
-        if (clc->downloadTempName[0] == '\0') {
+        if (CL_DL->downloadTempName[0] == '\0') {
 
             Com_Printf("Server sending download, but no download was requested\n");
             CL_AddReliableCommand("stopdl");
@@ -387,10 +397,10 @@ void CL_ParseDownload(msg_t *msg)
             return;
         }
 
-        clc->download = FS_SV_FOpenFileWrite(clc->downloadTempName);
-        if (clc->download == 0) {
+        CL_DL->download = FS_SV_FOpenFileWrite(CL_DL->downloadTempName);
+        if (CL_DL->download == 0) {
 
-            Com_Printf("Could not create %s\n", clc->downloadTempName);
+            Com_Printf("Could not create %s\n", CL_DL->downloadTempName);
             CL_AddReliableCommand("stopdl");
             CL_NextDownload();
             ZN10LargeLocalD1Ev(&data_large_local);
@@ -400,13 +410,13 @@ void CL_ParseDownload(msg_t *msg)
 
     if (size != 0) {
 
-        FS_Write(data, size, ((clientConnection_t *)*clc_ptr)->download);
+        FS_Write(data, size, CL_DL->download);
     }
 
     clc = (clientConnection_t *)*clc_ptr;
-    CL_AddReliableCommand(va("nextdl %d", clc->downloadBlock));
+    CL_AddReliableCommand(va("nextdl %d", CL_DL->downloadBlock));
 
-    clc->downloadBlock += 1;
+    CL_DL->downloadBlock += 1;
 
     clc->downloadCount += size;
 
@@ -417,17 +427,17 @@ void CL_ParseDownload(msg_t *msg)
         return;
     }
 
-    if (clc->download != 0) {
+    if (CL_DL->download != 0) {
 
-        FS_FCloseFile(clc->download);
+        FS_FCloseFile(CL_DL->download);
 
-        clc->download = 0;
+        CL_DL->download = 0;
 
-        FS_SV_Rename(clc->downloadTempName, clc->downloadName);
+        FS_SV_Rename(CL_DL->downloadTempName, CL_DL->downloadName);
     }
 
-    clc->downloadName[0] = 0;
-    clc->downloadTempName[0] = 0;
+    CL_DL->downloadName[0] = 0;
+    CL_DL->downloadTempName[0] = 0;
 
     *(byte *)((*download_ui_ptr) + 0x1c) = 0;
 
@@ -539,7 +549,9 @@ void CL_WWWDownload(void)
         char toOSPath[256];
 
         cls.download = 0;
-        FS_BuildOSPath(fs_homepath, cls.downloadName, "", toOSPath);
+        /* the local name the redirect kept, not the URL (the original's
+         * CL_WWWDownload, 0x4b5160, builds it from originalDownloadName) */
+        FS_BuildOSPath(fs_homepath, cls.originalDownloadName, "", toOSPath);
         if (toOSPath[0])
             toOSPath[strlen(toOSPath) - 1] = '\0';
 
