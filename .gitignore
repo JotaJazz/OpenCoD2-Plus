@@ -18,7 +18,7 @@ build/cmake/
 build/msvc/
 build/msvc-release/
 
-# renderer DLL build outputs
+# DLLs built into the old win32 build folders
 build/win32c/*.dll
 build/win32/*.dll
 build/win32c/*.bak
