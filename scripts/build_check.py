@@ -18,7 +18,9 @@ no bridge import may call an engine symbol that is data
 On Linux no engine source of the client may name a renamed bgame global without
 its eng_ name in effect (scripts/check_bgame_names.py), and the constants the
 engine's bgame takes from CoD2rev-Plus's must be current
-(scripts/bgame_plus_consts.py --check).
+(scripts/bgame_plus_consts.py --check), and no engine function may be called
+with another return or parameter type than its definition's
+(scripts/check_c_decls.py).
 """
 import argparse, os, re, subprocess, sys
 
@@ -131,6 +133,15 @@ def bgame_plus_consts():
     return (run.stdout.strip().splitlines() or run.stderr.strip().splitlines() or ['bgame_plus_consts.py failed'])[-3:]
 
 
+def c_decls(build_dir):
+    """The engine functions called with another type than they are defined."""
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_c_decls.py'), build_dir],
+                         capture_output=True, text=True)
+    if run.returncode == 0:
+        return []
+    return run.stdout.splitlines()[:-1] or (run.stderr.strip().splitlines() or ['check_c_decls.py failed'])[-3:]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
@@ -153,7 +164,7 @@ def main():
         if not errors:
             errors = duplicates(variant, build_dir)
         if not errors and variant.startswith('linux'):
-            errors = bgame_names(build_dir) + bgame_plus_consts()
+            errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir)
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')

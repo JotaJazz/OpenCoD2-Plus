@@ -1,0 +1,32 @@
+# Engine functions that scripts/check_c_decls.py finds called with another
+# type than they are defined, where the call cannot go wrong. Only shrink it.
+
+# Mac Carbon calls of src/Mac, against the stubs of src/stubs: never reached
+# on Linux (MacTools_Sleep, the only caller of UpTime and
+# AddDurationToAbsolute, has no caller), or a void stub whose result the
+# Mac code would have ignored
+AddDurationToAbsolute
+UpTime
+DisposeWindow
+EndMediaEdits
+HideWindow
+QDGlobalToLocalPoint
+QDLocalToGlobalPoint
+SetSystemUIMode
+ShowMenuBar
+ShowWindow
+CFRelease
+aglSwapBuffers
+# returned through MacDisplay_IsGLExtensionSupported, a Boolean (al) itself
+gluCheckExtension
+# libstdc++ names called against the stubs of src/stubs/cpp_trampoline.c and
+# carbon_stubs.c: the result is unused
+__ZNSs6appendEPKcm
+__ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_
+# a 4-byte union of pointers passed by value: the same stack slot as a pointer
+R_AddRefEntityToScene
+XModelBad
+XModelUnoptimize
+# declared int so that cg_draw_mp.c keeps the original's `return
+# Window_RemoveDynamicFlags(...)` shape; the result is unused
+Window_RemoveDynamicFlags
