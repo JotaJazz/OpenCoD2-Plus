@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "imports.h"
 
-extern const FxFlagEntry fxAttributeFlags[26];
+extern const FxFlagEntry fxAttributeFlags[24];
 extern const FxFlagEntry fxSpawnFlags[13];
 extern Bool g_rendererExists;
 
@@ -180,63 +180,32 @@ static inline __attribute__((always_inline)) float AbsCeil(float val)
     return (float)iv;
 }
 
-static inline __attribute__((always_inline)) void CreateTwoKeyCurve(byte *_this, int channelOffset, float initialValue, float maxRange)
+/* a flat curve of value / divisor, scaled by scale: CoD2MP_s.exe 1.3's
+   0x49c630 (the curve is 0 when the divisor is) */
+static void CreateFlatChannel(byte *_this, int channelId, float value, float divisor, float scale)
 {
     float keys[4];
     keys[0] = 0.0f;
-    if (maxRange != 0.0f) {
-        keys[1] = initialValue / maxRange;
-    } else {
-        keys[1] = 0.0f;
-    }
+    keys[1] = divisor != 0.0f ? value / divisor : 0.0f;
     keys[2] = 1.0f;
     keys[3] = keys[1];
-
-    const FxCurve *curve = FxCurve_AllocAndCreateWithKeys(keys, 1, 2);
-    *(const FxCurve **)(_this + channelOffset) = curve;
-    *(float *)(_this + channelOffset + 4) = maxRange;
-    *(float *)(_this + channelOffset + 8) = maxRange;
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].curve = FxCurve_AllocAndCreateWithKeys(keys, 1, 2);
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMin = scale;
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMax = scale;
 }
 
-static inline __attribute__((always_inline)) void CreateAccelCurve(byte *_this, int channelOffset, float initialValue, float maxScale, float maxRange)
+/* a ramp from 0 to value * life (ms) / 1000 / divisor, scaled by scale:
+   CoD2MP_s.exe 1.3's 0x49c6b0 */
+static void CreateAccelChannel(byte *_this, int channelId, float value, float divisor, float life, float scale)
 {
     float keys[4];
-    float scale = maxScale * 0.001f;
-    float range = maxRange * scale;
     keys[0] = 0.0f;
     keys[1] = 0.0f;
     keys[2] = 1.0f;
-    keys[3] = initialValue * scale;
-    if (maxRange != 0.0f) {
-        keys[3] = keys[3] / maxRange;
-    } else {
-        keys[3] = 0.0f;
-    }
-
-    const FxCurve *curve = FxCurve_AllocAndCreateWithKeys(keys, 1, 2);
-    *(const FxCurve **)(_this + channelOffset) = curve;
-    *(float *)(_this + channelOffset + 4) = range;
-    *(float *)(_this + channelOffset + 8) = range;
-}
-
-static inline __attribute__((always_inline)) void CreateAccelCurveUnit(byte *_this, int channelOffset, float initialValue, float maxScale, float maxRange)
-{
-    float keys[4];
-    float scale = maxScale * 0.001f;
-    keys[0] = 0.0f;
-    keys[1] = 0.0f;
-    keys[2] = 1.0f;
-    keys[3] = initialValue * scale;
-    if (maxRange != 0.0f) {
-        keys[3] = keys[3] / maxRange;
-    } else {
-        keys[3] = 0.0f;
-    }
-
-    const FxCurve *curve = FxCurve_AllocAndCreateWithKeys(keys, 1, 2);
-    *(const FxCurve **)(_this + channelOffset) = curve;
-    *(float *)(_this + channelOffset + 4) = 1.0f;
-    *(float *)(_this + channelOffset + 8) = 1.0f;
+    keys[3] = divisor != 0.0f ? value * life * 0.001f / divisor : 0.0f;
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].curve = FxCurve_AllocAndCreateWithKeys(keys, 1, 2);
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMin = scale;
+    ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMax = scale;
 }
 
 void FxRange_SetRange(const FxRange *_this, float min, float max)
@@ -645,6 +614,33 @@ void PrimitiveTemplate_ParseChannelCurve(const PrimitiveTemplate *_this, GPValue
     Hunk_FreeTempMemory(keys);
 }
 
+/* a color's curve: keys of a time and three values, as CoD2MP_s.exe 1.3
+   (0x49d700) */
+void PrimitiveTemplate_ParseChannelRgbCurve(const PrimitiveTemplate *_this, GPValue *pairs, FxChannelId channel)
+{
+    GPValue *list = GPV_LIST(pairs);
+    GPValue *p;
+    int keyCount = 0;
+    float *keys;
+    float *cur;
+
+    for (p = list; p; p = GPV_NEXT(p))
+        keyCount++;
+
+    keys = (float *)Hunk_AllocateTempMemoryInternal(keyCount * 16);
+    cur = keys;
+    keyCount = 0;
+    for (p = list; p; p = GPV_NEXT(p)) {
+        sscanf(GPV_STRING(p), "%f %f %f %f", &cur[0], &cur[1], &cur[2], &cur[3]);
+        keyCount++;
+        cur += 4;
+    }
+
+    ((PrimitiveTemplate *)_this)->mFxChannels[channel].curve = FxCurve_AllocAndCreateWithKeys(keys, 3, keyCount);
+
+    Hunk_FreeTempMemory(keys);
+}
+
 void PrimitiveTemplate_CreateBackCompatibleRotationDeltaCurve(const PrimitiveTemplate *_this, float initialValue, float keyScale, float lifetime, int channelId, float graphScale)
 {
     byte *thisPtr = (byte *)_this;
@@ -786,13 +782,16 @@ Bool PrimitiveTemplate_ParseVelocity(const PrimitiveTemplate *_this, const char 
     EnsureMinMax(&minV[1], &maxV[1]);
     EnsureMinMax(&minV[2], &maxV[2]);
 
-    float maxX = AbsCeil(minV[0]);
+    /* the curves hold the velocity over twice its largest component, which
+     * scales them back; the random ones are blended before that scale, so
+     * they are not scaled (CoD2MP_s.exe 1.3, 0x49c8d0) */
+    float maxX = fabsf(minV[0]);
     if (maxX < maxV[0])
         maxX = maxV[0];
-    float maxY = AbsCeil(minV[1]);
+    float maxY = fabsf(minV[1]);
     if (maxY < maxV[1])
         maxY = maxV[1];
-    float maxZ = AbsCeil(minV[2]);
+    float maxZ = fabsf(minV[2]);
     if (maxZ < maxV[2])
         maxZ = maxV[2];
     maxX *= 2.0f;
@@ -811,11 +810,9 @@ Bool PrimitiveTemplate_ParseVelocity(const PrimitiveTemplate *_this, const char 
     else
         totalMax = maxZ;
 
-    CreateTwoKeyCurve(thisPtr, 0x190, minV[0], totalMax);
-
-    CreateTwoKeyCurve(thisPtr, 0x19c, minV[1], totalMax);
-
-    CreateTwoKeyCurve(thisPtr, 0x1a8, minV[2], totalMax);
+    CreateFlatChannel(thisPtr, 12, minV[0], totalMax, totalMax);
+    CreateFlatChannel(thisPtr, 13, minV[1], totalMax, totalMax);
+    CreateFlatChannel(thisPtr, 14, minV[2], totalMax, totalMax);
 
     int allEqual = 1;
     if (minV[0] != maxV[0] || minV[1] != maxV[1] || minV[2] != maxV[2])
@@ -825,11 +822,9 @@ Bool PrimitiveTemplate_ParseVelocity(const PrimitiveTemplate *_this, const char 
 
         ((PrimitiveTemplate *)thisPtr)->mAttributeFlags |= 0x80000;
 
-        CreateTwoKeyCurve(thisPtr, 0x1b4, maxV[0], 1.0f);
-
-        CreateTwoKeyCurve(thisPtr, 0x1c0, maxV[1], 1.0f);
-
-        CreateTwoKeyCurve(thisPtr, 0x1cc, maxV[2], 1.0f);
+        CreateFlatChannel(thisPtr, 15, maxV[0], totalMax, 1.0f);
+        CreateFlatChannel(thisPtr, 16, maxV[1], totalMax, 1.0f);
+        CreateFlatChannel(thisPtr, 17, maxV[2], totalMax, 1.0f);
     }
 
     return 1;
@@ -852,13 +847,13 @@ Bool PrimitiveTemplate_ParseAcceleration(const PrimitiveTemplate *_this, const c
     EnsureMinMax(&minV[1], &maxV[1]);
     EnsureMinMax(&minV[2], &maxV[2]);
 
-    maxX = AbsCeil(minV[0]);
+    maxX = fabsf(minV[0]);
     if (maxX < maxV[0])
         maxX = maxV[0];
-    maxY = AbsCeil(minV[1]);
+    maxY = fabsf(minV[1]);
     if (maxY < maxV[1])
         maxY = maxV[1];
-    maxZ = AbsCeil(minV[2]);
+    maxZ = fabsf(minV[2]);
     if (maxZ < maxV[2])
         maxZ = maxV[2];
     maxX *= 2.0f;
@@ -871,18 +866,21 @@ Bool PrimitiveTemplate_ParseAcceleration(const PrimitiveTemplate *_this, const c
     if (totalMax < maxZ)
         totalMax = maxZ;
 
+    /* the velocity an acceleration adds over the longest life, over the
+     * largest one, as the velocity's curves (CoD2MP_s.exe 1.3, 0x49cc80) */
     lifeMax = ((PrimitiveTemplate *)thisPtr)->mLife.mMax;
+    float scale = totalMax * lifeMax * 0.001f;
 
-    CreateAccelCurve(thisPtr, 0x1d8, minV[0], lifeMax, totalMax);
-    CreateAccelCurve(thisPtr, 0x1e4, minV[1], lifeMax, totalMax);
-    CreateAccelCurve(thisPtr, 0x1f0, minV[2], lifeMax, totalMax);
+    CreateAccelChannel(thisPtr, 18, minV[0], scale, lifeMax, scale);
+    CreateAccelChannel(thisPtr, 19, minV[1], scale, lifeMax, scale);
+    CreateAccelChannel(thisPtr, 20, minV[2], scale, lifeMax, scale);
 
     allEqual = (minV[0] == maxV[0] && minV[1] == maxV[1] && minV[2] == maxV[2]);
     if (!allEqual) {
         ((PrimitiveTemplate *)thisPtr)->mAttributeFlags |= 0x100000;
-        CreateAccelCurveUnit(thisPtr, 0x1fc, maxV[0], lifeMax, totalMax);
-        CreateAccelCurveUnit(thisPtr, 0x208, maxV[1], lifeMax, totalMax);
-        CreateAccelCurveUnit(thisPtr, 0x214, maxV[2], lifeMax, totalMax);
+        CreateAccelChannel(thisPtr, 21, maxV[0], scale, lifeMax, 1.0f);
+        CreateAccelChannel(thisPtr, 22, maxV[1], scale, lifeMax, 1.0f);
+        CreateAccelChannel(thisPtr, 23, maxV[2], scale, lifeMax, 1.0f);
     }
 
     return 1;
@@ -1030,7 +1028,24 @@ Bool PrimitiveTemplate_ParseChannel(const PrimitiveTemplate *_this, BackCompatib
             PrimitiveTemplate_ParseChannelFlags(channel, topValue);
             parsed = 1;
         } else if (stricmp(key, "curve") == 0 || stricmp(key, "graph") == 0) {
-            PrimitiveTemplate_ParseChannelCurve(_this, pair, channelId);
+            /* the colors' curves have three values a key, as CoD2MP_s.exe
+             * 1.3 (0x49d8e0) */
+            if (channelId == 0 || channelId == 1)
+                PrimitiveTemplate_ParseChannelRgbCurve(_this, pair, channelId);
+            else
+                PrimitiveTemplate_ParseChannelCurve(_this, pair, channelId);
+            parsed = 1;
+        } else if (stricmp(key, "scale") == 0) {
+            /* what the curve's values are multiplied by: a range, or one
+             * value */
+            float scaleMin, scaleMax;
+            int n = sscanf(topValue, "%f %f", &scaleMin, &scaleMax);
+            if (n != 0 && n != EOF) {
+                if (n == 1)
+                    scaleMax = scaleMin;
+                ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMin = scaleMin;
+                ((PrimitiveTemplate *)_this)->mFxChannels[channelId].scaleRange.mMax = scaleMax;
+            }
             parsed = 1;
         }
     }
@@ -1302,7 +1317,7 @@ Bool PrimitiveTemplate_ParsePrimitiveInternal(const PrimitiveTemplate *_this, Ba
         }
 
         else if (stricmp(key, "flags") == 0 || stricmp(key, "flag") == 0) {
-            if (!PrimitiveTemplate_ParseFlags(_this, val, fxAttributeFlags, 26))
+            if (!PrimitiveTemplate_ParseFlags(_this, val, fxAttributeFlags, 24))
                 goto error_key;
         }
 
