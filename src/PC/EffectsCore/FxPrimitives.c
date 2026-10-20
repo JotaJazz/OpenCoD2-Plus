@@ -2025,8 +2025,8 @@ Bool Emitter_Update(const Emitter *_this)
 
     /* the model (useModel) goes into the world with its scale; with a bolt,
      * what the emitted effects inherit is how far the bolt moved since the
-     * last emission (0x497a3d to 0x497b06; the emission, 0x497b50, is not
-     * checked against the original yet) */
+     * last emission (0x497a3d to 0x497b06), which the emission
+     * (Emitter_UpdateEmitFx, 0x497b50) adds to its path */
     vec3_t bindVelocity = { 0, 0, 0 };
     if (((Effect *)self)->mFlags & 0x10) {
         if (orient) {
