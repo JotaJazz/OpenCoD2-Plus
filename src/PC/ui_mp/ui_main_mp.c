@@ -3212,36 +3212,15 @@ void UI_Refresh(void)
     int netSource;
     int needRebuild;
     static int refreshTraceCount;
-    static int fileTraceCount;
 
     if (Menu_Count(&uiInfo->uiDC) <= 0)
         return;
 
-    if (fileTraceCount < 40) {
-        FILE *f = fopen("x64_ui_trace.txt", fileTraceCount ? "a" : "w");
-        if (f) {
-            int i;
-            fprintf(f, "ui[%d] active=%d menuCount=%d openCount=%d keyCatchers=0x%x\n",
-                    fileTraceCount, uiInfo->currentMenuType, uiInfo->uiDC.menuCount,
-                    uiInfo->uiDC.openMenuCount, (*(clientActive_t **)imp_cl)->keyCatchers);
-            for (i = 0; i < uiInfo->uiDC.openMenuCount && i < 16; i++) {
-                menuDef_t *menu = uiInfo->uiDC.menuStack[i];
-                fprintf(f, "  stack[%d]=%s flags=0x%x full=%d\n",
-                        i,
-                        menu && menu->window.name ? menu->window.name : "<null>",
-                        menu ? menu->window.dynamicFlags[0] : 0,
-                        menu ? menu->fullScreen : 0);
-            }
-            fclose(f);
-        }
-        fileTraceCount++;
-    }
-
-    if (refreshTraceCount < 80 && (uiInfo->currentMenuType || uiInfo->uiDC.openMenuCount > 0)) {
+    /* MTRACE=1: the open menus, for the first 80 frames with one */
+    if (refreshTraceCount < 80 && (uiInfo->currentMenuType || uiInfo->uiDC.openMenuCount > 0) && getenv("MTRACE")) {
         int i;
-        if (getenv("MTRACE"))
-            Com_Printf("[menu-trace] UI_Refresh active=%d menuCount=%d openCount=%d",
-                       uiInfo->currentMenuType, uiInfo->uiDC.menuCount, uiInfo->uiDC.openMenuCount);
+        Com_Printf("[menu-trace] UI_Refresh active=%d menuCount=%d openCount=%d",
+                   uiInfo->currentMenuType, uiInfo->uiDC.menuCount, uiInfo->uiDC.openMenuCount);
         for (i = 0; i < uiInfo->uiDC.openMenuCount && i < 16; ++i) {
             menuDef_t *menu = uiInfo->uiDC.menuStack[i];
             Com_Printf(" stack[%d]=%s", i, menu && menu->window.name ? menu->window.name : "<null>");
