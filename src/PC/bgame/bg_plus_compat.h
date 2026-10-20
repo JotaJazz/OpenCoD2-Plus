@@ -63,6 +63,12 @@ static inline void Vec3Lerp(const vec_t *start, const vec_t *end, float fraction
     endpos[2] = (end[2] - start[2]) * fraction + start[2];
 }
 
+static inline bool Com_BitCheck(const int array[], int bitNum) { return (array[bitNum >> 5] >> (bitNum & 31)) & 1; }
+static inline void Com_BitSet(int array[], int bitNum) { array[bitNum >> 5] |= 1 << (bitNum & 31); }
+static inline void Com_BitClear(int array[], int bitNum) { array[bitNum >> 5] &= ~(1 << (bitNum & 31)); }
+
+extern const float AngleSubtract(const float a1, const float a2);
+extern float DiffTrack(float tgt, float cur, float rate, float deltaTime);
 extern const float AngleDelta(const float angle1, const float angle2);
 extern const float AngleNormalize180(const float angle);
 extern const float AngleNormalize180Accurate(float angle);

@@ -57,7 +57,7 @@ extern void CL_Netchan_TransmitNextFragment(netchan_t *chan);
 extern void NET_OutOfBandVoiceData(netsrc_t sock, netadr_t adr, byte *format, int len);
 extern void CL_SyncGpu(void);
 extern void CL_SendCmdInternal(void);
-extern Bool PM_IsBinocularsADS(const playerState_t *ps);
+extern bool PM_IsBinocularsADS(const playerState_t *ps);
 extern const signed char ClampChar(const int i);
 extern qboolean Sys_IsLANAddress(netadr_t adr);
 extern struct clientStatic_t cls;
