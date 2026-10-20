@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """Counts a real client's prediction misses while it moves, jumps and fires.
 
-    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N]
+    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--moves CFG]
 
 Runs the dedicated server with scripts/contact_test.py's mod and a minimal
-client as its target, and a real client (cod2_linux, cg_showmiss 1) as the
-second player, which a config file drives: it walks forward, back and to both
-sides, runs into walls, crouches, goes prone, stands, jumps and fires its
-rifle. The client predicts each move with its own bgame and checks the
-prediction against the server's playerstate in every snapshot; with
-cg_showmiss 1 (which the reconstruction reads as dvar_developer) it prints "Prediction miss: <distance>" when they differ by more
-than 0.1. Prints the number of misses and their total and largest distance,
-and exits with 0 when the client still runs, left no crash report, and the
-misses are at most --max-misses. The client opens a window and needs a CD key
-in ~/.cod2/preferences; without one the test is skipped (exit 0).
+client as its target, and a real client (cod2_linux, held at 20 fps) as the
+second player, which a config file drives: it turns away from the target,
+walks forward, back and to both sides, crouches, goes prone, stands, jumps
+and fires its rifle. It keeps away from the target: the client clips against
+other players with a box one unit smaller on each side than the server's (as
+the original does), so running into one misses by design.
+
+With each snapshot the client predicts its moves again from the server's
+playerstate, with its own bgame, and compares the result with what it had
+predicted for the same time; with cg_showmiss 1 (which the reconstruction
+reads as dvar_developer) it prints "Prediction miss: <distance>" when they
+differ by more than 0.1. Prints the number of misses and their total and
+largest distance, and exits with 0 when the client still runs, walked over
+300 units (as the target sees it), left no crash report, and the misses are
+at most --max-misses. The client opens a window and needs a CD key in
+~/.cod2/preferences; without one the test is skipped (exit 0).
 """
 import argparse, os, re, subprocess, sys, tempfile, time
 
@@ -29,12 +35,13 @@ DEFAULT_SERVER = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-lin
 # frames at the client's framerate, which the test holds at 20 (com_maxfps):
 # 'wait 20' is a second
 MOVES = '''wait 300
+cl_yawspeed 180; +right; wait 20; -right
 +forward; wait 60; -forward
-+back; wait 60; -back
++back; wait 30; -back
 +moveleft; wait 45; -moveleft
 +moveright; wait 45; -moveright
-+forward; +moveleft; wait 60; -moveleft; -forward
-+forward; wait 120; -forward
++forward; +moveleft; wait 40; -moveleft; -forward
++forward; wait 60; -forward
 gocrouch; wait 30
 +forward; wait 45; -forward
 goprone; wait 45
@@ -44,8 +51,7 @@ gostand; wait 30
 +forward; +gostand; wait 5; -gostand; wait 30; -forward
 +attack; wait 5; -attack; wait 30
 +attack; wait 5; -attack; wait 30
-+back; wait 120; -back
-+moveright; wait 60; -moveright
++moveright; wait 40; -moveright
 wait 30
 '''
 MOVES_SECONDS = 100
