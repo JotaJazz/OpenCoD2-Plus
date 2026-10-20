@@ -868,7 +868,11 @@ static void cr_posix_popup(const char *path, const char *desc)
     snprintf(fnarg, sizeof(fnarg), "--filename=%s", path);
     pid = fork();
     if (pid == 0) {
-
+        int fd;
+        /* the dialog outlives the game: without this it kept the game's
+         * sockets, and their ports, open until it was closed */
+        for (fd = 3; fd < 1024; fd++)
+            close(fd);
         execlp("zenity", "zenity", "--text-info", fnarg, titlearg,
                "--width=1000", "--height=680", "--font=monospace 9", (char *)NULL);
         execlp("kdialog", "kdialog", "--title", title, "--textbox", path, "1000", "680", (char *)NULL);
