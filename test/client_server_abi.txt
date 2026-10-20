@@ -126,9 +126,11 @@ Dvar_SetInt v0 4,4
 Dvar_SetString v0 4,4
 Dvar_SetStringByName v0 4,4
 ExpandBoundsToWidth v0 4,4
+FS_AddIwdFilesForGameDirectory v0 4,4
 FS_BuildOSPath v0 4,4,4,4
 FS_ClearIwdReferences v0 -
 FS_ConvertPath v0 4
+FS_FOpenFileWrite i4 4
 FS_FreeFile v0 4
 FS_GetFileList i4 4,4,4,4,4
 FS_GetMapBaseName i4 4
@@ -253,8 +255,10 @@ SV_ShutdownGameProgs v0 -
 SV_XModelGet i4 4
 ShrinkBoundsToHeight v0 4,4
 Swap_Init v0 -
+Sys_FreeFileList v0 4
 Sys_GetValue i4 4
 Sys_IsLANAddress i4 20
+Sys_ListFiles i4 4,4,4,4,4
 Sys_LoadingKeepAlive v0 -
 Sys_SnapVector v0 4
 UnGetLeanFraction f4 4

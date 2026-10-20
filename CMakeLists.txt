@@ -111,14 +111,21 @@ endif()
 if(COD2_PLUS_CLIENT_SERVER)
   add_compile_definitions(COD2_PLUS_CLIENT_SERVER=1)  # cgame no longer shares the bgame with a local server
 endif()
-# CoD2rev-Plus's libcod in the dedicated server (src/libcod): its script
-# functions, bots, sv_master1..5, HTTP, SQLite and the rest, with the modules
-# CoD2rev-Plus's Makefile turns on (all but MySQL). Its LIBCOD blocks in the
-# server, game, bgame, core and script VM are compiled in for the dedicated
-# server only; the client keeps them out.
-option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server" ON)
-if(NOT COD2_PLUS_SERVER OR COD2_WIN32_CLIENT)  # the MinGW client's configuration has no dedicated server
+# CoD2rev-Plus's libcod (src/libcod): its script functions, bots,
+# sv_master1..5, HTTP, SQLite and the rest, with the modules CoD2rev-Plus's
+# Makefile turns on (all but MySQL), in the dedicated server and, when it runs
+# CoD2rev-Plus's server (COD2_PLUS_CLIENT_SERVER), in the client's local
+# games. Their LIBCOD blocks in the server, game, bgame, core and script VM
+# are compiled in with it.
+option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server and the client's local games" ON)
+if(NOT COD2_PLUS_SERVER)
   set(COD2_PLUS_LIBCOD OFF)
+endif()
+# the client too: then the script VM, which both share, has libcod's blocks;
+# otherwise the dedicated server builds its own (cod2_plus_script_ded)
+set(COD2_LIBCOD_CLIENT OFF)
+if(COD2_PLUS_LIBCOD AND COD2_PLUS_CLIENT_SERVER)
+  set(COD2_LIBCOD_CLIENT ON)
 endif()
 set(COD2_LIBCOD_DEFS "")
 if(COD2_PLUS_LIBCOD)
@@ -144,12 +151,16 @@ function(cod2_plus_script)
   add_library(cod2_plus_script OBJECT ${src} ${COD2_SRC_DIR}/compat/script_exports.cpp
     ${COD2_SRC_DIR}/compat/script_imports.cpp ${COD2_SRC_DIR}/compat/script_missing.cpp)
   target_compile_definitions(cod2_plus_script PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  if(COD2_LIBCOD_CLIENT)
+    target_compile_definitions(cod2_plus_script PRIVATE ${COD2_LIBCOD_DEFS})
+    target_include_directories(cod2_plus_script PRIVATE ${COD2_SRC_DIR}/libcod/speex/include)
+  endif()
   add_library(cod2_plus_script_game OBJECT ${COD2_SRC_DIR}/compat/script_game_imports.cpp)
   target_compile_definitions(cod2_plus_script_game PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
   add_library(cod2_plus_script_core OBJECT ${COD2_SRC_DIR}/compat/script_core_imports.cpp
     ${COD2_SRC_DIR}/compat/script_core_missing.cpp)
   target_compile_definitions(cod2_plus_script_core PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
-  if(COD2_PLUS_LIBCOD)
+  if(COD2_PLUS_LIBCOD AND NOT COD2_LIBCOD_CLIENT)
     # the dedicated server's VM, with its LIBCOD blocks
     add_library(cod2_plus_script_ded OBJECT ${src} ${COD2_SRC_DIR}/compat/script_exports.cpp
       ${COD2_SRC_DIR}/compat/script_imports.cpp ${COD2_SRC_DIR}/compat/script_missing.cpp)
@@ -198,7 +209,9 @@ function(cod2_plus_server)
   target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG ${COD2_LIBCOD_DEFS})
   if(COD2_PLUS_LIBCOD)
     target_include_directories(cod2_plus_server PRIVATE ${COD2_SRC_DIR}/libcod/speex/include)
-    cod2_plus_libcod()
+    if(NOT TARGET cod2_plus_libcod)  # the client's local server may have made it
+      cod2_plus_libcod()
+    endif()
   endif()
 endfunction()
 
@@ -213,6 +226,13 @@ function(cod2_plus_server_client)
   # LISTEN_SERVER: CoD2rev-Plus's code for a server inside a client (its
   # #ifndef DEDICATED blocks)
   target_compile_definitions(cod2_plus_server_client PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG LISTEN_SERVER)
+  if(COD2_LIBCOD_CLIENT)
+    target_compile_definitions(cod2_plus_server_client PRIVATE ${COD2_LIBCOD_DEFS})
+    target_include_directories(cod2_plus_server_client PRIVATE ${COD2_SRC_DIR}/libcod/speex/include)
+    if(NOT TARGET cod2_plus_libcod)  # or the dedicated server's
+      cod2_plus_libcod()
+    endif()
+  endif()
 endfunction()
 
 # cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
@@ -489,7 +509,9 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
   if(COD2_PLUS_LIBCOD)
-    set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script_ded>)
+    if(NOT COD2_LIBCOD_CLIENT)
+      set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script_ded>)
+    endif()
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
 elseif(COD2_PLUS_CLIENT_SERVER)
@@ -498,12 +520,16 @@ elseif(COD2_PLUS_CLIENT_SERVER)
   list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
   cod2_plus_server_client()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
+  if(COD2_LIBCOD_CLIENT)
+    list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
+    add_compile_definitions(COD2_PLUS_LIBCOD=1)  # the engine's Com_Frame feeds libcod's hitch callback
+  endif()
 elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
-if(COD2_PLUS_LIBCOD AND NOT COD2_WIN32_CLIENT)
+if(COD2_PLUS_LIBCOD)
   # Mbed TLS: BCryptGenRandom for its entropy, the system store for its CAs
   target_link_libraries(${W32_EXE} PRIVATE bcrypt crypt32)
 endif()
@@ -684,9 +710,16 @@ if(COD2_PLUS_SERVER)
     list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
     cod2_plus_server_client()
     set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
+    if(COD2_LIBCOD_CLIENT)
+      list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
+    endif()
   endif()
   cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
   add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
+  if(COD2_LIBCOD_CLIENT)
+    # the engine's Com_Frame (common.c, here) feeds libcod's hitch callback
+    target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
+  endif()
   cod2_plus_server()
   list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
@@ -695,7 +728,7 @@ if(COD2_PLUS_SERVER)
   endif()
 endif()
 set(COD2_DED_SCRIPT_OBJS ${COD2_SCRIPT_OBJS})
-if(COD2_PLUS_LIBCOD)
+if(COD2_PLUS_LIBCOD AND NOT COD2_LIBCOD_CLIENT)
   set(COD2_DED_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script_ded>)
 endif()
 

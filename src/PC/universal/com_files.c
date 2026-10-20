@@ -151,7 +151,7 @@ int FS_GetFileList(const char *path, const char *extension, FsListBehavior behav
 void FS_SortFileList(const char **filelist, int numfiles);
 fileHandle_t FS_OpenFileOverwrite(const char *qpath);
 static int iwdsort(const float *a, const float *b);
-static void FS_AddIwdFilesForGameDirectory(const char *path, const char *pszGameFolder);
+void FS_AddIwdFilesForGameDirectory(const char *path, const char *pszGameFolder);  /* libcod loads a mod's iwds with it */
 static void __attribute_regparm__(3) FS_AddGameDirectory(const char *path, const char *dir, qboolean bLanguageDirectory, int iLanguage);
 void FS_CopyFile(char *fromOSPath, char *toOSPath);
 static int __attribute_regparm__(3) FS_FOpenFileRead_Internal(const char *filename, fileHandle_t *file, qboolean uniqueFILE, qboolean streamThread, qboolean fsOnly);
@@ -1617,7 +1617,7 @@ static pack_t *FS_LoadIwd(const char *iwdfile, const char *basename, const char 
     return iwd;
 }
 
-static void FS_AddIwdFilesForGameDirectory(const char *path, const char *pszGameFolder)
+void FS_AddIwdFilesForGameDirectory(const char *path, const char *pszGameFolder)
 {
     char iwdfile[256];
     char *sorted[1024];

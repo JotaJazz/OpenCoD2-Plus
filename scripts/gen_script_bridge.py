@@ -351,7 +351,9 @@ SERVER_STRUCT_RETURN_OK = set()
 # group link (it calls src/PC's C functions instead). The client has the game
 # group (CoD2rev-Plus's server, game and bgame) but not the core.
 MODULES = {
-    'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=[], header=SCRIPT_HEADER,
+    # libcod: what the VM's LIBCOD blocks call (Scr_QueueErrorCallback)
+    'script': dict(objects=['cod2_plus_script.dir/src/script/*.o'], others=['cod2_plus_libcod.dir/src/libcod/*.o'],
+                   header=SCRIPT_HEADER,
                    overloads=OVERLOADS, extra_args=EXTRA_ARGS, renamed=RENAMED, provided=PROVIDED,
                    export_custom=EXPORT_CUSTOM, struct_return_ok=STRUCT_RETURN_OK, import_custom=SCRIPT_IMPORT_CUSTOM,
                    groups={'game': ['cod2_plus_server.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')],
@@ -409,7 +411,9 @@ MODULES['client_server'] = dict(
     export_custom=CLIENT_SERVER_EXPORT_CUSTOM,
     objects=['cod2_plus_server_client.dir/src/' + d + '/*.o' for d in ('server', 'game', 'bgame')]
     + ['cod2_plus_server_client.dir/src/qcommon/cm_*.o']
-    + ['cod2_plus_server_client.dir/src/compat/client_server_missing.cpp.o'],
+    + ['cod2_plus_server_client.dir/src/compat/client_server_missing.cpp.o']
+    # libcod, when the client has it (COD2_PLUS_LIBCOD): its calls into the core
+    + ['cod2_plus_libcod.dir/src/libcod/*.o'],
     others=['cod2_plus_script.dir/src/script/*.o', 'cod2_plus_script.dir/src/compat/*.o',
             'cod2_plus_script_core.dir/src/compat/*.o'],
     provided=CLIENT_SERVER_PROVIDED, export_fatal=set(),
@@ -593,7 +597,10 @@ def signatures(mangled):
     sigs = {}
     for m, d in zip(mangled, demangle(mangled)):
         d = FILE_TYPES.sub('FILE', d)
-        if m.startswith('_Z') and '(' in d and '::' not in d.split('(')[0]:
+        # free functions only: no members (::) nor the runtime's operators
+        # (new, delete), which libcod's objects use and no engine defines
+        name = d.split('(')[0]
+        if m.startswith('_Z') and '(' in d and '::' not in name and not name.startswith('operator'):
             if d not in sigs.get(d.split('(')[0], []):
                 sigs.setdefault(d.split('(')[0], []).append(d)
     return sigs

@@ -1627,6 +1627,11 @@ BM_NOINLINE void Com_Frame_Try_Block_Function(void)
 
         if (msec >= 501 && msec <= 499999) {
             Com_Printf("Hitch warning: %i msec frame time\n", msec);
+#ifdef COD2_PLUS_LIBCOD
+            /* libcod's CodeCallback_HitchWarning, as CoD2rev-Plus's Com_Frame */
+            extern int hitchFrameTime;
+            hitchFrameTime = msec;
+#endif
         }
         maxMsec = 5000;
     } else {

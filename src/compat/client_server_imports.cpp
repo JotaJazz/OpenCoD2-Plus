@@ -680,6 +680,12 @@ static_assert(cod2_abi_slot<float*>() == 4, "ExpandBoundsToWidth: parameter 1 di
 extern "C" decltype(ExpandBoundsToWidth(std::declval<float*>(), std::declval<float*>())) cod2c_ExpandBoundsToWidth(float* a0, float* a1) __asm__(COD2_SYM("ExpandBoundsToWidth"));
 decltype(ExpandBoundsToWidth(std::declval<float*>(), std::declval<float*>())) ExpandBoundsToWidth(float* a0, float* a1) { return cod2c_ExpandBoundsToWidth(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(FS_AddIwdFilesForGameDirectory(std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "FS_AddIwdFilesForGameDirectory: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "FS_AddIwdFilesForGameDirectory: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "FS_AddIwdFilesForGameDirectory: parameter 1 differs from the engine");
+extern "C" decltype(FS_AddIwdFilesForGameDirectory(std::declval<char const*>(), std::declval<char const*>())) cod2c_FS_AddIwdFilesForGameDirectory(char const* a0, char const* a1) __asm__(COD2_SYM("FS_AddIwdFilesForGameDirectory"));
+decltype(FS_AddIwdFilesForGameDirectory(std::declval<char const*>(), std::declval<char const*>())) FS_AddIwdFilesForGameDirectory(char const* a0, char const* a1) { return cod2c_FS_AddIwdFilesForGameDirectory(a0, a1); }
+
 static_assert(cod2_abi_class<decltype(FS_BuildOSPath(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<char*>()))>() == 'v', "FS_BuildOSPath: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_BuildOSPath: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "FS_BuildOSPath: parameter 1 differs from the engine");
@@ -696,6 +702,11 @@ static_assert(cod2_abi_class<decltype(FS_ConvertPath(std::declval<char*>()))>() 
 static_assert(cod2_abi_slot<char*>() == 4, "FS_ConvertPath: parameter 0 differs from the engine");
 extern "C" decltype(FS_ConvertPath(std::declval<char*>())) cod2c_FS_ConvertPath(char* a0) __asm__(COD2_SYM("FS_ConvertPath"));
 decltype(FS_ConvertPath(std::declval<char*>())) FS_ConvertPath(char* a0) { return cod2c_FS_ConvertPath(a0); }
+
+static_assert(cod2_abi_class<decltype(FS_FOpenFileWrite(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(FS_FOpenFileWrite(std::declval<char const*>()))>() == 'v', "FS_FOpenFileWrite: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "FS_FOpenFileWrite: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(FS_FOpenFileWrite(std::declval<char const*>())), 4> cod2c_FS_FOpenFileWrite(char const* a0) __asm__(COD2_SYM("FS_FOpenFileWrite"));
+decltype(FS_FOpenFileWrite(std::declval<char const*>())) FS_FOpenFileWrite(char const* a0) { return (decltype(FS_FOpenFileWrite(std::declval<char const*>())))cod2c_FS_FOpenFileWrite(a0); }
 
 static_assert(cod2_abi_class<decltype(FS_FreeFile(std::declval<void*>()))>() == 'v', "FS_FreeFile: return class differs from the engine");
 static_assert(cod2_abi_slot<void*>() == 4, "FS_FreeFile: parameter 0 differs from the engine");
@@ -1358,6 +1369,11 @@ static_assert(cod2_abi_class<decltype(Swap_Init())>() == 'v', "Swap_Init: return
 extern "C" decltype(Swap_Init()) cod2c_Swap_Init() __asm__(COD2_SYM("Swap_Init"));
 decltype(Swap_Init()) Swap_Init() { return cod2c_Swap_Init(); }
 
+static_assert(cod2_abi_class<decltype(Sys_FreeFileList(std::declval<char**>()))>() == 'v', "Sys_FreeFileList: return class differs from the engine");
+static_assert(cod2_abi_slot<char**>() == 4, "Sys_FreeFileList: parameter 0 differs from the engine");
+extern "C" decltype(Sys_FreeFileList(std::declval<char**>())) cod2c_Sys_FreeFileList(char** a0) __asm__(COD2_SYM("Sys_FreeFileList"));
+decltype(Sys_FreeFileList(std::declval<char**>())) Sys_FreeFileList(char** a0) { return cod2c_Sys_FreeFileList(a0); }
+
 static_assert(cod2_abi_class<decltype(Sys_GetValue(std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Sys_GetValue(std::declval<int>()))>() == 'v', "Sys_GetValue: return class differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "Sys_GetValue: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_GetValue(std::declval<int>())), 4> cod2c_Sys_GetValue(int a0) __asm__(COD2_SYM("Sys_GetValue"));
@@ -1367,6 +1383,15 @@ static_assert(cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>())
 static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLANAddress: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_IsLANAddress(std::declval<netadr_t>())), 4> cod2c_Sys_IsLANAddress(netadr_t a0) __asm__(COD2_SYM("Sys_IsLANAddress"));
 decltype(Sys_IsLANAddress(std::declval<netadr_t>())) Sys_IsLANAddress(netadr_t a0) { return (decltype(Sys_IsLANAddress(std::declval<netadr_t>())))cod2c_Sys_IsLANAddress(a0); }
+
+static_assert(cod2_abi_class<decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>()))>() == 'v', "Sys_ListFiles: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Sys_ListFiles: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Sys_ListFiles: parameter 1 differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Sys_ListFiles: parameter 2 differs from the engine");
+static_assert(cod2_abi_slot<int*>() == 4, "Sys_ListFiles: parameter 3 differs from the engine");
+static_assert(cod2_abi_slot<int>() == 4, "Sys_ListFiles: parameter 4 differs from the engine");
+extern "C" cod2_abi_int<decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>())), 4> cod2c_Sys_ListFiles(char const* a0, char const* a1, char const* a2, int* a3, int a4) __asm__(COD2_SYM("Sys_ListFiles"));
+decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>())) Sys_ListFiles(char const* a0, char const* a1, char const* a2, int* a3, int a4) { return (decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>())))cod2c_Sys_ListFiles(a0, a1, a2, a3, a4); }
 
 static_assert(cod2_abi_class<decltype(Sys_LoadingKeepAlive())>() == 'v', "Sys_LoadingKeepAlive: return class differs from the engine");
 extern "C" decltype(Sys_LoadingKeepAlive()) cod2c_Sys_LoadingKeepAlive() __asm__(COD2_SYM("Sys_LoadingKeepAlive"));

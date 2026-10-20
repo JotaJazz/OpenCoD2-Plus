@@ -541,3 +541,169 @@ extern "C" void CM_SaveLump( int lumpnum, byte *newLump, int size, int *checksum
 {
 	Com_Error(ERR_FATAL, "CM_SaveLump is not in this build");
 }
+
+#ifdef LIBCOD
+// What libcod calls of CoD2rev-Plus's platform code (src/unix/unix_threads.cpp,
+// src/win32/win_threads.cpp), which the client does not link: its critical
+// sections, its threads and its sleep. The engine's own threads keep the
+// engine's primitives; these serve libcod's sections (CRITSECT_EXEC,
+// _MYSQL, _SQLITE, _SOUND) only.
+#ifdef _WIN32
+static CRITICAL_SECTION crit_sections[CRITSECT_COUNT];
+static INIT_ONCE crit_sectionsOnce = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK Sys_InitializeCriticalSections( PINIT_ONCE, PVOID, PVOID * )
+{
+	for ( int i = 0; i < CRITSECT_COUNT; i++ )
+		InitializeCriticalSection( &crit_sections[i] );
+	return TRUE;
+}
+
+// win32/win_threads.cpp, the sections made on first use: the client has no
+// Sys_InitMainThread of CoD2rev-Plus's
+void Sys_EnterCriticalSection( int section )
+{
+	InitOnceExecuteOnce( &crit_sectionsOnce, Sys_InitializeCriticalSections, NULL, NULL );
+	EnterCriticalSection( &crit_sections[section] );
+}
+
+void Sys_LeaveCriticalSection( int section )
+{
+	LeaveCriticalSection( &crit_sections[section] );
+}
+
+struct sysThreadStart_t
+{
+	void *(*func)( void * );
+	void *arg;
+};
+
+static DWORD WINAPI Sys_ThreadStart( LPVOID param )
+{
+	sysThreadStart_t start = *(sysThreadStart_t *)param;
+
+	free( param );
+	start.func( start.arg );
+	return 0;
+}
+
+// win32/win_threads.cpp (Sys_CreateThreadWithHandle)
+qboolean Sys_CreateNewThread( void *(*ThreadMain)( void * ), threadid_t *tid, void *arg )
+{
+	sysThreadStart_t *start = (sysThreadStart_t *)malloc( sizeof( *start ) );
+	HANDLE thid;
+
+	if ( start == NULL )
+	{
+		Com_Printf("Failed to start thread!\n");
+		return qfalse;
+	}
+
+	start->func = ThreadMain;
+	start->arg = arg;
+
+	thid = CreateThread( NULL, 0, Sys_ThreadStart, start, 0, tid );
+	if ( thid == NULL )
+	{
+		free( start );
+		Com_Printf("Failed to start thread with error %lu\n", GetLastError());
+		return qfalse;
+	}
+
+	CloseHandle( thid );
+	return qtrue;
+}
+
+// win32/win_threads.cpp
+void Sys_SleepMSec( int msec )
+{
+	Sleep( msec );
+}
+#else
+static pthread_mutex_t crit_sections[CRITSECT_COUNT];
+static pthread_once_t crit_sectionsOnce = PTHREAD_ONCE_INIT;
+
+static void Sys_InitializeCriticalSections( void )
+{
+	pthread_mutexattr_t muxattr;
+
+	pthread_mutexattr_init(&muxattr);
+	pthread_mutexattr_settype(&muxattr, PTHREAD_MUTEX_RECURSIVE);
+
+	for ( int i = 0; i < CRITSECT_COUNT; i++ )
+		pthread_mutex_init( &crit_sections[i], &muxattr );
+
+	pthread_mutexattr_destroy(&muxattr);
+}
+
+// unix/unix_threads.cpp, the sections made on first use: the client has no
+// Sys_InitMainThread of CoD2rev-Plus's
+void Sys_EnterCriticalSection( int section )
+{
+	pthread_once( &crit_sectionsOnce, Sys_InitializeCriticalSections );
+	pthread_mutex_lock(&crit_sections[section]);
+}
+
+void Sys_LeaveCriticalSection( int section )
+{
+	pthread_mutex_unlock(&crit_sections[section]);
+}
+
+// unix/unix_threads.cpp, without the alternate signal stack it gives each
+// worker for CoD2rev-Plus's crash handler, which the client does not have
+int Sys_CreatePthread( pthread_t *thread, const pthread_attr_t *attr, void *(*func)( void * ), void *arg )
+{
+	return pthread_create( thread, attr, func, arg );
+}
+
+#define MIN_STACKSIZE 256*1024
+// unix/unix_threads.cpp
+qboolean Sys_CreateNewThread( void *(*ThreadMain)( void * ), threadid_t *tid, void *arg )
+{
+	int err;
+	pthread_attr_t tattr;
+
+	err = pthread_attr_init(&tattr);
+	if(err != 0)
+	{
+		Com_Printf("pthread_attr_init(): Thread creation failed with the following error: %s\n", strerror(err));
+		return qfalse;
+	}
+
+	err = pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+	if(err != 0)
+	{
+		pthread_attr_destroy(&tattr);
+		Com_Printf("pthread_attr_setdetachstate(): Thread creation failed with the following error: %s\n", strerror(err));
+		return qfalse;
+	}
+
+	err = pthread_attr_setstacksize(&tattr, MIN_STACKSIZE);
+	if(err != 0)
+	{
+		pthread_attr_destroy(&tattr);
+		Com_Printf("pthread_attr_setstacksize(): Thread creation failed with the following error: %s\n", strerror(err));
+		return qfalse;
+	}
+
+	err = Sys_CreatePthread(tid, &tattr, ThreadMain, arg);
+	if(err != 0)
+	{
+		pthread_attr_destroy(&tattr);
+		Com_Printf("pthread_create(): Thread creation failed with the following error: %s\n", strerror(err));
+		return qfalse;
+	}
+	pthread_attr_destroy(&tattr);
+	return qtrue;
+}
+
+// unix/unix_threads.cpp
+void Sys_SleepMSec( int msec )
+{
+	struct timespec ts;
+	ts.tv_sec = msec / 1000;
+	ts.tv_nsec = (msec % 1000) * 1000000;
+	nanosleep(&ts, NULL);
+}
+#endif
+#endif
