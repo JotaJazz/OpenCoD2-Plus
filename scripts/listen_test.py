@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A client hosts a game and another client joins it.
 
-    python3 scripts/listen_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH]
+    python3 scripts/listen_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--host-binary EXE --host-wine WINE]
 
 Starts one client with +map on tdm (its local server, CoD2rev-Plus's), waits
 until it answers getinfo, starts a second client with +connect, and checks
@@ -9,7 +9,9 @@ with rcon that the server holds both: the host on loopback and the guest.
 Then g_speed set on the host's command line must survive the game's
 registration, and after a map_restart, and after a map command to another
 map, with the guest connected, the server must hold both again. Both clients must still run and leave no crash report.
-The clients need a CD key in ~/.cod2/preferences (codkey): without one the
+With --host-binary and --host-wine the host is another client, a Windows
+one (cod2_win32.exe) run by the given wine command, and the guest the Linux
+one. The clients need a CD key in ~/.cod2/preferences (codkey): without one the
 test is skipped (exit 0, with a message). They open windows. Exits with 0 when
 all of that holds.
 """
@@ -50,7 +52,17 @@ def wait_for(cond, timeout, step=2):
     return None
 
 
-def client(binary, game_dir, home, args, log):
+def wine_path(path):
+    """A path as a Windows program under wine sees it (drive Z: is /)."""
+    return 'Z:' + os.path.abspath(path).replace('/', '\\')
+
+
+def client(binary, game_dir, home, args, log, wine=None):
+    if wine:
+        return subprocess.Popen([wine, binary, '+set', 'fs_basepath', wine_path(game_dir), '+set', 'fs_homepath',
+                                 wine_path(home), '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log,
+                                stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                env=dict(os.environ, COD2_CONSOLE_STDOUT='1'))
     return subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(game_dir), '+set', 'fs_homepath', home,
                              '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log, stderr=subprocess.STDOUT,
                             stdin=subprocess.DEVNULL)
@@ -61,6 +73,8 @@ def main():
     ap.add_argument('game_dir')
     ap.add_argument('--protocol', type=int, choices=(115, 118), required=True)
     ap.add_argument('--binary')
+    ap.add_argument('--host-binary', help='another client to host the game (with --host-wine, a Windows one)')
+    ap.add_argument('--host-wine', help='the command that runs --host-binary (a wine wrapper)')
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--second-map', default='mp_carentan')
     args = ap.parse_args()
@@ -68,6 +82,7 @@ def main():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
     binary = os.path.abspath(args.binary or os.path.join(ROOT, DEFAULT_BINARY[args.protocol]))
+    host_binary = os.path.abspath(args.host_binary) if args.host_binary else binary
     port = smoke_test.free_port()
     run = Run()
     procs = []
@@ -76,9 +91,10 @@ def main():
         host_log, guest_log = os.path.join(host_home, 'out.log'), os.path.join(guest_home, 'out.log')
         try:
             with open(host_log, 'wb') as log:
-                host = client(binary, args.game_dir, host_home,
+                host = client(host_binary, args.game_dir, host_home,
                               ['+set', 'net_port', str(port), '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'tdm',
-                               '+set', 'sv_maxclients', '8', '+set', 'g_speed', G_SPEED, '+map', args.map], log)
+                               '+set', 'sv_maxclients', '8', '+set', 'g_speed', G_SPEED, '+map', args.map], log,
+                              wine=args.host_wine)
             procs.append(host)
             up = wait_for(lambda: host.poll() is None and smoke_test.query(port, 'getinfo x'), 150)
             run.check('the host serves its game', bool(up), f'exit code {host.poll()}' if not up else '')
