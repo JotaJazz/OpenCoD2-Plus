@@ -60,7 +60,7 @@ extern void AIL_set_sample_reverb_levels(void *S, float dry_level, float wet_lev
 extern void AIL_set_sample_ms_position(void *S, int ms);
 extern long unsigned int AIL_sample_position(void *S);
 extern void AIL_set_3D_sample_volume(void *S, float volume);
-extern void AIL_set_3D_sample_distances(void *S, float min_dist, float max_dist);
+extern void AIL_set_3D_sample_distances(void *S, float max_dist, float min_dist);
 extern void AIL_set_3D_sample_loop_count(void *S, int count);
 extern void AIL_set_3D_sample_effects_level(void *S, float level);
 extern void AIL_set_3D_sample_info(void *S, void *info);
@@ -728,27 +728,26 @@ void SND_Set3DPosition(int index, const vec_t *org)
     int listenerIdx;
     snd_local_t *sndGlob;
     snd_listener *listener;
-    float *listenerOrigin, *right, *up, *forward;
+    float *listenerOrigin, *forward, *left, *up;
     float dx, dy, dz;
-    float x, y, z;
 
     listenerIdx = SND_GetListenerIndexNearestToOrigin(org);
     sndGlob = &g_snd;
     listener = &sndGlob->listeners[listenerIdx];
     listenerOrigin = listener->orient.origin;
-    right = listener->orient.axis[0];
-    up = listener->orient.axis[1];
-    forward = listener->orient.axis[2];
+    forward = listener->orient.axis[0];
+    left = listener->orient.axis[1];
+    up = listener->orient.axis[2];
 
     dx = org[0] - listenerOrigin[0];
     dy = org[1] - listenerOrigin[1];
     dz = org[2] - listenerOrigin[2];
 
-    x = dx * right[0] + dy * right[1] + dz * right[2];
-    z = dx * forward[0] + dy * forward[1] + dz * forward[2];
-    y = -(dx * up[0] + dy * up[1] + dz * up[2]);
-
-    AIL_set_3D_position(milesGlob.handle_3D[index], x, y, z);
+    /* Miles' space: X right, Y up, Z ahead (the original's 0x4b67b0) */
+    AIL_set_3D_position(milesGlob.handle_3D[index],
+                        -(dx * left[0] + dy * left[1] + dz * left[2]),
+                        dx * up[0] + dy * up[1] + dz * up[2],
+                        dx * forward[0] + dy * forward[1] + dz * forward[2]);
 }
 
 static void MSS_SpatializeStream(float *volume, float *pan)
@@ -1253,7 +1252,7 @@ int SND_StartAlias3DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
     }
 
     AIL_set_3D_sample_volume(handle, scaledVol);
-    AIL_set_3D_sample_distances(handle, pAlias0->fDistMin, pAlias0->fDistMax);
+    AIL_set_3D_sample_distances(handle, pAlias0->fDistMax, pAlias0->fDistMin);
 
     playbackRate = AIL_3D_sample_playback_rate(handle);
     sndGlob = &g_snd;

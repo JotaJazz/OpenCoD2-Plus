@@ -86,9 +86,10 @@ Bool Voice_Init(void)
     Com_Printf("Voice chat is not available in this build\n");
     return 0;
 
-    /* the original zeroes a global it then hands Encode_Init and Decode_Init
-     * (0x19a1c2c); the reconstruction read voice_freq_ptr, a zeroed blob,
-     * as a pointer to it and wrote through NULL */
+    /* not reached until voice chat is done; then: the original zeroes a
+     * global it hands Encode_Init and Decode_Init (0x19a1c2c), where the
+     * reconstruction read voice_freq_ptr, a zeroed blob, as a pointer to it
+     * and wrote through NULL */
     freq = &s_voiceBandwidth;
     *freq = 0;
 

@@ -379,10 +379,6 @@ int GetControlReference()
 {
     return 0;
 }
-int SND_SetChannelInfo()
-{
-    return 0;
-}
 int SND_SetEnvironmentEffects_f()
 {
     return 0;
