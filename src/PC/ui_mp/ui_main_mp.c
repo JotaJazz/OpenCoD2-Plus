@@ -2841,7 +2841,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         return;
     }
 
-    case 252:
+    case 253:  /* UI_JOINGAMETYPE */
     {
         int jgtIdx = (ui_joinGameType)->current.integer;
         if (jgtIdx > sharedUiInfo.numJoinGameTypes) {
@@ -2858,7 +2858,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         return;
     }
 
-    case 253:
+    case 254:  /* UI_PREVIEWCINEMATIC */
     {
         int cinHandle = sharedUiInfo.previewMovie;
         if (cinHandle <= -2)
@@ -2877,17 +2877,17 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         return;
     }
 
-    case 254:
+    case 255:  /* UI_STARTMAPCINEMATIC */
     {
         UI_DrawMapPreview((const rectDef_t *)rect, color, 1);
         return;
     }
 
-    case 263:
+    case 265:  /* UI_RECORDLEVEL */
         UI_DrawRecordLevel((rectDef_t *)rect);
         return;
 
-    case 264:
+    case 266:  /* UI_AMITALKING */
     {
         if ((sv_voice)->current.enabled == 0 || (cl_voice)->current.enabled == 0)
             return;
@@ -2900,14 +2900,12 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         return;
     }
 
-    case 265:
-    case 266:
-    case 267:
+    case 267:  /* UI_TALKER1..4, as the original's menudefinition.h */
     case 268:
     case 269:
     case 270:
     {
-        int targetTalker = ownerDraw - 265;
+        int targetTalker = ownerDraw - 267;
         int talkerCount = 0;
         int clientNum;
         int pi;
@@ -2920,12 +2918,9 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
             talkerCount++;
         }
 
-        clientNum = pi;
-        if (clientNum < 0)
+        if (pi >= 64)
             return;
-
-        if (clientNum >= 64)
-            clientNum = -1;
+        clientNum = pi;
 
         {
             MaterialHandle voiceMat;
