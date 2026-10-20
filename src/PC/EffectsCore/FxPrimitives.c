@@ -1352,7 +1352,7 @@ void Particle_IntegrateVelocity(const Particle *_this, float normDuration, vec_t
 void Particle_IntegrateVelocity2(const Particle *_this, float normDuration, vec_t *outVector)
 {
     byte *self = (byte *)_this;
-    int useBlend = (*(byte *)(self + 0xaa) & 8) != 0;
+    int useBlend = (((Effect *)self)->mFlags & 0x100000) != 0; /* useRandomVelocity2 */
     float vx, vy, vz;
 
     if (useBlend) {
@@ -1365,7 +1365,7 @@ void Particle_IntegrateVelocity2(const Particle *_this, float normDuration, vec_
         vz = IntegrateChannel(self, 0x21c, 0, 0, 0x21c + 8, normDuration, 0);
     }
 
-    if (!(*(byte *)(self + 0xaa) & 0x20)) {
+    if (!(((Effect *)self)->mFlags & 0x400000)) { /* absoluteVel2 */
         AxisTransformVector((vec3_t *)((char *)self + offsetof(Particle, displayAxis[0][0])), vx, vy, vz, outVector);
     } else {
         outVector[0] = vx;
@@ -1548,6 +1548,30 @@ Bool Light_Update(const Light *_this)
     return 1;
 }
 
+extern void OrientationDirFromWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
+/* a velocity from its curves (along the particle's axis) into the space its
+   origin moves in: the world's, or the bolt's when it has one; an absolute
+   one (absoluteVel / absoluteVel2) is in the world's already. As CoD2MP_s.exe
+   1.3 (0x4951d0 and 0x4953a0) */
+static void Particle_OrientVelocity(const Particle *_this, int absoluteFlag, float vx, float vy, float vz, vec_t *outVector, const orientation_t *or_)
+{
+    byte *self = (byte *)_this;
+    vec3_t v = { vx, vy, vz };
+
+    if (((Effect *)self)->mFlags & absoluteFlag) {
+        if (or_) {
+            OrientationDirFromWorldDir(or_, v, outVector);
+            return;
+        }
+    } else if (!or_) {
+        AxisTransformVector((vec3_t *)((char *)self + offsetof(Particle, displayAxis[0][0])), vx, vy, vz, outVector);
+        return;
+    }
+    outVector[0] = vx;
+    outVector[1] = vy;
+    outVector[2] = vz;
+}
+
 void Particle_CalcVelocityValue(const Particle *_this, float normTime, vec_t *outVector, const orientation_t *or_)
 {
     byte *self = (byte *)_this;
@@ -1576,22 +1600,15 @@ void Particle_CalcVelocityValue(const Particle *_this, float normTime, vec_t *ou
         vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master)) + 8);
     }
 
-    if (!(*(byte *)(self + 0xaa) & 0x20)) {
-        AxisTransformVector((vec3_t *)((char *)self + offsetof(Particle, displayAxis[0][0])), vx, vy, vz, outVector);
-    } else {
-        outVector[0] = vx;
-        outVector[1] = vy;
-        outVector[2] = vz;
-    }
+    Particle_OrientVelocity(_this, 0x200000, vx, vy, vz, outVector, or_);
 }
 
 void Particle_CalcVelocity2Value(const Particle *_this, float normTime, vec_t *outVector, const orientation_t *or_)
 {
-    (void)or_;
     byte *self = (byte *)_this;
     float vx, vy, vz;
 
-    if (*(byte *)(self + 0xaa) & 8) {
+    if (((Effect *)self)->mFlags & 0x100000) {
         float bfx = (((Particle *)(self))->velocity2WeightX);
         float v0x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master))), normTime);
         float v1x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XRandChannelInstance.curveIterator.master))), normTime);
@@ -1612,13 +1629,7 @@ void Particle_CalcVelocity2Value(const Particle *_this, float normTime, vec_t *o
         vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master)) + 8);
     }
 
-    if (!(*(byte *)(self + 0xaa) & 0x20)) {
-        AxisTransformVector((vec3_t *)((char *)self + offsetof(Particle, displayAxis[0][0])), vx, vy, vz, outVector);
-    } else {
-        outVector[0] = vx;
-        outVector[1] = vy;
-        outVector[2] = vz;
-    }
+    Particle_OrientVelocity(_this, 0x400000, vx, vy, vz, outVector, or_);
 }
 
 void Particle_GetTotalVelocity(const Particle *_this, float normTime, vec_t *outVector, const orientation_t *or_)
@@ -2489,6 +2500,59 @@ Bool OrientedParticle_Update(const OrientedParticle *_this)
 }
 
 extern void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
+extern int FxHelper_GetMaterialSubimageCount(const FxHelper *_this, MaterialHandle handle);
+
+/* turns the particle by its rotation delta curve (blended with its random
+   curve by useRandomRotationDelta) over the frame, as CoD2MP_s.exe 1.3
+   (0x495ed0) */
+static void Particle_UpdateRotation(const Particle *_this)
+{
+    byte *self = (byte *)_this;
+    float normTime = ((Effect *)self)->normTime;
+    float delta = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, rotationDeltaChannelInstance.curveIterator.master))), normTime);
+
+    if (((Effect *)self)->mFlags & 0x40000) {
+        float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, rotationDeltaRandChannelInstance.curveIterator.master))), normTime);
+        delta += (v1 - delta) * (((Particle *)(self))->blendWeight[4]);
+    }
+    delta *= ((Particle *)self)->rotationDeltaChannelInstance.scale;
+    ((Effect *)self)->mRefEnt.rotation += (float)(*(FxHelper **)imp_theFxHelper)->mFrameTime * delta * 0.01f;
+}
+
+/* picks the frame of an animated material (an atlas) from the particle's age,
+   its frame rate and its loop mode, as CoD2MP_s.exe 1.3 (0x495f70) */
+static void Particle_UpdateSequence(const Particle *_this)
+{
+    Particle *p = (Particle *)_this;
+    Effect *e = &p->base;
+    int count = FxHelper_GetMaterialSubimageCount(*(FxHelper **)imp_theFxHelper, e->mRefEnt.customMaterial);
+    int frame;
+
+    if (count == 1) {
+        e->mRefEnt.materialSubimageIndex = 0;
+        return;
+    }
+    frame = (int)((float)(FXH_TIME(*(FxHelper **)imp_theFxHelper) - e->mTimeStart) * p->frameRate) + p->startFrame;
+    e->mRefEnt.materialSubimageIndex = frame;
+    if (p->sequenceLoopMode == 0) {
+        if (frame >= count)
+            e->mRefEnt.materialSubimageIndex = frame % count;
+    } else if (p->sequenceLoopMode == 1) {
+        if (frame < count)
+            return;
+        if (p->sequenceLoopTimes > 0) {
+            if (frame < (p->sequenceLoopTimes + 1) * count) {
+                e->mRefEnt.materialSubimageIndex = frame % count;
+            } else {
+                e->mRefEnt.materialSubimageIndex = count - 1;
+                p->sequenceLoopTimes = 0;
+            }
+        } else {
+            e->mRefEnt.materialSubimageIndex = count - 1;
+        }
+    }
+}
+
 Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud *_this_2)
 {
     (void)_this_1;
@@ -2556,27 +2620,35 @@ Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud
     }
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
 
-    if (radius == 0.0f) {
-        ((Effect *)self)->mFlags |= 0x01000000;
+    /* a particle without size is not drawn but keeps moving (0x01000000
+     * would stop its origin) */
+    if (radius == 0.0f)
         return 1;
-    }
 
+    /* the second radius: size2 when the scale is not uniform (blended with
+     * size2Rand by useRandomSize2), else the first, as CoD2MP_s.exe 1.3
+     * (0x495c80) */
+    float radius2;
     if ((((Particle *)(self))->nonUniformScale)) {
-        if (*(byte *)(self + 0xaa) & 1) {
-
+        if (((Effect *)self)->mFlags & 0x10000) {
+            float blendFactor = (((Particle *)(self))->blendWeight[3]);
+            float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master))), normTime);
+            float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2RandChannelInstance.curveIterator.master))), normTime);
+            radius2 = (v0 + (v1 - v0) * blendFactor) * *(float *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master)) + 8);
+        } else {
+            radius2 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master)) + 8);
         }
-    }
-
-    float rotation;
-    if (*(byte *)(self + 0xaa) & 1) {
-        rotation = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, size2ChannelInstance.curveIterator.master)) + 8);
     } else {
-        rotation = 0.0f;
+        radius2 = radius;
     }
-    ((Effect *)self)->mRefEnt.radius[1] = rotation;
+    ((Effect *)self)->mRefEnt.radius[1] = radius2;
+    if (radius2 == 0.0f)
+        return 1;
 
     Particle_UpdateRGB(_this);
     Particle_UpdateAlpha(_this);
+    Particle_UpdateRotation(_this);
+    Particle_UpdateSequence(_this);
 
     return 1;
 }
