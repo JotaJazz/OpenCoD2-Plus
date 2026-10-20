@@ -14,7 +14,7 @@ differ from the one before it by more than DIFF in some channel. Exits with 0
 when every effect changes over MIN_PIXELS pixels more than the picture does
 by itself, every effect loads (an effect that fails plays the placeholder
 instead), and the client still runs and leaves no crash report. --keep copies
-the screenshots and the log to DIR. The client opens a window and needs a CD
+the screenshots, the log and any crash report to DIR. The client opens a window and needs a CD
 key in ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
 import argparse, glob, os, shutil, struct, subprocess, sys, tempfile
@@ -28,8 +28,9 @@ DEFAULT_CLIENT = {115: 'build/check-linux-10/cod2_linux', 118: 'build/check-linu
 # rising; the dust of a bullet's impact (a decal, delayed particles and
 # runners); a vehicle's explosion (smoke, dirt and fireballs, most of them
 # delayed, and velocities with random ranges); a tank's (emitters flinging
-# parts that play effects, and the vehicle's explosion through a runner)
-EFFECTS = 'fx/misc/missing_fx,fx/impacts/default_hit,fx/explosions/large_vehicle_explosion,fx/explosions/tank_explosion'
+# parts that play effects, and the vehicle's explosion through a runner); a
+# boat's wake (oriented particles facing up)
+EFFECTS = 'fx/misc/missing_fx,fx/impacts/default_hit,fx/explosions/large_vehicle_explosion,fx/explosions/tank_explosion,fx/misc/wake_buffalo'
 # in mp_toujane, on the spawn point farthest from the map's ambient effects
 # (mp_toujane_fx.gsc's wind blown dust), looking up at the sky
 SPOT = '3051 2178 80 210'
@@ -64,7 +65,7 @@ Callback_PlayerConnect()
 '''
 DIFF = 40
 MIN_PIXELS = 500
-SECONDS = 300
+SECONDS = 360
 
 
 def tga(path):
@@ -153,7 +154,7 @@ def main():
         shots = next((d for d in glob.glob(os.path.join(home, '*', 'screenshots'))), os.path.join(home, 'fxtest', 'screenshots'))
         if args.keep:
             os.makedirs(args.keep, exist_ok=True)
-            for f in glob.glob(os.path.join(shots, '*.tga')) + [log_path]:
+            for f in glob.glob(os.path.join(shots, '*.tga')) + glob.glob(os.path.join(home, 'cod2_crash_*')) + [log_path]:
                 shutil.copy(f, args.keep)
         check('the client runs the config to its end', ran, f'exit code {client.poll()}')
         text = open(log_path, encoding='latin-1').read() if os.path.exists(log_path) else ''

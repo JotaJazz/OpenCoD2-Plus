@@ -1186,7 +1186,8 @@ void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const in
     PART_ANCHOR_X(p) = newOrigin[0];
     PART_ANCHOR_Y(p) = newOrigin[1];
     PART_ANCHOR_Z(p) = newOrigin[2];
-    *(void **)(p + 0x40) = material;
+    /* p is an Effect *: "p + 0x40" wrote the material 0x40 effects past it */
+    p->mRefEnt.customMaterial = (MaterialHandle)material;
 
     int flags = (((PrimitiveTemplate *)(primTemp))->mAttributeFlags);
     if (flags & 0x2000)
@@ -1198,9 +1199,9 @@ void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const in
     if (flags & 0x10000)
         (((Particle *)(p))->blendWeight[3]) = flrand(0.0f, 1.0f);
 
-    *(int *)(p + 0xb0) = 0;
+    p->mSortGroup = 0;
     if (material && FxHelper_IsMaterialRefractive(theFxHelper, (MaterialHandle)material))
-        *(int *)(p + 0xb0) = -1;
+        p->mSortGroup = -1;
 }
 
 extern void Particle_Particle(const Particle *particle);

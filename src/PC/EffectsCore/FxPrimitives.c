@@ -140,6 +140,10 @@ Bool Line_Update(const Line *_this);
 Bool Cloud_Update(const Cloud *_this);
 Bool OrientedParticle_Update(const OrientedParticle *_this);
 Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud *_this_2);
+static void Particle_UpdateSize(const Particle *_this);
+static void Particle_UpdateSize2(const Particle *_this);
+static void Particle_UpdateRotation(const Particle *_this);
+static void Particle_UpdateSequence(const Particle *_this);
 void Effect_Archive(const Effect *_this, FxArchive *arch);
 void Light_Archive(const Light *_this, FxArchive *arch);
 void Flash_Archive(const Flash *_this, FxArchive *arch);
@@ -1955,6 +1959,8 @@ Bool Particle_UpdateOrigin(const Particle *_this, const orientation_t *or_)
     return 1;
 }
 
+extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
+extern void OrientationDirToWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
 Bool Emitter_Update(const Emitter *_this)
 {
     byte *self = (byte *)_this;
@@ -1990,25 +1996,60 @@ Bool Emitter_Update(const Emitter *_this)
         }
     }
 
+    vec3_t previous;
+    previous[0] = PART_ANCHOR_X(self);
+    previous[1] = PART_ANCHOR_Y(self);
+    previous[2] = PART_ANCHOR_Z(self);
     if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
         return 0;
+
+    /* a model that stopped spins down; it turns by its angle deltas, which
+     * give its axes (0x497970, 0x498190) */
+    float *angles = (float *)(self + 0x278);
+    float *angleDelta = (float *)(self + 0x284);
+    if (previous[0] == PART_ANCHOR_X(self) && previous[1] == PART_ANCHOR_Y(self) && previous[2] == PART_ANCHOR_Z(self)) {
+        angleDelta[0] *= 0.7f;
+        angleDelta[1] *= 0.7f;
+        angleDelta[2] *= 0.7f;
+    }
+    {
+        float step = (float)(*(FxHelper **)imp_theFxHelper)->mFrameTime * 0.01f;
+        vec3_t right;
+        angles[0] += step * angleDelta[0];
+        angles[1] += step * angleDelta[1];
+        angles[2] += step * angleDelta[2];
+        AngleVectors(angles, ((Effect *)self)->mRefEnt.axis[0], right, ((Effect *)self)->mRefEnt.axis[2]);
+        ((Effect *)self)->mRefEnt.axis[1][0] = 0.0f - right[0];
+        ((Effect *)self)->mRefEnt.axis[1][1] = 0.0f - right[1];
+        ((Effect *)self)->mRefEnt.axis[1][2] = 0.0f - right[2];
+    }
+    Particle_UpdateSize((const Particle *)_this);
+    ((Effect *)self)->mRefEnt.scale = ((Effect *)self)->mRefEnt.radius[0];
 
     vec3_t bindVelocity = { 0, 0, 0 };
     if (orient) {
 
         FxHelper *helper = *(FxHelper **)imp_theFxHelper;
         int frameTime = helper->mFrameTime;
+        vec3_t local[3];
+        int i;
+        for (i = 0; i < 3; i++) {
+            local[i][0] = ((Effect *)self)->mRefEnt.axis[i][0];
+            local[i][1] = ((Effect *)self)->mRefEnt.axis[i][1];
+            local[i][2] = ((Effect *)self)->mRefEnt.axis[i][2];
+            OrientationDirToWorldDir(orient, local[i], ((Effect *)self)->mRefEnt.axis[i]);
+        }
+        vec3_t worldPos;
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), worldPos);
         if (frameTime > 0) {
             float invFt = 1.0f / ((float)frameTime * 0.001f);
-            vec3_t worldPos;
-            OrientationPosToWorldPos(orient, (vec_t *)(self + 4), worldPos);
             bindVelocity[0] = (worldPos[0] - (((Effect *)(self))->mRefEnt.origin[0])) * invFt;
             bindVelocity[1] = (worldPos[1] - (((Effect *)(self))->mRefEnt.origin[1])) * invFt;
             bindVelocity[2] = (worldPos[2] - (((Effect *)(self))->mRefEnt.origin[2])) * invFt;
-            (((Effect *)(self))->mRefEnt.origin[0]) = worldPos[0];
-            (((Effect *)(self))->mRefEnt.origin[1]) = worldPos[1];
-            (((Effect *)(self))->mRefEnt.origin[2]) = worldPos[2];
         }
+        (((Effect *)(self))->mRefEnt.origin[0]) = worldPos[0];
+        (((Effect *)(self))->mRefEnt.origin[1]) = worldPos[1];
+        (((Effect *)(self))->mRefEnt.origin[2]) = worldPos[2];
     } else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -2016,25 +2057,6 @@ Bool Emitter_Update(const Emitter *_this)
     }
 
     Emitter_UpdateEmitFx(_this, bindVelocity, (const orientation_t *)orient);
-
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Emitter, _base[372]))), normTime);
-        float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Emitter, _base[384]))), normTime);
-        radius = (v0 + (v1 - v0) * bf) * *(float *)(((char *)self + offsetof(Emitter, _base[372])) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Emitter, _base[372]))), normTime) * *(float *)(((char *)self + offsetof(Emitter, _base[372])) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-
-    if (radius == 0.0f) {
-        return 1;
-    }
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-
     return 1;
 }
 
@@ -2077,336 +2099,6 @@ void Particle_UpdateAlpha(const Particle *_this)
     }
 }
 
-Bool Cylinder_Update(const Cylinder *_this)
-{
-
-    byte *self = (byte *)_this;
-    int startTime = (((Effect *)(self))->mTimeStart);
-    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
-
-    if (startTime > curTime)
-        return 0;
-
-    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
-    ((Effect *)self)->normTime = normTime;
-    if (normTime > 1.0f)
-        ((Effect *)self)->normTime = 1.0f;
-    if (0.0f > ((Effect *)self)->normTime)
-        return 0;
-    normTime = ((Effect *)self)->normTime;
-
-    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
-    const orientation_t *orient = NULL;
-    if (boltFrame) {
-        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
-        if (boneIdx >= 0) {
-            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
-            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
-                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
-                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
-                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
-                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
-                }
-            }
-            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
-                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
-        }
-    }
-
-    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
-        return 0;
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)(self + 0x7c));
-    else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
-    }
-
-    float tailLen;
-    if (*(byte *)(self + 0xaa) & 2) {
-        float bf = *(float *)(self + 0x25c);
-        tailLen = (EvalCurve1(self + 0x260, normTime) + (EvalCurve1(self + 0x26c, normTime) - EvalCurve1(self + 0x260, normTime)) * bf) * *(float *)(self + 0x260 + 8);
-    } else {
-        tailLen = EvalCurve1(self + 0x260, normTime) * *(float *)(self + 0x260 + 8);
-    }
-    (((Tail *)(self))->tailLength) = tailLen;
-
-    Tail_CalcNewEndpoint((const Tail *)_this, (const orientation_t *)orient);
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 0x9c), (vec_t *)(self + 0x9c));
-
-    float radius1, radius2;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        radius1 = (EvalCurve1(self + 0x174, normTime) + (EvalCurve1(self + 0x180, normTime) - EvalCurve1(self + 0x174, normTime)) * bf) * *(float *)(self + 0x174 + 8);
-
-        if (*(byte *)(self + 0xaa) & 4) {
-            float bf2 = (((Particle *)(self))->blendWeight[3]);
-            radius2 = (EvalCurve1(self + 0x198, normTime) + (EvalCurve1(self + 0x1a4, normTime) - EvalCurve1(self + 0x198, normTime)) * bf2) * *(float *)(self + 0x198 + 8);
-        } else {
-            radius2 = EvalCurve1(self + 0x198, normTime) * *(float *)(self + 0x198 + 8);
-        }
-    } else {
-        radius1 = EvalCurve1(self + 0x174, normTime) * *(float *)(self + 0x174 + 8);
-        if (*(byte *)(self + 0xaa) & 4) {
-            float bf2 = (((Particle *)(self))->blendWeight[3]);
-            radius2 = (EvalCurve1(self + 0x198, normTime) + (EvalCurve1(self + 0x1a4, normTime) - EvalCurve1(self + 0x198, normTime)) * bf2) * *(float *)(self + 0x198 + 8);
-        } else {
-            radius2 = EvalCurve1(self + 0x198, normTime) * *(float *)(self + 0x198 + 8);
-        }
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius1;
-    ((Effect *)self)->mRefEnt.radius[1] = radius2;
-
-    if (radius1 == 0.0f && radius2 == 0.0f) {
-        return 1;
-    }
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-    return 1;
-}
-
-Bool Tail_Update(const Tail *_this)
-{
-    byte *self = (byte *)_this;
-    int startTime = (((Effect *)(self))->mTimeStart);
-    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
-
-    if (startTime > curTime)
-        return 0;
-
-    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
-    ((Effect *)self)->normTime = normTime;
-    if (normTime > 1.0f)
-        ((Effect *)self)->normTime = 1.0f;
-    if (0.0f > ((Effect *)self)->normTime)
-        return 0;
-    normTime = ((Effect *)self)->normTime;
-
-    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
-    const orientation_t *orient = NULL;
-    if (boltFrame) {
-        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
-        if (boneIdx >= 0) {
-            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
-            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
-                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
-                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
-                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
-                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
-                }
-            }
-            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
-                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
-        }
-    }
-
-    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
-        return 0;
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)&((Tail *)self)->base.base.mRefEnt.origin[0]);
-    else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
-    }
-
-    float tailLen;
-    if (*(byte *)(self + 0xaa) & 2) {
-        float bf = ((Tail *)self)->lengthBlendFactor;
-        float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master))), normTime);
-        float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthRandChannelInstance.curveIterator.master))), normTime);
-        tailLen = (v0 + (v1 - v0) * bf) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + 8);
-    } else {
-        tailLen = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + 8);
-    }
-    (((Tail *)(self))->tailLength) = tailLen;
-
-    Tail_CalcNewEndpoint(_this, (const orientation_t *)orient);
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)&((Tail *)self)->base.base.mRefEnt.endpos[0], (vec_t *)&((Tail *)self)->base.base.mRefEnt.endpos[0]);
-
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        radius = (EvalCurve1( (byte *)(((char *)self + offsetof(Tail, base.sizeChannelInstance.curveIterator.master))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(Tail, base.sizeRandChannelInstance.curveIterator.master)), normTime) - EvalCurve1((byte *)((char *)self + offsetof(Tail, base.sizeChannelInstance.curveIterator.master)), normTime)) * bf) * *(float *)(((char *)self + offsetof(Tail, base.sizeChannelInstance.curveIterator.master)) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, base.sizeChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Tail, base.sizeChannelInstance.curveIterator.master)) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-    ((Effect *)self)->mRefEnt.radius[1] = radius;
-
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-    return 1;
-}
-
-extern void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
-Bool Line_Update(const Line *_this)
-{
-    byte *self = (byte *)_this;
-    int startTime = (((Effect *)(self))->mTimeStart);
-    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
-
-    if (startTime > curTime)
-        return 0;
-
-    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
-    ((Effect *)self)->normTime = normTime;
-    if (normTime > 1.0f)
-        ((Effect *)self)->normTime = 1.0f;
-    if (0.0f > ((Effect *)self)->normTime)
-        return 0;
-    normTime = ((Effect *)self)->normTime;
-
-    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
-    const orientation_t *orient = NULL;
-    if (boltFrame) {
-        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
-        if (boneIdx >= 0) {
-            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
-            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
-                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
-                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
-                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
-                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
-                }
-            }
-            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
-                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
-        }
-    }
-
-    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
-        return 0;
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)&((Line *)self)->_base[124]);
-    else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
-    }
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 0x24c), (vec_t *)&((Line *)self)->_base[156]);
-    else {
-        ((Effect *)self)->mRefEnt.endpos[0] = (((Tail *)(self))->endpoint[0]);
-        ((Effect *)self)->mRefEnt.endpos[1] = (((Tail *)(self))->endpoint[1]);
-        ((Effect *)self)->mRefEnt.endpos[2] = (((Tail *)(self))->endpoint[2]);
-    }
-
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        radius = (EvalCurve1( (byte *)(((char *)self + offsetof(Line, _base[372]))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(Line, _base[384])), normTime) - EvalCurve1((byte *)((char *)self + offsetof(Line, _base[372])), normTime)) * bf) * *(float *)(((char *)self + offsetof(Line, _base[372])) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Line, _base[372]))), normTime) * *(float *)(((char *)self + offsetof(Line, _base[372])) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-    ((Effect *)self)->mRefEnt.radius[1] = radius;
-
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-
-    return 1;
-}
-
-Bool Cloud_Update(const Cloud *_this)
-{
-
-    byte *self = (byte *)_this;
-    int startTime = (((Effect *)(self))->mTimeStart);
-    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
-
-    if (startTime > curTime)
-        return 0;
-
-    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
-    ((Effect *)self)->normTime = normTime;
-    if (normTime > 1.0f)
-        ((Effect *)self)->normTime = 1.0f;
-    if (0.0f > ((Effect *)self)->normTime)
-        return 0;
-    normTime = ((Effect *)self)->normTime;
-
-    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
-    const orientation_t *orient = NULL;
-    if (boltFrame) {
-        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
-        if (boneIdx >= 0) {
-            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
-            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
-                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
-                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
-                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
-                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
-                }
-            }
-            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
-                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
-        }
-    }
-
-    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
-        return 0;
-
-    if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)&((Cloud *)self)->base.base.mRefEnt.origin[0]);
-    else {
-        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
-        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
-        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
-    }
-
-    float radius;
-    if ((*(short *)&((Effect *)self)->mFlags) < 0) {
-        float bf = (((Particle *)(self))->blendWeight[2]);
-        radius = (EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, base.sizeChannelInstance.curveIterator.master))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(Cloud, base.sizeRandChannelInstance.curveIterator.master)), normTime) - EvalCurve1((byte *)((char *)self + offsetof(Cloud, base.sizeChannelInstance.curveIterator.master)), normTime)) * bf) * *(float *)(((char *)self + offsetof(Cloud, base.sizeChannelInstance.curveIterator.master)) + 8);
-    } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, base.sizeChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Cloud, base.sizeChannelInstance.curveIterator.master)) + 8);
-    }
-    (((Effect *)(self))->mRefEnt.radius[0]) = radius;
-    if (radius == 0.0f) {
-        return 1;
-    }
-
-    float height;
-    if (*(byte *)(self + 0xaa) & 2) {
-        float bf = (*(float *)&((Cloud *)self)->useLengthFlag);
-        height = (EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, heightChannel.curveIterator.master))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(Cloud, heightRandChannel.curveIterator.master)), normTime) - EvalCurve1((byte *)((char *)self + offsetof(Cloud, heightChannel.curveIterator.master)), normTime)) * bf) * *(float *)(((char *)self + offsetof(Cloud, heightChannel.curveIterator.master)) + 8);
-    } else {
-        height = EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, heightChannel.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Cloud, heightChannel.curveIterator.master)) + 8);
-    }
-    ((Effect *)self)->mRefEnt.radius[1] = height;
-    if (height == 0.0f) {
-        return 1;
-    }
-
-    if (*(byte *)(self + 0xaa) & 1) {
-        float rot;
-        if (*(byte *)(self + 0xaa) & 0x10) {
-            float bf = (((Particle *)(self))->blendWeight[4]);
-            rot = (EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, base.size2ChannelInstance.curveIterator.master))), normTime) + (EvalCurve1((byte *)((char *)self + offsetof(Cloud, base.size2RandChannelInstance.curveIterator.master)), normTime) - EvalCurve1((byte *)((char *)self + offsetof(Cloud, base.size2ChannelInstance.curveIterator.master)), normTime)) * bf) * *(float *)(((char *)self + offsetof(Cloud, base.size2ChannelInstance.curveIterator.master)) + 8);
-        } else {
-            rot = EvalCurve1( (byte *)(((char *)self + offsetof(Cloud, base.size2ChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Cloud, base.size2ChannelInstance.curveIterator.master)) + 8);
-        }
-        (*(float *)&((Effect *)(self))->mRefEnt.materialSubimageIndex) = rot;
-    }
-
-    Particle_UpdateRGB((const Particle *)_this);
-    Particle_UpdateAlpha((const Particle *)_this);
-    return 1;
-}
-
-extern void OrientationDirToWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
 extern int FxHelper_GetMaterialSubimageCount(const FxHelper *_this, MaterialHandle handle);
 
 /* turns the particle by its rotation delta curve (blended with its random
@@ -2493,6 +2185,273 @@ static void Particle_UpdateSize2(const Particle *_this)
         ((Effect *)self)->mRefEnt.radius[1] = ((Effect *)self)->mRefEnt.radius[0];
 }
 
+/* a tail's or a cylinder's length, from its length curve (useRandomLength),
+   as 0x497410 */
+static void Tail_UpdateLength(const Tail *_this)
+{
+    byte *self = (byte *)_this;
+    ((Tail *)self)->tailLength = Particle_EvalChannel(self, (byte *)&((Tail *)self)->lengthChannelInstance, (byte *)&((Tail *)self)->lengthRandChannelInstance,
+                                                      0x20000, ((Tail *)self)->lengthBlendFactor, ((Effect *)self)->normTime);
+}
+
+/* as CoD2MP_s.exe 1.3 (0x497790): a cylinder does not move; it reaches
+   its length along its axis from its origin */
+Bool Cylinder_Update(const Cylinder *_this)
+{
+
+    byte *self = (byte *)_this;
+    int startTime = (((Effect *)(self))->mTimeStart);
+    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+
+    if (startTime > curTime)
+        return 0;
+
+    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
+    ((Effect *)self)->normTime = normTime;
+    if (normTime > 1.0f)
+        ((Effect *)self)->normTime = 1.0f;
+    if (0.0f > ((Effect *)self)->normTime)
+        return 0;
+
+    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
+    const orientation_t *orient = NULL;
+    if (boltFrame) {
+        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
+        if (boneIdx >= 0) {
+            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
+            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
+                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
+                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
+                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
+                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
+                }
+            }
+            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
+                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
+        }
+    }
+
+    Particle_UpdateSize((const Particle *)_this);
+    Particle_UpdateSize2((const Particle *)_this);
+    Tail_UpdateLength((const Tail *)_this);
+    Particle_UpdateRGB((const Particle *)_this);
+    Particle_UpdateAlpha((const Particle *)_this);
+
+    float *origin = (float *)(self + 4);
+    float *dir = ((Effect *)self)->mRefEnt.axis[0];
+    float length = ((Tail *)self)->tailLength;
+    vec3_t end;
+    end[0] = dir[0] * length + origin[0];
+    end[1] = dir[1] * length + origin[1];
+    end[2] = dir[2] * length + origin[2];
+    if (orient) {
+        OrientationPosToWorldPos(orient, origin, ((Effect *)self)->mRefEnt.origin);
+        OrientationPosToWorldPos(orient, end, ((Effect *)self)->mRefEnt.endpos);
+    } else {
+        ((Effect *)self)->mRefEnt.origin[0] = origin[0];
+        ((Effect *)self)->mRefEnt.origin[1] = origin[1];
+        ((Effect *)self)->mRefEnt.origin[2] = origin[2];
+        ((Effect *)self)->mRefEnt.endpos[0] = end[0];
+        ((Effect *)self)->mRefEnt.endpos[1] = end[1];
+        ((Effect *)self)->mRefEnt.endpos[2] = end[2];
+    }
+    return 1;
+}
+
+/* as CoD2MP_s.exe 1.3 (0x497350): a tail trails from where it moves, back
+   toward where it was, its length long */
+Bool Tail_Update(const Tail *_this)
+{
+    byte *self = (byte *)_this;
+    int startTime = (((Effect *)(self))->mTimeStart);
+    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+
+    if (startTime > curTime)
+        return 0;
+
+    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
+    ((Effect *)self)->normTime = normTime;
+    if (normTime > 1.0f)
+        ((Effect *)self)->normTime = 1.0f;
+    if (0.0f > ((Effect *)self)->normTime)
+        return 0;
+
+    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
+    const orientation_t *orient = NULL;
+    if (boltFrame) {
+        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
+        if (boneIdx >= 0) {
+            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
+            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
+                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
+                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
+                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
+                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
+                }
+            }
+            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
+                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
+        }
+    }
+
+    ((Tail *)self)->endpoint[0] = PART_ANCHOR_X(self);
+    ((Tail *)self)->endpoint[1] = PART_ANCHOR_Y(self);
+    ((Tail *)self)->endpoint[2] = PART_ANCHOR_Z(self);
+    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
+        return 0;
+
+    if (orient)
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+    else {
+        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
+        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
+        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
+    }
+
+    Particle_UpdateSize((const Particle *)_this);
+    Tail_UpdateLength(_this);
+    Particle_UpdateRGB((const Particle *)_this);
+    Particle_UpdateAlpha((const Particle *)_this);
+    Particle_UpdateSequence((const Particle *)_this);
+    Tail_CalcNewEndpoint(_this, (const orientation_t *)orient);
+    return 1;
+}
+
+extern void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
+/* as CoD2MP_s.exe 1.3 (0x4970e0): a line stays between its two points */
+Bool Line_Update(const Line *_this)
+{
+    byte *self = (byte *)_this;
+    int startTime = (((Effect *)(self))->mTimeStart);
+    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+
+    if (startTime > curTime)
+        return 0;
+
+    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
+    ((Effect *)self)->normTime = normTime;
+    if (normTime > 1.0f)
+        ((Effect *)self)->normTime = 1.0f;
+    if (0.0f > ((Effect *)self)->normTime)
+        return 0;
+    normTime = ((Effect *)self)->normTime;
+
+    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
+    const orientation_t *orient = NULL;
+    if (boltFrame) {
+        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
+        if (boneIdx >= 0) {
+            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
+            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
+                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
+                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
+                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
+                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
+                }
+            }
+            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
+                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
+        }
+    }
+
+    if (orient) {
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 0x24c), ((Effect *)self)->mRefEnt.endpos);
+    } else {
+        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
+        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
+        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
+        ((Effect *)self)->mRefEnt.endpos[0] = (((Tail *)(self))->endpoint[0]);
+        ((Effect *)self)->mRefEnt.endpos[1] = (((Tail *)(self))->endpoint[1]);
+        ((Effect *)self)->mRefEnt.endpos[2] = (((Tail *)(self))->endpoint[2]);
+    }
+
+    Particle_UpdateSize((const Particle *)_this);
+    Particle_UpdateRGB((const Particle *)_this);
+    Particle_UpdateAlpha((const Particle *)_this);
+    return 1;
+}
+
+extern void AngleAxisToQuat(float angle, const vec_t *axis, vec_t *quat);
+extern void QuatToAxis(const vec_t *quat, vec3_t *axis);
+/* as CoD2MP_s.exe 1.3 (0x496d70): a cloud turns about its random direction;
+   its scale is its size, its radii its size2 and length (or size2 again),
+   and its end point is where it was */
+Bool Cloud_Update(const Cloud *_this)
+{
+
+    byte *self = (byte *)_this;
+    int startTime = (((Effect *)(self))->mTimeStart);
+    int curTime = FXH_TIME(*(FxHelper **)imp_theFxHelper);
+
+    if (startTime > curTime)
+        return 0;
+
+    float normTime = (float)(curTime - startTime) / (float)((((Effect *)(self))->mTimeEnd) - startTime);
+    ((Effect *)self)->normTime = normTime;
+    if (normTime > 1.0f)
+        ((Effect *)self)->normTime = 1.0f;
+    if (0.0f > ((Effect *)self)->normTime)
+        return 0;
+
+    byte *boltFrame = (*(byte **)&((Effect *)(self))->mBolt.value);
+    const orientation_t *orient = NULL;
+    if (boltFrame) {
+        int boneIdx = (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle);
+        if (boneIdx >= 0) {
+            int clTime = (*(clientActive_t **)imp_cl)->skelTimeStamp;
+            if ((((FxBoltFrame *)(boltFrame))->cachedServerTime) != clTime) {
+                (((FxBoltFrame *)(boltFrame))->cachedServerTime) = clTime;
+                if (!FX_GetBoneOrientation( (int *)(((void *)&((FxBoltFrame *)(boltFrame))->mBolt)), (orientation_t *)(((void *)&((FxBoltFrame *)(boltFrame))->orientation)))) {
+                    (((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) = -1;
+                    (((FxBoltFrame *)(boltFrame))->mBolt.boneIndex) = -1;
+                }
+            }
+            if ((((FxBoltFrame *)(boltFrame))->mBolt.dobjHandle) >= 0)
+                orient = (&((FxBoltFrame *)(boltFrame))->orientation);
+        }
+    }
+
+    vec3_t previous;
+    previous[0] = PART_ANCHOR_X(self);
+    previous[1] = PART_ANCHOR_Y(self);
+    previous[2] = PART_ANCHOR_Z(self);
+    if (!Particle_UpdateOrigin((const Particle *)_this, (const orientation_t *)orient))
+        return 0;
+
+    float *length = (float *)(self + 0x258);
+    Particle_UpdateSize((const Particle *)_this);
+    Particle_UpdateSize2((const Particle *)_this);
+    if (((Cloud *)self)->useLengthFlag)
+        *length = Particle_EvalChannel(self, (byte *)&((Cloud *)self)->heightChannel, (byte *)&((Cloud *)self)->heightRandChannel,
+                                       0x20000, ((Cloud *)self)->randomLengthBlend, ((Effect *)self)->normTime);
+    Particle_UpdateRGB((const Particle *)_this);
+    Particle_UpdateAlpha((const Particle *)_this);
+    Particle_UpdateRotation((const Particle *)_this);
+
+    vec4_t quat;
+    AngleAxisToQuat(((Effect *)self)->mRefEnt.rotation, ((Cloud *)self)->randomDirection, quat);
+    QuatToAxis(quat, ((Effect *)self)->mRefEnt.axis);
+
+    ((Effect *)self)->mRefEnt.scale = ((Effect *)self)->mRefEnt.radius[0];
+    ((Effect *)self)->mRefEnt.radius[0] = ((Effect *)self)->mRefEnt.radius[1];
+    if (((Cloud *)self)->useLengthFlag)
+        ((Effect *)self)->mRefEnt.radius[1] = *length;
+
+    if (orient)
+        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+    else {
+        (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
+        (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
+        (((Effect *)(self))->mRefEnt.origin[2]) = PART_ANCHOR_Z(self);
+    }
+    ((Effect *)self)->mRefEnt.endpos[0] = previous[0];
+    ((Effect *)self)->mRefEnt.endpos[1] = previous[1];
+    ((Effect *)self)->mRefEnt.endpos[2] = previous[2];
+    return 1;
+}
+
+extern void OrientationDirToWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
 /* as CoD2MP_s.exe 1.3 (0x496970): a particle drawn facing its normal, which
    becomes the scene entity's forward axis */
 Bool OrientedParticle_Update(const OrientedParticle *_this)
