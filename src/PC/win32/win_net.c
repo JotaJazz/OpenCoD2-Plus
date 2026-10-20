@@ -58,6 +58,110 @@ typedef struct {
 } sockaddr_gen;
 
 qboolean Sys_IsLANAddress(netadr_t adr);
+
+/* The name of the last socket error, as the original's NET_ErrorString: on
+ * Windows errno is not set by the sockets, and the reconstruction's
+ * strerror(errno) printed an unrelated message. Linux maps errno to numbers
+ * that are not Windows' (linux_net.c), so it keeps strerror. */
+static const char *NET_ErrorString(void)
+{
+#ifdef _WIN32
+    switch (WSAGetLastError()) {
+    case 10004:
+        return "WSAEINTR";
+    case 10009:
+        return "WSAEBADF";
+    case 10013:
+        return "WSAEACCES";
+    case 10101:
+        return "WSAEDISCON";
+    case 10014:
+        return "WSAEFAULT";
+    case 10022:
+        return "WSAEINVAL";
+    case 10024:
+        return "WSAEMFILE";
+    case 10035:
+        return "WSAEWOULDBLOCK";
+    case 10036:
+        return "WSAEINPROGRESS";
+    case 10037:
+        return "WSAEALREADY";
+    case 10038:
+        return "WSAENOTSOCK";
+    case 10039:
+        return "WSAEDESTADDRREQ";
+    case 10040:
+        return "WSAEMSGSIZE";
+    case 10041:
+        return "WSAEPROTOTYPE";
+    case 10042:
+        return "WSAENOPROTOOPT";
+    case 10043:
+        return "WSAEPROTONOSUPPORT";
+    case 10044:
+        return "WSAESOCKTNOSUPPORT";
+    case 10045:
+        return "WSAEOPNOTSUPP";
+    case 10046:
+        return "WSAEPFNOSUPPORT";
+    case 10047:
+        return "WSAEAFNOSUPPORT";
+    case 10048:
+        return "WSAEADDRINUSE";
+    case 10049:
+        return "WSAEADDRNOTAVAIL";
+    case 10050:
+        return "WSAENETDOWN";
+    case 10051:
+        return "WSAENETUNREACH";
+    case 10052:
+        return "WSAENETRESET";
+    case 10053:
+        return "WSAECONNABORTED";
+    case 10054:
+        return "WSAECONNRESET";
+    case 10055:
+        return "WSAENOBUFS";
+    case 10056:
+        return "WSAEISCONN";
+    case 10057:
+        return "WSAENOTCONN";
+    case 10058:
+        return "WSAESHUTDOWN";
+    case 10059:
+        return "WSAETOOMANYREFS";
+    case 10060:
+        return "WSAETIMEDOUT";
+    case 10061:
+        return "WSAECONNREFUSED";
+    case 10062:
+        return "WSAELOOP";
+    case 10063:
+        return "WSAENAMETOOLONG";
+    case 10064:
+        return "WSAEHOSTDOWN";
+    case 10091:
+        return "WSASYSNOTREADY";
+    case 10092:
+        return "WSAVERNOTSUPPORTED";
+    case 10093:
+        return "WSANOTINITIALISED";
+    case 11001:
+        return "WSAHOST_NOT_FOUND";
+    case 11002:
+        return "WSATRY_AGAIN";
+    case 11003:
+        return "WSANO_RECOVERY";
+    case 11004:
+        return "WSANO_DATA";
+    default:
+        return "NO ERROR";
+    }
+#else
+    return strerror(errno);
+#endif
+}
 void Sys_ShowIP(void);
 static qboolean NET_GetDvars(void);
 void NET_Sleep(int msec);
@@ -256,7 +360,7 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
             if (err == 10035 || err == 10054) {
                 continue;
             }
-            Com_Printf("NET_GetPacket: %s\n", strerror(errno));
+            Com_Printf("NET_GetPacket: %s\n", NET_ErrorString());
             continue;
         }
 
@@ -373,7 +477,7 @@ Bool Sys_SendPacket(int length, const void *data, netadr_t to)
         }
     }
 
-    Com_Printf("Sys_SendPacket: %s\n", strerror(errno));
+    Com_Printf("Sys_SendPacket: %s\n", NET_ErrorString());
     return 1;
 }
 
@@ -409,7 +513,7 @@ void NET_OpenIP(void)
         if (newsocket == -1) {
             err = WSAGetLastError();
             if (err != 10047) {
-                Com_Printf("WARNING: UDP_OpenSocket: socket: %s\n", strerror(errno));
+                Com_Printf("WARNING: UDP_OpenSocket: socket: %s\n", NET_ErrorString());
                 ip_socket = 0;
                 goto next_check;
             }
@@ -418,13 +522,13 @@ void NET_OpenIP(void)
         }
 
         if (ioctlsocket(newsocket, 0x8004667e, (unsigned long *)&_true) == -1) {
-            Com_Printf("WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", strerror(errno));
+            Com_Printf("WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
             ip_socket = 0;
             goto next_check;
         }
 
         if (setsockopt(newsocket, SOL_SOCKET, SO_BROADCAST, (const char *)&sock_i, sizeof(sock_i)) == -1) {
-            Com_Printf("WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", strerror(errno));
+            Com_Printf("WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString());
             closesocket(newsocket);
             ip_socket = 0;
             goto next_check;
@@ -459,7 +563,7 @@ void NET_OpenIP(void)
             address.sin_family = AF_INET;
 
             if (bind(newsocket, (struct sockaddr *)&address, 16) == -1) {
-                Com_Printf("WARNING: UDP_OpenSocket: bind: %s\n", strerror(errno));
+                Com_Printf("WARNING: UDP_OpenSocket: bind: %s\n", NET_ErrorString());
                 closesocket(newsocket);
                 ip_socket = 0;
                 goto next_check;
@@ -482,8 +586,7 @@ void NET_OpenIP(void)
 
                 socks_socket = socket(2, 1, 6);
                 if (socks_socket == -1) {
-                    WSAGetLastError();
-                    Com_Printf("WARNING: NET_OpenSocks: socket: %s\n", strerror(errno));
+                    Com_Printf("WARNING: NET_OpenSocks: socket: %s\n", NET_ErrorString());
                     goto do_local_address;
                 }
 
@@ -491,8 +594,7 @@ void NET_OpenIP(void)
                     struct hostent *hp;
                     hp = gethostbyname(net_socksServer->current.string);
                     if (!hp) {
-                        WSAGetLastError();
-                        Com_Printf("WARNING: NET_OpenSocks: gethostbyname: %s\n", strerror(errno));
+                        Com_Printf("WARNING: NET_OpenSocks: gethostbyname: %s\n", NET_ErrorString());
                         goto do_local_address;
                     }
                     if (hp->h_addrtype != AF_INET) {
@@ -512,8 +614,7 @@ void NET_OpenIP(void)
                         saddr.sin_port = htons(net_socksPort->current.integer);
 
                         if (connect(socks_socket, (struct sockaddr *)&saddr, 16) == -1) {
-                            WSAGetLastError();
-                            Com_Printf("NET_OpenSocks: connect: %s\n", strerror(errno));
+                            Com_Printf("NET_OpenSocks: connect: %s\n", NET_ErrorString());
                             goto do_local_address;
                         }
 
@@ -540,8 +641,7 @@ void NET_OpenIP(void)
 
                         rlen = recv(socks_socket, buf, 64, 0);
                         if (rlen == -1) {
-                            WSAGetLastError();
-                            Com_Printf("NET_OpenSocks: recv: %s\n", strerror(errno));
+                            Com_Printf("NET_OpenSocks: recv: %s\n", NET_ErrorString());
                             goto do_local_address;
                         }
                         if (rlen != 2 || buf[0] != 5) {
@@ -567,14 +667,12 @@ void NET_OpenIP(void)
                                 memcpy(buf + 2 + ulen + 1, net_socksPassword->current.string, plen);
                             }
                             if (send(socks_socket, buf, 3 + ulen + plen, 0) == -1) {
-                                WSAGetLastError();
-                                Com_Printf("NET_OpenSocks: send: %s\n", strerror(errno));
+                                Com_Printf("NET_OpenSocks: send: %s\n", NET_ErrorString());
                                 goto do_local_address;
                             }
                             rlen = recv(socks_socket, buf, 64, 0);
                             if (rlen == -1) {
-                                WSAGetLastError();
-                                Com_Printf("NET_OpenSocks: recv: %s\n", strerror(errno));
+                                Com_Printf("NET_OpenSocks: recv: %s\n", NET_ErrorString());
                                 goto do_local_address;
                             }
                             if (rlen != 2 || buf[0] != 1) {
@@ -600,15 +698,13 @@ void NET_OpenIP(void)
                             *(unsigned short *)(buf + 8) = sp;
                         }
                         if (send(socks_socket, buf, 10, 0) == -1) {
-                            WSAGetLastError();
-                            Com_Printf("NET_OpenSocks: send: %s\n", strerror(errno));
+                            Com_Printf("NET_OpenSocks: send: %s\n", NET_ErrorString());
 
                         }
 
                         rlen = recv(socks_socket, buf, 64, 0);
                         if (rlen == -1) {
-                            WSAGetLastError();
-                            Com_Printf("NET_OpenSocks: recv: %s\n", strerror(errno));
+                            Com_Printf("NET_OpenSocks: recv: %s\n", NET_ErrorString());
                             goto do_local_address;
                         }
                         if (rlen <= 1 || buf[0] != 5) {
