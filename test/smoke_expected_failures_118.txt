@@ -1,2 +1,1 @@
 # Fallos esperados de smoke_test.py con el servidor de opencod2; solo se achica.
-heartbeat sent to sv_master1

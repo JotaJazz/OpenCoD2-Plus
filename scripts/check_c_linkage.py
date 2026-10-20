@@ -17,8 +17,8 @@ import argparse, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANGLED = re.compile(r'^_{1,2}Z')
 CMAKE_PROBE = re.compile(r'CMakeFiles/\d')
-CXX_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir',
-                'cod2_plus_server.dir', 'cod2_plus_server_client.dir')
+sys.path.insert(0, os.path.join(ROOT, 'scripts'))
+from check_duplicates import PLUS_TARGETS as CXX_TARGETS  # CoD2rev-Plus's targets
 
 
 def objects(build_dir):

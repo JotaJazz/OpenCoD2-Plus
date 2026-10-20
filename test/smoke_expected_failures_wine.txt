@@ -1,5 +1,8 @@
 # Fallos esperados de smoke_test.py con el servidor de Windows bajo wine; solo se achica.
 # Bajo wine el servidor no recibe señales como tales, e imprime solo en su ventana.
 crash report written
-heartbeat sent to sv_master1
+failed console log open reported once
+flatline heartbeat on SIGTERM
+games_mp.log closed on SIGTERM
 net_strictPort stops on a busy port
+server quit on SIGTERM with exit code 0

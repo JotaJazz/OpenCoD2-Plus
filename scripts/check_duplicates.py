@@ -14,8 +14,10 @@ is defined both by a CoD2rev-Plus object and by another one.
 """
 import argparse, glob, os, re, subprocess, sys
 
+# the OBJECT libraries with CoD2rev-Plus's code (CMakeLists.txt)
 PLUS_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir',
-                'cod2_plus_server.dir', 'cod2_plus_server_client.dir')
+                'cod2_plus_script_ded.dir', 'cod2_plus_server.dir', 'cod2_plus_server_client.dir',
+                'cod2_plus_libcod.dir')
 MANGLED = re.compile(r'^_{1,2}Z')
 STRONG = set('BDRT')  # not weak (W, V), unique (u) or common (C)
 

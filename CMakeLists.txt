@@ -111,6 +111,22 @@ endif()
 if(COD2_PLUS_CLIENT_SERVER)
   add_compile_definitions(COD2_PLUS_CLIENT_SERVER=1)  # cgame no longer shares the bgame with a local server
 endif()
+# CoD2rev-Plus's libcod in the dedicated server (src/libcod): its script
+# functions, bots, sv_master1..5, HTTP, SQLite and the rest, with the modules
+# CoD2rev-Plus's Makefile turns on (all but MySQL). Its LIBCOD blocks in the
+# server, game, bgame, core and script VM are compiled in for the dedicated
+# server only; the client keeps them out.
+option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server" ON)
+if(NOT COD2_PLUS_SERVER)
+  set(COD2_PLUS_LIBCOD OFF)
+endif()
+set(COD2_LIBCOD_DEFS "")
+if(COD2_PLUS_LIBCOD)
+  set(COD2_LIBCOD_DEFS LIBCOD LIBCOD_COMPILE_BOTS=1 LIBCOD_COMPILE_ENTITY=1 LIBCOD_COMPILE_EXEC=1
+    LIBCOD_COMPILE_GRAPH=1 LIBCOD_COMPILE_HTTP=1 LIBCOD_COMPILE_JSON=1 LIBCOD_COMPILE_LEVEL=1
+    LIBCOD_COMPILE_MEMORY=1 LIBCOD_COMPILE_PLAYER=1 LIBCOD_COMPILE_RATELIMITER=1 LIBCOD_COMPILE_SQLITE=1
+    LIBCOD_COMPILE_SPEEX=1 LIBCOD_COMPILE_UTILS=1 LIBCOD_COMPILE_WEAPONS=1)
+endif()
 if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
@@ -133,6 +149,35 @@ function(cod2_plus_script)
   add_library(cod2_plus_script_core OBJECT ${COD2_SRC_DIR}/compat/script_core_imports.cpp
     ${COD2_SRC_DIR}/compat/script_core_missing.cpp)
   target_compile_definitions(cod2_plus_script_core PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  if(COD2_PLUS_LIBCOD)
+    # the dedicated server's VM, with its LIBCOD blocks
+    add_library(cod2_plus_script_ded OBJECT ${src} ${COD2_SRC_DIR}/compat/script_exports.cpp
+      ${COD2_SRC_DIR}/compat/script_imports.cpp ${COD2_SRC_DIR}/compat/script_missing.cpp)
+    target_compile_definitions(cod2_plus_script_ded PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG
+      ${COD2_LIBCOD_DEFS})
+    target_include_directories(cod2_plus_script_ded PRIVATE ${COD2_SRC_DIR}/libcod/speex/include)
+  endif()
+endfunction()
+
+# cod2_plus_libcod(): the OBJECT library with libcod and the libraries it
+# brings (yyjson, SQLite, Mbed TLS), each with the flags CoD2rev-Plus's
+# Makefile gives it. Its Speex is left out: the engine links its own
+# (src/PC/speex, for the client's voice chat), whose API, SpeexBits and
+# narrowband mode are the ones libcod_sound.cpp uses, and whose bitstream the
+# clients decode.
+function(cod2_plus_libcod)
+  set(dir ${COD2_SRC_DIR}/libcod)
+  file(GLOB libcod CONFIGURE_DEPENDS ${dir}/*.cpp)
+  file(GLOB mbedtls CONFIGURE_DEPENDS ${dir}/mbedtls/library/*.c)
+  set(mbedtls_defs MBEDTLS_CONFIG_FILE="cod2rev_mbedtls_config.h")
+  set(mbedtls_dirs ${dir}/mbedtls ${dir}/mbedtls/include)
+  add_library(cod2_plus_libcod OBJECT ${libcod} ${dir}/yyjson/yyjson.c ${dir}/sqlite/sqlite3.c ${mbedtls})
+  target_compile_definitions(cod2_plus_libcod PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  set_source_files_properties(${libcod} PROPERTIES
+    COMPILE_DEFINITIONS "${COD2_LIBCOD_DEFS};${mbedtls_defs}"
+    INCLUDE_DIRECTORIES "${dir}/speex/include;${mbedtls_dirs}")
+  set_source_files_properties(${mbedtls} PROPERTIES
+    COMPILE_DEFINITIONS "${mbedtls_defs}" INCLUDE_DIRECTORIES "${mbedtls_dirs}")
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
@@ -150,7 +195,11 @@ function(cod2_plus_server)
     ${COD2_SRC_DIR}/stringed/*.cpp ${COD2_SRC_DIR}/xanim/*.cpp ${COD2_SRC_DIR}/zlib/unzip.c ${COD2_SRC_DIR}/zlib/ioapi.c ${platform}
     ${COD2_SRC_DIR}/compat/server_*.cpp)
   add_library(cod2_plus_server OBJECT ${src})
-  target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
+  target_compile_definitions(cod2_plus_server PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG ${COD2_LIBCOD_DEFS})
+  if(COD2_PLUS_LIBCOD)
+    target_include_directories(cod2_plus_server PRIVATE ${COD2_SRC_DIR}/libcod/speex/include)
+    cod2_plus_libcod()
+  endif()
 endfunction()
 
 # cod2_plus_server_client(): the OBJECT library with CoD2rev-Plus's server,
@@ -439,6 +488,10 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
   cod2_plus_replaced(WIN_C replaced)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+  if(COD2_PLUS_LIBCOD)
+    set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script_ded>)
+    list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
+  endif()
 elseif(COD2_PLUS_CLIENT_SERVER)
   # the client runs CoD2rev-Plus's server, game, bgame and collision
   # instead, as cod2_linux does
@@ -450,6 +503,10 @@ elseif(COD2_PLUS_SCRIPT)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
+if(COD2_PLUS_LIBCOD AND NOT COD2_WIN32_CLIENT)
+  # Mbed TLS: BCryptGenRandom for its entropy, the system store for its CAs
+  target_link_libraries(${W32_EXE} PRIVATE bcrypt crypt32)
+endif()
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
@@ -633,6 +690,13 @@ if(COD2_PLUS_SERVER)
   cod2_plus_server()
   list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
   set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+  if(COD2_PLUS_LIBCOD)
+    list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
+  endif()
+endif()
+set(COD2_DED_SCRIPT_OBJS ${COD2_SCRIPT_OBJS})
+if(COD2_PLUS_LIBCOD)
+  set(COD2_DED_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script_ded>)
 endif()
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
@@ -642,7 +706,7 @@ add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
 target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
   $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)

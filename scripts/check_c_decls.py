@@ -22,8 +22,8 @@ import argparse, json, os, re, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CXX_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir',
-                'cod2_plus_server.dir', 'cod2_plus_server_client.dir')
+sys.path.insert(0, os.path.join(ROOT, 'scripts'))
+from check_duplicates import PLUS_TARGETS as CXX_TARGETS  # CoD2rev-Plus's targets
 DIE = re.compile(r'^\s*<(\d+)><([0-9a-f]+)>: Abbrev Number: \d+ \((DW_TAG_\w+)\)')
 ATTR = re.compile(r'^\s*<[0-9a-f]+>\s+(DW_AT_\w+)\s*:\s*(.*)$')
 
