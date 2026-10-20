@@ -14,7 +14,6 @@ extern localEntity_t *cg_eachClientFreeLocalEntities[1];
 extern localEntity_t *cg_localEntities;
 extern localEntity_t *cg_activeLocalEntities;
 extern localEntity_t *cg_freeLocalEntities;
-static cg_eachClientLocalEntities_t cg_eachClientLocalEntities;
 
 void CG_InitLocalEntities(void);
 void CG_AddMovingTracer(localEntity_t *le);

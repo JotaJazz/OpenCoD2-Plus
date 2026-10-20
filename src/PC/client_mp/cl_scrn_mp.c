@@ -356,6 +356,15 @@ static void SCR_UpdateFrame(void)
 
         switch (connstate) {
         case 0:
+#if COD2_IS_PATCH_13
+            /* dropped by the server to download over HTTP: its progress, not
+             * the main menu (the original, 0x4149c5) */
+            if (((clientStatic_t *)imp_cls)->wwwDlInProgress) {
+                UI_Refresh();
+                UI_DrawConnectScreen();
+                goto check_ui;
+            }
+#endif
             SND_StopSounds((snd_stopsounds_arg_t)0);
             if (Sys_IsMainThread()) {
                 UI_SetActiveMenu(1);

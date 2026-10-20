@@ -2856,9 +2856,9 @@ typedef int FxImpactEntry;
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;
-/* the vertices CG_ImpactMark has CL_MarkFragments write, up to 1024
- * GfxWorldVertex: the original reserves 0x11000 bytes at 0x1710780 (the next
- * global is at 0x1721780). It was an int here, so every impact mark wrote
+/* the vertices CG_ImpactMark has CL_MarkFragments write, up to 1024: the
+ * original reserves 0x11000 bytes at 0x1710780 (its vertex is 0x44 bytes,
+ * GfxWorldVertex here 44). It was an int here, so every impact mark wrote
  * over the globals after it (on MinGW r_showSurfCounts, crashing the
  * renderer). */
 typedef struct MarkVertAssemblyBuffer {

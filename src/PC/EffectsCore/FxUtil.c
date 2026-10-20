@@ -62,9 +62,6 @@ extern int effectActiveCount;
 extern int effectBlockSightCount;
 extern FxHelper theFxHelpers[1];
 extern qboolean fxInitialized[1];
-static effectClusterArray_t effectClusterArray;
-static effectListArray_t effectListArrayBolt;
-static effectListArray_t effectListArrayNonBolt;
 static SortedEffect visibleEffectsNonBolt[1800];
 static SortedEffect visibleEffectsBolt[1800];
 

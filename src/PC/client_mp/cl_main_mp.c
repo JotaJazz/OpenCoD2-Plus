@@ -1777,7 +1777,9 @@ static void CL_BuildMd5StrFromCDKey(char *md5Str)
     len = strlen(key);
     if (len > 0) {
         j = 0;
-        for (i = 0; i < 32; ++i) {
+        if (len > 32)
+            len = 32;
+        for (i = 0; i < len; ++i) {  /* to the key's end, as 0x40cfc0 */
             unsigned char ch = (unsigned char)key[i];
             if ((ch >= '0' && ch <= '9') ||
                 (ch >= 'a' && ch <= 'z') ||
@@ -2268,7 +2270,15 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
     if (I_stricmp(cmd, (const char *)"disconnect") == 0) {
         if (conn->state && NET_CompareAdr(from, conn->netchan.remoteAddress) &&
             cls.realtime - conn->lastPacketTime > 2999) {
+#if COD2_IS_PATCH_13
+            /* a server that drops the client to download over HTTP is no
+             * error (the original, 0x40e5ab) */
+            if (!cls.wwwDlDisconnected)
+                Com_Error(1, (const char *)"EXE_SERVER_DISCONNECTED");
+            CL_Disconnect();
+#else
             Com_Error(1, (const char *)"EXE_SERVER_DISCONNECTED");
+#endif
         }
 
         result = 1;
@@ -2684,14 +2694,22 @@ void CL_Disconnect(void)
     if (conn->demorecording)
         CL_StopRecord_f();
 
-    if (CL_DL->download) {
-        FS_FCloseFile(CL_DL->download);
-        CL_DL->download = 0;
-    }
+#if COD2_IS_PATCH_13
+    /* a server that drops the client while it downloads over HTTP
+     * (wwwDlDisconnected) keeps the download going (the original's
+     * CL_Disconnect, 0x40cd33) */
+    if (!cls.wwwDlDisconnected)
+#endif
+    {
+        if (CL_DL->download) {
+            FS_FCloseFile(CL_DL->download);
+            CL_DL->download = 0;
+        }
 
-    CL_DL->downloadName[0] = '\0';
-    CL_DL->downloadTempName[0] = '\0';
-    legacy->cl_downloadName[0] = 0;
+        CL_DL->downloadName[0] = '\0';
+        CL_DL->downloadTempName[0] = '\0';
+        legacy->cl_downloadName[0] = 0;
+    }
 
     if (conn->demofile) {
         FS_FCloseFile(conn->demofile);
@@ -2720,6 +2738,10 @@ void CL_Disconnect(void)
 
     memset(conn, 0, sizeof(*conn));
     conn->state = CA_DISCONNECTED;
+#if COD2_IS_PATCH_13
+    if (!cls.wwwDlDisconnected)
+        CL_ClearStaticDownload();
+#endif
     SND_DisconnectListener();
 
     if (oldState > CA_LOGO)
@@ -3054,7 +3076,15 @@ void CL_DownloadsComplete(void)
     if (CL_DL->downloadRestart) {
         CL_DL->downloadRestart = 0;
         FS_Restart(clc->checksumFeed);
+#if COD2_IS_PATCH_13
+        /* as the original (0x40dc92): no donedl to a server that dropped the
+         * client to download, and the download's state cleared */
+        if (!cls.wwwDlDisconnected)
+            CL_AddReliableCommand_core((const char *)"donedl");
+        CL_ClearStaticDownload();
+#else
         CL_AddReliableCommand_core((const char *)"donedl");
+#endif
         return;
     }
 
@@ -3186,6 +3216,9 @@ void CL_InitDownloads(void)
     char missingFiles[1024];
 
     FS_ShiftStr((const char *)"ni]Zm^l", 7);
+#if COD2_IS_PATCH_13
+    CL_ClearStaticDownload();  /* the original's first step (0x40df2c) */
+#endif
 
     svRunning = com_sv_running;
     if (svRunning->current.enabled || !cl_allowDownload->current.enabled) {

@@ -282,9 +282,7 @@ extern cg_t cgArray[1];
 /* removed `static cgs_t cgsArray[1];` -- it was DEAD (declared, never referenced; this file
  * uses `cgs->` instead) and it collided with the real shared object in bss.c, which is what
  * `cgs` must bind to. See cg_local.h. */
-static centityArray_t cg_entitiesArray[1];
 extern weaponInfo_t cg_weaponsArray[CG_MAX_WEAPONS];
-static cg_itemsArray_t cg_itemsArray;
 static Bool g_ambientStarted;
 static Bool g_mapLoaded;
 /* migrated from the ILP32 data blob to typed C (x64 port Stage 2). */
