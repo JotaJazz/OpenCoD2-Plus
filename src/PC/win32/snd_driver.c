@@ -125,7 +125,9 @@ extern const dvar_t *mss_3d_provider;
 extern const dvar_t *mss_q3fs;
 static struct MssLocal milesGlob;
 
-static HSAMPLE handle_2D_004a3ad4[8];
+/* The 2D channels are chaninfo 45-52; their Miles samples are
+ * milesGlob.handle_2D[0-7] (the original reads [index * 4 + 0x14b2c34]). */
+#define MSS_2D_HANDLE(index) (milesGlob.handle_2D[(index) - 45])
 
 /* Miles calls its file callbacks __stdcall (AILCALLBACK): the original's
  * pop their arguments (ret 8, 4, 0xc, 0xc). The Mac port's MacMSS.c calls
@@ -240,7 +242,7 @@ int SND_GetDriverCPUPercentage(void)
 void SND_Stop2DChannel(int index)
 {
     snd_local_t *sndGlob;
-    AIL_end_sample(handle_2D_004a3ad4[index]);
+    AIL_end_sample(MSS_2D_HANDLE(index));
     sndGlob = &g_snd;
     sndGlob->chaninfo[index].paused = 0;
     sndGlob->chaninfo[index].startDelay = 0;
@@ -250,7 +252,7 @@ void SND_Pause2DChannel(int index)
 {
     snd_local_t *sndGlob;
     snd_channel_info_t *chaninfo;
-    AIL_stop_sample(handle_2D_004a3ad4[index]);
+    AIL_stop_sample(MSS_2D_HANDLE(index));
     sndGlob = &g_snd;
     chaninfo = &sndGlob->chaninfo[index];
     chaninfo->paused = 1;
@@ -260,7 +262,7 @@ void SND_Unpause2DChannel(int index, int timeshift)
 {
     snd_local_t *sndGlob = &g_snd;
     if (sndGlob->chaninfo[index].startDelay == 0) {
-        AIL_resume_sample(handle_2D_004a3ad4[index]);
+        AIL_resume_sample(MSS_2D_HANDLE(index));
     }
     sndGlob->chaninfo[index].endtime += timeshift;
     sndGlob->chaninfo[index].paused = 0;
@@ -279,7 +281,7 @@ Bool SND_Is2DChannelFree(int index)
     if (chaninfo->pAlias0 == NULL && chaninfo->pAlias1 == NULL) {
         return 1;
     }
-    return AIL_sample_status(handle_2D_004a3ad4[index]) == 2;
+    return AIL_sample_status(MSS_2D_HANDLE(index)) == 2;
 }
 
 void SND_Stop3DChannel(int index)
@@ -390,7 +392,7 @@ float SND_Get2DChannelVolume(int index)
     float left, right;
     snd_local_t *sndGlob;
     snd_channel_info_t *chaninfo;
-    AIL_sample_volume_levels(handle_2D_004a3ad4[index], &left, &right);
+    AIL_sample_volume_levels(MSS_2D_HANDLE(index), &left, &right);
     sndGlob = &g_snd;
     chaninfo = &sndGlob->chaninfo[index];
     if (chaninfo->srcChannelCount == 2) {
@@ -426,12 +428,12 @@ float SND_GetStreamChannelVolume(int index)
 
 int SND_Get2DChannelPlaybackRate(int index)
 {
-    return AIL_sample_playback_rate(handle_2D_004a3ad4[index]);
+    return AIL_sample_playback_rate(MSS_2D_HANDLE(index));
 }
 
 void SND_Set2DChannelPlaybackRate(int index, int rate)
 {
-    AIL_set_sample_playback_rate(handle_2D_004a3ad4[index], rate);
+    AIL_set_sample_playback_rate(MSS_2D_HANDLE(index), rate);
 }
 
 int SND_Get3DChannelPlaybackRate(int index)
@@ -473,7 +475,7 @@ int SND_Get2DChannelLength(int index)
 {
     long int length;
     long int *lenp = &length;
-    AIL_sample_ms_position(handle_2D_004a3ad4[index], lenp, NULL);
+    AIL_sample_ms_position(MSS_2D_HANDLE(index), lenp, NULL);
     return (int)length;
 }
 
@@ -497,7 +499,7 @@ void SND_Get2DChannelSaveInfo(int index, snd_save_2D_sample_t *info)
     snd_local_t *sndGlob;
     float masterVol;
 
-    handle = handle_2D_004a3ad4[index];
+    handle = MSS_2D_HANDLE(index);
     AIL_sample_ms_position(handle, &length, &offset);
     info->fraction = (float)(unsigned long int)offset / (float)(unsigned long int)length;
     sndGlob = &g_snd;
@@ -703,7 +705,7 @@ void SND_Update2DChannelReverb(int index)
     } else {
         reverbLevel = sndGlob->effect->wetlevel;
     }
-    AIL_set_sample_reverb_levels(handle_2D_004a3ad4[index], 1.0f, reverbLevel);
+    AIL_set_sample_reverb_levels(MSS_2D_HANDLE(index), 1.0f, reverbLevel);
 }
 
 void SND_Update3DChannelReverb(int index)
@@ -767,10 +769,11 @@ static void MSS_SpatializeStreamImpl(int i, float *volume, float *pan)
     float dot;
     float lerp, oneMinusLerp;
     float fDistMin, fDistMax;
-    float savedVolume, attenuation;
+    float dist, attenuation;
 
+    /* i is the stream's index: its channel follows the 32 3D ones */
     sndGlob = &g_snd;
-    chaninfo = &sndGlob->chaninfo[i];
+    chaninfo = &sndGlob->chaninfo[i + 0x20];
     pAlias0 = chaninfo->pAlias0;
     pAlias1 = chaninfo->pAlias1;
 
@@ -784,10 +787,10 @@ static void MSS_SpatializeStreamImpl(int i, float *volume, float *pan)
     delta[1] = orgVec[1] - listenerOrigin[1];
     delta[2] = orgVec[2] - listenerOrigin[2];
 
-    Vec3Normalize(delta);
+    dist = Vec3Normalize(delta);
 
-    right = listener->orient.axis[0];
-    dot = delta[0] * right[-1] + delta[1] * right[0] + delta[2] * right[1];
+    right = listener->orient.axis[1];
+    dot = delta[0] * right[0] + delta[1] * right[1] + delta[2] * right[2];
 
     lerp = chaninfo->lerp;
     oneMinusLerp = 1.0f - lerp;
@@ -795,9 +798,8 @@ static void MSS_SpatializeStreamImpl(int i, float *volume, float *pan)
     fDistMin = oneMinusLerp * pAlias0->fDistMin + lerp * pAlias1->fDistMin;
     fDistMax = oneMinusLerp * pAlias0->fDistMax + lerp * pAlias1->fDistMax;
 
-    savedVolume = *volume;
-    attenuation = SND_Attenuate(pAlias0->volumeFalloffCurve, savedVolume, fDistMin, fDistMax);
-    *volume = savedVolume * attenuation;
+    attenuation = SND_Attenuate(pAlias0->volumeFalloffCurve, dist, fDistMin, fDistMax);
+    *volume *= attenuation;
     *pan = (1.0f - dot) * 0.5f;
 }
 
@@ -841,7 +843,7 @@ void SND_UpdateStreamChannel(int i, int frametime)
 
         streamIdx = i - 0x20;
         SND_GetCurrent3DPosition(chaninfo->entnum, chaninfo->offset, chaninfo->org);
-        MSS_SpatializeStreamImpl(i, &volume, &pan);
+        MSS_SpatializeStreamImpl(streamIdx, &volume, &pan);
 
         if (AIL_is_3D_stream(milesGlob.handle_stream[streamIdx])) {
 
@@ -958,7 +960,7 @@ void SND_Update2DChannel(int i, int frametime)
     if (chaninfo->srcChannelCount != 2) {
         scaledVol *= 0.5f;
     }
-    AIL_set_sample_volume_levels(handle_2D_004a3ad4[i], scaledVol, scaledVol);
+    AIL_set_sample_volume_levels(MSS_2D_HANDLE(i), scaledVol, scaledVol);
 
     startDelay = chaninfo->startDelay;
     if (startDelay != 0) {
@@ -968,7 +970,7 @@ void SND_Update2DChannel(int i, int frametime)
         }
         chaninfo->startDelay = newDelay;
         if (newDelay == 0) {
-            return AIL_resume_sample(handle_2D_004a3ad4[i]);
+            return AIL_resume_sample(MSS_2D_HANDLE(i));
         }
     }
 }
@@ -1105,7 +1107,7 @@ int SND_StartAlias2DSample(const snd_alias_t *pAlias0, const snd_alias_t *pAlias
         return 0;
     }
 
-    handle = handle_2D_004a3ad4[index];
+    handle = MSS_2D_HANDLE(index);
     sound = (byte *)Com_GetSoundFileMem(pAlias0);
     AIL_init_sample(handle);
 
@@ -1361,7 +1363,7 @@ got_handle:
 
     milesGlob.handle_stream[streamIdx] = (HSTREAM)(handle);
 
-    AIL_stream_info(handle, &filetype, NULL, NULL, NULL);
+    AIL_stream_info(handle, NULL, &filetype, NULL, NULL);
     srcChannelCount = (filetype & 2) ? 2 : 1;
 
     baserate = AIL_stream_playback_rate(handle);
@@ -1398,10 +1400,9 @@ got_handle:
 
     AIL_stream_ms_position(handle, &total_msec, NULL);
     if (total_msec <= timeshift) {
-        return 0;
-    }
-    if (total_msec == 0) {
-        Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
+        if (total_msec == 0) {
+            Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
+        }
         return 0;
     }
 
@@ -1583,11 +1584,11 @@ void SND_Set2DChannelFromSaveInfo(int index, snd_save_2D_sample_t *info)
     float vol = info->volume * g_snd.volume;
 
     if (g_snd.chaninfo[index].srcChannelCount == 2) {
-        AIL_set_sample_volume_levels(handle_2D_004a3ad4[index], vol, vol);
+        AIL_set_sample_volume_levels(MSS_2D_HANDLE(index), vol, vol);
     } else {
         float leftVol = (1.0f - pan) * vol;
         float rightVol = pan * vol;
-        AIL_set_sample_volume_levels(handle_2D_004a3ad4[index], leftVol, rightVol);
+        AIL_set_sample_volume_levels(MSS_2D_HANDLE(index), leftVol, rightVol);
     }
 }
 
@@ -1766,8 +1767,8 @@ configure_provider:
 
     sndGlob = &g_snd;
     for (i = 0; i < sndGlob->max_2D_channels; i++) {
-        handle_2D_004a3ad4[i] = (HSAMPLE)(AIL_allocate_sample_handle( (void *)(milesGlob.driver_2D)));
-        if (handle_2D_004a3ad4[i] == NULL) {
+        milesGlob.handle_2D[i] = (HSAMPLE)(AIL_allocate_sample_handle( (void *)(milesGlob.driver_2D)));
+        if (milesGlob.handle_2D[i] == NULL) {
             Com_Error(1, (const char *)"\x15MILES 2D sound sample allocation failed on channel %i\n", i + 1);
         }
     }

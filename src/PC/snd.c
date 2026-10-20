@@ -715,6 +715,51 @@ void SND_GetCurrent3DPosition(int entnum, const vec_t *offset, vec_t *pos_out)
     pos_out[2] = org[2] + scale * axis[2][2];
 }
 
+/* The original's 0x44c8e0. A sound on an entity keeps its offset in the
+ * entity's frame (SND_GetCurrent3DPosition turns it back into a position);
+ * 2D channels (1, 2, 7-10) and sounds on no entity keep none. */
+void SND_SetChannelInfo(int index, int entnum, const snd_alias_t *pAlias0, const snd_alias_t *pAlias1, float lerp, const vec_t *origin, float volume, float pitch, int srcChannelCount, int baserate, int total_msec, int start_msec, int startDelay, int master, snd_alias_system_t system)
+{
+    snd_channel_info_t *chaninfo;
+    int entchannel;
+    vec3_t org;
+    vec3_t axis[3];
+    vec3_t delta;
+
+    chaninfo = &g_snd.chaninfo[index];
+    entchannel = (pAlias0->flags & 0x780) >> 7;
+
+    if (entnum >= 0 && entnum < 0x400 && (entchannel < 1 || entchannel > 10 || (entchannel >= 3 && entchannel <= 6))) {
+        CG_GetEntityOrientation(entnum, org, axis);
+        delta[0] = origin[0] - org[0];
+        delta[1] = origin[1] - org[1];
+        delta[2] = origin[2] - org[2];
+        chaninfo->offset[0] = delta[0] * axis[0][0] + delta[1] * axis[0][1] + delta[2] * axis[0][2];
+        chaninfo->offset[1] = delta[0] * axis[1][0] + delta[1] * axis[1][1] + delta[2] * axis[1][2];
+        chaninfo->offset[2] = delta[0] * axis[2][0] + delta[1] * axis[2][1] + delta[2] * axis[2][2];
+    } else {
+        chaninfo->offset[0] = 0.0f;
+        chaninfo->offset[1] = 0.0f;
+        chaninfo->offset[2] = 0.0f;
+    }
+
+    chaninfo->entnum = entnum;
+    chaninfo->entchannel = entchannel;
+    chaninfo->basevolume = volume;
+    chaninfo->pitch = pitch;
+    chaninfo->srcChannelCount = srcChannelCount;
+    chaninfo->baserate = baserate;
+    chaninfo->pAlias1 = pAlias1;
+    chaninfo->lerp = lerp;
+    chaninfo->startDelay = startDelay;
+    chaninfo->pAlias0 = pAlias0;
+    chaninfo->looptime = g_snd.looptime;
+    chaninfo->endtime = g_snd.time - start_msec + total_msec;
+    chaninfo->paused = g_snd.paused && g_snd.pauseSettings[entchannel];
+    chaninfo->master = master;
+    chaninfo->system = system;
+}
+
 static int SND_Get2DChannelOverlay(snd_overlay_info_t *info, int maxcount)
 {
     float vol;
