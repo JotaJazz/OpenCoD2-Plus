@@ -650,6 +650,30 @@ int FS_Write(const void *buffer, int len, fileHandle_t h)
     return len;
 }
 
+/* The original's zlib skipped output when unzReadCurrentFile was given no
+ * buffer, and FS_Seek moved through a file in an .iwd that way; the zlib the
+ * native builds link refuses a NULL buffer, so the skipped bytes go through a
+ * scratch one. Returns what that read would have: the bytes skipped, or the
+ * first read's result. */
+static int FS_ZipSkip(unzFile z, int len)
+{
+    byte scratch[4096];
+    int total = 0;
+
+    while (len > 0) {
+        int chunk = len > (int)sizeof(scratch) ? (int)sizeof(scratch) : len;
+        int got = unzReadCurrentFile(z, scratch, chunk);
+
+        if (got <= 0) {
+            return total ? total : got;
+        }
+        total += got;
+        len -= got;
+    }
+
+    return total;
+}
+
 int FS_Seek(fileHandle_t f, long int offset, int origin)
 {
     fileHandleData_t *entry;
@@ -723,7 +747,7 @@ int FS_Seek(fileHandle_t f, long int offset, int origin)
         }
     }
 
-    return unzReadCurrentFile(entry->handleFiles.file.z, NULL, skip) ? 0 : -1;
+    return FS_ZipSkip(entry->handleFiles.file.z, skip) ? 0 : -1;
 }
 
 int FS_FTell(fileHandle_t f)
