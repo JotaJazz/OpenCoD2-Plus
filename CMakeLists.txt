@@ -387,6 +387,10 @@ file(GLOB         W_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${CO
 set(WIN_C ${W_PC_C} ${W_MAC_C} ${W_STUBS_C} ${W_WIN_C} ${W_ROOT_C})
 list(FILTER WIN_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
 list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
+# the MSVC build's shims (its own dirent, SDL2 stubs, link glue): with MinGW
+# their readdir replaced the C runtime's, whose struct dirent differs, so
+# every file name came 8 bytes short and no .iwd was found
+list(FILTER WIN_C EXCLUDE REGEX "^src/win32/shims-msvc/")
 list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
 list(APPEND WIN_C src/blobs/bss.c src/unix/sysdiff_statehash.c)
 if(COD2_WIN32_CLIENT)
