@@ -182,7 +182,7 @@ python3 -m unittest discover -s test
 | `src/server` | Der Server von CoD2rev-Plus, unverändert kopiert; der dedizierte Server verwendet ihn. |
 | `src/game`, `src/bgame` | Game und Bgame von CoD2rev-Plus, unverändert kopiert; der dedizierte Server verwendet sie. |
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | Kern und Plattformcode von CoD2rev-Plus, unverändert kopiert; der dedizierte Server läuft darauf. `test/plus_replaces.txt` listet die Quellen der Engine, die sie dort ersetzen. |
-| `src/libcod`, `mods/bots` | Die libcod von CoD2rev-Plus und ihre Bibliotheken (yyjson, SQLite, Mbed TLS; ihr Speex wird nicht gebaut, das der Engine wird verwendet) sowie ihr Bot-Mod, unverändert kopiert; der dedizierte Server verwendet sie. |
+| `src/libcod`, `mods/bots` | Die libcod von CoD2rev-Plus und ihre Bibliotheken (yyjson, SQLite, Mbed TLS; ihr Speex wird nicht gebaut, das der Engine wird verwendet) sowie ihr Bot-Mod, unverändert kopiert; der dedizierte Server und die lokalen Spiele des Clients verwenden sie. |
 | `src/compat` | Die Brücken zwischen den C-Namen der Engine und der C++-VM, dem Server und dem Kern von CoD2rev-Plus; größtenteils generiert. |
 | `src/headers`, `src/imports` | Gemeinsame Typen, gegen die Originalbinärdatei geprüfte Offsets und Deklarationen importierter Funktionen. |
 | `src/blobs`, `build/native_gen`, `build/win_gen` | Aus der Originalbinärdatei übernommene Daten, die die Engine noch verwendet. |

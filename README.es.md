@@ -182,7 +182,7 @@ python3 -m unittest discover -s test
 | `src/server` | El servidor de CoD2rev-Plus, copiado sin cambios; lo usa el servidor dedicado. |
 | `src/game`, `src/bgame` | El game y el bgame de CoD2rev-Plus, copiados sin cambios; los usa el servidor dedicado. |
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | El núcleo y el código de plataforma de CoD2rev-Plus, copiados sin cambios; sobre ellos corre el servidor dedicado. `test/plus_replaces.txt` lista las fuentes del motor que reemplazan ahí. |
-| `src/libcod`, `mods/bots` | La libcod de CoD2rev-Plus y sus bibliotecas (yyjson, SQLite, Mbed TLS; su Speex no se compila, se usa el del motor), y su mod de bots, copiados sin cambios; los usa el servidor dedicado. |
+| `src/libcod`, `mods/bots` | La libcod de CoD2rev-Plus y sus bibliotecas (yyjson, SQLite, Mbed TLS; su Speex no se compila, se usa el del motor), y su mod de bots, copiados sin cambios; los usan el servidor dedicado y las partidas locales del cliente. |
 | `src/compat` | Los puentes entre los nombres de C del motor y la máquina virtual, el servidor y el núcleo C++ de CoD2rev-Plus; casi todo generado. |
 | `src/headers`, `src/imports` | Tipos compartidos, desplazamientos comprobados contra el binario original y declaraciones de las funciones importadas. |
 | `src/blobs`, `build/native_gen`, `build/win_gen` | Datos sacados del binario original, que el motor todavía usa. |
