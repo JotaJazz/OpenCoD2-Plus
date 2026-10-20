@@ -50,7 +50,7 @@ def build(variant, extra):
                                cwd=ROOT, capture_output=True, text=True)
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
-    # the client's own target: its renderer DLL variant (gfxdll) is experimental
+    # the client's own target
     target = ['--target', 'cod2_win32'] if variant.startswith('mingw-client') else []
     result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4)] + target + ['--', '-k'],
                             cwd=ROOT, capture_output=True, text=True)

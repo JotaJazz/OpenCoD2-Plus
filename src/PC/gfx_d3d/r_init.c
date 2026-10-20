@@ -305,11 +305,6 @@ refexport_t *GetRefAPI(int apiVersion, refimport_t *rimp)
     static refexport_t re;
     typedef void (*ri_Printf_fn)(int, const char *, ...);
 
-    if (apiVersion == 60) {
-        extern refexport_t *GetRefAPI_v60_adapt(refimport_t *);
-        return GetRefAPI_v60_adapt(rimp);
-    }
-
     memcpy(&ri, rimp, sizeof(ri));
     memset(&re, 0, sizeof(re));
 

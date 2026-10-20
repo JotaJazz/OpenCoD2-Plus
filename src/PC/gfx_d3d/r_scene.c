@@ -983,14 +983,6 @@ int R_AddStaticModelToScene(int smodelIndex)
 
 GfxEntity *R_AddRefEntityToScene(const GfxEntity *refEnt, GfxModel sceneModel, const struct centity_s *cent)
 {
-
-    {
-        extern int g_gfxV60DllActive;
-        extern void *g_gfxV60AddRefEntity;
-        if (g_gfxV60DllActive && g_gfxV60AddRefEntity)
-            return ((GfxEntity * (*)(const GfxEntity *, GfxModel, const struct centity_s *))
-                        g_gfxV60AddRefEntity)(refEnt, sceneModel, cent);
-    }
     {
         GfxBackEndData *buf;
         GfxEntity *backEndRefEnt;

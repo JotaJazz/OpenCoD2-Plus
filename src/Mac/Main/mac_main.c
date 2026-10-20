@@ -110,17 +110,6 @@ void Sys_ArchiveInfo(int checksum)
 
 void Sys_DirectXFatalError(void)
 {
-
-    {
-        extern int g_gfxV60DllActive;
-        extern void Com_Printf(const char *, ...);
-        if (g_gfxV60DllActive) {
-            static int n;
-            Com_Printf("[v60] Sys_DirectXFatalError #%d (wined3d device-loss; continuing)\n", ++n);
-            if (n < 1000)
-                return;
-        }
-    }
     const char *title = Win_LocalizeRef("WIN_DIRECTX_INIT_TITLE");
     const char *body = Win_LocalizeRef("WIN_DIRECTX_INIT_BODY");
     MessageBoxA(0, body, title, 0x10);

@@ -820,42 +820,6 @@ int CL_ScaledMilliseconds(void)
     return cls.realtime;
 }
 
-#ifdef COD2_GFX_DLL
-
-extern void *__stdcall LoadLibraryA(const char *name);
-extern void *__stdcall GetProcAddress(void *mod, const char *proc);
-extern unsigned long __stdcall GetLastError(void);
-void *g_gfxRendererModule;
-refexport_t *CL_LoadRendererDll(int apiVersion, refimport_t *ri_in)
-{
-    const char *name = "gfx_d3d_mp_x86_s.dll";
-    void *h;
-    refexport_t *(*pGetRefAPI)(int, refimport_t *);
-    h = LoadLibraryA(name);
-    if (!h) {
-        Com_Error(ERR_FATAL, "CL_InitRef: could not load renderer DLL '%s' (err %lu)",
-                  name, (unsigned long)GetLastError());
-        return NULL;
-    }
-    pGetRefAPI = (refexport_t * (*)(int, refimport_t *)) GetProcAddress(h, "GetRefAPI");
-    if (!pGetRefAPI) {
-        Com_Error(ERR_FATAL, "CL_InitRef: '%s' has no GetRefAPI export", name);
-        return NULL;
-    }
-    Com_Printf("Loaded renderer module: %s\n", name);
-    g_gfxRendererModule = h;
-    return pGetRefAPI(apiVersion, ri_in);
-}
-#endif
-
-int g_gfxV60DllActive = 0;
-
-void *g_gfxV60AddRefEntity = 0;
-
-#if defined(COD2_GFX_DLL) && defined(COD2_GFX_DLL_RETAIL_V60)
-#    include "PC/win32/gfx_dll_v60.h"
-#endif
-
 void CL_InitRef(void)
 {
     refimport_t ri_local;
@@ -998,25 +962,7 @@ void CL_InitRef(void)
         *(void **)&ri_local.CM_GetPlaneNum = (void *)CM_GetPlaneNum;
     }
 
-#if defined(COD2_GFX_DLL) && defined(COD2_GFX_DLL_RETAIL_V60)
-
-    gfxV60_LoadRetailRenderer(&ri_local, &re);
-#elif defined(COD2_GFX_DLL)
-
-    {
-        extern refimport_t ri;
-        extern int g_gfxV60DllActive;
-        extern void *g_gfxV60AddRefEntity;
-        memcpy(&ri, &ri_local, sizeof(ri_local));
-        memcpy(&re, CL_LoadRendererDll(0x3b, &ri_local), sizeof(re));
-
-        g_gfxV60AddRefEntity = GetProcAddress(g_gfxRendererModule, "R_AddRefEntityToScene");
-        g_gfxV60DllActive = 1;
-    }
-#else
-
     memcpy(&re, GetRefAPI(0x3b, &ri_local), sizeof(re));
-#endif
 
     Dvar_SetInt(cl_paused, 0);
 }

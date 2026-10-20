@@ -84,18 +84,6 @@ cmake --build build-win32 -j
 
 Add `-DCOD2_WIN32_CLIENT=ON` for the SDL2/GL client (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
-#### Swap-in renderer DLL (optional, experimental)
-
-The renderer can be built as a separate swap-in DLL: it exports `GetRefAPI` and talks to the engine only through the `ri`/`re` tables. With the client configured, run the `gfxdll` target:
-
-```sh
-cmake --build build-win32 --target gfxdll
-# -> build-win32/gfx_d3d_mp_x86_s.dll   (renderer DLL)
-# -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
-```
-
-The renderer–engine bridge is pre-generated and committed under `build/gfxdll/`; the build is pure compile and link. Experimental: it does not link at present, its pre-generated bridge having fallen behind the engine (see Known problems in `docs/CHANGES.md`).
-
 ### Windows (MSVC, native)
 
 A native build of the full SDL2/GL client with Visual Studio 2022 or newer and its **x86** toolset. Configure and build from an "x86 Native Tools for VS" command prompt:
@@ -191,7 +179,7 @@ python3 -m unittest discover -s test
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | CoD2rev-Plus's core and platform code, copied unchanged; the dedicated server runs on them. `test/plus_replaces.txt` lists the engine sources they replace there. |
 | `src/compat` | The bridges between the engine's C names and CoD2rev-Plus's C++ VM, server and core; mostly generated. |
 | `src/headers`, `src/imports` | Shared types, offsets checked against the original binary, and declarations of imported functions. |
-| `src/blobs`, `build/native_gen`, `build/win_gen`, `build/gfxdll` | Data taken from the original binary, still used by the engine. |
+| `src/blobs`, `build/native_gen`, `build/win_gen` | Data taken from the original binary, still used by the engine. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Platform code and stubs. |
 | `scripts` | Build and test scripts, and the test client from CoD2rev-Plus. |
 | `test` | Unit tests and the lists the checks read. |

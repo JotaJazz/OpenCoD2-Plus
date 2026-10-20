@@ -1091,13 +1091,6 @@ MaterialHandle Material_Register(const char *name, int imageTrack)
 
 MaterialHandle Material_RegisterHandle(const char *name, int baseImageFlags, int imageTrack)
 {
-
-    {
-        extern int g_gfxV60DllActive;
-        extern refexport_t re;
-        if (g_gfxV60DllActive && re.RegisterMaterial && (void *)re.RegisterMaterial != (void *)Material_RegisterHandle)
-            return re.RegisterMaterial(name, baseImageFlags, imageTrack);
-    }
     (void)baseImageFlags;
     if (!name || *name == '\0')
         return rgp.defaultMaterial;

@@ -128,8 +128,6 @@ int R_DrawConsoleText(const short int *string, int maxChars, FontHandle font, fl
 
 Font *R_LoadFont(const char *fontName, int imageTrack);
 
-refexport_t *GetRefAPI_v60_adapt(refimport_t *rimp_v60);
-
 void R_GetImageList(ImageList *imageList);
 int R_GetMinSpecImageMemory(void);
 void R_ResetImageAllocations(void);
@@ -409,10 +407,6 @@ void RB_UploadWaterTexture(GfxImage *image, water_t *water);
 
 qboolean R_WatersEquivalent(const water_t *w0, const water_t *w1);
 void R_CreateWaterSetup(const water_t *source, int waterMapSetupIndex, water_t *destination);
-
-void *R_LoadXModelSurfsSurface(void *surfsCtx, void *partBitsArg, int **streamCursor, void *(*alloc)(int size));
-void R_XModelSurfs_SetRefImport(void *rimp_v60);
-void *R_RegisterXModelSurfs(void *xmodel);
 
 int XSurfaceGetNumVerts(const XSurface *surface);
 int XSurfaceGetNumTris(const XSurface *surface);

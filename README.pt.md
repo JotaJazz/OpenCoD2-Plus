@@ -84,18 +84,6 @@ cmake --build build-win32 -j
 
 Acrescente `-DCOD2_WIN32_CLIENT=ON` para o cliente SDL2/GL (forneça as bibliotecas estáticas do SDL2 em `src/win32/sdl2/lib/`; o servidor dedicado não precisa de nenhuma). Como o cliente Linux, corre os seus jogos locais sobre o servidor, o game e o bgame do CoD2rev-Plus, e traça com a sua colisão. Sem Windows, `scripts/portable_wine.sh DIR` instala um Wine de 32 bits sem root (Debian ou Ubuntu com i386 ativado) e escreve `DIR/wine.sh` para o executar; `COD2_CONSOLE_STDOUT=1` copia a consola para stdout, e `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` faz com que crie um jogo onde entra o cliente Linux.
 
-#### DLL de renderizador substituível (opcional, experimental)
-
-O renderizador pode ser compilado como uma DLL separada e substituível: exporta `GetRefAPI` e comunica com o motor apenas através das tabelas `ri`/`re`. Com o cliente configurado, execute o alvo `gfxdll`:
-
-```sh
-cmake --build build-win32 --target gfxdll
-# -> build-win32/gfx_d3d_mp_x86_s.dll   (renderer DLL)
-# -> build-win32/cod2_win32_gfxdll.exe  (engine that loads it at runtime)
-```
-
-A ponte entre o renderizador e o motor está pré-gerada e incluída no repositório em `build/gfxdll/`; a compilação é apenas compilar e ligar. Experimental: de momento não liga, porque a sua ponte pré-gerada ficou para trás do motor (ver os problemas conhecidos em `docs/CHANGES.md`).
-
 ### Windows (MSVC, nativo)
 
 Uma compilação nativa do cliente SDL2/GL completo com o Visual Studio 2022 ou mais recente e o seu conjunto de ferramentas **x86**. Configure e compile a partir de uma linha de comandos "x86 Native Tools for VS":
@@ -191,7 +179,7 @@ python3 -m unittest discover -s test
 | `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | O núcleo e o código de plataforma do CoD2rev-Plus, copiados sem alterações; o servidor dedicado corre sobre eles. `test/plus_replaces.txt` lista as fontes do motor que eles substituem lá. |
 | `src/compat` | As pontes entre os nomes C do motor e a VM C++, o servidor e o núcleo do CoD2rev-Plus; na maior parte geradas. |
 | `src/headers`, `src/imports` | Tipos partilhados, offsets verificados contra o binário original e declarações de funções importadas. |
-| `src/blobs`, `build/native_gen`, `build/win_gen`, `build/gfxdll` | Dados tirados do binário original, ainda usados pelo motor. |
+| `src/blobs`, `build/native_gen`, `build/win_gen` | Dados tirados do binário original, ainda usados pelo motor. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Código de plataforma e stubs. |
 | `scripts` | Scripts de compilação e de testes, e o cliente de testes do CoD2rev-Plus. |
 | `test` | Testes unitários e as listas que as verificações leem. |

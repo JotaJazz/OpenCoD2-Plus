@@ -770,7 +770,7 @@ void CL_BlendSavedScreen(int fadeMsec)
 
 void CL_DrawStretchPicPhysical(float x, float y, float w, float h, float s1, float t1, float s2, float t2, const vec_t *color, MaterialHandle material)
 {
-#if defined(COD2_X64) && !defined(COD2_GFX_DLL)
+#if defined(COD2_X64)
     R_AddCmdDrawStretchPic(x, y, w, h, s1, t1, s2, t2, color, material);
 #else
     RE->DrawStretchPic(x, y, w, h, s1, t1, s2, t2, color, material);
@@ -779,7 +779,7 @@ void CL_DrawStretchPicPhysical(float x, float y, float w, float h, float s1, flo
 
 void CL_DrawQuadPic(int (*verts)[16][4], const vec_t *color, MaterialHandle material)
 {
-#if defined(COD2_X64) && !defined(COD2_GFX_DLL)
+#if defined(COD2_X64)
     R_AddCmdDrawQuadPic((vec2_t *)verts, color, material);
 #else
     RE->DrawQuadPic(verts, color, material);
@@ -1254,7 +1254,7 @@ void CL_SetFullScreenViewport(void)
 void CL_DrawStretchPic(float x, float y, float w, float h, int horzAlign, int vertAlign, float s1, float t1, float s2, float t2, const vec_t *color, MaterialHandle material)
 {
     CalcScreenPlacement(&x, &y, &w, &h, horzAlign, vertAlign);
-#if defined(COD2_X64) && !defined(COD2_GFX_DLL)
+#if defined(COD2_X64)
     R_AddCmdDrawStretchPic(x, y, w, h, s1, t1, s2, t2, color, material);
 #else
     RE->DrawStretchPic(x, y, w, h, s1, t1, s2, t2, color, material);
