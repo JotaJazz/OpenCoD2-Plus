@@ -1511,23 +1511,25 @@ static MSG_FORCEINLINE void MSG_WriteDeltaKeyBits(msg_t *msg, int key, int oldV,
     }
 }
 
+/* As the original and CoD2rev-Plus's (msg_mp.cpp): the second flag says
+ * whether the rest of the buttons, the weapons and the roll changed. The
+ * server reads only the attack button without it, so a jump, a stance or a
+ * weapon change written without the flag reached it one command late, when
+ * the next packet repeated the command against an empty one. */
 void MSG_WriteDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to)
 {
     int serverTimeDelta;
     int fromMoveBits;
     int toMoveBits;
-    int fieldKey;
 
     serverTimeDelta = to->serverTime - from->serverTime;
 
-    if ((unsigned int)serverTimeDelta <= 0xff) {
+    if (serverTimeDelta < 256) {
         MSG_WriteBit1_core(msg);
         MSG_WriteByte_core(msg, serverTimeDelta);
-        fieldKey = key ^ to->serverTime;
     } else {
         MSG_WriteBit0_core(msg);
         MSG_WriteLong_core(msg, to->serverTime);
-        fieldKey = key;
     }
 
     toMoveBits = MSG_UsercmdMoveBits(to->forwardmove, to->rightmove);
@@ -1536,34 +1538,34 @@ void MSG_WriteDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *t
     if ((from->buttons >> 1) == (to->buttons >> 1) &&
         from->weapon == to->weapon &&
         from->offHandIndex == to->offHandIndex &&
-        from->angles[2] == to->angles[2] &&
-        from->angles[0] == to->angles[0] &&
-        from->angles[1] == to->angles[1] &&
-        ((from->buttons ^ to->buttons) & 1) == 0 &&
-        fromMoveBits == toMoveBits) {
-        MSG_WriteBits_core(msg, key, 1);
-        return;
-    }
+        from->angles[2] == to->angles[2]) {
+        if (from->angles[0] == to->angles[0] &&
+            from->angles[1] == to->angles[1] &&
+            ((from->buttons ^ to->buttons) & 1) == 0 &&
+            fromMoveBits == toMoveBits) {
+            MSG_WriteBits_core(msg, key, 1);
+            return;
+        }
 
-    MSG_WriteBits_core(msg, key ^ 1, 1);
-
-    if ((unsigned int)serverTimeDelta > 0xff) {
         MSG_WriteBits_core(msg, key ^ 1, 1);
-    } else {
         MSG_WriteBits_core(msg, key, 1);
-    }
-    MSG_WriteBits_core(msg, fieldKey ^ to->buttons, 1);
-    MSG_WriteDeltaKeyShort(msg, fieldKey, from->angles[0], to->angles[0]);
-    MSG_WriteDeltaKeyShort(msg, fieldKey, from->angles[1], to->angles[1]);
-    MSG_WriteDeltaKeyBits(msg, fieldKey, fromMoveBits, toMoveBits, 4);
-
-    if ((unsigned int)serverTimeDelta > 0xff) {
-        int serverTimeKey = key ^ to->serverTime;
-
-        MSG_WriteDeltaKeyShort(msg, serverTimeKey, from->angles[2], to->angles[2]);
-        MSG_WriteDeltaKeyBits(msg, serverTimeKey, from->buttons >> 1, to->buttons >> 1, 18);
-        MSG_WriteDeltaKeyBits(msg, serverTimeKey, from->weapon, to->weapon, 7);
-        MSG_WriteDeltaKeyBits(msg, serverTimeKey, from->offHandIndex, to->offHandIndex, 7);
+        key ^= to->serverTime;
+        MSG_WriteBits_core(msg, key ^ to->buttons, 1);
+        MSG_WriteDeltaKeyShort(msg, key, from->angles[0], to->angles[0]);
+        MSG_WriteDeltaKeyShort(msg, key, from->angles[1], to->angles[1]);
+        MSG_WriteDeltaKeyBits(msg, key, fromMoveBits, toMoveBits, 4);
+    } else {
+        MSG_WriteBits_core(msg, key ^ 1, 1);
+        MSG_WriteBits_core(msg, key ^ 1, 1);
+        MSG_WriteBits_core(msg, key ^ to->buttons, 1);
+        MSG_WriteDeltaKeyShort(msg, key, from->angles[0], to->angles[0]);
+        MSG_WriteDeltaKeyShort(msg, key, from->angles[1], to->angles[1]);
+        MSG_WriteDeltaKeyBits(msg, key, fromMoveBits, toMoveBits, 4);
+        key ^= to->serverTime;
+        MSG_WriteDeltaKeyShort(msg, key, from->angles[2], to->angles[2]);
+        MSG_WriteDeltaKeyBits(msg, key, from->buttons >> 1, to->buttons >> 1, 18);
+        MSG_WriteDeltaKeyBits(msg, key, from->weapon, to->weapon, 7);
+        MSG_WriteDeltaKeyBits(msg, key, from->offHandIndex, to->offHandIndex, 7);
     }
 }
 
