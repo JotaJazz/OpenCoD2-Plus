@@ -6,6 +6,7 @@ extern volatile qboolean fx_camera_valid;
 extern struct DObj_s * Com_GetClientDObj(int handle, int localClientNum);
 extern int DObjGetBoneIndex(const DObj *obj, unsigned int boneName);
 extern void FxScheduler_PlayEffect(void *scheduler, EffectTemplate *fx, const vec_t *org, ...);
+extern void FxScheduler_PlayEffectWithDir(void *scheduler, EffectTemplate *fx, const vec_t *org, const vec_t *forward);
 extern int FX_Init(int rendererExists);
 extern void FX_Free(int freeAll);
 extern void FxHelper_AdjustCamera(const FxHelper *_this, refdef_t *refdef, float zfar);
@@ -51,8 +52,7 @@ void FX_PlaySimpleEffect(EffectTemplate *fx, const vec_t *org)
 
 void FX_PlayEffect(EffectTemplate *fx, const vec_t *org, const vec_t *fwd)
 {
-    /* fwd used as the axis; no bolt -> pass explicit NULL bolt (x64: else garbage r9). */
-    FxScheduler_PlayEffect(*(void **)*(void **)&fx_scheduler_ptr, fx, org, (MediaHandles *(*)[4])fwd, (const FxBoltInfo *)0);
+    FxScheduler_PlayEffectWithDir(*(void **)*(void **)&fx_scheduler_ptr, fx, org, fwd);
 }
 
 void FX_PlayEntityEffect(EffectTemplate *fx, const vec_t *org, vec3_t *axis, const FxBoltInfo *bolt)

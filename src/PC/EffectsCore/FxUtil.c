@@ -109,6 +109,7 @@ extern float FxRange_GetVal(const FxRange *range);
 extern void FxHelper_CameraShake(const FxHelper *_this, vec_t *origin, float intensity, int radius, int time_);
 extern EffectTemplate *MediaHandles_GetEffect(const MediaHandles *mediaHandles);
 extern void FxScheduler_PlayEffect(void *scheduler, void *effectTemplate, vec_t *origin, vec3_t *ax, void *bolt);
+extern void FxScheduler_PlayEffectWithDir(void *scheduler, void *effectTemplate, const vec_t *origin, const vec_t *forward);
 extern void FxScheduler_CreateDecalEffect(void *scheduler, void *primTemp, vec_t *origin, vec3_t *ax);
 extern void FxScheduler_FxScheduler(const FxScheduler *scheduler);
 extern void FX_InitTemplates(void);
@@ -276,7 +277,7 @@ void FX_CalcOrigin2(const PrimitiveTemplate *primTemp, vec_t *org, vec_t *org2, 
         if (flags & 0x10) {
             void *effect = MediaHandles_GetEffect((const MediaHandles *)(pt + 0x70));
             vec_t *traceNormal = (vec_t *)(trace + 4);
-            FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, effect, org2, (vec3_t *)traceNormal, NULL);
+            FxScheduler_PlayEffectWithDir(*(void **)imp_theFxScheduler, effect, org2, traceNormal);
         }
     } else {
 

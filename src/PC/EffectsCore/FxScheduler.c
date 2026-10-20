@@ -289,6 +289,22 @@ cleanup:
     }
 }
 
+/* The forward-vector form of PlayEffect, as Raven's CFxScheduler::PlayEffect
+ * that this scheduler comes from: the axis is the direction and two normals to
+ * it. Callers passed the direction itself as the axis, and the scheduler read
+ * six floats past it. */
+void FxScheduler_PlayEffectWithDir(const FxScheduler *_this, const EffectTemplate *fx, const vec_t *origin, const vec_t *forward)
+{
+    extern void MakeNormalVectors(const vec_t *forward, vec_t *right, vec_t *up);
+    vec3_t axis[3];
+
+    axis[0][0] = forward[0];
+    axis[0][1] = forward[1];
+    axis[0][2] = forward[2];
+    MakeNormalVectors(forward, axis[1], axis[2]);
+    FxScheduler_PlayEffect(_this, fx, origin, (MediaHandles *(*)[4])axis, (const FxBoltInfo *)0);
+}
+
 void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, const vec_t *origin, MediaHandles *(*axis)[4], const FxBoltInfo *bolt)
 {
     FxHelper *helper;

@@ -951,6 +951,7 @@ const FxBoltFramePtr FxBoltFrame_Acquire(const FxBoltInfo *bolt)
 
 extern float flrand(float min, float max);
 extern void FxScheduler_PlayEffect(void *scheduler, void *fx, float *origin, float *axis, const void *bolt);
+extern void FxScheduler_PlayEffectWithDir(void *scheduler, void *fx, const vec_t *origin, const vec_t *forward);
 void Particle_Die(const Particle *_this)
 {
     byte *p = (byte *)_this;
@@ -991,7 +992,7 @@ void Particle_Die(const Particle *_this)
     }
 
     scheduler = *(void **)imp_theFxScheduler;
-    FxScheduler_PlayEffect(scheduler, (*(void **)&((Particle *)p)->base.emitEffect), (float *)(p + 4), norm, NULL);
+    FxScheduler_PlayEffectWithDir(scheduler, (*(void **)&((Particle *)p)->base.emitEffect), (float *)(p + 4), norm);
 }
 
 void Tail_CalcNewEndpoint(const Tail *_this, const orientation_t *or_)
@@ -1915,7 +1916,7 @@ Bool Particle_UpdateOrigin(const Particle *_this, const orientation_t *or_)
                 endpos[0] = start_pt[0] + (end_pt[0] - start_pt[0]) * fraction;
                 endpos[1] = start_pt[1] + (end_pt[1] - start_pt[1]) * fraction;
                 endpos[2] = start_pt[2] + (end_pt[2] - start_pt[2]) * fraction;
-                FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, (*(void **)&((Effect *)self)->deathEffect), endpos, (vec_t *)(trace + 0x04), NULL);
+                FxScheduler_PlayEffectWithDir(*(void **)imp_theFxScheduler, (*(void **)&((Effect *)self)->deathEffect), endpos, (vec_t *)(trace + 0x04));
             }
 
             if (flags & 0x400) {
