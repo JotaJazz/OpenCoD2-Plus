@@ -48,8 +48,8 @@ struct Emitter {
     vec3_t angles;      /* the model's, turned by angleDelta (0x498190) */
     vec3_t angleDelta;
     void *emitFx;
-    float spawnVariance;
-    char _tail[4];
+    float emitDensity;  /* the step between emissions, give or take */
+    float emitVariance;
 
 };
 
@@ -128,8 +128,8 @@ COD2_ASSERT_FIELD(struct Emitter, initialVel, 0x258);
 COD2_ASSERT_FIELD(struct Emitter, velocityDelta, 0x264);
 COD2_ASSERT_FIELD(struct Emitter, angles, 0x278);
 COD2_ASSERT_FIELD(struct Emitter, angleDelta, 0x284);
-COD2_ASSERT_FIELD(struct Emitter, spawnVariance, 0x294);
-COD2_ASSERT_FIELD(struct Emitter, _tail, 0x298);
+COD2_ASSERT_FIELD(struct Emitter, emitDensity, 0x294);
+COD2_ASSERT_FIELD(struct Emitter, emitVariance, 0x298);
 COD2_ASSERT_FIELD(struct FxBoltFrame, refCount, 0x00);
 COD2_ASSERT_FIELD(struct FxBoltFrame, orientation, 0x08);
 COD2_ASSERT_FIELD(struct Line, _base, 0x000);

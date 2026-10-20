@@ -1669,106 +1669,101 @@ void Particle_GetTotalVelocity(const Particle *_this, float normTime, vec_t *out
     outVector[2] += (*(float *)&((Particle *)self)->subclassField2);
 }
 
+extern void MakeNormalVectors(const vec_t *forward, vec_t *right, vec_t *up);
+extern float crandom(void);
+static float Emitter_NormTime(float t, float life)
+{
+    float normTime = t / life;
+    return normTime > 1.0f ? 1.0f : normTime;
+}
+
+/* plays the emitted effect along the emitter's path, every step (its
+   density, give or take its variance) it travels, as CoD2MP_s.exe 1.3
+   (0x497b50): in 12 ms increments it finds where the path first gets a
+   step from the last emission, plays the effect there (along its velocity,
+   or at the bolt), then backs up to where the step was crossed. With a bolt,
+   the path also moves by the bolt's motion. */
 void Emitter_UpdateEmitFx(const Emitter *_this, vec_t *bindVelocity, const orientation_t *or_)
 {
-    byte *self = (byte *)_this;
-
-    if (!((*(byte *)&((Emitter *)self)->_base[169]) & 1))
-        return;
-
+    Emitter *em = (Emitter *)_this;
+    Effect *e = (Effect *)_this;
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
-    int frameTimeMs = helper->mFrameTime;
-    if (frameTimeMs == 0)
+
+    if (!(e->mFlags & 0x100) || helper->mFrameTime == 0)
         return;
 
-    float step = (((Emitter *)(self))->emitStep);
-    float step2 = step * step;
-    int t = (((Emitter *)(self))->emitLastTime);
-    int startTime = (((Effect *)(self))->mTimeStart);
-    float age = (float)(FXH_TIME(helper) - startTime) * 0.001f;
-    float lifeTime = (float)((((Effect *)(self))->mTimeEnd) - startTime) * 0.001f;
-
+    float step2 = em->emitStep * em->emitStep;
+    int now = FXH_TIME(helper);
+    int t = em->emitLastTime;
+    float age = (float)(now - e->mTimeStart) * 0.001f;
+    float life = (float)(e->mTimeEnd - e->mTimeStart) * 0.001f;
+    float total = 0.0f;
     int dif = 0;
-    float ftimeTotal = 0.0f;
 
-    while (t < FXH_TIME(helper)) {
+    while (t < now) {
         dif += 12;
         float ftime = (float)dif * 0.001f;
+        vec3_t oldorg, org, vel, next;
+        int i;
 
-        vec3_t oldorg;
-        oldorg[0] = (((Emitter *)(self))->emitPos[0]) + (((Emitter *)(self))->velocityDelta[0]);
-        oldorg[1] = (((Emitter *)(self))->emitPos[1]) + (((Emitter *)(self))->velocityDelta[1]);
-        oldorg[2] = (((Emitter *)(self))->emitPos[2]) + (((Emitter *)(self))->velocityDelta[2]);
-
-        float normTime = (ftimeTotal + age) / lifeTime;
-        if (normTime > 1.0f)
-            normTime = 1.0f;
-
-        vec3_t velocity;
-        Particle_GetTotalVelocity((const Particle *)_this, normTime, velocity, or_);
-
-        vec3_t org;
-        org[0] = (((Emitter *)(self))->emitPos[0]) + velocity[0] * ftime;
-        org[1] = (((Emitter *)(self))->emitPos[1]) + velocity[1] * ftime;
-        org[2] = (((Emitter *)(self))->emitPos[2]) + velocity[2] * ftime;
-
-        if (or_ && bindVelocity) {
-            org[0] += bindVelocity[0] * ftime;
-            org[1] += bindVelocity[1] * ftime;
-            org[2] += bindVelocity[2] * ftime;
+        for (i = 0; i < 3; i++)
+            oldorg[i] = em->emitPos[i] + em->velocityDelta[i];
+        Particle_GetTotalVelocity((const Particle *)_this, Emitter_NormTime(age + total, life), vel, or_);
+        for (i = 0; i < 3; i++) {
+            org[i] = vel[i] * ftime + em->emitPos[i];
+            if (or_)
+                org[i] += ftime * bindVelocity[i];
         }
-
-        float distSq = Vec3DistanceSq(org, oldorg);
-        if (distSq < step2) {
+        if (Vec3DistanceSq(oldorg, org) < step2) {
             t += 12;
             continue;
         }
 
-        vec3_t spawnPos;
         if (or_) {
-            OrientationPosToWorldPos(or_, org, spawnPos);
+            vec3_t spawn;
+            OrientationPosToWorldPos(or_, org, spawn);
+            FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, em->emitFx, spawn, (float *)0,
+                                   (*(byte **)&e->mBolt.value) + 0x3c);
         } else {
-            spawnPos[0] = org[0];
-            spawnPos[1] = org[1];
-            spawnPos[2] = org[2];
+            vec3_t axis[3];
+            float len = __builtin_sqrtf(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+            if (len > 0.0f) {
+                axis[0][0] = vel[0] * (1.0f / len);
+                axis[0][1] = vel[1] * (1.0f / len);
+                axis[0][2] = vel[2] * (1.0f / len);
+                MakeNormalVectors(axis[0], axis[1], axis[2]);
+            } else {
+                memcpy(axis, e->mRefEnt.axis, sizeof(axis));
+            }
+            FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, em->emitFx, org, (float *)axis, (const void *)0);
         }
 
-        void *boltInfo = NULL;
-        if ((*(byte **)&((Effect *)(self))->mBolt.value))
-            boltInfo = (byte *)((*(byte **)&((Effect *)(self))->mBolt.value)) + 0x3c;
-
-        void *emitEffect = (((Emitter *)(self))->emitFx);
-        FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, emitEffect, spawnPos, NULL, NULL);
-
-        float velLenSq = velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2];
-        float dF = (velLenSq + velLenSq) * ftime;
-        float nextFtime;
-        if (dF != 0.0f) {
-
-            float sq = __builtin_sqrtf(step2 / dF);
-            nextFtime = sq * ftime;
-        } else {
-            nextFtime = ftime;
+        /* back to where the path crossed the step */
+        float speed2 = vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2];
+        float a = ftime * speed2 + ftime * speed2;
+        if (a != 0.0f) {
+            float back = (ftime * ftime * speed2 - step2) / a * 1000.0f;
+            dif -= (int)lrint(back + 9.313225746154785e-10);
+            if (dif < t - em->emitLastTime)
+                dif = t - em->emitLastTime;
+            ftime = (float)dif * 0.001f;
+            Particle_GetTotalVelocity((const Particle *)_this, Emitter_NormTime(ftime + age + total, life), vel, or_);
+            for (i = 0; i < 3; i++)
+                org[i] = vel[i] * ftime + em->emitPos[i];
         }
-        float nextTime = nextFtime + (ftimeTotal + age);
-        float nextNormTime = nextTime / lifeTime;
-        if (nextNormTime > 1.0f)
-            nextNormTime = 1.0f;
-
-        vec3_t nextVel;
-        Particle_GetTotalVelocity((const Particle *)_this, nextNormTime, nextVel, or_);
-
-        (((Emitter *)(self))->emitPos[0]) = org[0];
-        (((Emitter *)(self))->emitPos[1]) = org[1];
-        (((Emitter *)(self))->emitPos[2]) = org[2];
-        (((Emitter *)(self))->velocityDelta[0]) = nextVel[0] * nextFtime - velocity[0] * ftime;
-        (((Emitter *)(self))->velocityDelta[1]) = nextVel[1] * nextFtime - velocity[1] * ftime;
-        (((Emitter *)(self))->velocityDelta[2]) = nextVel[2] * nextFtime - velocity[2] * ftime;
-
-        ftimeTotal += nextFtime;
-        dif = (int)(ftimeTotal * 1000.0f);
-        t = startTime + dif;
-        (((Emitter *)(self))->emitLastTime) = t;
+        Particle_GetTotalVelocity((const Particle *)_this, Emitter_NormTime(ftime + age + total, life), next, or_);
+        for (i = 0; i < 3; i++) {
+            em->emitPos[i] = org[i];
+            em->initialVel[i] = next[i];
+            if (or_)
+                em->velocityDelta[i] += ftime * bindVelocity[i];
+        }
+        em->emitLastTime += dif;
+        total += ftime;
+        dif = 0;
+        t = em->emitLastTime;
+        em->emitStep = em->emitDensity + crandom() * em->emitVariance;
+        step2 = em->emitStep * em->emitStep;
     }
 }
 

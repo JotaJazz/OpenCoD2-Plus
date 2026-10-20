@@ -1375,11 +1375,11 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
 
     (*(void **)&((Emitter *)p)->_base[180]) = material;
     ((Emitter *)p)->emitFx = effect;
-    ((Emitter *)p)->spawnVariance = stepBase;
-    (*(float *)&((Emitter *)p)->_tail[0]) = stepVar;
+    ((Emitter *)p)->emitDensity = stepBase;
+    ((Emitter *)p)->emitVariance = stepVar;
 
     ((Emitter *)p)->emitLastTime = theFxHelper->mTime;
-    ((Emitter *)p)->emitStep = stepBase + crandom() * (*(float *)&((Emitter *)p)->_tail[0]);
+    ((Emitter *)p)->emitStep = stepBase + crandom() * ((Emitter *)p)->emitVariance;
 }
 
 extern void OrientedParticle_OrientedParticle(const OrientedParticle *op);

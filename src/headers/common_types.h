@@ -6167,8 +6167,8 @@ struct Emitter {
     vec3_t angles;      /* the model's, turned by angleDelta (0x498190) */
     vec3_t angleDelta;
     void *emitFx;
-    float spawnVariance;
-    char _tail[4];
+    float emitDensity;  /* the step between emissions, give or take */
+    float emitVariance;
 
 };
 
