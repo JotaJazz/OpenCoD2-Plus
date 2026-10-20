@@ -18,6 +18,10 @@
 #define SHORT2ANGLE( x )  ( ( x ) * ( 360.0 / 65536 ) )
 #define SURF_START_BIT 20
 #define SURF_TYPEINDEX( x ) ( ( x >> ( SURF_START_BIT ) ) & 0x1f )
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#define RAD_TO_DEG ( 180.0f / M_PI )
 #define ARRAY_COUNT( x ) ( sizeof( x ) / sizeof( x[0] ) )
 #ifndef qtrue
 #define qtrue 1

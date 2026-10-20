@@ -28,7 +28,7 @@ extern void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, pla
 extern void PM_SetProneMovementOverride(playerState_t *ps);
 extern void PM_AddEvent(playerState_t *ps, int newEvent);
 extern int PM_GetEffectiveStance(playerState_t *ps);
-extern Bool Mantle_IsWeaponInactive(playerState_t *ps);
+extern bool Mantle_IsWeaponInactive(const playerState_t *ps);
 extern WeaponDef *BG_GetWeaponDef(int iWeapon);
 extern int BG_GetNumWeapons(void);
 extern int BG_AmmoForWeapon(int weapon);

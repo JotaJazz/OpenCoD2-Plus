@@ -30,7 +30,7 @@ extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern int BG_AnimScriptEvent(playerState_t *ps, scriptAnimEventTypes_t event, qboolean isContinue, qboolean force);
 extern void BG_UpdateConditionValue(int client, int condition, int value, qboolean checkConversion);
 extern void PM_SetProneMovementOverride(playerState_t *ps);
-extern qboolean Mantle_IsWeaponInactive(playerState_t *ps);
+extern bool Mantle_IsWeaponInactive(const playerState_t *ps);
 extern void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
 extern const dvar_t *bg_aimSpreadMoveSpeedThreshold;
 extern const dvar_t *player_scopeExitOnDamage;

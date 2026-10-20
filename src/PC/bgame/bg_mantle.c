@@ -1,11 +1,11 @@
 #include "common_types.h"
 #include "imports.h"
-#include <string.h>
+#include "bg_plus_compat.h"
 
-static inline float fabsf_local(float x)
-{
-    return __builtin_fabsf(x);
-}
+/* Mantling, as CoD2rev-Plus's bg_mantle.cpp (the server's), which this
+ * follows line by line: the client predicts its mantles with it. The dvars and
+ * the anims stay this file's own (static): the client also links
+ * CoD2rev-Plus's, and cgame creates its anims with its own allocator. */
 
 static const dvar_t *mantle_enable;
 static const dvar_t *mantle_debug;
@@ -14,91 +14,762 @@ static const dvar_t *mantle_check_radius;
 static const dvar_t *mantle_check_angle;
 static const dvar_t *mantle_view_yawcap;
 
-__attribute__((used, aligned(4)))
-UInt32 s_mantleTrans[24] = {
-    0x00000001,
-    0x00000008,
-    0x42640000,
-    0x00000002,
-    0x00000008,
-    0x424c0000,
-    0x00000003,
-    0x00000009,
-    0x42340000,
-    0x00000004,
-    0x00000009,
-    0x421c0000,
-    0x00000005,
-    0x00000009,
-    0x42040000,
-    0x00000006,
-    0x0000000a,
-    0x41d80000,
-    0x00000007,
-    0x0000000a,
-    0x41a80000,
-    0x00000000,
-    0x00000000,
-    0x00000000,
-};
-__attribute__((used, aligned(4)))
-const char *s_mantleAnimNames[] = {
-    "mp_mantle_root",
-    "mp_mantle_up_57",
-    "mp_mantle_up_51",
-    "mp_mantle_up_45",
-    "mp_mantle_up_39",
-    "mp_mantle_up_33",
-    "mp_mantle_up_27",
-    "mp_mantle_up_21",
-    "mp_mantle_over_high",
-    "mp_mantle_over_mid",
-    "player_mantle_over_low",
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-};
-static char (*s_mantleAnims)[64];
-
-#define s_mantleTrans ((MantleAnimTransition *)s_mantleTrans)
-
 extern const dvar_t *Dvar_RegisterBool(const char *name, int value, int flags);
 extern const dvar_t *Dvar_RegisterFloat(const char *name, float value, float min, float max, int flags);
 extern void *Hunk_AllocAlignInternal(int size, int align);
-extern void *XAnimCreateAnims(const char *name, int count, void *allocFunc);
+extern XAnim *XAnimCreateAnims(const char *name, int count, void *(*allocFunc)(int));
 extern void XAnimBlend(XAnim *anims, unsigned int animIndex, const char *name, unsigned int children, unsigned int num, unsigned int flags);
-extern void XAnimPrecache(const char *name, void *allocFunc);
-extern void XAnimCreate(struct XAnim_s *anims, unsigned int index, const char *name);
-extern void XAnimGetAbsDelta(const struct XAnim_s *anims, unsigned int animIndex, float *rot, float *delta, float frac);
-extern int XAnimGetLengthMsec(const struct XAnim_s *anims, unsigned int animIndex);
+extern void XAnimPrecache(const char *name, void *(*allocFunc)(int));
+extern void XAnimCreate(XAnim *anims, unsigned int index, const char *name);
+extern void XAnimGetAbsDelta(const XAnim *anims, unsigned int animIndex, float *rot, float *delta, float frac);
+extern int XAnimGetLengthMsec(const XAnim *anims, unsigned int animIndex);
 extern void Com_Error(int level, const char *fmt, ...);
-extern void Com_Printf(const char *fmt, ...);
-extern const float AngleDelta(const float angle1, const float angle2);
-extern const float AngleNormalize360Accurate(float a);
 extern void VectorAngleMultiply(float *trans, float yaw);
 extern void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
-extern int BG_AnimScriptAnimation(playerState_t *ps, aistateEnum_t state,
-                                  scriptAnimMoveTypes_t movetype, int force);
+extern int BG_AnimScriptAnimation(playerState_t *ps, aistateEnum_t state, scriptAnimMoveTypes_t movetype, int force);
 extern int BG_AnimScriptEvent(playerState_t *ps, scriptAnimEventTypes_t event, qboolean isContinue, qboolean force);
 extern void PM_trace(pmove_t *pm, trace_t *results, const vec_t *start, const vec_t *mins, const vec_t *maxs, const vec_t *end, int passEntityNum, int contentMask);
-extern const char *va(const char *fmt, ...);
-extern const vec_t Vec3Normalize(vec_t *v);
-extern const float vectoyaw(const vec_t *vec);
-extern double acos(double x);
+extern int PM_GetEffectiveStance(playerState_t *ps);
 
+/* the functions below, as bg_public.h declares them */
+void* MantleXAnimPrecacheAlloc( int size );
+void Mantle_DebugPrint( const char *msg );
+bool Mantle_IsWeaponInactive( const playerState_t *ps );
+void Mantle_ClearHint( playerState_t *ps );
+void Mantle_ShutdownAnims();
+void Mantle_CapView( playerState_t *ps );
+void Mantle_Move( pmove_t *pm, playerState_t *ps, pml_t *pml );
+void Mantle_CreateAnims( void *(*xanimAlloc)(int) );
+void Mantle_Check( pmove_t *pmove, pml_t *pml );
+void Mantle_CalcEndPos( pmove_t *pm, MantleResults *mresults );
+int Mantle_GetOverLength( const MantleState *mstate );
+int Mantle_GetUpLength( const MantleState *mstate );
+int Mantle_GetAnim( MantleState *mstate );
+int Mantle_FindTransition( float curHeight, float goalHeight );
+void Mantle_GetAnimDelta( MantleState *mstate, int time, vec3_t delta );
+bool Mantle_FindMantleSurface( pmove_t *pm, pml_t *pml, trace_t *trace, vec3_t mantleDir );
+bool Mantle_CheckLedge( pmove_t *pmove, pml_t *pml, MantleResults *mresults, float units );
+void Mantle_Start( pmove_t *pm, playerState_t *ps, MantleResults *mresults );
 void Mantle_RegisterDvars(void);
-static void *MantleXAnimPrecacheAlloc(int size);
-void Mantle_ShutdownAnims(void);
-void Mantle_ClearHint(playerState_t *ps);
-void Mantle_CapView(playerState_t *ps);
-Bool Mantle_IsWeaponInactive(playerState_t *ps);
-void Mantle_CreateAnims(MantleAnimAlloc xanimAlloc);
-static void __attribute_regparm__(3) Mantle_GetAnimDelta(MantleState *mstate, int time, float *delta);
-void Mantle_Move(pmove_t *pm, playerState_t *ps, pml_t *pml);
-static Bool __attribute_regparm__(3) Mantle_CheckLedge(pmove_t *pm, pml_t *pml, byte *mresults, float height);
-void Mantle_Check(pmove_t *pm, pml_t *pml);
+
+enum MantleAnims
+{
+	MANTLE_ROOT,
+	MANTLE_UP_57,
+	MANTLE_UP_51,
+	MANTLE_UP_45,
+	MANTLE_UP_39,
+	MANTLE_UP_33,
+	MANTLE_UP_27,
+	MANTLE_UP_21,
+	MANTLE_OVER_HIGH,
+	MANTLE_OVER_MID,
+	MANTLE_OVER_LOW,
+	MANTLE_ANIM_COUNT
+};
+
+static const char *s_mantleAnimNames[] =
+{
+	"mp_mantle_root",
+	"mp_mantle_up_57",
+	"mp_mantle_up_51",
+	"mp_mantle_up_45",
+	"mp_mantle_up_39",
+	"mp_mantle_up_33",
+	"mp_mantle_up_27",
+	"mp_mantle_up_21",
+	"mp_mantle_over_high",
+	"mp_mantle_over_mid",
+	"player_mantle_over_low",
+};
+
+static MantleAnimTransition s_mantleTrans[] =
+{
+	{ 1, 8, 57 },
+	{ 2, 8, 51 },
+	{ 3, 9, 45 },
+	{ 4, 9, 39 },
+	{ 5, 9, 33 },
+	{ 6, 10, 27 },
+	{ 7, 10, 21 },
+};
+
+static XAnim *s_mantleAnims;
+
+/*
+==================
+MantleXAnimPrecacheAlloc
+==================
+*/
+void* MantleXAnimPrecacheAlloc( int size )
+{
+	return Hunk_AllocAlignInternal(size, 4);
+}
+
+/*
+==================
+Mantle_DebugPrint
+==================
+*/
+void Mantle_DebugPrint( const char *msg )
+{
+	assert(msg);
+
+	if ( !mantle_debug->current.enabled )
+	{
+		return;
+	}
+
+	Com_Printf("%s\n", msg);
+}
+
+/*
+==================
+Mantle_IsWeaponInactive
+==================
+*/
+bool Mantle_IsWeaponInactive( const playerState_t *ps )
+{
+	return mantle_enable->current.enabled && ps->pm_flags & PMF_MANTLE && s_mantleTrans[ps->mantleState.transIndex].overAnimIndex != MANTLE_OVER_LOW;
+}
+
+/*
+==================
+Mantle_ClearHint
+==================
+*/
+void Mantle_ClearHint( playerState_t *ps )
+{
+	assert(ps);
+	ps->mantleState.flags &= ~8;
+}
+
+/*
+==================
+Mantle_ShutdownAnims
+==================
+*/
+void Mantle_ShutdownAnims()
+{
+	s_mantleAnims = NULL;
+}
+
+/*
+==================
+Mantle_CapView
+==================
+*/
+void Mantle_CapView( playerState_t *ps )
+{
+	float value;
+	float delta;
+
+	assert(ps);
+	assert(ps->pm_flags & PMF_MANTLE);
+
+	if ( !mantle_enable->current.enabled )
+	{
+		return;
+	}
+
+	delta = AngleDelta(ps->mantleState.yaw, ps->viewangles[YAW]);
+
+	if ( delta >= -mantle_view_yawcap->current.value && mantle_view_yawcap->current.value >= delta )
+	{
+		return;
+	}
+
+	while ( -mantle_view_yawcap->current.value > delta )
+	{
+		delta = delta + mantle_view_yawcap->current.value;
+	}
+
+	while ( delta > mantle_view_yawcap->current.value )
+	{
+		delta = delta - mantle_view_yawcap->current.value;
+	}
+
+	value = mantle_view_yawcap->current.value;
+
+	if ( delta > 0 )
+	{
+		value = value * -1.0;
+	}
+
+	ps->delta_angles[YAW] += ANGLE2SHORT(delta);
+	ps->viewangles[YAW] = AngleNormalize360Accurate(ps->mantleState.yaw + value);
+}
+
+/*
+==================
+Mantle_Move
+==================
+*/
+void Mantle_Move( pmove_t *pm, playerState_t *ps, pml_t *pml )
+{
+	int animIndex;
+	int mantleLength;
+	int deltaTime;
+	int prevTime;
+	vec3_t prevTrans;
+	vec3_t trans;
+	MantleState *mstate;
+
+	assert(ps->pm_flags & PMF_MANTLE);
+	assert(pml->msec >= 0);
+
+	if ( !mantle_enable->current.enabled )
+	{
+		return;
+	}
+
+	mstate = &ps->mantleState;
+	mstate->flags &= ~8;
+
+	if ( mstate->flags & 2 )
+	{
+		BG_AddPredictableEventToPlayerstate(EV_STANCE_FORCE_CROUCH, 0, ps);
+	}
+
+	mantleLength = Mantle_GetOverLength(mstate) + Mantle_GetUpLength(mstate);
+	prevTime = mstate->timer;
+	mstate->timer = prevTime + pml->msec;
+
+	if ( mstate->timer > mantleLength )
+	{
+		mstate->timer = mantleLength;
+	}
+
+	deltaTime = mstate->timer - prevTime;
+
+	Mantle_GetAnimDelta(mstate, prevTime, prevTrans);
+	Mantle_GetAnimDelta(mstate, mstate->timer, trans);
+
+	animIndex = Mantle_GetAnim(mstate) + ANIM_MT_MANTLE_ROOT;
+	BG_AnimScriptAnimation(ps, AISTATE_COMBAT, (scriptAnimMoveTypes_t)animIndex, qtrue);
+
+	VectorSubtract(trans, prevTrans, trans);
+	VectorAdd(trans, ps->origin, ps->origin);
+	VectorScale(trans, 1.0 / (deltaTime * 0.001), ps->velocity);
+
+	if ( mstate->timer != mantleLength )
+	{
+		return;
+	}
+
+	ps->pm_flags &= ~PMF_MANTLE;
+	pm->mantleStarted = false;
+
+	if ( mstate->flags & 1 )
+	{
+		BG_AnimScriptEvent(ps, ANIM_ET_JUMP, qfalse, qtrue);
+	}
+
+	if ( mstate->flags & 4 )
+	{
+		BG_AddPredictableEventToPlayerstate(EV_STANCE_FORCE_STAND, 0, ps);
+		ps->eFlags &= ~EF_MANTLE;
+	}
+}
+
+/*
+==================
+Mantle_CreateAnims
+==================
+*/
+void Mantle_CreateAnims( void *(*xanimAlloc)(int) )
+{
+	int animIndex;
+	int transIndex;
+	vec3_t rot;
+	vec3_t delta;
+
+	if ( s_mantleAnims )
+	{
+		return;
+	}
+
+	s_mantleAnims = XAnimCreateAnims("PLAYER_MANTLE", ARRAY_COUNT(s_mantleAnimNames), xanimAlloc);
+	assert(s_mantleAnims);
+
+	XAnimBlend(s_mantleAnims, 0, s_mantleAnimNames[0], 1, ARRAY_COUNT(s_mantleAnimNames) - 1, 0);
+
+	for ( animIndex = 1; animIndex < ARRAY_COUNT(s_mantleAnimNames); animIndex++ )
+	{
+		XAnimPrecache(s_mantleAnimNames[animIndex], MantleXAnimPrecacheAlloc);
+		XAnimCreate(s_mantleAnims, animIndex, s_mantleAnimNames[animIndex]);
+	}
+
+	for ( transIndex = 0; transIndex < ARRAY_COUNT(s_mantleTrans); transIndex++ )
+	{
+		animIndex = s_mantleTrans[transIndex].upAnimIndex;
+		XAnimGetAbsDelta(s_mantleAnims, animIndex, rot, delta, 1.0);
+
+		if ( I_fabs(delta[0] - 16.0) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has X translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[0], 16.0);
+		}
+
+		if ( I_fabs(delta[1]) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has Y translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[1], 0.0);
+		}
+
+		if ( I_fabs(delta[2] - s_mantleTrans[transIndex].height) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has Z translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[2], s_mantleTrans[transIndex].height);
+		}
+
+		animIndex = s_mantleTrans[transIndex].overAnimIndex;
+		XAnimGetAbsDelta(s_mantleAnims, animIndex, rot, delta, 1.0);
+
+		if ( I_fabs(delta[0] - 31.0) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has X translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[0], 31.0);
+		}
+
+		if ( I_fabs(delta[1]) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has Y translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[1], 0.0);
+		}
+
+		if ( I_fabs(delta[2] - -18.0) > 1.0 )
+		{
+			Com_Error(ERR_DROP, "Mantle anim [%s] has Z translation %f, should be %f\n", s_mantleAnimNames[animIndex], delta[2], -18.0);
+		}
+	}
+}
+
+/*
+==================
+Mantle_Check
+==================
+*/
+void Mantle_Check( pmove_t *pmove, pml_t *pml )
+{
+	playerState_t *ps;
+	vec3_t mantleDir;
+	trace_t trace;
+	MantleResults mresults;
+
+	Mantle_DebugPrint("====== Mantle Debug ======");
+
+	if ( !mantle_enable->current.enabled )
+	{
+		Mantle_DebugPrint("Mantle Failed: Not enabled");
+		return;
+	}
+
+	ps = pmove->ps;
+	assert(ps);
+
+	Mantle_ClearHint(pmove->ps);
+
+	if ( ps->pm_type >= PM_DEAD )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player is dead");
+		return;
+	}
+
+	if ( ps->pm_flags & PMF_MANTLE )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player already mantling");
+		return;
+	}
+
+	if ( ps->eFlags & (EF_CROUCH | EF_PRONE) )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player not standing");
+		return;
+	}
+
+	if ( ps->weaponstate >= WEAPON_BINOCULARS_INIT && ps->weaponstate <= WEAPON_BINOCULARS_END )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player using binoculars");
+		return;
+	}
+
+	if ( !Mantle_FindMantleSurface(pmove, pml, &trace, mantleDir) )
+	{
+		return;
+	}
+
+	memset(&mresults, 0, sizeof(mresults));
+
+	VectorCopy(mantleDir, mresults.dir);
+	VectorCopy(ps->origin, mresults.startPos);
+
+	if ( trace.surfaceFlags & SURF_MANTLEOVER )
+	{
+		mresults.flags |= 1;
+	}
+
+	if ( Mantle_CheckLedge(pmove, pml, &mresults, 60.0) )
+	{
+		return;
+	}
+
+	if ( Mantle_CheckLedge(pmove, pml, &mresults, 40.0) )
+	{
+		return;
+	}
+
+	Mantle_CheckLedge(pmove, pml, &mresults, 20.0);
+}
+
+/*
+==================
+Mantle_CalcEndPos
+==================
+*/
+void Mantle_CalcEndPos( pmove_t *pm, MantleResults *mresults )
+{
+	playerState_t *ps;
+	vec3_t maxs;
+	vec3_t mins;
+	vec3_t end;
+	vec3_t start;
+	trace_t trace;
+
+	ps = pm->ps;
+	assert(ps);
+
+	if ( !(mresults->flags & 1) )
+	{
+		VectorCopy(mresults->ledgePos, mresults->endPos);
+		return;
+	}
+
+	VectorCopy(ps->mins, mins);
+	VectorCopy(ps->maxs, maxs);
+	maxs[2] = 50.0;
+
+	VectorCopy(mresults->ledgePos, start);
+	VectorMA(start, 31.0, mresults->dir, start);
+
+	VectorCopy(start, end);
+	end[2] = end[2] - 18.0;
+
+	PM_trace(pm, &trace, start, mins, maxs, end, ps->clientNum, pm->tracemask);
+
+	if ( trace.startsolid || trace.fraction < 1.0 )
+	{
+		mresults->flags &= ~1;
+		VectorCopy(mresults->ledgePos, mresults->endPos);
+	}
+	else
+	{
+		VectorCopy(end, mresults->endPos);
+		mresults->endPos[2] = (end[2] - start[2]) * trace.fraction + start[2];
+	}
+}
+
+/*
+==================
+Mantle_GetOverLength
+==================
+*/
+int Mantle_GetOverLength( const MantleState *mstate )
+{
+	if ( !(mstate->flags & 1) )
+	{
+		return 0;
+	}
+
+	return XAnimGetLengthMsec(s_mantleAnims, s_mantleTrans[mstate->transIndex].overAnimIndex);
+}
+
+/*
+==================
+Mantle_GetUpLength
+==================
+*/
+int Mantle_GetUpLength( const MantleState *mstate )
+{
+	return XAnimGetLengthMsec(s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex);
+}
+
+/*
+==================
+Mantle_GetAnim
+==================
+*/
+int Mantle_GetAnim( MantleState *mstate )
+{
+	int upTime;
+	int overTime;
+
+	upTime = Mantle_GetUpLength(mstate);
+	overTime = Mantle_GetOverLength(mstate);
+
+	assert((mstate->timer >= 0) && (mstate->timer <= (upTime + overTime)));
+
+	if ( mstate->timer > upTime )
+		return s_mantleTrans[mstate->transIndex].overAnimIndex;
+	else
+		return s_mantleTrans[mstate->transIndex].upAnimIndex;
+}
+
+/*
+==================
+Mantle_FindTransition
+==================
+*/
+int Mantle_FindTransition( float curHeight, float goalHeight )
+{
+	float height;
+	int bestIndex;
+	int transIndex;
+	float bestDiff;
+
+	height = goalHeight - curHeight;
+	assert(height > 0);
+
+	bestIndex = 0;
+	bestDiff = I_fabs(s_mantleTrans[0].height - height);
+
+	for ( transIndex = 1; transIndex < ARRAY_COUNT(s_mantleTrans); transIndex++ )
+	{
+		if ( bestDiff > I_fabs(s_mantleTrans[transIndex].height - height) )
+		{
+			bestIndex = transIndex;
+			bestDiff = I_fabs(s_mantleTrans[transIndex].height - height);
+		}
+	}
+
+	return bestIndex;
+}
+
+/*
+==================
+Mantle_GetAnimDelta
+==================
+*/
+void Mantle_GetAnimDelta( MantleState *mstate, int time, vec3_t delta )
+{
+	int upTime;
+	int overTime;
+	vec3_t trans;
+	vec2_t rot;
+
+	upTime = Mantle_GetUpLength(mstate);
+	overTime = Mantle_GetOverLength(mstate);
+
+	assert((time >= 0) && (time <= (upTime + overTime)));
+
+	if ( time <= upTime )
+	{
+		XAnimGetAbsDelta(s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex, rot, delta, (float)time / (float)upTime);
+	}
+	else
+	{
+		XAnimGetAbsDelta(s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex, rot, trans, 1.0);
+		XAnimGetAbsDelta(s_mantleAnims, s_mantleTrans[mstate->transIndex].overAnimIndex, rot, delta, (float)(time - upTime) / (float)overTime);
+
+		VectorAdd(delta, trans, delta);
+	}
+
+	VectorAngleMultiply(delta, mstate->yaw);
+}
+
+/*
+==================
+Mantle_FindMantleSurface
+==================
+*/
+bool Mantle_FindMantleSurface( pmove_t *pm, pml_t *pml, trace_t *trace, vec3_t mantleDir )
+{
+	playerState_t *ps;
+	vec3_t traceDir;
+	vec3_t end;
+	vec3_t start;
+	vec3_t maxs;
+	vec3_t mins;
+
+	ps = pm->ps;
+	assert(ps);
+
+	VectorSet(mins, -mantle_check_radius->current.value, -mantle_check_radius->current.value, ps->mins[2]);
+	VectorSet(maxs, mantle_check_radius->current.value, mantle_check_radius->current.value, ps->maxs[2]);
+
+	assert((maxs[0] - mins[0]) <= (ps->maxs[2] - ps->mins[2]));
+	assert((maxs[1] - mins[1]) <= (ps->maxs[2] - ps->mins[2]));
+
+	VectorCopy(pml->forward, traceDir);
+	traceDir[2] = 0;
+
+	Vec3Normalize(traceDir);
+
+	VectorMA(ps->origin, -(ps->maxs[0] - mantle_check_radius->current.value), traceDir, start);
+	VectorMA(ps->origin, mantle_check_range->current.value + ps->maxs[0] - mantle_check_radius->current.value, traceDir, end);
+
+	PM_trace(pm, trace, start, mins, maxs, end, ps->clientNum, CONTENTS_MANTLE);
+
+	if ( trace->startsolid || trace->allsolid )
+	{
+		Mantle_DebugPrint("Mantle Failed: Mantle brush is too thick");
+		return false;
+	}
+
+	if ( trace->fraction == 1.0 )
+	{
+		Mantle_DebugPrint("Mantle Failed: No mantle surface found");
+		return false;
+	}
+
+	if ( !(trace->surfaceFlags & (SURF_MANTLEON | SURF_MANTLEOVER)) )
+	{
+		Mantle_DebugPrint("Mantle Failed: No mantle surface with MANTLE_ON or MANTLE_OVER found");
+		return false;
+	}
+
+	VectorNegate(trace->normal, mantleDir);
+	mantleDir[2] = 0;
+
+	if ( Vec3Normalize(mantleDir) < 0.000099999997 )
+	{
+		Mantle_DebugPrint("Mantle Failed: Mantle surface has vertical normal");
+		return false;
+	}
+
+	if ( acos(DotProduct(traceDir, mantleDir)) * RAD_TO_DEG > mantle_check_angle->current.value )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player is not facing mantle surface");
+		return false;
+	}
+
+	return true;
+}
+
+/*
+==================
+Mantle_CheckLedge
+==================
+*/
+bool Mantle_CheckLedge( pmove_t *pmove, pml_t *pml, MantleResults *mresults, float units )
+{
+	playerState_t *ps;
+	vec3_t maxs;
+	vec3_t mins;
+	vec3_t end;
+	vec3_t start;
+	trace_t trace;
+
+	ps = pmove->ps;
+	assert(ps);
+
+	Mantle_DebugPrint(va("Checking for ledge at %f units", units));
+
+	VectorSet(mins, -ps->maxs[0], -ps->maxs[0], 0.0);
+	VectorSet(maxs, ps->maxs[0], ps->maxs[0], ps->maxs[0] + ps->maxs[0]);
+
+	VectorCopy(mresults->startPos, start);
+	start[2] = start[2] + units;
+
+	VectorMA(start, 16.0, mresults->dir, end);
+	PM_trace(pmove, &trace, start, mins, maxs, end, ps->clientNum, pmove->tracemask);
+
+	if ( trace.startsolid || trace.fraction < 1.0 )
+	{
+		Mantle_DebugPrint("Mantle Failed: Ledge is too far away");
+		return false;
+	}
+
+	VectorCopy(end, start);
+	end[2] = mresults->startPos[2] + 18.0;
+
+	PM_trace(pmove, &trace, start, mins, maxs, end, ps->clientNum, pmove->tracemask);
+
+	if ( trace.startsolid || trace.fraction == 1.0 )
+	{
+		Mantle_DebugPrint("Mantle Failed: Can't find ledge");
+		return false;
+	}
+
+	if ( trace.normal[2] < 0.69999999 )
+	{
+		Mantle_DebugPrint("Mantle Failed: Ledge is too steep");
+		return false;
+	}
+
+	VectorCopy(end, mresults->ledgePos);
+	mresults->ledgePos[2] = (end[2] - start[2]) * trace.fraction + start[2];
+	assert((((mresults->ledgePos[2] - mresults->startPos[2]) > 0.0f)));
+	maxs[2] = 50.0;
+
+	PM_trace(pmove, &trace, mresults->ledgePos, mins, maxs, mresults->ledgePos, ps->clientNum, pmove->tracemask);
+
+	if ( trace.startsolid )
+	{
+		Mantle_DebugPrint("Mantle Failed: Player can't fit crouched on ledge");
+		return false;
+	}
+
+	ps->mantleState.flags |= 8;
+	mresults->flags |= 8;
+
+	Mantle_DebugPrint("Mantle available!");
+
+	if ( !(pmove->cmd.buttons & BUTTON_JUMP) )
+	{
+		return true;
+	}
+
+	Mantle_CalcEndPos(pmove, mresults);
+
+	if ( !(ps->eFlags & EF_CROUCH) )
+	{
+		PM_trace(pmove, &trace, mresults->ledgePos, ps->mins, ps->maxs, mresults->ledgePos, ps->clientNum, pmove->tracemask);
+
+		if ( trace.startsolid )
+		{
+			mresults->flags |= 2;
+		}
+
+		PM_trace(pmove, &trace, mresults->endPos,  ps->mins, ps->maxs, mresults->endPos, ps->clientNum, pmove->tracemask);
+
+		if ( !trace.startsolid )
+		{
+			mresults->flags |= 4;
+		}
+	}
+
+	Mantle_Start(pmove, ps, mresults);
+	return true;
+}
+
+/*
+==================
+Mantle_Start
+==================
+*/
+void Mantle_Start( pmove_t *pm, playerState_t *ps, MantleResults *mresults )
+{
+	int mantleTime;
+	vec3_t trans;
+	MantleState *mstate;
+
+	mstate = &ps->mantleState;
+
+	ps->mantleState.yaw = vectoyaw(mresults->dir);
+
+	mstate->timer = 0;
+	mstate->transIndex = Mantle_FindTransition(mresults->startPos[2], mresults->ledgePos[2]);
+	mstate->flags = mresults->flags;
+
+	mantleTime = Mantle_GetOverLength(mstate) + Mantle_GetUpLength(mstate);
+	Mantle_GetAnimDelta(mstate, mantleTime, trans);
+
+	VectorSubtract(mresults->endPos, trans, ps->origin);
+
+	ps->pm_flags |= PMF_MANTLE;
+	ps->eFlags |= EF_MANTLE;
+
+	VectorCopy(mresults->endPos, pm->mantleEndPos);
+
+	pm->mantleDuration = mantleTime;
+	pm->mantleStarted = true;
+}
 
 void Mantle_RegisterDvars(void)
 {
@@ -108,591 +779,4 @@ void Mantle_RegisterDvars(void)
     mantle_check_radius = Dvar_RegisterFloat("mantle_check_radius", 0.1f, 0.0f, 15.0f, 0x1180);
     mantle_check_angle = Dvar_RegisterFloat("mantle_check_angle", 60.0f, 0.0f, 180.0f, 0x1180);
     mantle_view_yawcap = Dvar_RegisterFloat("mantle_view_yawcap", 60.0f, 0.0f, 180.0f, 0x1180);
-}
-
-static void *MantleXAnimPrecacheAlloc(int size)
-{
-    return Hunk_AllocAlignInternal(size, 4);
-}
-
-void Mantle_ShutdownAnims(void)
-{
-    s_mantleAnims = 0;
-}
-
-void Mantle_ClearHint(playerState_t *ps)
-{
-    ps->mantleState.flags &= ~8;
-}
-
-void Mantle_CapView(playerState_t *ps)
-{
-    float yawcap;
-    float delta;
-    float negcap;
-
-    if (!mantle_enable->current.enabled)
-        return;
-
-    delta = AngleDelta(ps->mantleState.yaw, ps->viewangles[1]);
-
-    yawcap = mantle_view_yawcap->current.value;
-    negcap = -yawcap;
-
-    if (delta < negcap || delta > yawcap) {
-
-        while (delta < negcap)
-            delta += yawcap;
-        while (delta > yawcap)
-            delta -= yawcap;
-    } else {
-        return;
-    }
-
-    {
-        float clampVal;
-        if (delta > 0.0f)
-            clampVal = negcap;
-        else
-            clampVal = yawcap;
-
-        {
-            int viewDelta = (int)(delta * 182.04444885253906f) & 0xffff;
-            ps->delta_angles[1] += viewDelta;
-        }
-
-        ps->viewangles[1] = AngleNormalize360Accurate(clampVal + ps->mantleState.yaw);
-    }
-}
-
-Bool Mantle_IsWeaponInactive(playerState_t *ps)
-{
-    MantleState *mstate;
-
-    if (!mantle_enable->current.enabled)
-        return 0;
-
-    mstate = &ps->mantleState;
-
-    if (!(ps->pm_flags & 4))
-        return 0;
-
-    return s_mantleTrans[mstate->transIndex].overAnimIndex != 10;
-}
-
-void Mantle_CreateAnims(MantleAnimAlloc xanimAlloc)
-{
-    int i;
-    float rot[4];
-    float delta[3];
-
-    if (s_mantleAnims != 0)
-        return;
-
-    s_mantleAnims = (char (*)[64])(XAnimCreateAnims("PLAYER_MANTLE", 11, (void *)xanimAlloc));
-    XAnimBlend( (XAnim *)(s_mantleAnims), 0, s_mantleAnimNames[0], 1, 10, 0);
-
-    for (i = 1; i < 11; i++) {
-        XAnimPrecache(s_mantleAnimNames[i], (void *)MantleXAnimPrecacheAlloc);
-        XAnimCreate((struct XAnim_s *)s_mantleAnims, i, s_mantleAnimNames[i]);
-    }
-
-    for (i = 0; i < 7; i++) {
-        int upAnimIdx = s_mantleTrans[i].upAnimIndex;
-        int overAnimIdx = s_mantleTrans[i].overAnimIndex;
-
-        XAnimGetAbsDelta((const struct XAnim_s *)s_mantleAnims, upAnimIdx, rot, delta, 1.0f);
-        if (fabsf_local(delta[0] - 16.0f) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has X translation %f, should be %f\n", s_mantleAnimNames[upAnimIdx], (double)delta[0], 16.0);
-        if (fabsf_local(delta[1]) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has Y translation %f, should be %f\n", s_mantleAnimNames[upAnimIdx], (double)delta[1], 0.0);
-        if (fabsf_local(delta[2] - s_mantleTrans[i].height) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has Z translation %f, should be %f\n", s_mantleAnimNames[upAnimIdx], (double)delta[2], (double)s_mantleTrans[i].height);
-
-        XAnimGetAbsDelta((const struct XAnim_s *)s_mantleAnims, overAnimIdx, rot, delta, 1.0f);
-        if (fabsf_local(delta[0] - 31.0f) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has X translation %f, should be %f\n", s_mantleAnimNames[overAnimIdx], (double)delta[0], 31.0);
-        if (fabsf_local(delta[1]) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has Y translation %f, should be %f\n", s_mantleAnimNames[overAnimIdx], (double)delta[1], 0.0);
-        if (fabsf_local(delta[2] + 18.0f) > 1.0f)
-            Com_Error(1, "Mantle anim [%s] has Z translation %f, should be %f\n", s_mantleAnimNames[overAnimIdx], (double)delta[2], -18.0);
-    }
-}
-
-static void __attribute_regparm__(3) Mantle_GetAnimDelta(MantleState *mstate, int time, float *delta)
-{
-    float rot[4];
-    float trans[3];
-    int upLen;
-    int overLen = 0;
-
-    upLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex);
-
-    if (mstate->flags & 1) {
-        overLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].overAnimIndex);
-    }
-
-    if (upLen >= time) {
-
-        float frac = (float)time / (float)upLen;
-        XAnimGetAbsDelta((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex, rot, delta, frac);
-    } else {
-
-        XAnimGetAbsDelta((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex, rot, trans, 1.0f);
-
-        {
-            float overFrac = (float)(time - upLen) / (float)overLen;
-            XAnimGetAbsDelta((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].overAnimIndex, rot, delta, overFrac);
-        }
-
-        delta[0] += trans[0];
-        delta[1] += trans[1];
-        delta[2] += trans[2];
-    }
-
-    VectorAngleMultiply(delta, mstate->yaw);
-}
-
-void Mantle_Move(pmove_t *pm, playerState_t *ps, pml_t *pml)
-{
-    MantleState *mstate;
-    int upLen;
-    int mantleLength;
-    int prevTime;
-    int deltaTime;
-    float trans[3];
-    float prevTrans[3];
-    float scale;
-
-    if (!mantle_enable->current.enabled)
-        return;
-
-    mstate = &ps->mantleState;
-
-    mstate->flags &= ~8;
-
-    if (mstate->flags & 2) {
-        BG_AddPredictableEventToPlayerstate(0x8d, 0, ps);
-    }
-
-    {
-        int idx = mstate->transIndex;
-        upLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[idx].upAnimIndex);
-    }
-
-    {
-        int overLen = 0;
-        if (mstate->flags & 1) {
-            int idx = mstate->transIndex;
-            overLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[idx].overAnimIndex);
-        }
-        mantleLength = upLen + overLen;
-    }
-
-    prevTime = mstate->timer;
-
-    {
-        int newTime = prevTime + pml->msec;
-        if (newTime > mantleLength)
-            newTime = mantleLength;
-        mstate->timer = newTime;
-    }
-
-    deltaTime = mstate->timer - prevTime;
-
-    Mantle_GetAnimDelta(mstate, prevTime, prevTrans);
-    Mantle_GetAnimDelta(mstate, mstate->timer, trans);
-
-    {
-        int currentUpLen;
-        int moveType;
-
-        currentUpLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].upAnimIndex);
-        if (mstate->flags & 1) {
-            XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[mstate->transIndex].overAnimIndex);
-        }
-
-        if (currentUpLen < mstate->timer) {
-            moveType = s_mantleTrans[mstate->transIndex].overAnimIndex + 20;
-        } else {
-            moveType = s_mantleTrans[mstate->transIndex].upAnimIndex + 20;
-        }
-
-        BG_AnimScriptAnimation(ps, AISTATE_COMBAT, (scriptAnimMoveTypes_t)moveType, 1);
-    }
-
-    trans[0] -= prevTrans[0];
-    trans[1] -= prevTrans[1];
-    trans[2] -= prevTrans[2];
-
-    ps->origin[0] += trans[0];
-    ps->origin[1] += trans[1];
-    ps->origin[2] += trans[2];
-
-    scale = 1.0f / ((float)deltaTime * 0.001f);
-    ps->velocity[0] = trans[0] * scale;
-    ps->velocity[1] = trans[1] * scale;
-    ps->velocity[2] = trans[2] * scale;
-
-    if (mantleLength == mstate->timer) {
-        ps->pm_flags &= ~4;
-        pm->mantleStarted = 0;
-
-        if (mstate->flags & 1) {
-            BG_AnimScriptEvent(ps, ANIM_ET_JUMP, 0, 1);
-        }
-
-        if (mstate->flags & 4) {
-            BG_AddPredictableEventToPlayerstate(0x8c, 0, ps);
-            ps->eFlags &= ~0x4000;
-        }
-    }
-}
-
-static Bool __attribute_regparm__(3) Mantle_CheckLedge(pmove_t *pm, pml_t *pml, byte *mresults_raw, float height)
-{
-    MantleResults *mr = (MantleResults *)mresults_raw;
-    trace_t tr;
-    trace_t wallTr;
-    playerState_t *ps = pm->ps;
-    float playerRadius = ps->maxs[0];
-    float mins[3], maxs[3];
-    float start[3], end[3];
-
-    {
-        const char *msg = va("Checking for ledge at %f units", (double)height);
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", msg);
-    }
-
-    mins[0] = -playerRadius;
-    mins[1] = -playerRadius;
-    mins[2] = 0.0f;
-    maxs[0] = playerRadius;
-    maxs[1] = playerRadius;
-    maxs[2] = playerRadius * 2.0f;
-
-    start[0] = mr->startPos[0];
-    start[1] = mr->startPos[1];
-    start[2] = mr->startPos[2];
-
-    start[2] += height;
-
-    end[0] = mr->dir[0] * 16.0f + start[0];
-    end[1] = mr->dir[1] * 16.0f + start[1];
-    end[2] = mr->dir[2] * 16.0f + start[2];
-
-    PM_trace(pm, &tr, start, mins, maxs, end, ps->clientNum, pm->tracemask);
-
-    if (tr.startsolid || tr.fraction < 1.0f) {
-
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Can't reach ledge from below");
-        return 0;
-    }
-
-    start[0] = end[0];
-    start[1] = end[1];
-    start[2] = end[2];
-    end[2] = mr->startPos[2] + 18.0f;
-
-    PM_trace(pm, &tr, start, mins, maxs, end, ps->clientNum, pm->tracemask);
-
-    if (tr.startsolid || tr.fraction == 1.0f) {
-
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Can't find ledge");
-        return 0;
-    }
-
-    if (tr.normal[2] < 0.7f) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Surface too steep");
-        return 0;
-    }
-
-    mr->ledgePos[0] = end[0];
-    mr->ledgePos[1] = end[1];
-    mr->ledgePos[2] = start[2] + (end[2] - start[2]) * tr.fraction;
-
-    maxs[2] = 50.0f;
-
-    {
-        PM_trace(pm, &tr, mr->ledgePos, mins, maxs, mr->ledgePos, ps->clientNum, pm->tracemask);
-        if (tr.startsolid) {
-            if (mantle_debug->current.enabled)
-                Com_Printf("%s\n", "Mantle Failed: No room on ledge");
-            return 0;
-        }
-    }
-
-    ps->mantleState.flags |= 8;
-    mr->flags |= 8;
-
-    if (mantle_debug->current.enabled)
-        Com_Printf("%s\n", "Mantle: Found ledge");
-
-    if (!(pm->cmd.buttons & 0x400))
-        return 1;
-
-    if (mr->flags & 1) {
-
-        float wallMins[3], wallMaxs[3];
-        float wallStart[3], wallEnd[3];
-
-        wallMins[0] = ps->mins[0];
-        wallMins[1] = ps->mins[1];
-        wallMins[2] = ps->mins[2];
-        wallMaxs[0] = ps->maxs[0];
-        wallMaxs[1] = ps->maxs[1];
-        wallMaxs[2] = 50.0f;
-
-        wallStart[0] = mr->ledgePos[0];
-        wallStart[1] = mr->ledgePos[1];
-        wallStart[2] = mr->ledgePos[2];
-
-        wallEnd[0] = mr->dir[0] * 31.0f + wallStart[0];
-        wallEnd[1] = mr->dir[1] * 31.0f + wallStart[1];
-        wallEnd[2] = mr->dir[2] * 31.0f + wallStart[2] - 18.0f;
-
-        PM_trace(pm, &wallTr, wallStart, wallMins, wallMaxs, wallEnd, ps->clientNum, pm->tracemask);
-
-        if (!wallTr.startsolid && wallTr.fraction >= 1.0f) {
-
-            mr->endPos[0] = wallEnd[0];
-            mr->endPos[1] = wallEnd[1];
-            mr->endPos[2] = wallStart[2] + (wallEnd[2] - wallStart[2]) * wallTr.fraction;
-        } else {
-
-            mr->flags &= ~1;
-            mr->endPos[0] = mr->ledgePos[0];
-            mr->endPos[1] = mr->ledgePos[1];
-            mr->endPos[2] = mr->ledgePos[2];
-        }
-    } else {
-
-        mr->endPos[0] = mr->ledgePos[0];
-        mr->endPos[1] = mr->ledgePos[1];
-        mr->endPos[2] = mr->ledgePos[2];
-    }
-
-    if (!(ps->eFlags & 4)) {
-
-        float *pMins = ps->mins;
-        float *pMaxs = ps->maxs;
-
-        PM_trace(pm, &tr, mr->ledgePos, pMins, pMaxs, mr->ledgePos, ps->clientNum, pm->tracemask);
-        if (tr.startsolid)
-            mr->flags |= 2;
-
-        PM_trace(pm, &tr, mr->endPos, pMins, pMaxs, mr->endPos, ps->clientNum, pm->tracemask);
-        if (!tr.startsolid)
-            mr->flags |= 4;
-    }
-
-    {
-        MantleState *mantleState = &ps->mantleState;
-        float heightDiff;
-        int bestTrans = 0;
-        float bestDist;
-        int mantleTime;
-        float animDelta[3];
-
-        mantleState->yaw = vectoyaw(mr->dir);
-        mantleState->timer = 0;
-
-        heightDiff = mr->ledgePos[2] - mr->startPos[2];
-        bestDist = fabsf_local(s_mantleTrans[0].height - heightDiff);
-        {
-            int j;
-            for (j = 1; j < 7; j++) {
-                float dist = fabsf_local(s_mantleTrans[j].height - heightDiff);
-                if (dist < bestDist) {
-                    bestTrans = j;
-                    bestDist = dist;
-                }
-            }
-        }
-
-        mantleState->transIndex = bestTrans;
-        mantleState->flags = mr->flags;
-
-        {
-            int idx = bestTrans;
-            int upAnimLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[idx].upAnimIndex);
-            int overAnimLen = 0;
-            if (mantleState->flags & 1) {
-                overAnimLen = XAnimGetLengthMsec((const struct XAnim_s *)s_mantleAnims, s_mantleTrans[idx].overAnimIndex);
-            }
-            mantleTime = upAnimLen + overAnimLen;
-        }
-
-        Mantle_GetAnimDelta(mantleState, mantleTime, animDelta);
-        {
-            ps->origin[0] = mr->endPos[0] - animDelta[0];
-            ps->origin[1] = mr->endPos[1] - animDelta[1];
-            ps->origin[2] = mr->endPos[2] - animDelta[2];
-        }
-
-        ps->pm_flags |= 4;
-        ps->eFlags |= 0x4000;
-
-        pm->mantleEndPos[0] = mr->endPos[0];
-        pm->mantleEndPos[1] = mr->endPos[1];
-        pm->mantleEndPos[2] = mr->endPos[2];
-        pm->mantleDuration = mantleTime;
-        pm->mantleStarted = 1;
-    }
-
-    return 1;
-}
-
-void Mantle_Check(pmove_t *pm, pml_t *pml)
-{
-    playerState_t *ps;
-    float playerRadius;
-    float mins[3], maxs[3];
-    float start[3], end[3];
-    float traceDir[3];
-    float mantleDir[3];
-    byte trace[0x38];
-    float len;
-    byte mresults[0x38];
-    trace_t *tr;
-    MantleResults *results;
-
-    if (mantle_debug->current.enabled)
-        Com_Printf("%s\n", "Mantle_Check");
-
-    if (!mantle_enable->current.enabled) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle disabled");
-        return;
-    }
-
-    ps = pm->ps;
-
-    ps->mantleState.flags &= ~8;
-
-    if (ps->pm_type > 5) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Bad movement type");
-        return;
-    }
-
-    if (ps->pm_flags & 4) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Already mantling");
-        return;
-    }
-
-    if (ps->eFlags & 0xc) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Prone or going prone");
-        return;
-    }
-
-    if (ps->weaponstate >= 0x11 && ps->weaponstate <= 0x16) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Bad weapon state");
-        return;
-    }
-
-    {
-        float checkRadius;
-        float scale;
-        float checkRange;
-
-        playerRadius = ps->maxs[0];
-        checkRadius = mantle_check_radius->current.value;
-
-        mins[0] = -checkRadius;
-        mins[1] = -checkRadius;
-        mins[2] = ps->mins[2];
-
-        maxs[0] = checkRadius;
-        maxs[1] = checkRadius;
-        maxs[2] = ps->maxs[2];
-
-        scale = playerRadius - checkRadius;
-        checkRange = scale + mantle_check_range->current.value;
-
-        traceDir[0] = pml->forward[0];
-        traceDir[1] = pml->forward[1];
-        traceDir[2] = 0.0f;
-
-        Vec3Normalize(traceDir);
-
-        start[0] = ps->origin[0] + traceDir[0] * (-scale);
-        start[1] = ps->origin[1] + traceDir[1] * (-scale);
-        start[2] = ps->origin[2] + traceDir[2] * (-scale);
-
-        end[0] = ps->origin[0] + traceDir[0] * checkRange;
-        end[1] = ps->origin[1] + traceDir[1] * checkRange;
-        end[2] = ps->origin[2] + traceDir[2] * checkRange;
-    }
-
-    tr = (trace_t *)trace;
-    results = (MantleResults *)mresults;
-
-    PM_trace(pm, (trace_t *)(trace), start, mins, maxs, end, ps->clientNum, 0x1000000);
-
-    if (tr->allsolid == 0 && tr->startsolid == 0) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: No wall found");
-        return;
-    }
-
-    if (tr->fraction == 1.0f) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Trace went full distance");
-        return;
-    }
-
-    if (!(tr->surfaceFlags & 0x6000000)) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Surface not mantleable");
-        return;
-    }
-
-    mantleDir[0] = -tr->normal[0];
-    mantleDir[1] = -tr->normal[1];
-    mantleDir[2] = 0.0f;
-
-    len = Vec3Normalize(mantleDir);
-    if (len < 0.0001f) {
-        if (mantle_debug->current.enabled)
-            Com_Printf("%s\n", "Mantle Failed: Bad wall normal");
-        return;
-    }
-
-    {
-        float dot = traceDir[0] * mantleDir[0] + traceDir[1] * mantleDir[1] + traceDir[2] * mantleDir[2];
-        double angle = acos((double)dot) * 57.29577951308232;
-        if (angle > (double)mantle_check_angle->current.value) {
-            if (mantle_debug->current.enabled)
-                Com_Printf("%s\n", "Mantle Failed: Bad approach angle");
-            return;
-        }
-    }
-
-    memset(mresults, 0, sizeof(MantleResults));
-
-    results->dir[0] = mantleDir[0];
-    results->dir[1] = mantleDir[1];
-    results->dir[2] = mantleDir[2];
-
-    results->startPos[0] = ps->origin[0];
-    results->startPos[1] = ps->origin[1];
-    results->startPos[2] = ps->origin[2];
-
-    if (tr->surfaceFlags & 0x4000000) {
-        results->flags |= 1;
-    }
-
-    if (Mantle_CheckLedge(pm, pml, mresults, 60.0f))
-        return;
-    if (Mantle_CheckLedge(pm, pml, mresults, 40.0f))
-        return;
-    Mantle_CheckLedge(pm, pml, mresults, 20.0f);
 }
