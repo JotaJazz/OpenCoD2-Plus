@@ -57,6 +57,10 @@ extern float atanf(float x);
 extern void CL_ResetSkeletonCache(int level);
 extern void CG_UpdateViewWeaponAnim(playerState_t *ps);
 extern struct DObj_s *Com_GetClientDObj(int handle, int localClientNum);
+extern qboolean CG_DObjGetWorldTagPos(const centity_t *cent, struct DObj_s *obj, unsigned int tagName, vec_t *pos);
+extern float crandom(void);
+extern void Com_Error(errorParm_t code, const char *fmt, ...);
+extern scr_const_t scr_const;
 extern void CG_DObjUpdateInfo(struct DObj_s *obj);
 extern void CG_ProcessClientNoteTracks(int clientNum);
 extern void CG_CalcEntityLerpPositions(centity_t *cent);
@@ -344,6 +348,34 @@ static void CG_OffsetThirdPersonView(void)
     }
 }
 
+/* The original's 0x4cf5a0: on a turret the view is at the turret's
+ * tag_player, and a jittering turret (viewlocked 2) shakes it in first person
+ * by the weapon's view jitter. */
+static void CG_CalcTurretViewValues(void)
+{
+    centity_t *cent;
+    struct DObj_s *obj;
+    WeaponDef *weapDef;
+
+    if (!(cg->predictedPlayerState.eFlags & 0x300))
+        return;
+
+    cent = &cg_entities[cg->predictedPlayerState.viewlocked_entNum];
+    obj = Com_GetClientDObj(cent->nextState.number, cent->localClientNum);
+    if (!obj)
+        return;
+
+    if (!CG_DObjGetWorldTagPos(cent, obj, scr_const.tag_player, cg->refdef.vieworg))
+        Com_Error(ERR_DROP, "\x15Turret has no bone: tag_player");
+
+    if (cg->predictedPlayerState.viewlocked == 2 && !cg->renderingThirdPerson) {
+        weapDef = BG_GetWeaponDef(cent->nextState.weapon);
+        cg->refdefViewAngles[0] += crandom() * weapDef->vertViewJitter;
+        weapDef = BG_GetWeaponDef(cent->nextState.weapon);
+        cg->refdefViewAngles[1] += crandom() * weapDef->horizViewJitter;
+    }
+}
+
 static void CG_CalcViewValues(void)
 {
     playerState_t *ps;
@@ -517,6 +549,8 @@ static void CG_CalcViewValues(void)
             }
         }
     }
+
+    CG_CalcTurretViewValues();
 
     if (cg->renderingThirdPerson)
         goto do_third_person;
