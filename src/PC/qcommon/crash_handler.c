@@ -868,9 +868,13 @@ static void cr_posix_popup(const char *path, const char *desc)
     snprintf(fnarg, sizeof(fnarg), "--filename=%s", path);
     pid = fork();
     if (pid == 0) {
-        int fd;
+        int fd, null;
         /* the dialog outlives the game: without this it kept the game's
-         * sockets, and their ports, open until it was closed */
+         * sockets, and their ports, open until it was closed, and the pipe
+         * a script reads the game's output from */
+        null = open("/dev/null", O_RDWR);
+        for (fd = 0; fd < 3 && null >= 0; fd++)
+            dup2(null, fd);
         for (fd = 3; fd < 1024; fd++)
             close(fd);
         execlp("zenity", "zenity", "--text-info", fnarg, titlearg,

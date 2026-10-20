@@ -17,13 +17,15 @@ that gives wine the paths as Windows sees them; the list is then
 test/smoke_expected_failures_wine.txt, since the Windows server prints only to
 its console window and a signal does not reach it as one under wine.
 net_strictPort, which smoke_test.py checks in the output, is checked here in
-its console log instead.
+its console log instead: the failed bind and no other port tried.
 """
 import argparse, os, re, shlex, socket, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT = re.compile(r'^(ok  |FAIL) (?P<name>.+?)( \(.*\))?$')
 HEADER = '# Fallos esperados de smoke_test.py con el servidor de opencod2; solo se achica.\n'
+WINE_HEADER = ('# Fallos esperados de smoke_test.py con el servidor de Windows bajo wine; solo se achica.\n'
+               '# Bajo wine el servidor no recibe señales como tales, e imprime solo en su ventana.\n')
 DEFAULT_BINARY = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-linux/cod2_lnxded'}
 
 
@@ -79,27 +81,40 @@ def write_launcher(directory, wine, exe):
 
 
 def strict_port(launcher, game_dir):
-    """net_strictPort 1 under wine: on a busy port the server stops with the
-    error in its console log instead of taking the next port (it shows the
-    error in a message box and waits there, so it is ended here)."""
+    """net_strictPort 1 under wine: on a busy port the server fails to bind
+    it and tries no other (without net_strictPort it takes the next one). Its
+    fatal error goes to a message box, where it waits, not to its console
+    log, so it is ended here once the log shows the failed bind and nothing
+    after it."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as busy, \
             tempfile.TemporaryDirectory(prefix='opencod2_strict_') as home:
         busy.bind(('0.0.0.0', 0))
         port = busy.getsockname()[1]
         log = os.path.join(home, 'main', 'console_mp_server.log')
+        failed = f'Opening IP socket: localhost:{port}\nWARNING: UDP_OpenSocket: bind: WSAEADDRINUSE'
         server = subprocess.Popen([launcher, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath', home,
                                    '+set', 'logfile', '2', '+set', 'dedicated', '1',
                                    '+set', 'net_port', str(port), '+set', 'net_strictPort', '1'],
                                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         text = ''
-        end = time.time() + 60
-        while time.time() < end and server.poll() is None and 'net_strictPort' not in text:
-            time.sleep(1)
-            text = open(log, encoding='latin-1').read() if os.path.exists(log) else ''
-        if server.poll() is None:
-            server.kill()
-            server.wait()
-        return 'net_strictPort' in text and f'localhost:{port + 1}' not in text
+        try:
+            end = time.time() + 60
+            while time.time() < end and server.poll() is None and failed not in text:
+                time.sleep(1)
+                if os.path.exists(log):
+                    with open(log, encoding='latin-1') as f:
+                        text = f.read()
+            # the next port would be tried at once; give it time to show
+            time.sleep(5)
+            with open(log, encoding='latin-1') as f:
+                text = f.read()
+        except OSError:
+            pass
+        finally:
+            if server.poll() is None:
+                server.kill()
+                server.wait()
+        return failed in text and f'localhost:{port + 1}' not in text and 'Couldn\'t allocate IP port' not in text
 
 
 def main():
@@ -135,7 +150,7 @@ def main():
     if args.update:
         with open(path, 'w') as f:
             flaky = load_expected(os.path.join(ROOT, 'test', 'smoke_flaky.txt'))
-            f.write(HEADER + ''.join(name + '\n' for name in sorted(n for n, ok in results.items() if not ok and n not in flaky)))
+            f.write((WINE_HEADER if args.wine else HEADER) + ''.join(name + '\n' for name in sorted(n for n, ok in results.items() if not ok and n not in flaky)))
         print(f'\nwrote {os.path.relpath(path, ROOT)}')
         return 0
 
