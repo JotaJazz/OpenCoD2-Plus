@@ -154,7 +154,7 @@ EffectTemplate *FX_TryRegisterEffect(const char *name)
     return registeredTemplate;
 }
 
-/* fxRestart frees every template's primitives (FX_FreeSystem, as the
+/* fxRestart empties every template's primitives (FX_FreeSystem, as the
  * original) while the cgame, the weapon definitions and the entities keep
  * pointers to the templates, which then played primitives without materials
  * and crashed the client. The templates themselves are on the hunk and stay:
