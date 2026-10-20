@@ -173,6 +173,12 @@ phases()
 			self.health = 10;
 			radiusDamage(self.origin + (0, 0, 40), 64, 60, 60);
 		}
+		else if(phase == "spot")
+		{
+			// a place of the test's own (scripts/prediction_test.py)
+			self setOrigin((getcvarfloat("contact_x"), getcvarfloat("contact_y"), getcvarfloat("contact_z")));
+			self setPlayerAngles((0, getcvarfloat("contact_yaw"), 0));
+		}
 		else if(phase == "radius")
 		{
 			radiusDamage(level.target.origin + (0, 0, 40), 64, 60, 60);

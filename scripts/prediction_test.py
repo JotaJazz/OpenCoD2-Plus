@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Counts a real client's prediction misses while it moves, jumps and fires.
 
-    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--moves CFG]
+    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--moves CFG] [--spot 'X Y Z YAW']
 
 Runs the dedicated server with scripts/contact_test.py's mod and a minimal
 client as its target, and a real client (cod2_linux, held at 20 fps) as the
-second player, which a config file drives: it turns away from the target,
+second player, which the mod puts in front of a ledge (--spot, by rcon) and a
+config file drives: it mantles onto the ledge, turns away from the target,
 walks forward, back and to both sides, crouches, goes prone, stands, jumps
 and fires its rifle. It keeps away from the target: the client clips against
 other players with a box one unit smaller on each side than the server's (as
@@ -35,6 +36,8 @@ DEFAULT_SERVER = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-lin
 # frames at the client's framerate, which the test holds at 20 (com_maxfps):
 # 'wait 20' is a second
 MOVES = '''wait 300
++forward; wait 10; +gostand; wait 10; -gostand; wait 40; -forward
+wait 20
 cl_yawspeed 180; +right; wait 20; -right
 +forward; wait 60; -forward
 +back; wait 30; -back
@@ -55,6 +58,9 @@ gostand; wait 30
 wait 30
 '''
 MOVES_SECONDS = 100
+# in mp_toujane, in front of a ledge with a mantle_on brush (x 2403 to 2494,
+# y 2233 to 2301, top at 107), facing it: the moves start with a mantle
+SPOT = '2450 2200 80 90'
 # 14 to 34 in 1.3 and 1.0 when the client's prediction follows the server's
 # code; 119 to 153 before
 MAX_MISSES = 60
@@ -69,6 +75,8 @@ def main():
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
+    ap.add_argument('--spot', default=SPOT, help="'x y z yaw' to put the client at when it joins (the mod's spot phase); "
+                    "'' leaves it where it spawns")
     args = ap.parse_args()
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
@@ -136,6 +144,10 @@ def main():
                 if joined:
                     # the moves take about a minute at WSLg's framerate; the
                     # client writes its log at exit, so it is read after
+                    if args.spot:
+                        for cvar, value in zip(('contact_x', 'contact_y', 'contact_z', 'contact_yaw'), args.spot.split()):
+                            smoke_test.rcon(port, RCON, f'set {cvar} {value}')
+                        smoke_test.rcon(port, RCON, 'set contact_phase spot')
                     mover = int(re.search(r'contact mover (\d+)', game_log(home)).group(1))
                     path, last, start = 0.0, None, None
                     end = time.time() + MOVES_SECONDS
