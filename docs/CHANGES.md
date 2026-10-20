@@ -192,7 +192,7 @@ Everything this fork adds to [opencod2/opencod2](https://github.com/opencod2/ope
 ## Known problems
 
 - What CoD2rev-Plus has in libcod is not here: its script functions, the bots and `sv_master1` to `sv_master5`, so the server sends its heartbeat only to the Activision master and the smoke test's `heartbeat sent to sv_master1` fails.
-- MSVC, the web build and x64 keep `src/PC/server_mp`, `src/PC/game_mp` and `src/PC/game`. The MinGW client's renderer DLL variant (`gfxdll`) does not link.
+- MSVC, the web build and x64 keep `src/PC/server_mp`, `src/PC/game_mp` and `src/PC/game`. The MinGW client's renderer DLL variant (`gfxdll`, experimental, outside `all`) does not link: its engine side lacks the script and server objects the client now links, and its pre-generated boundary in `build/gfxdll` (sliced data blobs, symbol aliases) predates the engine compiled as C++, the typed data and CoD2rev-Plus's server and collision: 95 of its 115 aliases name symbols that no longer exist, and the DLL misses `sv_cheats`, `g_traceThreadInfo`, the `Interlocked*` functions and `IncludeClass`'s vtable. It needs that boundary generated again.
 - CoD2rev-Plus's `SV_Shutdown` does not clear `com_errorEntered` when a local map load is cut short, so a second error during that cleanup is fatal instead of a drop.
 - The MSVC build is not checked by the scripts above and still compiles C with the reconstructed VM and server.
 - MSVC, the web build and x64 keep the engine's collision (`src/PC/qcommon/cm_*`), which is simpler than CoD2rev-Plus's: players traced as boxes, not capsules, no 0.125 gap before a face, no terrain test for a trace that does not move, sight traces against box entities left as a placeholder.
