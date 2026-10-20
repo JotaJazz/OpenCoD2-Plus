@@ -11,6 +11,10 @@ extern const dvar_t *cg_marksLimit;
 extern MarkPoly cg_markPolys[1024];
 extern MarkPoly *cg_freeMarkPolys;
 extern MarkVertAssemblyBuffer markVerts;
+/* CG_ImpactMark lets CL_MarkFragments write up to 1024 vertices there */
+#ifdef __cplusplus
+static_assert(sizeof(MarkVertAssemblyBuffer) >= 1024 * sizeof(GfxWorldVertex), "markVerts holds 1024 vertices");
+#endif
 
 extern const vec_t Vec3NormalizeTo(const vec_t *v, vec_t *out);
 extern void PerpendicularVector(const vec_t *src, vec_t *dst);
