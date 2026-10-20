@@ -90,4 +90,21 @@ extern void Com_Printf(const char *fmt, ...);
 extern void Com_DPrintf(const char *fmt, ...);
 extern char *va(const char *format, ...);
 
+/* bg_plus_math.c: CoD2rev-Plus's versions of the math whose engine versions
+ * differ in the last bits */
+extern float BGP_AngleNormalize360(float angle);
+extern float BGP_AngleNormalize180(float angle);
+extern float BGP_AngleDelta(float angle1, float angle2);
+extern void BGP_AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
+extern float BGP_vectoyaw(const vec_t *vec);
+extern void BGP_vectoangles(const vec_t *value1, vec_t *angles);
+extern float BGP_PitchForYawOnNormal(const float fYaw, const vec_t *normal);
+#define AngleNormalize360 BGP_AngleNormalize360
+#define AngleNormalize180 BGP_AngleNormalize180
+#define AngleDelta BGP_AngleDelta
+#define AngleVectors BGP_AngleVectors
+#define vectoyaw BGP_vectoyaw
+#define vectoangles BGP_vectoangles
+#define PitchForYawOnNormal BGP_PitchForYawOnNormal
+
 #endif
