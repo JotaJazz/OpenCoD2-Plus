@@ -671,7 +671,7 @@ void CG_SetNextSnap(snapshot_t *snap_param)
 
         if (!isDemo) {
             char *nextSnap = (char *)cg->nextSnap;
-            if (!(((snapshot_t *)nextSnap)->ps.pm_flags & 0x40)) {
+            if (!(((snapshot_t *)nextSnap)->ps.pm_flags & 0x400000)) {  /* PMF_FOLLOW */
 
                 const dvar_t *dv1 = cg_dvar1 ? (const dvar_t *)*cg_dvar1 : NULL;
                 if (!dv1 || dv1->current.enabled == 0) {
