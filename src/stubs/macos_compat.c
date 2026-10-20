@@ -679,6 +679,15 @@ ContextRef MacDisplay_CreateScreenContext(int inDepthSize, int inUseStencil,
         SDL_SetWindowInputFocus(sdl_gl_window);
 #    endif
         SDL_WarpMouseInWindow(sdl_gl_window, sdl_gl_width / 2, sdl_gl_height / 2);
+    } else {
+        /* a vid_restart to another r_mode: the window takes the new size,
+         * which it was created with only the first time */
+        int curWidth = 0, curHeight = 0;
+        SDL_GetWindowSize(sdl_gl_window, &curWidth, &curHeight);
+        if (curWidth != sdl_gl_width || curHeight != sdl_gl_height) {
+            SDL_SetWindowSize(sdl_gl_window, sdl_gl_width, sdl_gl_height);
+            fprintf(stderr, "Game window resized: %dx%d\n", sdl_gl_width, sdl_gl_height);
+        }
     }
 
     sdl_gl_context = SDL_GL_CreateContext(sdl_gl_window);
