@@ -2,6 +2,7 @@
 """Lists the engine functions called with another type than they are defined.
 
     python3 scripts/check_c_decls.py <build_dir> [--readelf READELF] [--allowlist FILE] [-v]
+    (MinGW: --readelf i686-w64-mingw32-objdump)
 
 The engine's sources have C linkage and declare what they call with their own
 `extern` lines, so nothing checks a declaration against the definition in
@@ -45,8 +46,10 @@ def objects(build_dir):
 
 def parse(readelf, path):
     """[(name, is_declaration, signature)] of the object's C functions."""
-    run = subprocess.run([readelf, '--debug-dump=info', '-W', path], capture_output=True, text=True,
-                         errors='replace')
+    # readelf for ELF; objdump prints the same DWARF dump for MinGW's COFF
+    cmd = [readelf, '--dwarf=info', '-W', path] if 'objdump' in os.path.basename(readelf) \
+        else [readelf, '--debug-dump=info', '-W', path]
+    run = subprocess.run(cmd, capture_output=True, text=True, errors='replace')
     if run.returncode != 0:
         raise RuntimeError(f'{readelf} failed on {path}: {run.stderr.strip()[:200]}')
     out = run.stdout
