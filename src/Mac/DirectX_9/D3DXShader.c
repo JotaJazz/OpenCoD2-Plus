@@ -505,6 +505,22 @@ static const char *arb_ps_debug_green =
     "MOV oC0, {0, 1, 0, 1};\n"
     "END\n";
 
+#ifdef GFX_REAL_D3D9
+/* blanks // comments: Wine's compiler rejects one after an #include, which
+ * the game's lprobe_flag shaders have; Microsoft's ignores it either way */
+static void StripLineComments(char *s, int len)
+{
+    int i;
+
+    for (i = 0; i + 1 < len; i++) {
+        if (s[i] == '/' && s[i + 1] == '/') {
+            while (i < len && s[i] != '\n' && s[i] != '\r')
+                s[i++] = ' ';
+        }
+    }
+}
+#endif
+
 HRESULT D3DXCompileShader(
     const char *pSrcData, UINT SrcDataLen,
     const void *pDefines, void *pInclude,
@@ -550,9 +566,20 @@ HRESULT D3DXCompileShader(
                     (void *)s_real, s_real ? libs[li] : "NOT FOUND");
             fflush(stderr);
         }
-        if (s_real)
-            return s_real(pSrcData, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile,
-                          Flags, ppShader, ppErrorMsgs, ppConstantTable);
+        if (s_real) {
+            char *src = (char *)malloc(SrcDataLen ? SrcDataLen : 1);
+            HRESULT hr;
+
+            if (!src)
+                return s_real(pSrcData, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile,
+                              Flags, ppShader, ppErrorMsgs, ppConstantTable);
+            memcpy(src, pSrcData, SrcDataLen);
+            StripLineComments(src, (int)SrcDataLen);
+            hr = s_real(src, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile,
+                        Flags, ppShader, ppErrorMsgs, ppConstantTable);
+            free(src);
+            return hr;
+        }
     }
 #endif
 
@@ -686,6 +713,7 @@ static int __attribute__((stdcall)) RealInclude_Open(void *_this, int IncludeTyp
         return 0;
     }
     StripConstRegisters((char *)data, len);
+    StripLineComments((char *)data, len);
     *ppData = data;
     *pBytes = (UINT)len;
     return 0;
