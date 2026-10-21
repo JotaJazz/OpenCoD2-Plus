@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-10|mingw-client|mingw-client-10|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-d3d9|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
 (cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
-the -10 ones build 1.0. The engine compiles as C++ unless --c is given; with --c,
+mingw-client-d3d9 is that client drawing with the real d3d9 and d3dx9's HLSL
+compiler (COD2_WIN32_REAL_D3D9); the -10 ones build 1.0. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -40,6 +41,7 @@ VARIANTS = {
 }
 for _v in ('mingw', 'mingw-client'):
     VARIANTS[_v + '-10'] = VARIANTS[_v] + ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10']
+VARIANTS['mingw-client-d3d9'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=ON']
 # the MinGW client links the static SDL2 the user supplies
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
