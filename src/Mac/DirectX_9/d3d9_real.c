@@ -28,12 +28,12 @@ void *RealD3D9_Direct3DCreate9(void)
     return iface;
 }
 
-void *RealD3D9_CreateGameWindow(int w, int h)
+void *RealD3D9_CreateGameWindow(int w, int h, int fullscreen)
 {
-    extern void *Sys_CreateD3DWindow(int width, int height);
-    void *hwnd = Sys_CreateD3DWindow(w, h);
+    extern void *Sys_CreateD3DWindow(int width, int height, int fullscreen);
+    void *hwnd = Sys_CreateD3DWindow(w, h, fullscreen);
 
-    fprintf(stderr, "[real-d3d9] game window hwnd=%p %dx%d\n", hwnd, w, h);
+    fprintf(stderr, "[real-d3d9] game window hwnd=%p %dx%d%s\n", hwnd, w, h, fullscreen ? " full screen" : "");
     return hwnd;
 }
 

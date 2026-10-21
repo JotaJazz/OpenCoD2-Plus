@@ -330,8 +330,9 @@ static LRESULT CALLBACK CoD2_InputForward(HWND h, UINT msg, WPARAM wp, LPARAM lp
 
 /* the game window of a real Direct3D 9 device (GFX_REAL_D3D9): an SDL window
  * as the GL renderer's, so SDL's event pump (IN_Frame) still gets the input,
- * without a GL context; d3d9 presents to its HWND */
-void *Sys_CreateD3DWindow(int width, int height)
+ * without a GL context; d3d9 presents to its HWND. Full screen it covers the
+ * desktop, and d3d9 stretches the frame of r_mode's size over it. */
+void *Sys_CreateD3DWindow(int width, int height, int fullscreen)
 {
     SDL_SysWMinfo wm;
 
@@ -347,15 +348,30 @@ void *Sys_CreateD3DWindow(int width, int height)
             return NULL;
         }
         SDL_AddEventWatch(sdl_quit_watch, NULL);
-        SDL_RaiseWindow(sdl_gl_window);
         fprintf(stderr, "Game window created: %dx%d\n", width, height);
+    }
+    if (fullscreen) {
+        SDL_SetWindowFullscreen(sdl_gl_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     } else {
+        SDL_SetWindowFullscreen(sdl_gl_window, 0);
         SDL_SetWindowSize(sdl_gl_window, width, height);
     }
+    SDL_RaiseWindow(sdl_gl_window);
     SDL_VERSION(&wm.version);
     if (!SDL_GetWindowWMInfo(sdl_gl_window, &wm) || wm.subsystem != SDL_SYSWM_WINDOWS)
         return NULL;
     return (void *)wm.info.win.window;
+}
+
+/* the desktop's size, which a full screen view takes its shape from */
+void Sys_GetDesktopSize(int *width, int *height)
+{
+    SDL_DisplayMode mode;
+
+    if (sdl_gl_window && SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(sdl_gl_window), &mode) == 0) {
+        *width = mode.w;
+        *height = mode.h;
+    }
 }
 
 static void Win32_BridgeInputToEngine(SDL_Window *win)

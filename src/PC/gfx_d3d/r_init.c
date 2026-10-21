@@ -755,7 +755,11 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
 
         {
             extern void *RealD3D9_Direct3DCreate9(void);
-            extern void *RealD3D9_CreateGameWindow(int, int);
+            extern void *RealD3D9_CreateGameWindow(int, int, int);
+            extern void Sys_GetDesktopSize(int *width, int *height);
+            extern const dvar_t *r_fullscreen;
+            int fullscreen = r_fullscreen->current.enabled;
+            int shapeWidth, shapeHeight;
             extern void RealD3D9_FillPresentParams(void *, void *, int, int);
             extern void R_GetModeSize(int *width, int *height);
             int width, height;
@@ -768,7 +772,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             R_GetModeSize(&width, &height);
             if (!dx.d3d9)
                 dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9();
-            hwnd = RealD3D9_CreateGameWindow(width, height);
+            hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
             RealD3D9_FillPresentParams(pp, hwnd, width, height);
             hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
@@ -776,8 +780,13 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             vidConfig.width = width;
             vidConfig.height = height;
             vidConfig.displayFrequency = 60;
-            vidConfig.isFullscreen = 0;
-            vidConfig.aspectRatioWindow = R_WindowAspectRatio(width, height);
+            vidConfig.isFullscreen = fullscreen;
+            /* full screen the view takes the monitor's shape, windowed its own */
+            shapeWidth = width;
+            shapeHeight = height;
+            if (fullscreen)
+                Sys_GetDesktopSize(&shapeWidth, &shapeHeight);
+            vidConfig.aspectRatioWindow = R_WindowAspectRatio(shapeWidth, shapeHeight);
             vidConfig.aspectRatioPixel = (float)height * vidConfig.aspectRatioWindow / (float)width;
         }
 #else
