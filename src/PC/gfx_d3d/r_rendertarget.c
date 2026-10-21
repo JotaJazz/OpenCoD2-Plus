@@ -38,9 +38,9 @@ extern void Image_TrackTexture(GfxImage *image, int imageFlags, D3DFORMAT format
 
 #define VTABLE(obj) (*(void ***)obj)
 
-typedef HRESULT (*D3DDevice_GetBackBufferFn)(void *device, UINT swapChain, UINT backBuffer, void *type, IDirect3DSurface9 **surface);
-typedef HRESULT (*D3DDevice_GetRenderTargetFn)(void *device, DWORD renderTargetIndex, void *unused, IDirect3DSurface9 **surface);
-typedef HRESULT (*D3DDevice_GetDepthStencilFn)(void *device, DWORD unused1, DWORD unused2, DWORD unused3, IDirect3DSurface9 **surface);
+typedef HRESULT(D3DVTCC *D3DDevice_GetBackBufferFn)(void *device, UINT swapChain, UINT backBuffer, void *type, IDirect3DSurface9 **surface);
+typedef HRESULT(D3DVTCC *D3DDevice_GetRenderTargetFn)(void *device, DWORD renderTargetIndex, void *unused, IDirect3DSurface9 **surface);
+typedef HRESULT(D3DVTCC *D3DDevice_GetDepthStencilFn)(void *device, DWORD unused1, DWORD unused2, DWORD unused3, IDirect3DSurface9 **surface);
 typedef HRESULT(D3DVTCC *D3DDevice_CreateDepthStencilFn)(void *device, UINT width, UINT height, D3DFORMAT format, int multiSample, DWORD multiSampleQuality, int discard, IDirect3DSurface9 **surface, void *sharedHandle);
 typedef HRESULT(D3DVTCC *D3DSurface_GetDescFn)(void *surface, void *desc);
 typedef ULONG(D3DVTCC *IUnknown_AddRefFn)(void *obj);

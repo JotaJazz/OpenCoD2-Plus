@@ -226,13 +226,11 @@ static int Image_VolumeSlicePitch(D3DFORMAT format, int srcWidth, int srcHeight)
 {
     switch (format) {
     case D3DFMT_A8R8G8B8:
+    case D3DFMT_X8R8G8B8:
     case D3DFMT_D32:
     case D3DFMT_D24S8:
     case D3DFMT_R32F:
         return srcWidth * srcHeight * 4;
-    case D3DFMT_X8R8G8B8:
-
-        return srcWidth * srcHeight * 3;
     case D3DFMT_R5G6B5:
     case D3DFMT_A8L8:
     case D3DFMT_D16:

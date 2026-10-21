@@ -513,7 +513,12 @@ static void StripLineComments(char *s, int len)
     int i;
 
     for (i = 0; i + 1 < len; i++) {
-        if (s[i] == '/' && s[i + 1] == '/') {
+        if (s[i] == '/' && s[i + 1] == '*') {
+            /* a block comment is left as it is, // and all */
+            for (i += 2; i + 1 < len && !(s[i] == '*' && s[i + 1] == '/'); i++) {
+            }
+            i++;
+        } else if (s[i] == '/' && s[i + 1] == '/') {
             while (i < len && s[i] != '\n' && s[i] != '\r')
                 s[i++] = ' ';
         }

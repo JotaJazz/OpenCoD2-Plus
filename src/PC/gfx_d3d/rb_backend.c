@@ -2103,19 +2103,19 @@ static void RB_Set2D(void)
         do {
             void *device = ((DxGlobals *)dx)->device;
             void **vtable = *(void ***)device;
-            ((int(__attribute__((stdcall)) *)(void *, int, const void *))vtable[0xb0 / 4])(
+            ((int(D3DVTCC *)(void *, int, const void *))vtable[0xb0 / 4])(
                 device, 0x100, identity);
         } while (*(int *)&alwaysfails);
         do {
             void *device = ((DxGlobals *)dx)->device;
             void **vtable = *(void ***)device;
-            ((int(__attribute__((stdcall)) *)(void *, int, const void *))vtable[0xb0 / 4])(
+            ((int(D3DVTCC *)(void *, int, const void *))vtable[0xb0 / 4])(
                 device, 2, identity);
         } while (*(int *)&alwaysfails);
         do {
             void *device = ((DxGlobals *)dx)->device;
             void **vtable = *(void ***)device;
-            ((int(__attribute__((stdcall)) *)(void *, int, const void *))vtable[0xb0 / 4])(
+            ((int(D3DVTCC *)(void *, int, const void *))vtable[0xb0 / 4])(
                 device, 3, transform);
         } while (*(int *)&alwaysfails);
     }
@@ -2283,12 +2283,12 @@ static void RB_SaveScreenCmd(GfxRenderCommandExecState *execState)
         void *device = ((DxGlobals *)dx)->device;
         void **vtable = *(void ***)device;
         void *backBuffer = dxs->renderTargetSurface;
-        ((int(__attribute__((stdcall)) *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
+        ((int(D3DVTCC *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
             device, backBuffer, NULL, imageSurface, NULL, 2);
     } while (*(int *)&alwaysfails);
 
     do {
-        ((int(__attribute__((stdcall)) *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
+        ((int(D3DVTCC *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
     } while (*(int *)&alwaysfails);
 
     rgp.savedScreenTime = backEnd.sceneDef.time;
@@ -2329,12 +2329,12 @@ static void RB_ApplyEarlyPostEffectsCmd(GfxRenderCommandExecState *execState)
             void *device = ((DxGlobals *)dx)->device;
             void **vtable = *(void ***)device;
             void *backBuffer = dxs->renderTargetSurface;
-            ((int(__attribute__((stdcall)) *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
+            ((int(D3DVTCC *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
                 device, backBuffer, NULL, imageSurface, NULL, 2);
         } while (*(int *)&alwaysfails);
 
         do {
-            ((int(__attribute__((stdcall)) *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
+            ((int(D3DVTCC *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
         } while (*(int *)&alwaysfails);
 
         backEnd.resolvedPostSunTarget = (GfxRenderTargetId)(1);
@@ -3115,7 +3115,7 @@ void RB_ExecuteRenderCommands(const void *data)
     if (!((DxGlobals *)dx)->deviceLost) {
         void *device = ((DxGlobals *)dx)->device;
         void **vtable = *(void ***)device;
-        HRESULT hr = ((HRESULT(__attribute__((stdcall)) *)(void *))(vtable[0x0c / 4]))(device);
+        HRESULT hr = ((HRESULT(D3DVTCC *)(void *))(vtable[0x0c / 4]))(device);
         if ((unsigned int)(hr + 0x7789f798u) <= 1)
             ((DxGlobals *)dx)->deviceLost = 1;
     }
@@ -3205,7 +3205,7 @@ void RB_ExecuteRenderCommands(const void *data)
     do {
         void *device = ((DxGlobals *)dx)->device;
         void **vtable = *(void ***)device;
-        ((HRESULT(__attribute__((stdcall)) *)(void *))(vtable[0xa4 / 4]))(device);
+        ((HRESULT(D3DVTCC *)(void *))(vtable[0xa4 / 4]))(device);
     } while (*(volatile int *)&alwaysfails);
 
     backEnd.frameCount += 1;
@@ -3282,7 +3282,7 @@ post_render:
     do {
         void *device = ((DxGlobals *)dx)->device;
         void **vtable = *(void ***)device;
-        ((HRESULT(__attribute__((stdcall)) *)(void *))(vtable[0xa8 / 4]))(device);
+        ((HRESULT(D3DVTCC *)(void *))(vtable[0xa8 / 4]))(device);
     } while (*(volatile int *)&alwaysfails);
     ((DxGlobals *)dx)->inScene = 0;
 
@@ -3534,12 +3534,12 @@ static void RB_CopyBackBufferToSurface(void *image)
         void *device = ((DxGlobals *)dx)->device;
         void **vtable = *(void ***)device;
         void *backBuffer = dxs->renderTargetSurface;
-        ((int(__attribute__((stdcall)) *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
+        ((int(D3DVTCC *)(void *, void *, void *, void *, void *, int))vtable[0x88 / 4])(
             device, backBuffer, NULL, imageSurface, NULL, 2);
     } while (*(int *)&alwaysfails);
 
     do {
-        ((int(__attribute__((stdcall)) *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
+        ((int(D3DVTCC *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
     } while (*(int *)&alwaysfails);
 }
 
@@ -3851,12 +3851,12 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
             void *device = ((DxGlobals *)dx)->device;
             void **vtable = *(void ***)device;
             void *backBuffer = dxs->renderTargetSurface;
-            ((HRESULT(__attribute__((stdcall)) *)(void *, void *, void *, void *, void *, int))
+            ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))
                  vtable[0x88 / 4])(device, backBuffer, NULL, imageSurface, NULL, 2);
         } while (*(volatile int *)&alwaysfails);
 
         do {
-            ((HRESULT(__attribute__((stdcall)) *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
+            ((HRESULT(D3DVTCC *)(void *))((*(void ***)imageSurface)[2]))(imageSurface);
         } while (*(volatile int *)&alwaysfails);
 
         backEnd.resolvedSceneTarget = (GfxRenderTargetId)(2);

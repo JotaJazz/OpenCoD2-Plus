@@ -680,7 +680,7 @@ void R_ImageList_f(void)
     typedef void (*PrintFunc)(int, const char *, ...);
     typedef int (*CmdArgcFunc)(void);
     typedef const char *(*CmdArgvFunc)(int);
-    typedef HRESULT(__attribute__((stdcall)) * GetDescFunc)(void *, UINT, void *);
+    typedef HRESULT(D3DVTCC * GetDescFunc)(void *, UINT, void *);
 
     PrintFunc Com_Printf = *(PrintFunc *)((char *)&ri);
     CmdArgcFunc Cmd_Argc = (CmdArgcFunc)ri.Cmd_Argc;

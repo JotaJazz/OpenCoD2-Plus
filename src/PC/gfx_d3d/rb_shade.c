@@ -826,7 +826,7 @@ void RB_SetVertexData(unsigned int streamIndex, const void *data, int vertexCoun
     else
         lockFlags = 0;
 
-    hr = ((HRESULT(__attribute__((stdcall)) *)(IDirect3DVertexBuffer9 *, UINT, UINT, void **, DWORD))(*(void ***)(dxVb))[0x2c / 4])(dxVb, (UINT)writeOffset, (UINT)totalSize, (void **)&bufferData, lockFlags);
+    hr = ((HRESULT(D3DVTCC *)(IDirect3DVertexBuffer9 *, UINT, UINT, void **, DWORD))(*(void ***)(dxVb))[0x2c / 4])(dxVb, (UINT)writeOffset, (UINT)totalSize, (void **)&bufferData, lockFlags);
 
     if (hr < 0)
         R_FatalLockError(hr);
@@ -872,7 +872,7 @@ void RB_SetVertexData(unsigned int streamIndex, const void *data, int vertexCoun
     }
 
     do {
-        ((HRESULT(__attribute__((stdcall)) *)(IDirect3DVertexBuffer9 *))(*(void ***)(dxVb))[0x30 / 4])(dxVb);
+        ((HRESULT(D3DVTCC *)(IDirect3DVertexBuffer9 *))(*(void ***)(dxVb))[0x30 / 4])(dxVb);
     } while (*(int *)&alwaysfails);
 
     {

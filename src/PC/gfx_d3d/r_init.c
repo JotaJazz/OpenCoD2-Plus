@@ -249,7 +249,7 @@ static HRESULT R_CreateDevice_impl(HWND hwnd, DWORD behavior, void *d3dpp)
 
             void *d3d9 = (void *)dx.d3d9;
             void **vtable = *(void ***)d3d9;
-            hr = ((HRESULT(__attribute__((stdcall)) *)(void *, int, int, HWND, DWORD, void *, void **))
+            hr = ((HRESULT(D3DVTCC *)(void *, int, int, HWND, DWORD, void *, void **))
                       vtable[0x40 / 4])(d3d9, dx.adapterIndex, 1, hwnd, behavior, d3dpp, (void **)&dx.device);
 
             if (hr >= 0)
