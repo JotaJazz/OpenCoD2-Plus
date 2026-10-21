@@ -120,7 +120,10 @@ void R_GenerateOutdoorImage(GfxImage *outdoorImage)
             if (imp_CM_BoxTrace)
                 ((CM_BoxTraceFn)imp_CM_BoxTrace)(&trace, start, end, nullVec, nullVec, 0, 0x2001);
 
-            float hitZ = floorZ + (ceilZ - floorZ) * trace.fraction;
+            /* the trace runs down from above the world, as the 1.3
+             * renderer's (0x10020790): from the top, the fraction of the way
+             * down where it hits */
+            float hitZ = ceilZ + (floorZ - ceilZ) * trace.fraction;
             hitZ = hitZ * outdoorGlob.scale[2] + outdoorGlob.add[2];
 
             float fval = floorf(hitZ);
