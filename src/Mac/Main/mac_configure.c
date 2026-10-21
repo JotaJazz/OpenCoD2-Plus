@@ -22,6 +22,12 @@ int Sys_SystemMemoryMB(void)
 
 void Sys_DetectVideoCard(int descLimit, char *description)
 {
+#ifdef _WIN32
+    extern int Win_DisplayDeviceName(char *name, int size);
+
+    if (Win_DisplayDeviceName(description, descLimit))
+        return;
+#endif
 
     const char *renderer = "Linux OpenGL";
     strncpy(description, renderer, descLimit);

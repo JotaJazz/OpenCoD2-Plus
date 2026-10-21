@@ -27,6 +27,13 @@ Boolean MacFeatures_IsAltiVecAvailable(UInt8 *outMajor, UInt8 *outMinor, UInt8 *
 
 float MacFeatures_GetCPUSpeedInGHz(void)
 {
+#ifdef _WIN32
+    extern unsigned int Win_CpuMHz(void);
+    unsigned int winMHz = Win_CpuMHz();
+
+    if (winMHz)
+        return (float)winMHz / 1000.0f;
+#endif
     FILE *f = fopen("/proc/cpuinfo", "r");
     char line[256];
     float mhz = 800.0f;
@@ -48,6 +55,13 @@ float MacFeatures_GetCPUSpeedInGHz(void)
 
 UInt32 MacFeatures_GetMemorySizeInMB(void)
 {
+#ifdef _WIN32
+    extern unsigned int Win_MemoryMB(void);
+    unsigned int winMB = Win_MemoryMB();
+
+    if (winMB)
+        return (UInt32)winMB;
+#endif
     FILE *f = fopen("/proc/meminfo", "r");
     char line[256];
     unsigned long kb = 128 * 1024;
