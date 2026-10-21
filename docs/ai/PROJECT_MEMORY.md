@@ -7,7 +7,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 ## 2026-10-21 — documentation system
 
-- `docs/CHANGES.md` split into `docs/architecture`, `docs/development`, `docs/roadmap`, ADRs and this memory layer; `AGENTS.md` added; English only (root README keeps 6 languages).
+- The former CHANGES.md (one long narrative) split into `docs/architecture`, `docs/development`, `docs/roadmap`, ADRs and this memory layer; `AGENTS.md` added; English only (root README keeps 6 languages).
 - `scripts/check_docs.py` keeps links, paths and personal data honest; run it with the unit tests.
 - Rejected: a CLAUDE.md (AGENTS.md only), a security section (no surface yet).
 

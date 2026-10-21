@@ -41,7 +41,7 @@ This repository is a fork of [opencod2/opencod2](https://github.com/opencod2/ope
 - **Fixes:** the server answered on the wrong port, saw no `.iwd` on Windows drives under WSL, and crashed on any kick; it announced protocol 118 in the 1.0 build; the C++ Linux build stays on glibc 2.34; `getAnimLength` and three other animation builtins no longer crash the server. The fourth or fifth map load crashed the server: the animation script grew with each map, and the error it raised from rcon corrupted the stack. The 1.0 server wrote over its own configstrings and no 1.0 client could join. Fragmented messages used the wrong offsets in both versions, and the port of a network address was where Quake III keeps it, not where CoD2 does. The `.iwd` files in the server's own folder were not searched, and the builtins that take a player did not see one with CoD2rev-Plus's VM. Entities were linked into the world's sectors under the wrong number, so unlinking some of them crashed and traces tested the previous entity. In the client, every entity clipped as a box was left out of the world's sectors and the box test missed the segments that crossed it, so bullets went through the players of a local game; and since an upstream change for x64, no animation of more than one frame played on 32 bits, which left the players and the first-person weapon in a broken pose. The client crashed when it saw a player die, and its movement prediction could overrun its stack against walls; it sent a jump, a stance or a weapon change one command late and truncated the velocity it predicts; the MG42's anims, the UI's fill and text widths and a dozen other engine calls passed arguments or read results of another type than the function's, and effects played along a direction got a broken axis. No effect was drawn at all (impacts, explosions, the maps' smoke): the effects code read its flags, curve scales, colors and velocities otherwise than the original binary, scheduled delayed parts for a time that never came, left every particle at the world's origin with no second radius, and nothing drew them. A changed configstring dropped the client and the scoreboard stayed empty (the server commands' letters had other meanings), a thrown grenade hung in the air (no entity moved between its events), and snow fell only indoors (the outdoor map was upside down).
 - **Tests:** CoD2rev-Plus's smoke test, unchanged, against this server, with the list of checks it does not pass yet; tests for two players, map loads, a drop error from rcon and the animation builtins; and checks for structure layouts, C names, the ABI of the bridge and the files copied from CoD2rev-Plus. Tests fire level and down at a player and check that each shot lands on the upper body or on the legs, and that a knife and an explosion reach a player, on the dedicated server and in a local game.
 
-Every change in detail is in [docs/CHANGES.md](docs/CHANGES.md) (in English).
+The technical documentation is in [docs/README.md](docs/README.md) (in English).
 
 ## Game versions
 
@@ -190,7 +190,7 @@ python3 -m unittest discover -s test
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Platform code and stubs. |
 | `scripts` | Build and test scripts, and the test client from CoD2rev-Plus. |
 | `test` | Unit tests and the lists the checks read. |
-| `docs` | [CHANGES.md](docs/CHANGES.md) and the banner. |
+| `docs` | The [documentation](docs/README.md) and the banner. |
 
 ## Notice
 
