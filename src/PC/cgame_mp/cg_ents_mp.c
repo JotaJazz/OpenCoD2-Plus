@@ -105,6 +105,7 @@ void CG_Item(centity_t *cent);
 void CG_Missile(centity_t *cent);
 void CG_ScriptMover(centity_t *cent);
 void CG_ProcessEntity(centity_t *cent);
+void CG_UpdateEntInfo(void);
 void CG_AddPacketEntities(void);
 
 struct XAnim_s *CG_GetMG42Anims(centity_t *cent)
@@ -936,6 +937,31 @@ void CG_ProcessEntity(centity_t *cent)
     case 9:
         CG_Turret(cent);
         break;
+    }
+}
+
+// each snapshot entity's animation and notetracks advance for the frame,
+// and its position and angles are set for cg->time, as the 1.3 binary
+// (0x4cfbb0) does before the entities are added
+void CG_UpdateEntInfo(void)
+{
+    snapshot_t *snap;
+    int num;
+
+    snap = cg->nextSnap;
+    for (num = 0; num < snap->numEntities; ++num) {
+        int entityNum = snap->entities[num].number;
+        struct DObj_s *obj = Com_GetClientDObj(entityNum, 0);
+        centity_t *cent;
+
+        if (obj) {
+            CG_DObjUpdateInfo(obj);
+            CG_ProcessClientNoteTracks(entityNum);
+        }
+
+        cent = &(*(centity_t **)imp_cg_entities)[entityNum];
+        if (cent->nextState.eType < 10)
+            CG_CalcEntityLerpPositions(cent);
     }
 }
 

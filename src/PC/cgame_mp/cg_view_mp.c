@@ -32,6 +32,7 @@ extern void CG_DrawActive(void);
 extern void CG_Draw3dHudElems(void);
 extern unsigned int CG_Draw2D(void);
 extern void CG_AddPacketEntities(void);
+extern void CG_UpdateEntInfo(void);
 extern void CG_AddLocalEntities(void);
 extern void CG_AddLagometerFrameInfo(void);
 
@@ -783,6 +784,8 @@ qboolean CG_DrawActiveFrame(int serverTime, DemoType demoType,
     } else {
         cg->renderingThirdPerson = 0;
     }
+
+    CG_UpdateEntInfo();
 
     cg->kickAVel[0] = 0;
     cg->kickAVel[1] = 0;

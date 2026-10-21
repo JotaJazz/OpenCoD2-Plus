@@ -86,6 +86,7 @@ void CG_Item(centity_t *cent);
 void CG_Missile(centity_t *cent);
 void CG_ScriptMover(centity_t *cent);
 void CG_ProcessEntity(centity_t *cent);
+void CG_UpdateEntInfo(void);
 void CG_AddPacketEntities(void);
 
 void CG_EntityEvent(centity_t *cent, int event);
