@@ -757,7 +757,7 @@ qboolean CG_DrawScoreboard(void)
     float fontScale;
     float footerFontScale;
     struct Material *material;
-    sbpicinfo_t borderLines[4];
+    sbpicinfo_t borderLines[6];
     char mapBuffer[64];
     const char *map;
     const char *gameType;
@@ -829,13 +829,10 @@ qboolean CG_DrawScoreboard(void)
         color[3] = borderAlpha;
         material = CL_RegisterMaterialNoMip((const char *)"white", 7);
         numLines = CalcBorderLines(borderLines);
-        if (numLines > 0) {
+        {
             int lineIdx;
-            float *linePtr = (float *)borderLines + 4;
-            for (lineIdx = 0; lineIdx < numLines; lineIdx++) {
-                UI_DrawHandlePic(linePtr[-3], linePtr[-2], linePtr[-1], linePtr[0], 0, 0, color, material);
-                linePtr += 4;
-            }
+            for (lineIdx = 0; lineIdx < numLines; lineIdx++)
+                UI_DrawHandlePic(borderLines[lineIdx].x, borderLines[lineIdx].y, borderLines[lineIdx].w, borderLines[lineIdx].h, 0, 0, color, material);
         }
     }
 
