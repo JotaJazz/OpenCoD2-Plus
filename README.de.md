@@ -48,7 +48,6 @@ Die technische Dokumentation steht in [docs/README.md](docs/README.md) (auf Engl
 - **Die Version wird beim Kompilieren gewählt.** Standardmäßig wird die Engine als 1.3 gebaut (Protokoll 118); mit `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` wird sie als 1.0 gebaut (Protokoll 115).
 - **Beide dedizierten Server funktionieren zum Testen:** In 1.3 und in 1.0 lädt der Server Karten, wechselt und startet sie neu, antwortet auf `getinfo`, `getstatus` und rcon und hält zwei Spieler, die beitreten, gehen, zurückkommen und gekickt werden.
 - **Lokale Spiele funktionieren zum Testen:** In 1.3 und in 1.0 erstellt ein Client ein Spiel auf dem Server von CoD2rev-Plus, ein anderer Client tritt bei, und beide bleiben nach `map_restart` und einem Kartenwechsel (`scripts/listen_test.py`, mit Ihrem CD-Key). Ein Schuss trifft den Körperteil, auf den er zielt (`scripts/hit_location_test.py`).
-- **Was CoD2rev-Plus in libcod hat, ist noch nicht hier:** seine Skriptfunktionen, die Bots und `sv_master1`…`sv_master5`, sodass der Server seinen Heartbeat nur an den Master-Server von Activision sendet.
 
 ## Kompilieren
 
@@ -84,7 +83,7 @@ cmake --build build-win32 -j
 # -> build-win32/cod2_win32_ded.exe   (dedicated server)
 ```
 
-Fügen Sie `-DCOD2_WIN32_CLIENT=ON` für den SDL2/GL-Client hinzu (die statischen SDL2-Bibliotheken müssen Sie unter `src/win32/sdl2/lib/` bereitstellen; der dedizierte Server braucht keine). Wie der Linux-Client lässt er seine lokalen Spiele auf Server, Game und Bgame von CoD2rev-Plus laufen und verfolgt mit dessen Kollision. Ohne Windows richtet `scripts/portable_wine.sh DIR` ein 32-Bit-Wine ohne Root ein (Debian oder Ubuntu mit aktiviertem i386) und schreibt `DIR/wine.sh`, um es zu starten; `COD2_CONSOLE_STDOUT=1` kopiert die Konsole nach stdout, und mit `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` erstellt er ein Spiel, dem der Linux-Client beitritt.
+Fügen Sie `-DCOD2_WIN32_CLIENT=ON` für den Client, der mit Direct3D 9 und den Shadern des Spiels zeichnet (`-DCOD2_WIN32_REAL_D3D9=OFF`: das GL-Gerät) hinzu (die statischen SDL2-Bibliotheken müssen Sie unter `src/win32/sdl2/lib/` bereitstellen; der dedizierte Server braucht keine). Wie der Linux-Client lässt er seine lokalen Spiele auf Server, Game und Bgame von CoD2rev-Plus laufen und verfolgt mit dessen Kollision. Ohne Windows richtet `scripts/portable_wine.sh DIR` ein 32-Bit-Wine ohne Root ein (Debian oder Ubuntu mit aktiviertem i386) und schreibt `DIR/wine.sh`, um es zu starten; `COD2_CONSOLE_STDOUT=1` kopiert die Konsole nach stdout, und mit `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` erstellt er ein Spiel, dem der Linux-Client beitritt.
 
 ### Windows (MSVC, nativ)
 
@@ -113,7 +112,8 @@ Dieser Build kompiliert noch C und verwendet die rekonstruierte Skript-VM (`src/
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | Server, Game, Bgame und Kollision von CoD2rev-Plus für die lokalen Spiele des Clients (Linux, und MinGW mit `COD2_WIN32_CLIENT`), auf dem Kern der Engine; braucht `COD2_PLUS_SERVER`. `OFF` behält `src/PC/server_mp`, wie es MSVC, der Web-Build und x64 noch tun. |
 | `COD2_PLUS_LIBCOD` | `ON` | Die libcod von CoD2rev-Plus (`src/libcod`) im dedizierten Server und, mit `COD2_PLUS_CLIENT_SERVER`, in den lokalen Spielen des Clients, mit ihren Modulen außer MySQL; braucht `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature-Schalter; `-DCOD2_PATCH_10` baut die Version 1.0. |
-| `COD2_WIN32_CLIENT` | `OFF` | MinGW: der SDL2/GL-Client statt des dedizierten Servers. |
+| `COD2_WIN32_CLIENT` | `OFF` | MinGW: der Client statt des dedizierten Servers. |
+| `COD2_WIN32_REAL_D3D9` | `ON` | MinGW-Client: echtes Direct3D 9 und die Shader des Spiels (d3dx9 des Systems); `OFF` behält das GL-Gerät. |
 | `COD2_WIN_MSVC` | `OFF` | Nativer MSVC-Build (von den Presets `msvc-client` gesetzt). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: eine eigenständige ausführbare Datei mit statischem SDL2 und statischer C-Laufzeit. |
 | `COD2_DEBUG` | `OFF` | `-O0` und keine Härtung, zum Debuggen. |
@@ -144,7 +144,7 @@ build-win32\cod2_win32_ded.exe +set fs_basepath "C:\path\to\CoD2" +set dedicated
 Die Prüfungen brauchen den Build und, für diejenigen, die den Server starten, einen Spielordner mit den originalen `.iwd`-Dateien. Sie starten den Server im LAN-Modus mit einem temporären Benutzerordner, der Spielordner wird also nur gelesen.
 
 ```bash
-python3 scripts/build_check.py all                      # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
+python3 scripts/build_check.py all                      # every variant (linux, linux-10, mingw, mingw-client...) into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # jeder Engine-Aufruf passt zu den Typen seiner Definition
@@ -171,7 +171,7 @@ python3 -m unittest discover -s test
 - `prediction_test.py` zählt die Vorhersagefehler eines echten Clients (mit CD-Key), der läuft, sich duckt, sich hinlegt, springt und schießt; `--max-misses` legt fest, wie viele erlaubt sind.
 - `fx_test.py` lässt einen echten Client (mit CD-Key) ein Sprite, einen Kugeleinschlag und zwei Explosionen vor sich abspielen und prüft, dass jedes den Screenshot verändert.
 - `bots_test.py` und `http_test.py` stammen unverändert von CoD2rev-Plus und prüfen libcod: Die Bots aus `mods/bots` müssen ihre Wege finden, ihren Graphen speichern und wieder laden und auf einer echten Karte kämpfen; `httpFetch` und `webSocket*` müssen mit lokalen HTTP-, HTTPS-, WS- und WSS-Servern funktionieren (sie brauchen `openssl`). Übergeben Sie `--binary build/check-linux/cod2_lnxded`.
-- `scripts/cxx_errors.py` zählt die C++-Fehler eines Moduls (`--return-type` findet Nicht-void-Funktionen, die ohne return enden können, was in C++ undefiniert ist); `scripts/gen_script_bridge.py --module script|server` erzeugt die Brücke zur Skript-VM oder zum Server neu, und `scripts/engine_abi.py --module server` zeichnet mit gdb die ABI der Engine auf, gegen die die Brücke prüft (`test/server_abi.txt`).
+- `scripts/cxx_errors.py` zählt die C++-Fehler eines Moduls (`--return-type` findet Nicht-void-Funktionen, die ohne return enden können, was in C++ undefiniert ist); `scripts/gen_script_bridge.py --module script|server|client_server` erzeugt die Brücke zur Skript-VM oder zum Server neu, und `scripts/engine_abi.py --module server` zeichnet mit gdb die ABI der Engine auf, gegen die die Brücke prüft (`test/server_abi.txt`).
 
 ## Aufbau des Repositorys
 

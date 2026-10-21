@@ -14,8 +14,9 @@ mods/bots/           libcod bots mod (vendored)
 scripts/             build checks, generators, tests (Python)
 src/PC/              reconstructed engine (client, renderer, cgame, effects, ...)
 src/compat/          generated bridge engine <-> CoD2rev-Plus
-src/{script,server,game,bgame,qcommon,universal,xanim,libcod,unix,win32,...}/
-                     vendored CoD2rev-Plus
+src/{script,server,game,bgame,qcommon,universal,xanim,libcod,...}/
+                     vendored CoD2rev-Plus (src/unix, src/win32: its platform
+                     code plus this fork's stubs and SDL2 libs)
 src/blobs/           original binaries' data
 src/headers/         shared headers, layout pins
 src/Mac/, src/stubs/ GL device and platform glue

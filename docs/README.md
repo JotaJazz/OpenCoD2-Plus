@@ -19,5 +19,5 @@ English. The project's summary for a wide audience is the root
 - The code is the source of truth: `python3 scripts/check_docs.py` checks links,
   repository paths and personal data.
 - Live state: `ai/SYSTEM_SUMMARY.md`; history: `ai/PROJECT_MEMORY.md`
-  (append-only); decisions: ADRs (never edited once accepted).
+  (append-only); decisions: ADRs (an accepted ADR is not edited; only its status changes when superseded).
 - Update rules: [ai/DEVELOPMENT_GUIDE.md](ai/DEVELOPMENT_GUIDE.md#doc-sync-rules).

@@ -2,8 +2,9 @@
 
 Runtime tests need the original game files (a folder with `main/*.iwd`), passed
 as `GAME` below. Tests with a real client need a CD key in
-`~/.cod2/preferences` (the Windows client reads `.cod2/preferences` next to its
-home) and open windows; without a key they are skipped (exit 0). Servers run in
+`$HOME/.cod2/preferences` (with no `HOME`, as usual on Windows, `.cod2/preferences`
+in the working directory) and open windows; without a key they are skipped
+(exit 0). Servers run in
 LAN mode with a temporary home, so `GAME` is only read.
 
 ## Runtime tests
@@ -25,8 +26,19 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
 
 `P` is 118 (1.3, `build/check-linux`) or 115 (1.0, `build/check-linux-10`);
-most scripts pick the binary from `--protocol`, `opencod2_smoke.py`,
-`bots_test.py` and `http_test.py` take `--binary`.
+the scripts pick the binary from `--protocol` (`--binary` overrides it).
+`bots_test.py` and `http_test.py` need `--binary`: their default
+(`bin/cod2rev_lnxded`, CoD2rev-Plus's layout) does not exist here.
+
+## Operational notes
+
+| Note | Detail |
+|---|---|
+| Minimal client | `scripts/hit_location_test.py`'s client sends pitch, move keys and buttons every command: a field left unchanged keeps the server's previous command's value |
+| Prediction misses | `cg_showmiss 1` is read as `dvar_developer` in the reconstruction; running into another player always misses (the client clips players with a box one unit smaller per side, as the original) |
+| Bots flake | "search paths sparingly" failed 2 runs in 5 with the client as host, on one bot-second; it is the tail of the same behavior as the dedicated server |
+| `layout_parity.py` | runs nothing: values are read from the compiled objects with `objcopy`, so MinGW needs no Wine |
+| UI trace | `MTRACE=1` prints the open menus to the console |
 
 Windows dedicated server under Wine: `opencod2_smoke.py GAME --protocol 118
 --binary build/check-mingw/cod2_win32_ded.exe --wine DIR/wine.sh`, list

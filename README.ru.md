@@ -48,7 +48,6 @@
 - **Версия выбирается при сборке.** По умолчанию движок собирается как 1.3 (протокол 118); с `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` он собирается как 1.0 (протокол 115).
 - **Оба выделенных сервера работают для тестов:** в 1.3 и в 1.0 сервер загружает, меняет и перезапускает карты, отвечает на `getinfo`, `getstatus` и rcon и держит двух игроков, которые входят, выходят, возвращаются и получают кик.
 - **Локальные игры работают для тестов:** в 1.3 и в 1.0 клиент создаёт игру на сервере CoD2rev-Plus, другой клиент подключается, и оба остаются после `map_restart` и смены карты (`scripts/listen_test.py`, с вашим CD-ключом). Выстрел попадает в ту часть тела, в которую направлен (`scripts/hit_location_test.py`).
-- **То, что есть в CoD2rev-Plus в libcod, здесь пока нет:** его функции скриптов, боты и `sv_master1`…`sv_master5`, поэтому сервер отправляет heartbeat только на мастер-сервер Activision.
 
 ## Сборка
 
@@ -84,7 +83,7 @@ cmake --build build-win32 -j
 # -> build-win32/cod2_win32_ded.exe   (dedicated server)
 ```
 
-Добавьте `-DCOD2_WIN32_CLIENT=ON` для клиента SDL2/GL (статические библиотеки SDL2 нужно положить в `src/win32/sdl2/lib/`; выделенному серверу они не нужны). Как и Linux-клиент, он запускает локальные игры на сервере, game и bgame CoD2rev-Plus и использует его столкновения. Без Windows `scripts/portable_wine.sh DIR` устанавливает 32-битный Wine без root (Debian или Ubuntu с включённой архитектурой i386) и создаёт `DIR/wine.sh` для запуска; `COD2_CONSOLE_STDOUT=1` копирует консоль в stdout, а `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` заставляет его создать игру, к которой подключается Linux-клиент.
+Добавьте `-DCOD2_WIN32_CLIENT=ON` для клиента, который рисует через Direct3D 9 и шейдеры игры (`-DCOD2_WIN32_REAL_D3D9=OFF`: GL-устройство) (статические библиотеки SDL2 нужно положить в `src/win32/sdl2/lib/`; выделенному серверу они не нужны). Как и Linux-клиент, он запускает локальные игры на сервере, game и bgame CoD2rev-Plus и использует его столкновения. Без Windows `scripts/portable_wine.sh DIR` устанавливает 32-битный Wine без root (Debian или Ubuntu с включённой архитектурой i386) и создаёт `DIR/wine.sh` для запуска; `COD2_CONSOLE_STDOUT=1` копирует консоль в stdout, а `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` заставляет его создать игру, к которой подключается Linux-клиент.
 
 ### Windows (MSVC, нативно)
 
@@ -113,7 +112,8 @@ cmake --build build/msvc-release --target cod2_win32
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | Сервер, game, bgame и столкновения CoD2rev-Plus для локальных игр клиента (Linux, и MinGW с `COD2_WIN32_CLIENT`), на ядре движка; требует `COD2_PLUS_SERVER`. `OFF` оставляет `src/PC/server_mp`, как пока делают MSVC, веб-сборка и x64. |
 | `COD2_PLUS_LIBCOD` | `ON` | libcod из CoD2rev-Plus (`src/libcod`) в выделенном сервере и, с `COD2_PLUS_CLIENT_SERVER`, в локальных играх клиента, с её модулями, кроме MySQL; требует `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Переключатели возможностей; `-DCOD2_PATCH_10` собирает версию 1.0. |
-| `COD2_WIN32_CLIENT` | `OFF` | MinGW: клиент SDL2/GL вместо выделенного сервера. |
+| `COD2_WIN32_CLIENT` | `OFF` | MinGW: клиент вместо выделенного сервера. |
+| `COD2_WIN32_REAL_D3D9` | `ON` | Клиент MinGW: настоящий Direct3D 9 и шейдеры игры (d3dx9 системы); `OFF` оставляет GL-устройство. |
 | `COD2_WIN_MSVC` | `OFF` | Нативная сборка MSVC (задаётся пресетами `msvc-client`). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: один автономный исполняемый файл со статическими SDL2 и средой выполнения C. |
 | `COD2_DEBUG` | `OFF` | `-O0` и без усиления защиты, для отладки. |
@@ -144,7 +144,7 @@ build-win32\cod2_win32_ded.exe +set fs_basepath "C:\path\to\CoD2" +set dedicated
 Проверкам нужна сборка, а тем, которые запускают сервер, — папка игры с оригинальными файлами `.iwd`. Они запускают сервер в режиме LAN с временной домашней папкой, поэтому папка игры только читается.
 
 ```bash
-python3 scripts/build_check.py all                      # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
+python3 scripts/build_check.py all                      # every variant (linux, linux-10, mingw, mingw-client...) into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # каждый вызов движка совпадает с типами своего определения
@@ -171,7 +171,7 @@ python3 -m unittest discover -s test
 - `prediction_test.py` считает ошибки предсказания настоящего клиента (с CD-ключом), который ходит, приседает, ложится, прыгает и стреляет; `--max-misses` задаёт допустимое число.
 - `fx_test.py` заставляет настоящего клиента (с CD-ключом) проиграть перед собой спрайт, попадание пули и два взрыва и проверяет, что каждый меняет снимок экрана.
 - `bots_test.py` и `http_test.py` взяты из CoD2rev-Plus без изменений и проверяют libcod: боты из `mods/bots` должны находить пути, сохранять и перечитывать свой граф и сражаться на настоящей карте; `httpFetch` и `webSocket*` должны работать с локальными серверами HTTP, HTTPS, WS и WSS (нужен `openssl`). Передайте им `--binary build/check-linux/cod2_lnxded`.
-- `scripts/cxx_errors.py` подсчитывает ошибки C++ модуля (`--return-type` находит функции, возвращающие значение, которые могут завершиться без return, что в C++ является неопределённым поведением); `scripts/gen_script_bridge.py --module script|server` заново генерирует мост к виртуальной машине скриптов или к серверу, а `scripts/engine_abi.py --module server` записывает с помощью gdb ABI движка, по которому проверяется мост (`test/server_abi.txt`).
+- `scripts/cxx_errors.py` подсчитывает ошибки C++ модуля (`--return-type` находит функции, возвращающие значение, которые могут завершиться без return, что в C++ является неопределённым поведением); `scripts/gen_script_bridge.py --module script|server|client_server` заново генерирует мост к виртуальной машине скриптов или к серверу, а `scripts/engine_abi.py --module server` записывает с помощью gdb ABI движка, по которому проверяется мост (`test/server_abi.txt`).
 
 ## Структура репозитория
 

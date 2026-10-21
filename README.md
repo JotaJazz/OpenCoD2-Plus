@@ -48,7 +48,6 @@ The technical documentation is in [docs/README.md](docs/README.md) (in English).
 - **The version is chosen when building.** By default the engine is built as 1.3 (protocol 118); with `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` it is built as 1.0 (protocol 115).
 - **Both dedicated servers work for testing:** in 1.3 and in 1.0 the server loads, changes and restarts maps, answers `getinfo`, `getstatus` and rcon, and holds two players who join, leave, come back and get kicked.
 - **Local games work for testing:** in 1.3 and in 1.0 a client hosts a game on CoD2rev-Plus's server, another client joins it, and both stay through `map_restart` and a map change (`scripts/listen_test.py`, with your CD key). A shot lands on the body part it aims at (`scripts/hit_location_test.py`).
-- **What CoD2rev-Plus has in libcod is not here yet:** its script functions, the bots and `sv_master1`…`sv_master5`, so the server sends its heartbeat only to the Activision master.
 
 ## Building
 
@@ -84,7 +83,7 @@ cmake --build build-win32 -j
 # -> build-win32/cod2_win32_ded.exe   (dedicated server)
 ```
 
-Add `-DCOD2_WIN32_CLIENT=ON` for the SDL2/GL client (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
+Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
 ### Windows (MSVC, native)
 
@@ -113,7 +112,8 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | CoD2rev-Plus's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as MSVC, the web build and x64 still do. |
 | `COD2_PLUS_LIBCOD` | `ON` | CoD2rev-Plus's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature switches; `-DCOD2_PATCH_10` builds the 1.0 version. |
-| `COD2_WIN32_CLIENT` | `OFF` | MinGW: the SDL2/GL client instead of the dedicated server. |
+| `COD2_WIN32_CLIENT` | `OFF` | MinGW: the client instead of the dedicated server. |
+| `COD2_WIN32_REAL_D3D9` | `ON` | MinGW client: real Direct3D 9 and the game's shaders (system d3dx9); `OFF` keeps the GL device. |
 | `COD2_WIN_MSVC` | `OFF` | Native MSVC build (set by the `msvc-client` presets). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: one standalone executable with static SDL2 and C runtime. |
 | `COD2_DEBUG` | `OFF` | `-O0` and no hardening, for debugging. |
@@ -144,7 +144,7 @@ build-win32\cod2_win32_ded.exe +set fs_basepath "C:\path\to\CoD2" +set dedicated
 The checks need the build and, for the ones that start the server, a game folder with the stock `.iwd` files. They start the server in LAN mode with a temporary home folder, so the game folder is only read.
 
 ```bash
-python3 scripts/build_check.py all                      # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
+python3 scripts/build_check.py all                      # every variant (linux, linux-10, mingw, mingw-client...) into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # every engine call matches its definition's types
@@ -171,7 +171,7 @@ python3 -m unittest discover -s test
 - `prediction_test.py` counts the prediction misses of a real client (with a CD key) that walks, crouches, goes prone, jumps and fires; `--max-misses` sets how many it allows.
 - `fx_test.py` has a real client (with a CD key) play a sprite, a bullet's impact and two explosions in front of it, and checks each changes the screenshot.
 - `bots_test.py` and `http_test.py` are CoD2rev-Plus's, unchanged, for libcod: the bots of `mods/bots` must find their paths, save and reload their graph and fight on a real map; `httpFetch` and `webSocket*` must work against local HTTP, HTTPS, WS and WSS servers (they need `openssl`). Pass `--binary build/check-linux/cod2_lnxded`.
-- `scripts/cxx_errors.py` counts the C++ errors of a module (`--return-type` finds non-void functions that can end without a return, which is undefined in C++); `scripts/gen_script_bridge.py --module script|server` regenerates the bridge to the script VM or to the server, and `scripts/engine_abi.py --module server` records, with gdb, the engine's ABI the bridge checks against (`test/server_abi.txt`).
+- `scripts/cxx_errors.py` counts the C++ errors of a module (`--return-type` finds non-void functions that can end without a return, which is undefined in C++); `scripts/gen_script_bridge.py --module script|server|client_server` regenerates the bridge to the script VM or to the server, and `scripts/engine_abi.py --module server` records, with gdb, the engine's ABI the bridge checks against (`test/server_abi.txt`).
 
 ## Repository layout
 

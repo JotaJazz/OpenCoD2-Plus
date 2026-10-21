@@ -27,7 +27,7 @@ server; the engine's own platform files are listed in `test/plus_replaces.txt`.
 | `cod2_linux`, `cod2_win32.exe` (client) | everything | VM, server, game, bgame, collision, libcod (local games, built with `LISTEN_SERVER`) | `script`, `client_server` |
 | MSVC, web, x64 | everything, plus `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` | none | none |
 
-## Build switches (CMake)
+## Main build switches (all options: root README)
 
 | Option | Default | Effect |
 |---|---|---|

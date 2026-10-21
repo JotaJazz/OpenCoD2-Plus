@@ -12,7 +12,7 @@ CoD2rev-Plus's code over the reconstructed engine.
 ## Hard rules
 
 - Never edit files listed in `test/vendored_files.txt`; fixes go to CoD2rev-Plus first ([docs/development/vendored.md](docs/development/vendored.md)).
-- Engine ↔ CoD2rev-Plus calls go only through the generated bridge in `src/compat`, ABI-checked ([docs/architecture/boundaries.md](docs/architecture/boundaries.md)).
+- Engine ↔ CoD2rev-Plus calls go only through the generated, type-checked bridge in `src/compat` ([docs/architecture/boundaries.md](docs/architecture/boundaries.md)).
 - The original 1.3 binaries define correct behavior; cite the address a fix follows ([docs/development/validation.md](docs/development/validation.md)).
 - Prove every fix with a test or check you ran; `python3 scripts/build_check.py all` and `python3 -m unittest discover -s test` stay green.
 - No personal data in the repository (CD keys, personal paths, private server addresses).

@@ -12,6 +12,7 @@ on CoD2rev-Plus's server ([ADR 0004](adr/0004-client-local-games-on-cod2rev-plus
 | Bridge | `--module client_server`: exports `test/client_server_interface.txt`, imports checked against `test/client_server_abi.txt`; `src/compat/client_server_missing.cpp` has what the engine lacks (libcod's critical sections and threads, `Sys_SleepMSec`, `Com_GetBspLump`, weapon info memory) |
 | Left out of the client | `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/qcommon/cm_*` |
 | Blob guards | `COD2_PLUS_GAME` (server/game/bgame globals), `COD2_PLUS_CM` (`cm`, `cm_world`, `g_traceThreadInfo`); `COD2_PLUS_SERVER` only in the dedicated server |
+| `LISTEN_SERVER` | keeps `DEDICATED` undefined, so CoD2rev-Plus's server builds its client calls (`CL_InitLoad`, `CL_MapLoading`, `CL_ShutdownAll`, `CL_StartLoading`, `CL_Disconnect`) |
 | 1.0 limit | the 1.0 client's core speaks protocol 115 only; libcod's multi-protocol server is not reachable from it |
 
 The ABI files are read from a client built with `-DCOD2_PLUS_CLIENT_SERVER=OFF`

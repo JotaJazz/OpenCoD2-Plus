@@ -58,5 +58,5 @@ Rules for contributors and AI agents. Tooling details:
 ## Never
 
 - Commit a CD key, a personal path or a private server address.
-- Edit vendored files, or accepted ADRs.
+- Edit vendored files, or accepted ADRs (beyond marking one superseded).
 - Claim a fix works without running the test that shows it.

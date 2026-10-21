@@ -1,6 +1,6 @@
 # Building
 
-Install commands and the full option table are in the root
+Install commands and the CMake options are in the root
 [README](../../README.md#building); this page is what a contributor needs on
 top of it.
 
@@ -45,6 +45,20 @@ Gotcha: an executable whose mtime is newer than its inputs is not relinked,
 even if a previous link was cut short. If a binary is suspiciously small,
 delete it and build again.
 
+Other `build_check.py` flags: `--c` builds C (`-DCOD2_CXX_ALL=OFF`),
+`--cxx-dirs "a;b"` then keeps those `src/` modules as C++.
+
+## Dedicated server without the client's libraries
+
+`cod2_lnxded` links the same engine objects as the client, whose renderer, GL
+layer, SDL2 input and HTTP download reference GL, X11, SDL2 and curl but are
+never called there: `src/unix/linux_ded_stubs.c` (Linux) and
+`src/win32/win32_stubs.c` (MinGW) stand in for them, each returning 0. When the
+glibc/client-library check fails, the missing stub goes there.
+
+Linux builds use `_FILE_OFFSET_BITS=64`: the 32-bit `readdir` fails with
+`EOVERFLOW` on file systems with large inode numbers (Windows drives under WSL).
+
 ## How the engine compiles as C++
 
 Each C source is built through `build/<dir>/cxx_wrap/<path>.c.cpp`, holding
@@ -55,7 +69,22 @@ floor. `scripts/cxx_errors.py` counts C++ errors per module;
 `scripts/check_c_linkage.py` lists mangled names beyond
 `test/c_linkage_allowlist.txt`.
 
+Rules for shared headers and engine sources:
+
+| Rule | Why |
+|---|---|
+| enums declared ahead of their definition use `COD2_ENUM_DECL` (opaque C++ declaration) and `COD2_ENUM_INT` (`int` base) | C++ needs a fixed underlying type |
+| every project header is wrapped in `extern "C"` | names stay C for blobs and aliases |
+| K&R imports called with arguments are declared `f(COD2_KR)` (`...` in C++) | same arguments and promotions as in C |
+| a non-void function that can end without `return` returns 0 | in C++ that is undefined and GCC drops the code after the call |
+| C library functions come from their headers, not redeclarations | real signatures |
+
 ## Regenerating the bridge
+
+The generator reads object files of existing builds: `build/check-linux`
+and, when present, `build/check-mingw` and `build/check-mingw-client`
+(MinGW compiles without optimizing and keeps calls GCC drops on Linux).
+Build all three first, or the MinGW link may miss imports.
 
 | Task | Command |
 |---|---|

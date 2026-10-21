@@ -33,7 +33,7 @@ the dedicated server on CoD2rev-Plus's maintained code.
 |---|---|
 | P1 | The original 1.3 binaries define correct behavior; fixes cite the address they follow. |
 | P2 | Vendored code is copied byte for byte; fixes go upstream first. |
-| P3 | Every engine ↔ CoD2rev-Plus crossing is generated and ABI-checked. |
+| P3 | Every engine ↔ CoD2rev-Plus crossing is generated and type-checked (ABI files for the server and client bridges). |
 | P4 | Every claim is backed by a test or a check (`scripts/`). |
 | P5 | The code is the source of truth; docs follow it. |
 

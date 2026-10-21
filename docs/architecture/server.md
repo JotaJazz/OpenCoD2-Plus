@@ -40,10 +40,19 @@ format on the engine side and pass `"%s"`.
 `level_locals_t`, `gitem_s`, `scr_const_t`, `game_hudelem_s` match field by
 field in 1.3 and 1.0 (`scripts/layout_parity.py`).
 
-## Protocol letters
+## Protocol facts
 
-The server's reliable commands are one letter plus arguments; the client's
-switch is in [client.md](client.md#server-commands).
+| Fact | Detail |
+|---|---|
+| Version | `COD2_PROTOCOL_VERSION` 118 (1.3) or 115 (1.0, `-DCOD2_PATCH_10`); `src/compat/script_missing.cpp` asserts CoD2rev-Plus's `PROTOCOL_VERSION` matches |
+| Fragment offsets | shorts in 1.0, longs in 1.3, in both directions (`Netchan_TransmitNextFragment`, `0x447e61`) |
+| `netadr_t` port | right after the IP, at +8 (`NET_AdrToString`, `0x44770a`), not after the IPX bytes as in Quake III |
+| Server commands | one letter plus arguments; the client's switch is in [client.md](client.md#server-commands) |
+
+## Bridge behavior worth knowing
+
+- `Com_Error` is `noreturn` in CoD2rev-Plus; the engine's returns for `ERR_SCRIPT`/`ERR_LOCALIZATION` once the UI shows the error, so the bridge raises it again as a drop.
+- Variadic functions format into 4096-byte buffers (CoD2rev-Plus's `MAXPRINTMSG`); `Com_sprintf` formats straight into its destination.
 
 ## Windows
 

@@ -15,7 +15,7 @@ blobs (original data) <- imp_ pointers <- engine
 
 ## Must
 
-- Cross engine ↔ CoD2rev-Plus only through `src/compat`, with an interface entry and an ABI check.
+- Cross engine ↔ CoD2rev-Plus only through `src/compat`, with an interface entry (ABI-checked for the server and client modules).
 - Keep one copy of each state per executable (`test/plus_replaces.txt`).
 - Follow the 1.3 binaries; cite addresses.
 - Reach `cgs_t`/`cg_t` fields by name.

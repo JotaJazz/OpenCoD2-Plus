@@ -57,6 +57,6 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 - Forked from opencod2/opencod2; the Linux and MinGW builds were broken by upstream changes only built with MSVC (119 and 5 errors).
 - Goal set: one public repository with client and server on CoD2rev-Plus, validated against the original 1.3 binaries.
 
-## 2026-06-25 to 2026-09-15 — upstream opencod2
+## 2026-09-15 — upstream opencod2 (since 2026-06-25)
 
 - Initial reconstruction, MSVC build, data blobs, an x64 port in progress, the effects hierarchy; inherited as the engine (`src/PC`).

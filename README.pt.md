@@ -48,7 +48,6 @@ A documentação técnica está em [docs/README.md](docs/README.md) (em inglês)
 - **A versão é escolhida ao compilar.** Por predefinição o motor é compilado como 1.3 (protocolo 118); com `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` é compilado como 1.0 (protocolo 115).
 - **Os dois servidores dedicados funcionam para testes:** na 1.3 e na 1.0 o servidor carrega, muda e reinicia mapas, responde a `getinfo`, `getstatus` e rcon, e mantém dois jogadores que entram, saem, voltam e são expulsos.
 - **Os jogos locais funcionam para testes:** na 1.3 e na 1.0 um cliente cria um jogo sobre o servidor do CoD2rev-Plus, outro cliente entra e os dois ficam depois de um `map_restart` e de uma mudança de mapa (`scripts/listen_test.py`, com a sua CD key). Um tiro acerta a parte do corpo para onde aponta (`scripts/hit_location_test.py`).
-- **O que o CoD2rev-Plus tem no libcod ainda não está aqui:** as suas funções de script, os bots e `sv_master1`…`sv_master5`, por isso o servidor envia o seu heartbeat só para o servidor master da Activision.
 
 ## Compilar
 
@@ -84,7 +83,7 @@ cmake --build build-win32 -j
 # -> build-win32/cod2_win32_ded.exe   (dedicated server)
 ```
 
-Acrescente `-DCOD2_WIN32_CLIENT=ON` para o cliente SDL2/GL (forneça as bibliotecas estáticas do SDL2 em `src/win32/sdl2/lib/`; o servidor dedicado não precisa de nenhuma). Como o cliente Linux, corre os seus jogos locais sobre o servidor, o game e o bgame do CoD2rev-Plus, e traça com a sua colisão. Sem Windows, `scripts/portable_wine.sh DIR` instala um Wine de 32 bits sem root (Debian ou Ubuntu com i386 ativado) e escreve `DIR/wine.sh` para o executar; `COD2_CONSOLE_STDOUT=1` copia a consola para stdout, e `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` faz com que crie um jogo onde entra o cliente Linux.
+Acrescente `-DCOD2_WIN32_CLIENT=ON` para o cliente, que desenha com Direct3D 9 e os shaders do jogo (`-DCOD2_WIN32_REAL_D3D9=OFF`: o dispositivo GL) (forneça as bibliotecas estáticas do SDL2 em `src/win32/sdl2/lib/`; o servidor dedicado não precisa de nenhuma). Como o cliente Linux, corre os seus jogos locais sobre o servidor, o game e o bgame do CoD2rev-Plus, e traça com a sua colisão. Sem Windows, `scripts/portable_wine.sh DIR` instala um Wine de 32 bits sem root (Debian ou Ubuntu com i386 ativado) e escreve `DIR/wine.sh` para o executar; `COD2_CONSOLE_STDOUT=1` copia a consola para stdout, e `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` faz com que crie um jogo onde entra o cliente Linux.
 
 ### Windows (MSVC, nativo)
 
@@ -113,7 +112,8 @@ Esta compilação ainda compila C e usa a VM de scripts reconstruída (`src/PC/s
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | O servidor, o game, o bgame e a colisão do CoD2rev-Plus para os jogos locais do cliente (Linux, e MinGW com `COD2_WIN32_CLIENT`), sobre o núcleo do motor; precisa de `COD2_PLUS_SERVER`. `OFF` mantém `src/PC/server_mp`, como ainda fazem o MSVC, a compilação web e o x64. |
 | `COD2_PLUS_LIBCOD` | `ON` | A libcod do CoD2rev-Plus (`src/libcod`) no servidor dedicado e, com `COD2_PLUS_CLIENT_SERVER`, nos jogos locais do cliente, com os seus módulos exceto o MySQL; precisa de `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Opções de funcionalidades; `-DCOD2_PATCH_10` compila a versão 1.0. |
-| `COD2_WIN32_CLIENT` | `OFF` | MinGW: o cliente SDL2/GL em vez do servidor dedicado. |
+| `COD2_WIN32_CLIENT` | `OFF` | MinGW: o cliente em vez do servidor dedicado. |
+| `COD2_WIN32_REAL_D3D9` | `ON` | Cliente MinGW: Direct3D 9 real e os shaders do jogo (d3dx9 do sistema); `OFF` mantém o dispositivo GL. |
 | `COD2_WIN_MSVC` | `OFF` | Compilação nativa com MSVC (definida pelos presets `msvc-client`). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: um único executável autónomo com SDL2 e runtime C estáticos. |
 | `COD2_DEBUG` | `OFF` | `-O0` e sem hardening, para depuração. |
@@ -144,7 +144,7 @@ build-win32\cod2_win32_ded.exe +set fs_basepath "C:\path\to\CoD2" +set dedicated
 As verificações precisam da compilação e, as que iniciam o servidor, de uma pasta do jogo com os `.iwd` originais. Iniciam o servidor em modo LAN com uma pasta de utilizador temporária, pelo que a pasta do jogo só é lida.
 
 ```bash
-python3 scripts/build_check.py all                      # linux (1.3), linux-10 (1.0) and mingw into build/check-*/
+python3 scripts/build_check.py all                      # every variant (linux, linux-10, mingw, mingw-client...) into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
 python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # cada chamada do motor corresponde aos tipos da sua definição
@@ -171,7 +171,7 @@ python3 -m unittest discover -s test
 - `prediction_test.py` conta os erros de previsão de um cliente real (com chave de CD) que anda, se agacha, se deita, salta e dispara; `--max-misses` define quantos admite.
 - `fx_test.py` faz um cliente real (com chave de CD) reproduzir um sprite, um impacto de bala e duas explosões à sua frente, e verifica que cada um muda a captura.
 - `bots_test.py` e `http_test.py` são os do CoD2rev-Plus, sem alterações, para a libcod: os bots de `mods/bots` têm de encontrar os seus caminhos, guardar e reler o seu grafo e lutar num mapa real; `httpFetch` e `webSocket*` têm de funcionar contra servidores locais HTTP, HTTPS, WS e WSS (precisam de `openssl`). Passe-lhes `--binary build/check-linux/cod2_lnxded`.
-- `scripts/cxx_errors.py` conta os erros de C++ de um módulo (`--return-type` encontra funções não void que podem terminar sem return, o que é indefinido em C++); `scripts/gen_script_bridge.py --module script|server` regenera a ponte para a VM de scripts ou para o servidor, e `scripts/engine_abi.py --module server` regista, com o gdb, a ABI do motor contra a qual a ponte verifica (`test/server_abi.txt`).
+- `scripts/cxx_errors.py` conta os erros de C++ de um módulo (`--return-type` encontra funções não void que podem terminar sem return, o que é indefinido em C++); `scripts/gen_script_bridge.py --module script|server|client_server` regenera a ponte para a VM de scripts ou para o servidor, e `scripts/engine_abi.py --module server` regista, com o gdb, a ABI do motor contra a qual a ponte verifica (`test/server_abi.txt`).
 
 ## Estrutura do repositório
 
