@@ -30,41 +30,11 @@ void *RealD3D9_Direct3DCreate9(void)
 
 void *RealD3D9_CreateGameWindow(int w, int h)
 {
-    HINSTANCE hInst = GetModuleHandleA(NULL);
-    WNDCLASSEXA wc;
-    HWND hwnd;
-    RECT r;
-    const char *cls = "CoD2";
+    extern void *Sys_CreateD3DWindow(int width, int height);
+    void *hwnd = Sys_CreateD3DWindow(w, h);
 
-    if (getenv("REALD3D9_GENERIC_WND") || !GetClassInfoExA(hInst, "CoD2", &wc)) {
-        WNDCLASSA gc;
-        memset(&gc, 0, sizeof(gc));
-        gc.lpfnWndProc = DefWindowProcA;
-        gc.hInstance = hInst;
-        gc.hCursor = LoadCursorA(NULL, (LPCSTR)0x7F00 );
-        gc.lpszClassName = "CoD2_RealD3D9";
-        RegisterClassA(&gc);
-        cls = "CoD2_RealD3D9";
-    }
-
-    r.left = 0;
-    r.top = 0;
-    r.right = w;
-    r.bottom = h;
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
-
-    hwnd = CreateWindowExA(0, cls, "CoD2 (real D3D9)",
-                           WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                           CW_USEDEFAULT, CW_USEDEFAULT,
-                           r.right - r.left, r.bottom - r.top,
-                           NULL, NULL, hInst, NULL);
-
-    fprintf(stderr, "[real-d3d9] game window cls='%s' hwnd=%p %dx%d\n", cls, (void *)hwnd, w, h);
-    if (hwnd) {
-        ShowWindow(hwnd, SW_SHOW);
-        UpdateWindow(hwnd);
-    }
-    return (void *)hwnd;
+    fprintf(stderr, "[real-d3d9] game window hwnd=%p %dx%d\n", hwnd, w, h);
+    return hwnd;
 }
 
 void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h)

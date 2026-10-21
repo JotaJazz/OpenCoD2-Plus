@@ -732,12 +732,15 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             extern void *RealD3D9_Direct3DCreate9(void);
             extern void *RealD3D9_CreateGameWindow(int, int);
             extern void RealD3D9_FillPresentParams(void *, void *, int, int);
-            int width = 640, height = 480;
+            extern void R_GetModeSize(int *width, int *height);
+            int width, height;
             void *hwnd;
             unsigned char pp[56];
             HRESULT hr;
 
             ri_printf(0, "Initializing REAL Direct3D9 (GFX_REAL_D3D9)\n");
+            /* the mode r_mode names, as the fake device's path */
+            R_GetModeSize(&width, &height);
             if (!dx.d3d9)
                 dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9();
             hwnd = RealD3D9_CreateGameWindow(width, height);

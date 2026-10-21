@@ -328,6 +328,36 @@ static LRESULT CALLBACK CoD2_InputForward(HWND h, UINT msg, WPARAM wp, LPARAM lp
                         : DefWindowProcA(h, msg, wp, lp);
 }
 
+/* the game window of a real Direct3D 9 device (GFX_REAL_D3D9): an SDL window
+ * as the GL renderer's, so SDL's event pump (IN_Frame) still gets the input,
+ * without a GL context; d3d9 presents to its HWND */
+void *Sys_CreateD3DWindow(int width, int height)
+{
+    SDL_SysWMinfo wm;
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO) && SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        fprintf(stderr, "SDL_InitSubSystem(VIDEO) FAILED: %s\n", SDL_GetError());
+        return NULL;
+    }
+    if (!sdl_gl_window) {
+        sdl_gl_window = SDL_CreateWindow("CoD2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                         width, height, SDL_WINDOW_SHOWN);
+        if (!sdl_gl_window) {
+            fprintf(stderr, "SDL_CreateWindow FAILED: %s\n", SDL_GetError());
+            return NULL;
+        }
+        SDL_AddEventWatch(sdl_quit_watch, NULL);
+        SDL_RaiseWindow(sdl_gl_window);
+        fprintf(stderr, "Game window created: %dx%d\n", width, height);
+    } else {
+        SDL_SetWindowSize(sdl_gl_window, width, height);
+    }
+    SDL_VERSION(&wm.version);
+    if (!SDL_GetWindowWMInfo(sdl_gl_window, &wm) || wm.subsystem != SDL_SYSWM_WINDOWS)
+        return NULL;
+    return (void *)wm.info.win.window;
+}
+
 static void Win32_BridgeInputToEngine(SDL_Window *win)
 {
     SDL_SysWMinfo wm;
