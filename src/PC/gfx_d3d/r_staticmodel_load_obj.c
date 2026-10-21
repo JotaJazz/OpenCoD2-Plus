@@ -552,10 +552,12 @@ void R_CacheStaticModelLighting(const GfxWorld *world, GfxStaticModelInstance *s
                 else if (bi <= 0)
                     bi = 0;
 
-                texel[0] = (byte)ai;
-                texel[1] = rByte;
-                texel[2] = gByte;
-                texel[3] = (byte)bi;
+                /* A8R8G8B8 is B, G, R, A in memory: the shader reads the
+                 * light's color from rgb and the sun's visibility from a */
+                texel[0] = (byte)bi;
+                texel[1] = gByte;
+                texel[2] = rByte;
+                texel[3] = (byte)ai;
                 c++;
             }
         }

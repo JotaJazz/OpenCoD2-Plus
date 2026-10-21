@@ -14,10 +14,10 @@ extern void Image_TrackTexture(GfxImage *image, int imageFlags, D3DFORMAT format
 
 typedef int(D3DVTCC *LockRectFn)(void *texture, int level, D3DLOCKED_RECT *lockedRect, void *rect, int flags);
 typedef int(D3DVTCC *LockRectCubeFn)(void *texture, int face, int level, D3DLOCKED_RECT *lockedRect, void *rect, int flags);
-typedef int (*LockBoxFn)(void *texture, int level, D3DLOCKED_BOX *lockedBox, void *box, int flags);
+typedef int(D3DVTCC *LockBoxFn)(void *texture, int level, D3DLOCKED_BOX *lockedBox, void *box, int flags);
 typedef int(D3DVTCC *UnlockRectFn)(void *texture, int level);
 typedef int(D3DVTCC *UnlockRectCubeFn)(void *texture, int face, int level);
-typedef int (*UnlockBoxFn)(void *texture, int level);
+typedef int(D3DVTCC *UnlockBoxFn)(void *texture, int level);
 
 static inline __attribute__((always_inline)) int Image_Max1(int val)
 {
@@ -272,7 +272,25 @@ void Image_UploadData(GfxImage *image, D3DFORMAT format, int face, int mipLevel,
     }
 
     if (image->mapType == 4) {
-
+        /* a volume (the static models' lighting): every slice row by row */
+        srcWidth = Image_Max1(image->width >> mipLevel);
+        srcHeight = Image_Max1(image->height >> mipLevel);
+        srcDepth = Image_Max1(image->depth >> mipLevel);
+        Image_GetSrcStrideAndDy(format, srcWidth, &srcRowPitch, &dy);
+        if (!srcRowPitch)
+            return;
+        texture = (void *)image->texture.volmap;
+        if (!texture || !*(void **)texture)
+            return;
+        vtable = *(void ***)texture;
+        /* the GL device's volumes cannot be locked (their table is empty) */
+        if (!vtable[VTABLE_LOCKRECT] || ((LockBoxFn)vtable[VTABLE_LOCKRECT])(texture, mipLevel, &lockedBox, 0, 0) < 0)
+            return;
+        for (sliceIndex = 0; sliceIndex < srcDepth; sliceIndex++) {
+            Image_CopyToLockedSurface((byte *)lockedBox.pBits + sliceIndex * lockedBox.SlicePitch, lockedBox.RowPitch,
+                                      src + sliceIndex * Image_VolumeSlicePitch(format, srcWidth, srcHeight), srcRowPitch, dy, srcHeight);
+        }
+        ((UnlockBoxFn)vtable[VTABLE_UNLOCKRECT])(texture, mipLevel);
         return;
     }
 
