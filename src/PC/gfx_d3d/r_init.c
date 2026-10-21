@@ -690,6 +690,31 @@ extern void R_InitDrawGroups(void);
 extern void R_InitSystems(void);
 extern void FFT_Init(int *fftBitswap, complex_t *fftTrigTable);
 extern void *Direct3DCreate9(int sdkVersion);  /* returns a pointer; `int` truncated it on x64 */
+/* the aspect the view is drawn for, as the 1.3 renderer (0x10011610): what
+ * r_aspectRatio names, or for auto the window's own shape, rounded to 4:3,
+ * 16:10 or 16:9 */
+static float R_WindowAspectRatio(int width, int height)
+{
+    extern const dvar_t *r_aspectRatio;
+    int shape;
+
+    switch (r_aspectRatio->current.integer) {
+    case 1:
+        return 4.0f / 3.0f;
+    case 2:
+        return 1.6f;
+    case 3:
+        return 16.0f / 9.0f;
+    default:
+        shape = (int)floor((double)height * 16.0 / (double)width + 0.5);
+        if (shape == 10)
+            return 1.6f;
+        if (shape < 10)
+            return 16.0f / 9.0f;
+        return 4.0f / 3.0f;
+    }
+}
+
 static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
 {
     typedef void (*PrintFunc)(int, const char *, ...);
@@ -752,7 +777,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             vidConfig.height = height;
             vidConfig.displayFrequency = 60;
             vidConfig.isFullscreen = 0;
-            vidConfig.aspectRatioWindow = (float)width / (float)height;
+            vidConfig.aspectRatioWindow = R_WindowAspectRatio(width, height);
             vidConfig.aspectRatioPixel = (float)height * vidConfig.aspectRatioWindow / (float)width;
         }
 #else
@@ -788,7 +813,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             vidConfig.height = height;
             vidConfig.displayFrequency = 60;
             vidConfig.isFullscreen = 0;
-            vidConfig.aspectRatioWindow = (float)width / (float)height;
+            vidConfig.aspectRatioWindow = R_WindowAspectRatio(width, height);
             vidConfig.aspectRatioPixel = (float)height * vidConfig.aspectRatioWindow / (float)width;
 
         }
