@@ -293,91 +293,83 @@ void R_SetPicmip(void)
     void (*ri_Printf)(int, const char *, ...) = *(void (**)(int, const char *, ...))&ri;
     void (*Cvar_SetValue)(void *, int) = (void (*)(void *, int))ri.Dvar_SetInt;
     int (*Cvar_VariableIntegerValue)(const char *) = (int (*)(const char *))ri.Dvar_GetInt;
-    int texMemInMegs, sysMemInMegs;
+    unsigned int texMemInMegs;
+    unsigned int sysMemInMegs;
     int minPicmip;
     int changed;
 
     texMemInMegs = R_AvailableTextureMemory();
     sysMemInMegs = Cvar_VariableIntegerValue("sys_sysMB");
 
+    /* as the 1.3 renderer (gfx_d3d_mp_x86_s.dll 0x1000d6a0): the texture
+     * memory picks the detail, a small system memory lowers it */
     if ((r_picmip_manual)->current.enabled) {
-        ri_Printf(0, "Using manual picmip settings\n");
+        ri_Printf(0, "Picmip is set manually.\n");
         IG_SCALAR(2048) = (r_picmip)->current.integer;
         IG_SCALAR(2049) = (r_picmip_bump)->current.integer;
         IG_SCALAR(2050) = (r_picmip_spec)->current.integer;
-    } else if (r_rendererInUse->current.integer == 2) {
-
-        ri_Printf(0, "Dx7 renderer: using low-res textures\n");
-        if (texMemInMegs > 128) {
-            IG_SCALAR(2048) = 1;
-            IG_SCALAR(2049) = 1;
-            IG_SCALAR(2050) = 1;
-        } else {
-            IG_SCALAR(2048) = 2;
-            IG_SCALAR(2049) = 2;
-            IG_SCALAR(2050) = 2;
-        }
-
-        if (sysMemInMegs <= 383) {
-            changed = 0;
-            if (IG_SCALAR(2048) < 1) {
-                IG_SCALAR(2048) = 1;
-                changed = 1;
-            }
-            if (IG_SCALAR(2049) < 1) {
-                IG_SCALAR(2049) = 1;
-                changed = 1;
-            }
-            if (IG_SCALAR(2050) < 1) {
-                IG_SCALAR(2050) = 1;
-                changed = 1;
-            }
-            if (changed)
-                ri_Printf(0, "Reducing texture detail based on total system memory of %i M", sysMemInMegs);
-        }
     } else {
-
-        ri_Printf(0, "Using non-Dx7 renderer\n");
-
-        IG_SCALAR(2048) = 2;
-        IG_SCALAR(2049) = 2;
-        IG_SCALAR(2050) = 2;
-
-        if (sysMemInMegs <= 383) {
-            if (sysMemInMegs <= 479) {
-                minPicmip = 1;
-                goto apply_sysmem;
+        if (r_rendererInUse->current.integer == 2) {
+            ri_Printf(0, "Texture detail is set automatically for DirectX 7.\n");
+            if (texMemInMegs >= 100) {
+                IG_SCALAR(2048) = 0;
+                IG_SCALAR(2049) = 0;
+                IG_SCALAR(2050) = 0;
+            } else if (texMemInMegs >= 28) {
+                IG_SCALAR(2048) = 1;
+                IG_SCALAR(2049) = 1;
+                IG_SCALAR(2050) = 1;
+            } else {
+                IG_SCALAR(2048) = 2;
+                IG_SCALAR(2049) = 2;
+                IG_SCALAR(2050) = 2;
             }
+            minPicmip = sysMemInMegs < 384 ? 1 : 0;
         } else {
-            minPicmip = 2;
-        apply_sysmem:
-            changed = 0;
-            if (IG_SCALAR(2048) < minPicmip) {
-                IG_SCALAR(2048) = minPicmip;
-                changed = 1;
+            static const struct {
+                unsigned int texMemInMegs;
+                int picmip, bump, spec;
+            } detail[] = {
+                { 300, 0, 0, 0 },
+                { 240, 0, 0, 1 },
+                { 190, 0, 1, 1 },
+                { 150, 1, 1, 1 },
+                { 130, 1, 1, 2 },
+                { 120, 1, 2, 2 },
+                { 0, 2, 2, 2 },
+            };
+            int i;
+
+            ri_Printf(0, "Texture detail is set automatically.\n");
+            for (i = 0; texMemInMegs < detail[i].texMemInMegs; i++) {
             }
-            if (IG_SCALAR(2049) < minPicmip) {
-                IG_SCALAR(2049) = minPicmip;
-                changed = 1;
-            }
-            if (IG_SCALAR(2050) < minPicmip) {
-                IG_SCALAR(2050) = minPicmip;
-                changed = 1;
-            } else if (!changed) {
-                goto set_cvars;
-            }
-            ri_Printf(0, "Reducing texture detail based on total system memory of %i M", sysMemInMegs);
+            IG_SCALAR(2048) = detail[i].picmip;
+            IG_SCALAR(2049) = detail[i].bump;
+            IG_SCALAR(2050) = detail[i].spec;
+            minPicmip = sysMemInMegs < 384 ? 2 : sysMemInMegs < 480 ? 1 : 0;
         }
+
+        changed = 0;
+        if (IG_SCALAR(2048) < minPicmip) {
+            IG_SCALAR(2048) = minPicmip;
+            changed = 1;
+        }
+        if (IG_SCALAR(2049) < minPicmip) {
+            IG_SCALAR(2049) = minPicmip;
+            changed = 1;
+        }
+        if (IG_SCALAR(2050) < minPicmip) {
+            IG_SCALAR(2050) = minPicmip;
+            changed = 1;
+        }
+        if (changed)
+            ri_Printf(0, "Reducing texture detail based on total system memory of %i MB to improve load times.\n", sysMemInMegs);
     }
 
-set_cvars:
-
-    Cvar_SetValue = (void (*)(void *, int))ri.Dvar_SetInt;
-    ri_Printf = *(void (**)(int, const char *, ...))&ri;
-    Cvar_SetValue( (void *)(r_picmip), IG_SCALAR(2048));
-    Cvar_SetValue( (void *)(r_picmip_bump), IG_SCALAR(2049));
-    Cvar_SetValue( (void *)(r_picmip_spec), IG_SCALAR(2050));
-    ri_Printf(0, "Using picmip %i on most textures, %i on normal maps, and %i on spec maps",
+    Cvar_SetValue((void *)(r_picmip), IG_SCALAR(2048));
+    Cvar_SetValue((void *)(r_picmip_bump), IG_SCALAR(2049));
+    Cvar_SetValue((void *)(r_picmip_spec), IG_SCALAR(2050));
+    ri_Printf(0, "Using picmip %i on most textures, %i on normal maps, and %i on specular maps\n",
               IG_SCALAR(2048), IG_SCALAR(2049), IG_SCALAR(2050));
 }
 
