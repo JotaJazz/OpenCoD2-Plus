@@ -14,7 +14,9 @@ extern void Hunk_FreeTempMemory(void *buf);
 typedef int (*CM_BoxTraceFn)(trace_t *results, const vec_t *start, const vec_t *end,
                              const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask);
 
-static const int outdoorMapSize[3] = { 0 }; /* never filled in; zero, as C left it */
+/* the outdoor map's texels per axis, as the 1.3 renderer's (0x10190398): left
+ * zero, the map's scale was negative and nothing was outdoors */
+static const int outdoorMapSize[3] = { 512, 512, 256 };
 
 static OutdoorGlob outdoorGlob;
 
