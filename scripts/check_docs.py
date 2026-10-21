@@ -5,10 +5,11 @@
 
 Reads AGENTS.md, the README files and docs/**/*.md (not docs/superpowers,
 which is local) and prints one line per problem, as path:line: message:
-a relative link to a file that does not exist; a backticked repository
-path (src/, scripts/, test/, docs/, cmake/, mods/, third_party/) that does
-not exist; personal data (a Windows drive path but the C:\\path\\to\\
-placeholder, an IPv4 address but 127.0.0.1 and 0.0.0.0, a CD key); a stage
+a relative link to a file that does not exist; a repository path (src/,
+scripts/, test/, docs/, cmake/, mods/, third_party/) anywhere in backticks
+that does not exist; personal data (a Windows drive path but the
+C:\\path\\to\\ placeholder, /home/<name> or /mnt/<drive>, an IPv4 address
+but 127.0.0.1 and 0.0.0.0, a CD key or the word codkey); a stage
 of docs/ai/PROJECT_MEMORY.md with more than 3 bullets. Exits with 0 when
 there are none.
 """
@@ -18,9 +19,11 @@ LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)\)')
 CODE = re.compile(r'`([^`\n]+)`')
 REPO_DIRS = ('src/', 'scripts/', 'test/', 'docs/', 'cmake/', 'mods/', 'third_party/')
 SENSITIVE = [
-    (re.compile(r'\b[A-Za-z]:\\(?!path\\to\\)'), 'a Windows drive path'),
-    (re.compile(r'\b(?!127\.0\.0\.1\b)(?!0\.0\.0\.0\b)\d{1,3}(?:\.\d{1,3}){3}\b'), 'an IP address'),
+    (re.compile(r'\b[A-Za-z]:[\\/](?!path[\\/]to[\\/])'), 'a Windows drive path'),
+    (re.compile(r'/home/\w|/mnt/[a-z]/'), 'a personal Unix path'),
+    (re.compile(r'(?<!version )(?<![\w.])(?!127\.0\.0\.1\b)(?!0\.0\.0\.0\b)\d{1,3}(?:\.\d{1,3}){3}\b'), 'an IP address'),
     (re.compile(r'codkey', re.I), 'a CD key'),
+    (re.compile(r'\b[A-Z0-9]{4}(?:-[A-Z0-9]{4}){4}\b'), 'a CD key'),
 ]
 MEMORY = 'docs/ai/PROJECT_MEMORY.md'
 MAX_BULLETS = 3
@@ -68,12 +71,13 @@ def check_file(root, path):
             target = target.split('#')[0]
             if not os.path.exists(os.path.normpath(os.path.join(here, target))):
                 problems.append(where + 'broken link %s' % target)
-        for token in CODE.findall(line):
-            token = token.strip().split(' ')[0].rstrip('.,:;')
-            if not token.startswith(REPO_DIRS) or any(c in token for c in '*<>{}$'):
-                continue
-            if not os.path.exists(os.path.join(root, token)):
-                problems.append(where + 'no such path %s' % token)
+        for code in CODE.findall(line):
+            for token in code.split():
+                token = token.strip('\'"').split('=')[-1].strip('\'"').split('#')[0].rstrip('.,:;)')
+                if not token.startswith(REPO_DIRS) or any(c in token for c in '*<>{}$|'):
+                    continue
+                if not os.path.exists(os.path.join(root, token)):
+                    problems.append(where + 'no such path %s' % token)
     return problems
 
 

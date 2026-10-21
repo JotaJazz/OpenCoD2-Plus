@@ -35,6 +35,19 @@ class CheckDocs(unittest.TestCase):
         self.assertEqual(self.problems('docs/a.md', 'run `scripts/real.py` and `cod2_linux`\n'), [])
         self.assertEqual(self.problems('docs/a.md', '`test/smoke_expected_failures_*.txt` `src/<module>`\n'), [])
 
+    def test_paths_inside_commands(self):
+        self.write('scripts/real.py', '')
+        self.write('CMakeLists.txt', '')
+        self.assertEqual(len(self.problems('docs/a.md', '`python3 scripts/nope.py --x`\n')), 1)
+        self.assertEqual(len(self.problems('docs/a.md', '`-DCMAKE_TOOLCHAIN_FILE=cmake/nope.cmake`\n')), 1)
+        self.assertEqual(len(self.problems('docs/a.md', "`git am --include='src/nope/x.c'`\n")), 1)
+        self.assertEqual(self.problems('docs/a.md', '`python3 scripts/real.py` `CMakeLists.txt` `docs/a.md#sec`\n'), [])
+
+    def test_personal_unix_paths_and_keys(self):
+        p = self.problems('docs/a.md', '/home/someone/x\n/mnt/e/games\nE:/games\nABCD-EF12-GH34-IJ56-KL78\n')
+        self.assertEqual(len(p), 4)
+        self.assertEqual(self.problems('docs/a.md', 'version 1.3.0.1 and /home/<user> and ~/.cod2/preferences\n'), [])
+
     def test_sensitive(self):
         p = self.problems('docs/a.md', 'Z:\\some\\dir\n203.0.113.7\nthe codkey\n')
         self.assertEqual(len(p), 3)
