@@ -385,7 +385,7 @@ void Material_ReleaseAll(void)
                 do {
                     void *obj = *pObj;
                     void **vtable = *(void ***)obj;
-                    ((void (*)(void *))vtable[2])(obj);
+                    ((void (D3DVTCC *)(void *))vtable[2])(obj);
                     *pObj = NULL;
                 } while (*(int *)&alwaysfails);
             }
@@ -397,7 +397,7 @@ void Material_ReleaseAll(void)
         if (shader) {
             void *obj = *(void **)&((MaterialShader *)shader)->u;
             void **vtable = *(void ***)obj;
-            ((void (*)(void *))vtable[2])(obj);
+            ((void (D3DVTCC *)(void *))vtable[2])(obj);
         }
     }
 }
@@ -664,7 +664,7 @@ void Material_Shutdown(void)
                 do {
                     void *obj = *pObj;
                     void **vtable = *(void ***)obj;
-                    ((void (*)(void *))vtable[2])(obj);
+                    ((void (D3DVTCC *)(void *))vtable[2])(obj);
                     *pObj = NULL;
                 } while (*(int *)&alwaysfails);
             }
@@ -678,7 +678,7 @@ void Material_Shutdown(void)
         if (shader) {
             void *obj = *(void **)&((MaterialShader *)shader)->u;
             void **vtable = *(void ***)obj;
-            ((void (*)(void *))vtable[2])(obj);
+            ((void (D3DVTCC *)(void *))vtable[2])(obj);
         }
     }
 #endif
@@ -783,7 +783,7 @@ void Material_ReloadAll(void)
                 do {
                     void *device = (void *)((DxGlobals *)dx)->device;
                     void **vtable = *(void ***)device;
-                    ((int (*)(void *, const void *, void **))vtable[0x158 / 4])(
+                    ((int (D3DVTCC *)(void *, const void *, void **))vtable[0x158 / 4])(
                         device, elemTable, &decl);
                 } while (*(int *)&alwaysfails);
 
@@ -810,13 +810,13 @@ void Material_ReloadAll(void)
 
                 void *device = (void *)((DxGlobals *)dx)->device;
                 void **vtable = *(void ***)device;
-                hr = ((int (*)(void *, const void *, void **))vtable[0x16c / 4])(
+                hr = ((int (D3DVTCC *)(void *, const void *, void **))vtable[0x16c / 4])(
                     device, (const void *)((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
             } else {
 
                 void *device = (void *)((DxGlobals *)dx)->device;
                 void **vtable = *(void ***)device;
-                hr = ((int (*)(void *, const void *, void **))vtable[0x1a8 / 4])(
+                hr = ((int (D3DVTCC *)(void *, const void *, void **))vtable[0x1a8 / 4])(
                     device, (const void *)((MaterialShader *)shader)->program, (void **)&((MaterialShader *)shader)->u);
             }
 
@@ -896,7 +896,7 @@ void Load_BuildVertexDecl(MaterialVertexDeclaration **mtlVertDecl)
         do {
             void *device = dx.device;
             void **vtable = *(void ***)device;
-            ((int (*)(void *, const void *, void **))vtable[0x158 / 4])(
+            ((int (D3DVTCC *)(void *, const void *, void **))vtable[0x158 / 4])(
                 device, elemTable, &decl);
         } while (*(int *)&alwaysfails);
 

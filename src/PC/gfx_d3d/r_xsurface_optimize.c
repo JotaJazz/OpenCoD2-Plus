@@ -69,7 +69,7 @@ void XSurfaceOptimizeRigid(XModel *model, XSurface *surface, XVertexBuffer *surf
     device = dx.device;   /* was DEREF_PTR(imp_dx,8): x86 device offset; x64 dx.device is @16 */
     deviceVtable = *(void ***)device;
 
-    hr = ((int(__attribute__((cdecl)) *)(void *, int, int, int, int, void *, void *))deviceVtable[0x68 / 4])(device, vertCount * vertexStride, 8, 0, 0, surfRigid, 0);
+    hr = ((int(D3DVTCC *)(void *, int, int, int, int, void *, void *))deviceVtable[0x68 / 4])(device, vertCount * vertexStride, 8, 0, 0, surfRigid, 0);
 
     if (hr < 0) {
 
@@ -78,12 +78,12 @@ void XSurfaceOptimizeRigid(XModel *model, XSurface *surface, XVertexBuffer *surf
     }
 
     vbVtable = *(void ***)surface->surfRigid.vb;
-    hr = ((int(__attribute__((cdecl)) *)(void *, int, int, void *, int))vbVtable[0x2c / 4])(surface->surfRigid.vb, 0, 0, &vertexBuffer, 0);
+    hr = ((int(D3DVTCC *)(void *, int, int, void *, int))vbVtable[0x2c / 4])(surface->surfRigid.vb, 0, 0, &vertexBuffer, 0);
 
     if (hr < 0) {
 
         vbVtable = *(void ***)surface->surfRigid.vb;
-        ((void(__attribute__((cdecl)) *)(void *))vbVtable[8 / 4])(surface->surfRigid.vb);
+        ((void(D3DVTCC *)(void *))vbVtable[8 / 4])(surface->surfRigid.vb);
         surface->surfRigid.vb = NULL;
         return;
     }
@@ -192,7 +192,7 @@ void XModelUnoptimize(XModel *model)
                 do {
 
                     vbVtable = *(void ***)surf->surfRigid.vb;
-                    ((void(__attribute__((cdecl)) *)(void *))vbVtable[8 / 4])(surf->surfRigid.vb);
+                    ((void(D3DVTCC *)(void *))vbVtable[8 / 4])(surf->surfRigid.vb);
                     surf->surfRigid.vb = NULL;
                 } while (GPU_FENCE_FLAG != 0);
             }

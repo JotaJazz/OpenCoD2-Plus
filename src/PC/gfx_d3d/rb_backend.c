@@ -1059,8 +1059,8 @@ static void RB_StretchRawCmd(GfxRenderCommandExecState *execState)
                 device, surface, NULL, backBuffer, dstRect, 2);
         }
 
-        ((ULONG (*)(void *))(*(void ***)surface)[0x08 / 4])(surface);
-        ((ULONG (*)(void *))(*(void ***)rawTexture)[0x08 / 4])(rawTexture);
+        ((ULONG (D3DVTCC *)(void *))(*(void ***)surface)[0x08 / 4])(surface);
+        ((ULONG (D3DVTCC *)(void *))(*(void ***)rawTexture)[0x08 / 4])(rawTexture);
     }
 
     cmd = (byte *)execState->cmd;

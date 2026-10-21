@@ -341,7 +341,7 @@ void R_LockSkinnedCache(GfxLockType lockType)
         lockFlags = 0x2000;
 
     vtable = *(void ***)vb;
-    hr = ((HRESULT (*)(void *, UINT, UINT, void **, DWORD))(vtable[0x2C / 4]))(
+    hr = ((HRESULT (D3DVTCC *)(void *, UINT, UINT, void **, DWORD))(vtable[0x2C / 4]))(
         vb, 0, 0, (void **)&dx->skinnedCacheLockAddr, lockFlags);
 
     if (hr < 0)
@@ -349,7 +349,7 @@ void R_LockSkinnedCache(GfxLockType lockType)
 
     if ((uintptr_t)((DxGlobals *)dx)->skinnedCacheLockAddr & 0xf) {
         vtable = *(void ***)vb;
-        ((HRESULT (*)(void *))(vtable[0x30 / 4]))(vb);
+        ((HRESULT (D3DVTCC *)(void *))(vtable[0x30 / 4]))(vb);
         ((DxGlobals *)dx)->skinnedCacheLockAddr = NULL;
     }
 }

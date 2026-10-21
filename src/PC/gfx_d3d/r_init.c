@@ -156,7 +156,7 @@ static inline void R_SafeRelease(void **objPtr)
     if (*objPtr) {
         do {
             void *obj = *objPtr;
-            ((void (*)(void *))((*(void ***)obj)[2]))(obj);
+            ((void (D3DVTCC *)(void *))((*(void ***)obj)[2]))(obj);
             *objPtr = NULL;
         } while (*(int *)&alwaysfails);
     }
@@ -456,7 +456,7 @@ void R_Error(errorParm_t errorLevel, const char *msg, ...)
     if (dx.inScene) {
         void *dev = (void *)dx.device;
         void **vt = *(void ***)dev;
-        ((int (*)(void *))vt[0xa8 / 4])(dev);
+        ((int (D3DVTCC *)(void *))vt[0xa8 / 4])(dev);
         dx.inScene = 0;
     }
 

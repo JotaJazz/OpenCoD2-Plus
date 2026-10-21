@@ -267,14 +267,14 @@ int RB_SetIndexData(const r_index_t *indices, int indexCount)
     else
         lockFlags = 0x2000;
 
-    hr = ((HRESULT (*)(IDirect3DIndexBuffer9 *, UINT, UINT, void **, DWORD))(*(void ***)(ib))[11])(ib, (UINT)byteOffset, (UINT)indexDataSize, &bufferData, lockFlags);
+    hr = ((HRESULT (D3DVTCC *)(IDirect3DIndexBuffer9 *, UINT, UINT, void **, DWORD))(*(void ***)(ib))[11])(ib, (UINT)byteOffset, (UINT)indexDataSize, &bufferData, lockFlags);
     if (hr < 0)
         R_FatalLockError(hr);
 
     Com_Memcpy(bufferData, indices, indexDataSize);
 
     do {
-        ((HRESULT (*)(IDirect3DIndexBuffer9 *))(*(void ***)(ib))[12])(ib);
+        ((HRESULT (D3DVTCC *)(IDirect3DIndexBuffer9 *))(*(void ***)(ib))[12])(ib);
     } while (*(int *)&alwaysfails);
 
     if (ib != dxState.indexBuffer)
