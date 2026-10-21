@@ -392,7 +392,9 @@ elseif(WIN32)
 # WINDOWS (MinGW cross-compile: cod2_win32_ded.exe / cod2_win32.exe)
 # ----------------------------------------------------------------------------
 option(COD2_WIN32_CLIENT "SDL2/GL client (needs static SDL2 libs) instead of the headless server" OFF)
-option(COD2_WIN32_REAL_D3D9 "Real IDirect3DDevice9 renderer path (Wine d3d9.dll)" OFF)
+# the client draws with the system's d3d9 and compiles the game's HLSL with its
+# d3dx9, as the original renderer; OFF keeps the Mac port's GL device
+option(COD2_WIN32_REAL_D3D9 "Windows client: real Direct3D 9 and d3dx9 shaders instead of the GL device" ON)
 # feature gates as on Linux (-DCOD2_PATCH_10 builds 1.0): CoD2rev-Plus's
 # PROTOCOL_VERSION already follows them, so the engine has to see them too
 set(COD2_FEATURE_CFLAGS "" CACHE STRING "Pass-through feature gates, e.g. -DCOD2_PATCH_10")
@@ -454,7 +456,7 @@ else()
     add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
   endif()
 endif()
-if(COD2_WIN32_REAL_D3D9)
+if(COD2_WIN32_CLIENT AND COD2_WIN32_REAL_D3D9)
   add_compile_definitions(GFX_REAL_D3D9)
 endif()
 
