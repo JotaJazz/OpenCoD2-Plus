@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 extern struct DxGlobals dx;

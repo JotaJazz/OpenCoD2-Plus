@@ -659,6 +659,51 @@ long long QueryPerf(void)
 }
 #endif
 
+#ifdef GFX_REAL_D3D9
+/* the frame about to be presented, top row first, as RGB or RGBA: the
+ * screenshot path's glReadPixels has no GL context to read with a real
+ * device, so the back buffer is copied to system memory instead */
+int RB_ReadBackBuffer(int width, int height, int bytesPerPixel, byte *buffer)
+{
+    void *device = dx_g->device;
+    void **vtable;
+    IDirect3DSurface9 *backBuffer = dx_g->renderTargets[0].colorSurface;
+    IDirect3DSurface9 *sysSurf = NULL;
+    struct {
+        int Pitch;
+        void *pBits;
+    } lr;
+    int x, y, ok = 0;
+
+    if (!device || !backBuffer)
+        return 0;
+    vtable = *(void ***)device;
+    /* CreateOffscreenPlainSurface(X8R8G8B8, D3DPOOL_SYSTEMMEM) */
+    if (((HRESULT(D3DVTCC *)(void *, UINT, UINT, DWORD, DWORD, void *, void *))vtable[0x90 / 4])(
+            device, width, height, 22, 2, &sysSurf, NULL) < 0 || !sysSurf)
+        return 0;
+    /* GetRenderTargetData, then LockRect(D3DLOCK_READONLY) */
+    if (((HRESULT(D3DVTCC *)(void *, void *, void *))vtable[0x80 / 4])(device, backBuffer, sysSurf) >= 0
+        && ((HRESULT(D3DVTCC *)(void *, void *, void *, DWORD))((*(void ***)sysSurf)[0x34 / 4]))(sysSurf, &lr, NULL, 0x10) >= 0) {
+        for (y = 0; y < height; y++) {
+            const byte *src = (const byte *)lr.pBits + y * lr.Pitch;
+            byte *dst = buffer + y * width * bytesPerPixel;
+            for (x = 0; x < width; x++, src += 4, dst += bytesPerPixel) {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                if (bytesPerPixel == 4)
+                    dst[3] = 0xff;
+            }
+        }
+        ((HRESULT(D3DVTCC *)(void *))((*(void ***)sysSurf)[0x38 / 4]))(sysSurf);
+        ok = 1;
+    }
+    ((ULONG(D3DVTCC *)(void *))((*(void ***)sysSurf)[2]))(sysSurf);
+    return ok;
+}
+#endif
+
 static void RB_EndFrame_real(void)
 {
     char *dx = (char *)dx_g;
@@ -783,6 +828,11 @@ static void RB_EndFrame_real(void)
     }
 #endif
 #ifdef GFX_REAL_D3D9
+    {
+        /* the fake device's Present takes the screenshot; a real one does not */
+        extern void R_CapturePendingScreenshotBeforePresent(void);
+        R_CapturePendingScreenshotBeforePresent();
+    }
 
     if (getenv("REALD3D9_PERFLOG")) {
         extern long long QueryPerf(void);

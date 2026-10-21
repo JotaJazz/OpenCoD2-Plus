@@ -1,4 +1,5 @@
 #include "common_types.h"
+#include <stdlib.h>
 extern dvar_t *r_rendererInUse;
 extern Bool g_RenderToShadowCookie;
 extern Bool g_InhibitCopy;

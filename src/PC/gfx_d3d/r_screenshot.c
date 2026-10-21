@@ -101,6 +101,12 @@ static Bool R_GetFrontBufferData(int width, int height, int bytesPerPixel, byte 
     byte centerBack[4] = { 0, 0, 0, 0 };
     byte centerFront[4] = { 0, 0, 0, 0 };
 
+#ifdef GFX_REAL_D3D9
+    {
+        extern int RB_ReadBackBuffer(int width, int height, int bytesPerPixel, byte *buffer);
+        return RB_ReadBackBuffer(width, height, bytesPerPixel, buffer);
+    }
+#endif
     rowBytes = width * 4;
     tempBuffer = (byte *)calloc(1, rowBytes * height);
     if (!tempBuffer) {
