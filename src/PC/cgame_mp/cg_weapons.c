@@ -115,7 +115,9 @@ extern void *Hunk_AllocXAnimClient(int size);
 extern itemInfo_t cg_itemsArray[];
 extern weaponInfo_t cg_weaponsArray[];
 extern gitem_t bg_itemlist[];
-static const int iSlotPreferenceOrder[2] = { 0 }; /* never filled in; zero, as C left it */
+/* the slots to switch to when a primary runs dry, as the 1.3 binary's
+ * CG_OutOfAmmoChange (0x4d69fc): left zero, it looked in slot 0 twice */
+static const int iSlotPreferenceOrder[2] = { 1, 2 };
 extern weapSlot_t (*s_barrelTags[4])[64];
 
 COD2_ASSERT_FIELD(WeaponDef, szGunXModel,       0x0c);
