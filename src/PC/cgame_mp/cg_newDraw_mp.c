@@ -30,7 +30,9 @@ extern const dvar_t *hud_health_pulserate_critical;
 extern const dvar_t *hud_deathQuoteFadeTime;
 static vec4_t color;
 static char szErrorString[1024];
-static const float pulseMags[4] = { 0 }; /* never filled in; zero, as C left it */
+/* how strong each pulse of the low health overlay is, as the 1.3 binary's
+ * CG_PulseLowHealthOverlay (0x4c5000): left zero, the overlay never showed */
+static const float pulseMags[4] = { 1.0f, 0.8f, 0.6f, 0.3f };
 static vec4_t color_00302d80;   /* duplicate decl removed (C++ redefinition -> C2086) */
 static const dvar_t *hud_fadeout_speed;
 static const dvar_t *hud_enable;
