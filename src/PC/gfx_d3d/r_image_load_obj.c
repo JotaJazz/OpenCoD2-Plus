@@ -22,8 +22,17 @@ extern void R_GenerateOutdoorImage(GfxImage *image);
 extern void Image_BuildSpecularityMap(float shift, byte *pic);
 
 extern GfxImage *Image_Alloc(const char *name, int category, int semantic, int imageTrack);
-static vec3_t lightGridLookupMatrix[3];
-static const int faceAxis[6][3] = { 0 }; /* never filled in; zero, as C left it */
+/* the light grid's basis, as rb_shade.c's and the 1.3 renderer's (0x100104c0):
+ * left zero, every light grid weight came out 0 and the models lit by the
+ * grid (the view weapon, players) drew black */
+static vec3_t lightGridLookupMatrix[3] = {
+    { 0.816496551f, -0.408248276f, -0.408248276f },
+    { 0.0f, 0.707106769f, -0.707106769f },
+    { 0.577350259f, 0.577350259f, 0.577350259f },
+};
+/* each cube face's axes (normal, right, up: 2 * axis + negative), as the 1.3
+ * renderer builds them (0x10010180); left zero, every face was the same */
+static const int faceAxis[6][3] = { { 0, 5, 3 }, { 1, 4, 3 }, { 2, 0, 4 }, { 3, 0, 5 }, { 4, 0, 3 }, { 5, 1, 3 } };
 
 void Image_Generate2D(GfxImage *image, byte *pixels, int width, int height, int imageFormat);
 void Image_Generate3D(GfxImage *image, byte *pixels, int width, int height, int depth, D3DFORMAT imageFormat);
