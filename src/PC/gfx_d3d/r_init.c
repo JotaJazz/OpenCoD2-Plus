@@ -60,8 +60,10 @@ extern void R_AddCmdDrawStretchRaw(int x, int y, int w, int h, int cols, int row
 extern void R_AddCmdDrawQuadPic(vec2_t *verts, const vec_t *color, MaterialHandle material);
 extern void R_AddCmdDrawSprite(MaterialHandle material, const byte *rgbaColor, const vec_t *pos, float radius, float minScreenRadius, int renderFxFlags);
 
-static vec2_t cornerTexCoords[4];
-static const r_index_t quadIndices[6] = { 0 }; /* never filled in; zero, as C left it */
+/* a particle cloud quad's corners and its two triangles, as the 1.3 renderer
+ * builds them (0x10011c40); left zero, every quad was a point */
+static const vec2_t cornerTexCoords[4] = { { 0.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f } };
+static const r_index_t quadIndices[6] = { 0, 1, 2, 2, 1, 3 };
 
 void R_FatalInitError(const char *msg);
 const char *R_ErrorDescription(HRESULT hr);

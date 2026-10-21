@@ -97,11 +97,14 @@ void RB_TessParticleCloud(const GfxEntity *re)
         RB_EndSurface();
     }
 
-    args.vertexCount = 0;
-    args.primCount = 0;
+    /* the whole cloud buffer: 1024 quads of 4 vertices and 2 triangles, as
+     * the 1.3 renderer draws it (0x10041405); the counts were a field off,
+     * so no cloud was drawn */
     args.firstVertexFromBase = 0;
+    args.vertexCount = 0x1000;
+    args.primCount = 0x800;
     args.u.buf.baseVertex = 0;
-    args.u.buf.baseIndex = 0x800;
+    args.u.buf.baseIndex = 0;
 
     if (re->radius[0] == re->radius[1] ||
         VecNCompareCustomEpsilon(re->origin, re->endpos, 0.001f, 3)) {
