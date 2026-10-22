@@ -1278,8 +1278,8 @@ void CG_AddViewWeapon(playerState_t *ps)
     ws.vLastMoveAng[1] = cg->playerEntity.vLastMoveAng[1];
     ws.vLastMoveAng[2] = cg->playerEntity.vLastMoveAng[2];
     ws.fLastIdleFactor = cg->playerEntity.fLastIdleFactor;
-    ws.time = cg->time - playerState->commandTime;
-    ws.damageTime = cg->damageTime;
+    ws.time = cg->time - playerState->deltaTime;
+    ws.damageTime = cg->damageTime ? cg->damageTime - playerState->deltaTime : 0;
     ws.v_dmg_pitch = cg->v_dmg_pitch;
     ws.v_dmg_roll = cg->v_dmg_roll;
     ws.vGunOffset[0] = cg->vGunOffset[0];
@@ -1294,6 +1294,18 @@ void CG_AddViewWeapon(playerState_t *ps)
     ws.weapIdleTime = &cg->weapIdleTime;
     BG_CalculateWeaponAngles(&ws, weaponAngles);
 
+    /* 0x4d66c4: the motion state carries over to the next frame */
+    cg->playerEntity.vLastMoveAng[0] = ws.vLastMoveAng[0];
+    cg->playerEntity.vLastMoveAng[1] = ws.vLastMoveAng[1];
+    cg->playerEntity.vLastMoveAng[2] = ws.vLastMoveAng[2];
+    cg->playerEntity.fLastIdleFactor = ws.fLastIdleFactor;
+    cg->vGunOffset[0] = ws.vGunOffset[0];
+    cg->vGunOffset[1] = ws.vGunOffset[1];
+    cg->vGunOffset[2] = ws.vGunOffset[2];
+    cg->vGunSpeed[0] = ws.vGunSpeed[0];
+    cg->vGunSpeed[1] = ws.vGunSpeed[1];
+    cg->vGunSpeed[2] = ws.vGunSpeed[2];
+
     AnglesToAxis(weaponAngles, weaponAxis);
     MatrixMultiply(weaponAxis, cg->refdef.viewaxis, finalAxis);
 
@@ -1305,9 +1317,9 @@ void CG_AddViewWeapon(playerState_t *ps)
     hand.origin[1] = cg->refdef.vieworg[1];
     hand.origin[2] = cg->refdef.vieworg[2];
 
-    CG_Madd(hand.origin, finalAxis[0], cg->swayOffset[0] + cg->vGunOffset[0] + CG_DvarValue(imp_cg_gun_x));
-    CG_Madd(hand.origin, finalAxis[1], cg->swayOffset[1] + cg->vGunOffset[1] + CG_DvarValue(imp_cg_gun_y));
-    CG_Madd(hand.origin, finalAxis[2], cg->swayOffset[2] + cg->vGunOffset[2] + CG_DvarValue(imp_cg_gun_z));
+    CG_Madd(hand.origin, finalAxis[0], cg->swayOffset[0] + CG_DvarValue(imp_cg_gun_x));
+    CG_Madd(hand.origin, finalAxis[1], cg->swayOffset[1] + CG_DvarValue(imp_cg_gun_y));
+    CG_Madd(hand.origin, finalAxis[2], cg->swayOffset[2] + CG_DvarValue(imp_cg_gun_z));
 
     if (BG_IsAimDownSightWeapon(weaponIndex) && playerState->fWeaponPosFrac > 0.0f) {
         cg->gunPitch = weaponAngles[0];
