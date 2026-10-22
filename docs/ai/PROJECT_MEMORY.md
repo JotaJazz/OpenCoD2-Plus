@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-22 — weapon motion, scoreboard banner, menu sounds
+
+- After the first shot the view weapon shook until the next spawn: `CG_AddViewWeapon` dropped the motion state `BG_CalculateWeaponAngles` returned, so the gun kick restarted from 0 every frame with an ever-growing speed and followed the frame time. Written back as 1.3 (`0x4d66c4`), with its `deltaTime` time base; checked on the Linux client firing in bursts (idle frame-to-frame change 0.025° → 0.003°, the idle sway).
+- The team banners on the scoreboard drew `$default` (a blue band): `Dvar_GetString` returned a `va()` copy, which the banner's own `va()` text overwrote. It returns the string itself, as `0x4375b0`.
+- Menus were silent after the first remote connect: `Com_LoadSoundAliases` wiped the menus' aliases when cgame loaded its own. The 1.3 binary (`0x42e380`) wipes nothing there.
+
 ## 2026-10-21 — menu mouse
 
 - In menus the SDL pump let the mouse go (system cursor shown) and passed the window's pixel position as the menus' 640×480 position: at 1920×1080 both cursors drifted apart. Now captured with deltas, as the 1.3 binary's `IN_Frame` (`0x464b30`).

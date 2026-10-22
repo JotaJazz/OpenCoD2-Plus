@@ -71,6 +71,14 @@ A shot's recoil (`BG_WeaponFireRecoil`, from `CG_FireWeapon`) adds to
 kick angles plus `cg->offsetAngles` with the usercmd
 (`CL_SetUserCmdAimValues`), so the view and the aim move together.
 
+## View weapon
+
+`CG_AddViewWeapon` (`src/PC/cgame_mp/cg_weapons.c`, the binary's `0x4d6390`)
+copies the weapon's motion state from `cg` into a `weaponState_t`, runs
+`BG_CalculateWeaponAngles` and writes `vLastMoveAng`, `fLastIdleFactor`,
+`vGunOffset` and `vGunSpeed` back, so the gun kick spring, the idle factor and
+the move lag carry over between frames. Its time base is `ps->deltaTime`.
+
 ## Mouse
 
 As the 1.3 binary (`IN_Frame` `0x464b30`, `IN_MouseMove` `0x4649c0`), the SDL

@@ -30,6 +30,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 | The SDL pump ignores `in_mouse` (not registered there) and `ClickToContinue` (the original posts a click each frame) | `src/unix/linux_input.c` | 1.3's `IN_Frame` `0x464b30` |
 | The Linux X11 fallback pump still sends absolute positions to menus | `src/unix/linux_input.c` | runs only when SDL has no events |
+| The view weapon's position is the eye plus sway and `cg_gun_*`, not 1.3's `CG_CalculateWeaponPosition` (`0x4d5970`: lean, move offset, landing dip, gun offsets); the sway gets scale 1, not the shellshock one (`0x4d52e0`) | `src/PC/cgame_mp/cg_weapons.c` | angles follow 1.3 |
 | `r_fullscreen` cannot be overridden by `+set` on the command line ("is read only") | dvar registration | profile value wins |
 
 ## Deferred decisions
