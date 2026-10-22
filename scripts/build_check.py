@@ -31,7 +31,7 @@ import argparse, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
-LINUX_BINARIES = ('cod2_linux', 'cod2_lnxded')
+LINUX_BINARIES = ('cod2_linux', 'cod2_linux_vk', 'cod2_lnxded')
 CLIENT_LIBRARIES = ('libGL.', 'libX11.', 'libSDL2', 'libcurl.')
 
 VARIANTS = {
@@ -44,6 +44,9 @@ VARIANTS = {
 for _v in ('mingw', 'mingw-client'):
     VARIANTS[_v + '-10'] = VARIANTS[_v] + ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10']
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
+# the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
+VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
 # the MinGW client links the static SDL2 the user supplies
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
@@ -113,7 +116,8 @@ def duplicates(variant, build_dir):
                                   '--nm', nm] + extra, capture_output=True, text=True)
             if run.returncode != 0:
                 errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
-        executable = os.path.join(build_dir, target + ('.exe' if variant.startswith('mingw') else ''))
+        executable = os.path.join(build_dir, (target + '_vk' if variant == 'linux-vk' and target == 'cod2_linux' else target)
+                                  + ('.exe' if variant.startswith('mingw') else ''))
         if os.path.exists(executable):
             # the imports the target links: the client's server and collision
             # with the VM's core thunks, the dedicated server's own
@@ -187,6 +191,9 @@ def main():
     for variant in variants:
         if variant.startswith('mingw-client') and not os.path.exists(SDL2_MINGW):
             print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
+            continue
+        if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):
+            print(f'skip {variant} (no {os.path.relpath(LINUX_VK_DXVK, ROOT)}: scripts/build_linux_vk_deps.sh)')
             continue
         errors = build(variant, extra)
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)

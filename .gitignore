@@ -53,3 +53,6 @@ build/check-*/
 cod2_crash_*.txt
 .superpowers/
 docs/superpowers/
+
+# Linux real Direct3D 9 deps (scripts/build_linux_vk_deps.sh)
+third_party/linux-vk/

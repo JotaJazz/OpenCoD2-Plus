@@ -559,6 +559,15 @@ else()
 # NATIVE Linux (cod2_linux + cod2_lnxded)
 # ----------------------------------------------------------------------------
 option(COD2_DEBUG "-O0, no hardening (gdb / canary-UB work; mirrors DEBUG=1)" OFF)
+option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader): cod2_linux_vk" OFF)
+set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk)
+if(COD2_LINUX_DXVK)
+  if(NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libdxvk_d3d9.so.0 OR NOT EXISTS ${COD2_LINUX_VK_DIR}/include/vkd3d_shader.h)
+    message(FATAL_ERROR "COD2_LINUX_DXVK: run scripts/build_linux_vk_deps.sh first")
+  endif()
+  add_compile_definitions(GFX_REAL_D3D9)
+  include_directories(${COD2_LINUX_VK_DIR}/include)
+endif()
 set(COD2_FEATURE_CFLAGS "" CACHE STRING "Pass-through feature gates, e.g. -DCOD2_PATCH_13=1")
 set(COD2_WWWDL_LIBS "-l:libcurl.so.4" CACHE STRING "1.3 redirected-download backend lib")
 
@@ -761,5 +770,19 @@ target_link_options(cod2_lnxded PRIVATE ${COD2_LINK_EXTRA})
 
 set_target_properties(cod2_linux cod2_lnxded PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+# COD2_LINUX_DXVK: the client renders through the real Direct3D 9 path
+# (GFX_REAL_D3D9) as the Windows client, on DXVK native, and compiles the
+# game's shaders with vkd3d-shader; both are loaded at run time from next to
+# the executable (scripts/build_linux_vk_deps.sh builds them). The whole build
+# directory is compiled that way, and its client is named cod2_linux_vk.
+if(COD2_LINUX_DXVK)
+  set_target_properties(cod2_linux PROPERTIES OUTPUT_NAME cod2_linux_vk)
+  target_link_options(cod2_linux PRIVATE "-Wl,-rpath,$ORIGIN")
+  foreach(lib libdxvk_d3d9.so.0 libvkd3d-shader.so.1)
+    add_custom_command(TARGET cod2_linux POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${COD2_LINUX_VK_DIR}/lib/${lib} ${CMAKE_BINARY_DIR}/${lib})
+  endforeach()
+endif()
 
 endif()
