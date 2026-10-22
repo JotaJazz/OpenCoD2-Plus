@@ -650,12 +650,20 @@ void RB_GpuWaited(int ticks)
 
 #ifdef GFX_REAL_D3D9
 long long g_perfFreq;
+#    ifdef _WIN32
 extern unsigned int __attribute__((stdcall)) GetTickCount(void);
+#    else
+extern int Sys_Milliseconds(void);
+#    endif
 long long QueryPerf(void)
 {
 
     g_perfFreq = 1000;
+#    ifdef _WIN32
     return (long long)(unsigned long long)GetTickCount();
+#    else
+    return (long long)(unsigned int)Sys_Milliseconds();
+#    endif
 }
 #endif
 

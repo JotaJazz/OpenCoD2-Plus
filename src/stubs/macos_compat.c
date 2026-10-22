@@ -401,6 +401,47 @@ static void Win32_BridgeInputToEngine(SDL_Window *win)
 }
 #    endif
 
+#    if defined(GFX_REAL_D3D9) && !defined(_WIN32)
+/* Linux: the game window of DXVK native's Direct3D 9, an SDL window made for
+ * Vulkan; DXVK's SDL2 window system takes the SDL_Window as the HWND. */
+void *Sys_CreateD3DWindow(int width, int height, int fullscreen)
+{
+    if (!SDL_WasInit(SDL_INIT_VIDEO) && SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        fprintf(stderr, "SDL_InitSubSystem(VIDEO) FAILED: %s\n", SDL_GetError());
+        return NULL;
+    }
+    if (!sdl_gl_window) {
+        sdl_gl_window = SDL_CreateWindow("CoD2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                         width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
+        if (!sdl_gl_window) {
+            fprintf(stderr, "SDL_CreateWindow FAILED: %s\n", SDL_GetError());
+            return NULL;
+        }
+        SDL_AddEventWatch(sdl_quit_watch, NULL);
+        fprintf(stderr, "Game window created: %dx%d\n", width, height);
+    }
+    if (fullscreen) {
+        SDL_SetWindowFullscreen(sdl_gl_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    } else {
+        SDL_SetWindowFullscreen(sdl_gl_window, 0);
+        SDL_SetWindowSize(sdl_gl_window, width, height);
+    }
+    SDL_RaiseWindow(sdl_gl_window);
+    return sdl_gl_window;
+}
+
+/* the desktop's size, which a full screen view takes its shape from */
+void Sys_GetDesktopSize(int *width, int *height)
+{
+    SDL_DisplayMode mode;
+
+    if (sdl_gl_window && SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(sdl_gl_window), &mode) == 0) {
+        *width = mode.w;
+        *height = mode.h;
+    }
+}
+#    endif
+
 #    if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
 typedef struct LinuxInputEvent {
     int type;

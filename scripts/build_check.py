@@ -167,7 +167,9 @@ def c_decls(build_dir):
 
 def var_sizes(build_dir):
     """The engine's globals declared larger than they are defined."""
-    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_var_sizes.py'), build_dir],
+    binary = 'cod2_linux_vk' if os.path.exists(os.path.join(build_dir, 'cod2_linux_vk')) else 'cod2_linux'
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_var_sizes.py'), build_dir,
+                          '--binary', binary],
                          capture_output=True, text=True)
     if run.returncode == 0:
         return []

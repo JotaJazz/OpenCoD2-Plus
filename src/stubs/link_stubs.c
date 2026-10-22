@@ -752,7 +752,12 @@ int GetHighAndLowIndices(void)
 extern void *vtbl_CD3DXConstantTable[];
 int D3DXGetShaderConstantTable(const void *function, void **constantTable)
 {
-#ifdef GFX_REAL_D3D9
+#if defined(GFX_REAL_D3D9) && !defined(_WIN32)
+    {
+        extern int VkD3DX_GetShaderConstantTable(const void *function, void **constantTable);
+        return VkD3DX_GetShaderConstantTable(function, constantTable);
+    }
+#elif defined(GFX_REAL_D3D9)
 
     {
         typedef int(__stdcall * PFN_GetCT)(const void *, void **);

@@ -774,10 +774,14 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             R_GetModeSize(&width, &height);
             if (!dx.d3d9)
                 dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9();
+            if (!dx.d3d9)
+                R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
             RealD3D9_FillPresentParams(pp, hwnd, width, height);
             hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
+            if (hr < 0 || !dx.device)
+                R_Error(ERR_FATAL, "Couldn't create the Direct3D 9 device: %s", R_ErrorDescription(hr));
 
             vidConfig.width = width;
             vidConfig.height = height;

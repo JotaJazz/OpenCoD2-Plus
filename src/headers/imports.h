@@ -27,7 +27,7 @@ extern "C" {
 #include "imports/libstdcxx.h"
 #include "generated_syms.h"
 
-#ifdef GFX_REAL_D3D9
+#if defined(GFX_REAL_D3D9) && defined(_WIN32)
 #define D3DVTCC __attribute__((stdcall))
 #else
 #define D3DVTCC

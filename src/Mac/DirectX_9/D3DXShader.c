@@ -537,7 +537,24 @@ HRESULT D3DXCompileShader(
     int isVS = 0;
     int len = (int)SrcDataLen;
 
-#ifdef GFX_REAL_D3D9
+#if defined(GFX_REAL_D3D9) && !defined(_WIN32)
+    {
+        extern HRESULT VkD3DX_CompileShader(const char *src, UINT len, const void *defines, void *include,
+                                            const char *entry, const char *profile, void **shader, void **errors);
+        char *src = (char *)malloc(SrcDataLen ? SrcDataLen : 1);
+        HRESULT hr;
+
+        if (!src)
+            return (HRESULT)0x8007000e;
+        memcpy(src, pSrcData, SrcDataLen);
+        StripLineComments(src, (int)SrcDataLen);
+        hr = VkD3DX_CompileShader(src, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile, ppShader, ppErrorMsgs);
+        free(src);
+        if (ppConstantTable)
+            *ppConstantTable = NULL;
+        return hr;
+    }
+#elif defined(GFX_REAL_D3D9)
 
     {
         typedef HRESULT(__stdcall * PFN_D3DXCompile)(const char *, UINT, const void *, void *,
@@ -694,7 +711,15 @@ static void StripConstRegisters(char *s, int len)
     }
 }
 
-static int __attribute__((stdcall)) RealInclude_Open(void *_this, int IncludeType,
+/* the include object's methods: stdcall as d3dx9's on Windows, cdecl as
+ * VkD3DX_CompileShader calls them on Linux */
+#    ifdef _WIN32
+#        define REALINCLUDE_CC __attribute__((stdcall))
+#    else
+#        define REALINCLUDE_CC
+#    endif
+
+static int REALINCLUDE_CC RealInclude_Open(void *_this, int IncludeType,
                                                      const char *pFileName, const void *pParentData, const void **ppData, UINT *pBytes)
 {
     char path[160];
@@ -723,7 +748,7 @@ static int __attribute__((stdcall)) RealInclude_Open(void *_this, int IncludeTyp
     *pBytes = (UINT)len;
     return 0;
 }
-static int __attribute__((stdcall)) RealInclude_Close(void *_this, const void *pData)
+static int REALINCLUDE_CC RealInclude_Close(void *_this, const void *pData)
 {
     (void)_this;
     if (pData && ((const char *)pData)[0])
