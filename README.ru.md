@@ -73,6 +73,8 @@ cmake --build build-native -j
 
 Библиотеки клиента нужны для сборки обоих, но `cod2_lnxded` запускается только с 32-битными libc, libm, libz и libstdc++.
 
+`cod2_linux` рисует временными шейдерами (без солнца, белое небо). Для собственных шейдеров игры соберите `cod2_linux_vk`: `scripts/build_linux_vk_deps.sh` собирает DXVK native и vkd3d-shader (32 бита, из зафиксированных версий; нужны также `meson`, `ninja` и `libvulkan1:i386`), затем настройте сборку с `-DCOD2_LINUX_DXVK=ON` в отдельном каталоге. Нужно устройство Vulkan.
+
 ### Windows (кросс-компиляция из Linux с помощью MinGW)
 
 Нужны 32-битные компиляторы MinGW-w64 (`g++-mingw-w64-i686`) и статическая zlib для MinGW (`libz-mingw-w64-dev`).

@@ -16,6 +16,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0006](0006-original-1-3-binaries-are-the-reference.md) | The original 1.3 binaries are the reference | Accepted | 2026-10-20 |
 | [0007](0007-remove-the-renderer-dll-variant.md) | Remove the renderer DLL variant | Accepted | 2026-10-20 |
 | [0008](0008-windows-client-on-real-direct3d-9.md) | Windows client on real Direct3D 9 | Accepted | 2026-10-21 |
+| [0009](0009-linux-client-on-dxvk.md) | Linux client on DXVK native | Accepted | 2026-10-22 |
 
 ## Template
 

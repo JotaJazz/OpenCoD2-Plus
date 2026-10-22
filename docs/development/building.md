@@ -10,6 +10,7 @@ top of it.
 |---|---|---|
 | Linux 1.3 | `cmake -S . -B build/check-linux` | `cod2_linux`, `cod2_lnxded` |
 | Linux 1.0 | `+ -DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` | same, protocol 115 |
+| Linux real Direct3D 9 | `scripts/build_linux_vk_deps.sh`, then `-DCOD2_LINUX_DXVK=ON` | `cod2_linux_vk` with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it |
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
 | MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
@@ -27,6 +28,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
+| `linux-vk` | Linux client on real Direct3D 9 (`-DCOD2_LINUX_DXVK=ON`; skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
 
 Checks it runs (each a script in `scripts/`):
 

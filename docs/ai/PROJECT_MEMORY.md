@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-22 — Linux client on real Direct3D 9
+
+- `cod2_linux_vk` (`-DCOD2_LINUX_DXVK=ON`): the Windows client's real Direct3D 9 path on DXVK native, with vkd3d-shader compiling the game's HLSL, so Linux gets the game's lighting (the GL device draws the sky white and the world flat). `cod2_linux` stays the GL client.
+- Chosen over translating the shaders to GLSL: it reuses the Windows renderer path whole; only device, window and shader compiler differ. Found: vkd3d 1.19 rejects the game's overlapping `register(c)` reservations, but the include handler strips them already (as on Windows); DXVK native needs `DXVK_WSI_DRIVER` and ends the process when Vulkan has no device, so the client asks the loader first.
+- Checked under WSL on llvmpipe: 152 shaders compile on mp_toujane, the map draws, `vid_restart` works, a missing library or Vulkan device is a clean error. Not checked on a GPU.
+
 ## 2026-10-22 — weapon motion, scoreboard banner, menu sounds
 
 - After the first shot the view weapon shook until the next spawn: `CG_AddViewWeapon` dropped the motion state `BG_CalculateWeaponAngles` returned, so the gun kick restarted from 0 every frame with an ever-growing speed and followed the frame time. Written back as 1.3 (`0x4d66c4`), with its `deltaTime` time base; checked on the Linux client firing in bursts (idle frame-to-frame change 0.025° → 0.003°, the idle sway).

@@ -22,6 +22,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/client_view_test.py` | a real client is shot, blasted, watches deaths, dies and respawns without crashing | yes |
 | `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); `--moves CFG`, `--spot` | yes |
 | `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
+| `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
 
@@ -66,6 +67,7 @@ plus:
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
    `prediction`.
+   `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py` and `http_test.py` with `--binary build/check-linux/cod2_lnxded`.
 
 ## Ad-hoc client checks

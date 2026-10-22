@@ -17,7 +17,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Item | Why accepted |
 |---|---|
 | Engine's bgame keeps its own animation script (`src/PC/bgame/bg_animation_mp.c`) | predicted legs/torso differ from the server's 4 times over the prediction test, against 20 origin misses |
-| Linux client has only the GL device (stand-in shaders) | a real Direct3D 9 needs Windows or Wine |
+| `cod2_linux` keeps the GL device (stand-in shaders) | `cod2_linux_vk` has the game's shaders but needs DXVK, vkd3d-shader and a Vulkan device |
 | `fxRestart` takes hunk memory each time until the next map load | developer command; many restarts on one map end in a drop error |
 | Server browser's find-player list indexes 1-based (`ui_main_mp.c`) | nothing starts that search, in the original either |
 | Windows dedicated server prints only to its window, shows a message box on fatal errors | CoD2rev-Plus's `src/win32`; scripts read the console log |
@@ -40,7 +40,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|
 | Move MSVC, web and x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
 | Port the engine's animation script to CoD2rev-Plus's | measurable benefit |
-| A Linux client on a real renderer (Vulkan/OpenGL with the game's shaders) | not planned |
+| Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 
 ## Deliberate simplifications
 

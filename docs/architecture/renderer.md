@@ -8,9 +8,10 @@ into the client (no separate DLL: [ADR 0007](adr/0007-remove-the-renderer-dll-va
 | Build | Device | Shaders |
 |---|---|---|
 | Windows client (default, `COD2_WIN32_REAL_D3D9=ON`, `GFX_REAL_D3D9`) | real `IDirect3DDevice9` | the game's `materials/shaders/*.hlsl`, compiled with the system's d3dx9 (`d3dx9_43` down to `d3dx9_24`), `//` comments blanked first (Wine's compiler rejects one after an `#include`) |
-| Windows client with `COD2_WIN32_REAL_D3D9=OFF`, Linux client | Mac port's GL layer behind a Direct3D interface (`src/Mac`) | hand-written ARB programs picked by HLSL keywords: no sun, no specular, white world |
+| Linux client `cod2_linux_vk` (`-DCOD2_LINUX_DXVK=ON`, `GFX_REAL_D3D9`) | DXVK native's `IDirect3DDevice9`, over Vulkan | the game's shaders, compiled with vkd3d-shader |
+| Windows client with `COD2_WIN32_REAL_D3D9=OFF`, Linux client `cod2_linux` | Mac port's GL layer behind a Direct3D interface (`src/Mac`) | hand-written ARB programs picked by HLSL keywords: no sun, no specular, white world |
 
-Decision: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md).
+Decisions: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md), [ADR 0009](adr/0009-linux-client-on-dxvk.md).
 
 ## Real Direct3D 9 path
 
@@ -23,6 +24,23 @@ Decision: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md).
 | COM calls | through `D3DVTCC` (stdcall on a real device, empty for the GL device) |
 | Picmip | by texture memory, as `0x1000d6a0`; Windows system info from `GlobalMemoryStatusEx`, the processor's registry key and the primary display device |
 | `vid_restart` | refused while a local server runs ("Listen server cannot video restart"), as the original |
+
+## Linux real Direct3D 9 path
+
+`cod2_linux_vk` runs the same `GFX_REAL_D3D9` renderer code; only three seams
+differ from Windows, each `#if defined(GFX_REAL_D3D9) && !defined(_WIN32)`:
+
+| Seam | Linux |
+|---|---|
+| Device (`RealD3D9_Direct3DCreate9`, `src/Mac/DirectX_9/d3d9_real.c`) | `dlopen` of `libdxvk_d3d9.so.0`, next to the executable first; `DXVK_WSI_DRIVER=SDL2`; SDL's video initialised first. DXVK ends the process when Vulkan has no device, so the loader is asked for one before; no library, no device or a failed `CreateDevice` is a fatal renderer error |
+| Window (`Sys_CreateD3DWindow`, `src/stubs/macos_compat.c`) | the SDL window with `SDL_WINDOW_VULKAN`, passed as the HWND (DXVK's SDL2 window system takes the `SDL_Window*`) |
+| Shaders (`src/Mac/DirectX_9/d3dx_vkd3d.c`) | `D3DXCompileShader` through `libvkd3d-shader.so.1` (HLSL to Direct3D 9 bytecode, the include object as callbacks); `D3DXGetShaderConstantTable` reads the bytecode's CTAB comment |
+
+COM calls are cdecl there (`D3DVTCC` is stdcall on Windows only), as DXVK
+native declares them. `scripts/build_linux_vk_deps.sh` builds both libraries
+(DXVK v2.7.1, vkd3d 1.19, 32-bit) into `third_party/linux-vk/`, which is not
+in git; the build copies them next to `cod2_linux_vk`. Under WSL the only
+Vulkan device is llvmpipe (the processor): correct pictures, slow.
 
 ## Tables filled from the original
 
