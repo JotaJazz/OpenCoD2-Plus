@@ -9,6 +9,7 @@ English. The project's summary for a wide audience is the root
 | Architecture | [overview](architecture/overview.md), [boundaries](architecture/boundaries.md), [server](architecture/server.md), [client](architecture/client.md), [renderer](architecture/renderer.md), [effects](architecture/effects.md) | how the system is built and the rules it keeps |
 | Decisions | [adr/](architecture/adr/README.md) | why it is built that way |
 | Development | [building](development/building.md), [testing](development/testing.md), [validation](development/validation.md), [vendored](development/vendored.md) | how to build, test and validate |
+| Changes | [changes](changes.md) | what this fork changed, by area |
 | Roadmap | [debt](roadmap/debt.md) | risks, accepted debt, deferred decisions |
 | Glossary | [glossary](glossary.md) | terms |
 

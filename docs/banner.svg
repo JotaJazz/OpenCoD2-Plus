@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="title desc">
-  <title id="title">opencod2-plus</title>
+  <title id="title">OpenCoD2-Plus</title>
   <desc id="desc">Call of Duty 2 engine, client and dedicated server, for Linux and Windows</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -22,7 +22,7 @@
     <polyline points="88,178 143,148 198,178"/>
   </g>
 
-  <text x="250" y="140" font-family="Impact, 'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="2" fill="#efe6cf">opencod2<tspan fill="#c9b37e">-plus</tspan></text>
+  <text x="250" y="140" font-family="Impact, 'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="2" fill="#efe6cf">OpenCoD2<tspan fill="#c9b37e">-Plus</tspan></text>
   <text x="254" y="186" font-family="'Courier New', Courier, monospace" font-size="24" fill="#d8ceb4">Call of Duty 2 engine · client &amp; server · Linux &amp; Windows</text>
-  <text x="254" y="222" font-family="'Courier New', Courier, monospace" font-size="19" fill="#9c9478">reverse-engineered · work in progress · C++ · CoD2rev-Plus script VM</text>
+  <text x="254" y="222" font-family="'Courier New', Courier, monospace" font-size="19" fill="#9c9478">reverse-engineered · community-driven · CoD2rev-Plus server · real lighting</text>
 </svg>

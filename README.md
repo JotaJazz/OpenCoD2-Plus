@@ -1,8 +1,8 @@
-# opencod2-plus
+# OpenCoD2-Plus
 
-<p align="center"><img src="docs/banner.svg" alt="opencod2-plus" width="100%"></p>
+<p align="center"><img src="docs/banner.svg" alt="OpenCoD2-Plus" width="100%"></p>
 
-![Status: work in progress](https://img.shields.io/badge/status-work%20in%20progress-orange)
+![Status: in development](https://img.shields.io/badge/status-in%20development-orange)
 ![License: none yet](https://img.shields.io/badge/license-none%20yet-lightgrey)
 ![Platforms: Linux | Windows](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
 ![CoD2 1.3](https://img.shields.io/badge/CoD2-1.3-c9b37e)
@@ -11,43 +11,55 @@
 
 [Español](README.es.md) · **English** · [Português](README.pt.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
-Reverse-engineered source code of the **Call of Duty 2** engine: the multiplayer client and the dedicated server, for Linux and Windows.
+**Call of Duty 2 is still alive.** OpenCoD2-Plus is the Call of Duty 2 multiplayer engine rebuilt from its source: the client and the dedicated server, for Windows and Linux, made by people who still play the game and keep improving it.
 
-This repository is a fork of [opencod2/opencod2](https://github.com/opencod2/opencod2), which is where the reconstruction of the engine was done. It also carries changes from [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web). This fork only adds the changes described in [Changes in this fork](#changes-in-this-fork). Its goal is to become one repository with the client and the dedicated server, by bringing in the server of [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) module by module. On Linux that is done: the dedicated server runs entirely on CoD2rev-Plus's code, and the client's local games run on its server.
+<table>
+  <tr>
+    <td><img src="docs/images/carentan.jpg" alt="Carentan: the piano in front of the Jeanne d'Arc café"></td>
+    <td><img src="docs/images/toujane.jpg" alt="Toujane: the flak gun and the mosque tower"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/images/scoreboard.jpg" alt="The scoreboard of a local game with bots"></td>
+  </tr>
+</table>
+<p align="center"><sub>Carentan, Toujane and a local game with bots, drawn by the Linux client with the game's own shaders.</sub></p>
 
-> [!WARNING]
-> **Work in progress — this does not fully work yet.** The client boots to the main menu, hosts local games that other clients join, and the dedicated server, now CoD2rev-Plus's, loads maps and holds players in 1.0 and 1.3, but expect crashes, missing functionality and broken features. It is shared for the curious and for collaboration, not as a finished or playable port.
+## What works today
+
+- **Online play on public 1.3 servers** with the Windows client, with the original lighting: Direct3D 9 and the game's own shaders.
+- **Host a game from the client**, for friends to join, with bots if you like (libcod).
+- **A dedicated server for 1.3 and 1.0**, built on [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus): on Linux it passes CoD2rev-Plus's whole smoke test.
+- **A Linux client**, and one on Vulkan (DXVK) that draws with the game's own shaders too.
+- **Checked against the original 1.3 binaries**: movement prediction, effects, sounds, recoil, menus and many fixes ([what changed](docs/changes.md)).
+
+> [!NOTE]
+> **Still in development.** Expect bugs and missing pieces, and please report them in the [issues](https://github.com/JotaJazz/opencod2-plus/issues).
 
 > [!IMPORTANT]
 > **No game content is included — bring your own data.** This repository is source code only: no executables, archives, maps, models, textures, sounds or scripts. To run anything you must supply data files from a copy of the game that **you legally own**.
 
-## Transparency
+## How to play
 
-- **Who maintains this:** I'm JotaJazz. I like old games, and that is why this fork exists: I want to keep playing CoD2 with my friends, and to keep the game alive for the community that still plays it, with an open project.
-- **How the work is done:** I work with [Claude Code](https://claude.com/claude-code), Anthropic's coding assistant. The changes in this fork, including this README and its translations, are written with its help. Commits made this way carry a `Co-Authored-By: Claude` line in their message, so they can be identified in the history with `git log`.
-- **Relationship with the original:** the reconstruction is the work of the opencod2 authors (riicchhaarrd) and of Sipex. This fork no longer pulls changes from them; it brings in code from CoD2rev-Plus instead, copied unchanged so that its commits apply here too.
-- **License:** the original repository has no license, and neither does this one yet. CoD2rev-Plus, whose script VM, server, game and bgame are already here (`src/script`, `src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`), is AGPL-3.0. The license of the whole is being sorted out with the original authors before more of that code is published here. libcod (`src/libcod`) and its bots mod (`mods/bots`) come from CoD2rev-Plus too, with third-party libraries under their own licenses: SQLite (public domain), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT, in `yyjson.h`) and Speex (BSD, `src/libcod/speex/COPYING`, not built).
-- **What it is not:** it is not an official project and is not affiliated with Activision, Infinity Ward or the authors of the original repository. It contains no game files.
+Ready-to-run builds will be published on the **Releases** page. Until then, build the client (see [Building](#building)) and point it at your Call of Duty 2 folder, the one with `main/`:
 
-## Changes in this fork
+```bat
+cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
+```
 
-- **Builds that work again:** the Linux and MinGW builds, broken since the original was built only with MSVC, build again; `scripts/build_check.py` builds Linux and MinGW (the dedicated server and, with SDL2, the client), as 1.3 and as 1.0, in one go.
-- **Compiled as C++:** on Linux and MinGW the whole engine compiles as C++ (gnu++17), with the shared headers made valid C++, without changing what it does; checks guard the C names the data blobs rely on and the structure layouts of the original binary.
-- **CoD2rev-Plus's script VM:** the GSC virtual machine is CoD2rev-Plus's, copied unchanged into `src/script`, with a generated C/C++ bridge. The server now holds two players, disconnects, reconnects and `clientkick`, where the reconstructed VM crashed as soon as the second player joined.
-- **CoD2rev-Plus's server:** the dedicated server is built with CoD2rev-Plus's server, copied unchanged into `src/server`, with a generated bridge in which every call between the two is checked against the engine's ABI. The local games of the Linux and Windows (MinGW) clients run on it too, and the whole client traces with its collision: a client hosts a game and others join it. With it the server refuses to send the stock and server-only `.iwd` files. Its game and bgame (`src/game`, `src/bgame`) come with it, and with them `addip` and the rotation of `games_mp.log`; in the client, cgame keeps the engine's bgame (`src/PC/bgame`), whose globals take the `eng_` prefix, and which now predicts the player's moves, mantles and weapon with CoD2rev-Plus's code: in the same moves it now mispredicts (snaps back) about an eighth as often. Since then the dedicated server also runs on its core: `universal`, `qcommon` and the platform code (`src/universal`, `src/qcommon`, `src/unix`, `src/win32`), which bring the console log's rotation and timestamps, `net_strictPort` and its crash report. With its xanim (`src/xanim`) too, everything the dedicated server runs is CoD2rev-Plus's code.
-- **CoD2rev-Plus's libcod:** the dedicated server is built with libcod, copied unchanged into `src/libcod` with the modules CoD2rev-Plus turns on (all but MySQL): its script functions, the bots, `sv_master1` to `sv_master5`, HTTP and WebSocket (Mbed TLS), SQLite and JSON. It passes CoD2rev-Plus's smoke, bots and HTTP tests in 1.3 and 1.0; the client's local games have it too, on its local server (Linux and Windows): the bots test passes there as well, and the HTTP test on Linux.
-- **A dedicated server without the client's libraries:** on Linux `cod2_lnxded` needs only libc, libm, libz and libstdc++, not GL, X11, SDL2 or curl.
-- **The Windows client's real lighting:** the Windows client draws with Direct3D 9 and compiles the game's own shaders with the system's d3dx9, as the original renderer does, instead of the stand-in shaders of the Mac port's GL layer (a white world and sky). The sun, the lightmaps, the models' lighting and the sky look as in the original: under Wine, next to the original `CoD2MP_s.exe` on the same spots, the two draw nearly the same picture. On the way, several of the renderer's tables that the reconstruction had left zero were filled from the original (the view weapon and players drew black, static models too), the textures load at full size again, and `r_aspectRatio` and full screen work.
-- **Fixes:** the server answered on the wrong port, saw no `.iwd` on Windows drives under WSL, and crashed on any kick; it announced protocol 118 in the 1.0 build; the C++ Linux build stays on glibc 2.34; `getAnimLength` and three other animation builtins no longer crash the server. The fourth or fifth map load crashed the server: the animation script grew with each map, and the error it raised from rcon corrupted the stack. The 1.0 server wrote over its own configstrings and no 1.0 client could join. Fragmented messages used the wrong offsets in both versions, and the port of a network address was where Quake III keeps it, not where CoD2 does. The `.iwd` files in the server's own folder were not searched, and the builtins that take a player did not see one with CoD2rev-Plus's VM. Entities were linked into the world's sectors under the wrong number, so unlinking some of them crashed and traces tested the previous entity. In the client, every entity clipped as a box was left out of the world's sectors and the box test missed the segments that crossed it, so bullets went through the players of a local game; and since an upstream change for x64, no animation of more than one frame played on 32 bits, which left the players and the first-person weapon in a broken pose. The client crashed when it saw a player die, and its movement prediction could overrun its stack against walls; it sent a jump, a stance or a weapon change one command late and truncated the velocity it predicts; the MG42's anims, the UI's fill and text widths and a dozen other engine calls passed arguments or read results of another type than the function's, and effects played along a direction got a broken axis. No effect was drawn at all (impacts, explosions, the maps' smoke): the effects code read its flags, curve scales, colors and velocities otherwise than the original binary, scheduled delayed parts for a time that never came, left every particle at the world's origin with no second radius, and nothing drew them. A changed configstring dropped the client and the scoreboard stayed empty (the server commands' letters had other meanings), a thrown grenade hung in the air (no entity moved between its events), and snow fell only indoors (the outdoor map was upside down).
-- **Tests:** CoD2rev-Plus's smoke test, unchanged, against this server, with the list of checks it does not pass yet; tests for two players, map loads, a drop error from rcon and the animation builtins; and checks for structure layouts, C names, the ABI of the bridge and the files copied from CoD2rev-Plus. Tests fire level and down at a player and check that each shot lands on the upper body or on the legs, and that a knife and an explosion reach a player, on the dedicated server and in a local game.
+```sh
+./cod2_linux +set fs_basepath /path/to/CoD2 +connect IP:port
+./cod2_linux_vk +set fs_basepath /path/to/CoD2 +connect IP:port   # with the game's own shaders (Vulkan)
+```
 
-The technical documentation is in [docs/README.md](docs/README.md) (in English).
+Without `+connect` the client opens the main menu, where you can also start your own game. A dedicated server for your local network:
 
-## Game versions
+```sh
+./cod2_lnxded +set fs_basepath /path/to/CoD2 +set dedicated 1 +map mp_toujane
+```
 
-- **The version is chosen when building.** By default the engine is built as 1.3 (protocol 118); with `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` it is built as 1.0 (protocol 115).
-- **Both dedicated servers work for testing:** in 1.3 and in 1.0 the server loads, changes and restarts maps, answers `getinfo`, `getstatus` and rcon, and holds two players who join, leave, come back and get kicked.
-- **Local games work for testing:** in 1.3 and in 1.0 a client hosts a game on CoD2rev-Plus's server, another client joins it, and both stay through `map_restart` and a map change (`scripts/listen_test.py`, with your CD key). A shot lands on the body part it aims at (`scripts/hit_location_test.py`).
+## For contributors
+
+Every kind of help counts: playing and reporting bugs, testing on other systems, or code. The technical documentation, in English, starts at [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) is the entry point for AI coding agents.
 
 ## Building
 
@@ -87,7 +99,8 @@ cmake --build build-win32 -j
 
 Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
-### Windows (MSVC, native)
+<details>
+<summary><b>Windows (MSVC, native)</b></summary>
 
 A native build of the full SDL2/GL client with Visual Studio 2022 or newer and its **x86** toolset. Configure and build from an "x86 Native Tools for VS" command prompt:
 
@@ -103,7 +116,10 @@ cmake --build build/msvc-release --target cod2_win32
 
 This build still compiles C and uses the reconstructed script VM (`src/PC/script`). SDL2 is supplied by you: put the 32-bit MSVC SDL2 development package under `third_party/SDL2-<version>/` and copy `SDL2.dll` next to the executable. With `-DCOD2_SDL2_STATIC=ON` it links a static SDL2 you build yourself (`SDL2-static.lib`, same configuration as the engine) and the static C runtime, into one executable that needs no DLL; build SDL2 with `-DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_RENDER=OFF -DSDL_FORCE_STATIC_VCRT=ON`. Release applies `/O2` to decompiler-faithful code that is less tested than the Debug build: if something misbehaves only in Release, suspect the optimizer.
 
-### CMake options
+</details>
+
+<details>
+<summary><b>CMake options</b></summary>
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -123,25 +139,12 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 
 There is also a WebAssembly build (`emcmake cmake -S . -B build/web`, with the Emscripten SDK), described at the top of `CMakeLists.txt`.
 
-## Running
-
-The engine needs the original game files (the `main` folder with its `.iwd` files), which are not in this repository. You need your own copy of Call of Duty 2.
-
-```sh
-./build-native/cod2_linux +set fs_basepath /path/to/CoD2
-./build-native/cod2_lnxded +set fs_basepath /path/to/CoD2 +set dedicated 1 +map mp_toujane
-```
-
-On Windows:
-
-```bat
-build\msvc\cod2_win32.exe +set fs_basepath "C:\path\to\CoD2"
-build-win32\cod2_win32_ded.exe +set fs_basepath "C:\path\to\CoD2" +set dedicated 1 +map mp_toujane
-```
-
-`dedicated 1` keeps the server on the local network; it is a test server, not one to run on the public list yet.
+</details>
 
 ## Testing
+
+<details>
+<summary><b>The test scripts</b></summary>
 
 The checks need the build and, for the ones that start the server, a game folder with the stock `.iwd` files. They start the server in LAN mode with a temporary home folder, so the game folder is only read.
 
@@ -175,7 +178,12 @@ python3 -m unittest discover -s test
 - `bots_test.py` and `http_test.py` are CoD2rev-Plus's, unchanged, for libcod: the bots of `mods/bots` must find their paths, save and reload their graph and fight on a real map; `httpFetch` and `webSocket*` must work against local HTTP, HTTPS, WS and WSS servers (they need `openssl`). Pass `--binary build/check-linux/cod2_lnxded`.
 - `scripts/cxx_errors.py` counts the C++ errors of a module (`--return-type` finds non-void functions that can end without a return, which is undefined in C++); `scripts/gen_script_bridge.py --module script|server|client_server` regenerates the bridge to the script VM or to the server, and `scripts/engine_abi.py --module server` records, with gdb, the engine's ABI the bridge checks against (`test/server_abi.txt`).
 
+</details>
+
 ## Repository layout
+
+<details>
+<summary><b>What is where</b></summary>
 
 | Path | Contents |
 | --- | --- |
@@ -194,6 +202,16 @@ python3 -m unittest discover -s test
 | `test` | Unit tests and the lists the checks read. |
 | `docs` | The [documentation](docs/README.md) and the banner. |
 
+</details>
+
+## Transparency
+
+- **Who maintains this:** I'm JotaJazz. I like old games, and that is why this fork exists: I want to keep playing CoD2 with my friends, and to keep the game alive for the community that still plays it, with an open project.
+- **How the work is done:** I work with [Claude Code](https://claude.com/claude-code), Anthropic's coding assistant. The changes in this fork, including this README and its translations, are written with its help. Commits made this way carry a `Co-Authored-By: Claude` line in their message, so they can be identified in the history with `git log`.
+- **Relationship with the original:** the reconstruction is the work of the opencod2 authors (riicchhaarrd) and of Sipex. This fork no longer pulls changes from them; it brings in code from CoD2rev-Plus instead, copied unchanged so that its commits apply here too.
+- **License:** none yet, as in the original. CoD2rev-Plus's code here (script VM, server, game, core, libcod and its bots mod) is AGPL-3.0, and the license of the whole is being sorted out with the original authors. Third-party libraries keep theirs: SQLite (public domain), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT) and Speex (BSD, not built).
+- **What it is not:** it is not an official project and is not affiliated with Activision, Infinity Ward or the authors of the original repository. It contains no game files.
+
 ## Notice
 
 This is an independent, source-level reconstruction of the Call of Duty 2 engine. It is not affiliated with, authorized by, sponsored by, or endorsed by Activision Publishing, Inc., Infinity Ward, or any of their affiliates.
@@ -205,6 +223,8 @@ This project does not provide or help obtain copyrighted game data. To use it wi
 The reconstructed engine source is a derivative work created for the purposes of preservation, interoperability, research, and education. It is provided as-is, without warranty of any kind, express or implied.
 
 If you are a rights holder and believe something here should not be distributed, please open an issue or contact the maintainer and it will be addressed promptly.
+
+The screenshots show content of Call of Duty 2, property of Activision Publishing, Inc., for identification only.
 
 ## Credits
 
