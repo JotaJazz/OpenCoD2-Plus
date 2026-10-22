@@ -110,6 +110,7 @@ int SDL_IsTextInputActive(void) { return 0; }
 int SDL_PollEvent(void) { return 0; }
 int SDL_PumpEvents(void) { return 0; }
 int SDL_RaiseWindow(void) { return 0; }
+int SDL_GetWindowFlags(void) { return 0; }
 int SDL_SetRelativeMouseMode(void) { return 0; }
 int SDL_SetWindowGrab(void) { return 0; }
 int SDL_SetWindowInputFocus(void) { return 0; }

@@ -26,6 +26,8 @@ extern void CCallOfDutyEngine_DoTextInput(const CCallOfDutyEngine *_this,
 extern void Sys_QueEvent(int time, sysEventType_t type, int value, int value2,
                          int ptrLength, void *ptr);
 extern void CL_MouseEventAbsolute(int x, int y, int dx, int dy);
+extern void CL_MouseEvent(int dx, int dy);
+extern Bool Dvar_GetBool(const char *dvarName);
 
 typedef struct LinuxInputEvent {
     int type;
@@ -167,6 +169,9 @@ static const CCallOfDutyEngine *get_engine(void)
     return (const CCallOfDutyEngine *)linux_engine_storage;
 }
 
+/* the mouse is captured: its moves count, menus' too */
+static int in_mouseCaptured;
+
 int SDL_PumpInputEvents(void)
 {
     SDL_Event ev;
@@ -182,8 +187,10 @@ int SDL_PumpInputEvents(void)
     for (eventCount = 0; eventCount < 256 && SDL_PollEvent(&ev); ++eventCount) {
         switch (ev.type) {
         case SDL_MOUSEMOTION: {
-            CL_MouseEventAbsolute(ev.motion.x, ev.motion.y,
-                                  ev.motion.xrel, ev.motion.yrel);
+            /* as the 1.3 binary's IN_MouseMove (0x4649c0): only a captured
+             * mouse moves, and by its deltas, menus' cursor too */
+            if (in_mouseCaptured)
+                CL_MouseEvent(ev.motion.xrel, ev.motion.yrel);
             ++inputEventCount;
             break;
         }
@@ -265,13 +272,17 @@ void IN_Frame(void)
         extern SDL_Window *sdl_gl_window;
         byte *cl = imp_cl ? *(byte **)imp_cl : NULL;
         int keyCatchers = cl ? *(int *)(cl + 4) : -1;
-        static int grabbed = -1;
-        int wantGrab = (cl && keyCatchers == 0) ? 1 : 0;
-        if (wantGrab != grabbed) {
+        /* as the 1.3 binary's IN_Frame (0x464b30): the mouse stays captured
+         * and its cursor hidden in menus; it is let go only without focus or
+         * with the console open in a window */
+        int wantGrab = cl && sdl_gl_window &&
+                       (SDL_GetWindowFlags(sdl_gl_window) & SDL_WINDOW_INPUT_FOCUS) &&
+                       !((keyCatchers & 1) && !Dvar_GetBool("r_fullscreen"));
+        if (wantGrab != in_mouseCaptured) {
             if (sdl_gl_window)
                 SDL_SetWindowGrab(sdl_gl_window, wantGrab ? SDL_TRUE : SDL_FALSE);
             SDL_SetRelativeMouseMode(wantGrab ? SDL_TRUE : SDL_FALSE);
-            grabbed = wantGrab;
+            in_mouseCaptured = wantGrab;
         }
     }
 

@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-21 — menu mouse
+
+- In menus the SDL pump let the mouse go (system cursor shown) and passed the window's pixel position as the menus' 640×480 position: at 1920×1080 both cursors drifted apart. Now captured with deltas, as the 1.3 binary's `IN_Frame` (`0x464b30`).
+- Checked on the Linux client (same pump) with XTest at 1024×768: captured in the menu, menu cursor follows the deltas.
+
 ## 2026-10-21 — view kick
 
 - `CG_DrawActiveFrame` zeroed the kick angles every frame, so a shot's recoil never moved the view or the aim; added `CG_KickAngles` (`0x4cec80`), called while `pm_flags & 0x800000`, as the 1.3 binary.

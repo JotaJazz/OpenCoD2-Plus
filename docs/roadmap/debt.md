@@ -28,6 +28,8 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|---|
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
+| The SDL pump ignores `in_mouse` (not registered there) and `ClickToContinue` (the original posts a click each frame) | `src/unix/linux_input.c` | 1.3's `IN_Frame` `0x464b30` |
+| The Linux X11 fallback pump still sends absolute positions to menus | `src/unix/linux_input.c` | runs only when SDL has no events |
 | `r_fullscreen` cannot be overridden by `+set` on the command line ("is read only") | dvar registration | profile value wins |
 
 ## Deferred decisions
