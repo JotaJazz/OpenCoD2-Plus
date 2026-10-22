@@ -695,6 +695,66 @@ void CG_InitView(void)
     FX_AdjustTime(cg->time);
 }
 
+/* The original's 0x4cec80: the weapon's recoil (kickAVel) moves the kick
+ * angles, which are pulled back to center at the weapon's hip or ADS center
+ * speed, in steps of 5 ms. A kick returning to center moves at 0.06 of its
+ * speed, never crosses it and never passes 10 degrees. */
+static void CG_KickAngles(void)
+{
+    int weapIndex;
+    WeaponDef *weapDef;
+    int t;
+    int i;
+    float ft;
+    float centerSpeed;
+    float kickChange;
+    float kick;
+
+    weapIndex = BG_GetViewmodelWeaponIndex(&cg->predictedPlayerState);
+    weapDef = BG_GetWeaponDef(weapIndex);
+
+    for (t = cg->frametime; t > 0; t -= 5) {
+        ft = (float)(t > 5 ? 5 : t) * 0.001f;
+
+        for (i = 0; i < 3; i++) {
+            if (cg->kickAVel[i] == 0.0f && cg->kickAngles[i] == 0.0f)
+                continue;
+
+            if (cg->kickAngles[i] != 0.0f) {
+                if (weapIndex == 0)
+                    centerSpeed = 2400.0f;
+                else if (cg->predictedPlayerState.fWeaponPosFrac > 0.5f)
+                    centerSpeed = weapDef->fAdsViewKickCenterSpeed;
+                else
+                    centerSpeed = weapDef->fHipViewKickCenterSpeed;
+
+                if (cg->kickAngles[i] > 0.0f)
+                    centerSpeed = -centerSpeed;
+                cg->kickAVel[i] += centerSpeed * ft;
+            }
+
+            kickChange = ft * cg->kickAVel[i];
+            if (kickChange * cg->kickAngles[i] < 0.0f)
+                kickChange *= 0.06f;
+
+            kick = kickChange + cg->kickAngles[i];
+            if (kick * cg->kickAngles[i] < 0.0f) {
+                cg->kickAngles[i] = 0.0f;
+                cg->kickAVel[i] = 0.0f;
+                continue;
+            }
+
+            cg->kickAngles[i] = kick;
+            if (kick == 0.0f) {
+                cg->kickAVel[i] = 0.0f;
+            } else if (fabsf(kick) > 10.0f) {
+                cg->kickAngles[i] = kick > 0.0f ? 10.0f : -10.0f;
+                cg->kickAVel[i] = 0.0f;
+            }
+        }
+    }
+}
+
 qboolean CG_DrawActiveFrame(int serverTime, DemoType demoType,
                             CubemapShot cubemapShot, int cubemapSize,
                             qboolean renderScreen)
@@ -787,12 +847,17 @@ qboolean CG_DrawActiveFrame(int serverTime, DemoType demoType,
 
     CG_UpdateEntInfo();
 
-    cg->kickAVel[0] = 0;
-    cg->kickAVel[1] = 0;
-    cg->kickAVel[2] = 0;
-    cg->kickAngles[0] = 0;
-    cg->kickAngles[1] = 0;
-    cg->kickAngles[2] = 0;
+    /* as the 1.3 binary (0x4cffda): kick only while playing */
+    if (cg->nextSnap->ps.pm_flags & 0x800000) {
+        CG_KickAngles();
+    } else {
+        cg->kickAVel[0] = 0;
+        cg->kickAVel[1] = 0;
+        cg->kickAVel[2] = 0;
+        cg->kickAngles[0] = 0;
+        cg->kickAngles[1] = 0;
+        cg->kickAngles[2] = 0;
+    }
 
     CL_ResetSkeletonCache(0);
     CG_AddPacketEntities();

@@ -59,6 +59,18 @@ animation (`CG_DObjUpdateInfo`), processes notetracks and sets the position
 for `cg->time` (`CG_CalcEntityLerpPositions`). Nothing else advances an
 entity's body animation.
 
+## View kick
+
+A shot's recoil (`BG_WeaponFireRecoil`, from `CG_FireWeapon`) adds to
+`cg->kickAVel`. Right after `CG_UpdateEntInfo`, `CG_KickAngles`
+(`src/PC/cgame_mp/cg_view_mp.c`, the binary's `0x4cec80`) turns that speed into
+`cg->kickAngles`, pulling them back to center at the weapon's
+`hipViewKickCenterSpeed` or `adsViewKickCenterSpeed` (2400 with no weapon) in
+5 ms steps, 10 degrees at most. It runs only while the next snapshot has
+`pm_flags & 0x800000`; otherwise both are zeroed. `CG_DrawActive` sends the
+kick angles plus `cg->offsetAngles` with the usercmd
+(`CL_SetUserCmdAimValues`), so the view and the aim move together.
+
 ## Layout notes
 
 The engine's `cgs_t` and `cg_t` are laid out differently from the binary's; code

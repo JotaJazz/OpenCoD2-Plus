@@ -26,7 +26,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Gap | Where | Notes |
 |---|---|---|
-| `CG_DrawActiveFrame` lacks the original's call to `0x4cec80` when the next snapshot's `pm_flags & 0x800000`; it always zeroes the kick angles | `src/PC/cgame_mp/cg_view_mp.c` | found in review, not investigated |
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 | `r_fullscreen` cannot be overridden by `+set` on the command line ("is read only") | dvar registration | profile value wins |

@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-21 — view kick
+
+- `CG_DrawActiveFrame` zeroed the kick angles every frame, so a shot's recoil never moved the view or the aim; added `CG_KickAngles` (`0x4cec80`), called while `pm_flags & 0x800000`, as the 1.3 binary.
+- Checked at runtime: a rifle shot lifts the view about 3 degrees and returns it to center within a few frames; prediction misses unchanged (21 on main and on the branch).
+
 ## 2026-10-21 — documentation system
 
 - The former CHANGES.md (one long narrative) split into `docs/architecture`, `docs/development`, `docs/roadmap`, ADRs and this memory layer; `AGENTS.md` added; English only (root README keeps 6 languages).
