@@ -48,12 +48,16 @@ export BISON_PKGDATADIR=$tools/usr/share/bison
 [ -x "$tools/usr/bin/m4" ] && export M4=$tools/usr/bin/m4
 
 # DXVK: d3d9 only, SDL2 window system
-if [ ! -d "$work/dxvk" ]; then
+# a clone or a build directory a failed run left half done is made again
+if [ "$(git -C "$work/dxvk" rev-parse HEAD 2>/dev/null)" != "$DXVK_COMMIT" ]; then
+    rm -rf "$work/dxvk" "$work/dxvk.tmp" "$work/dxvk-build"
     git clone -q --depth 1 --branch "$DXVK_TAG" --recurse-submodules --shallow-submodules \
-        https://github.com/doitsujin/dxvk.git "$work/dxvk"
+        https://github.com/doitsujin/dxvk.git "$work/dxvk.tmp"
+    [ "$(git -C "$work/dxvk.tmp" rev-parse HEAD)" = "$DXVK_COMMIT" ] || { echo "DXVK $DXVK_TAG is not $DXVK_COMMIT" >&2; exit 1; }
+    mv "$work/dxvk.tmp" "$work/dxvk"
 fi
-[ "$(git -C "$work/dxvk" rev-parse HEAD)" = "$DXVK_COMMIT" ] || { echo "DXVK is not $DXVK_COMMIT" >&2; exit 1; }
-if [ ! -d "$work/dxvk-build" ]; then
+if [ ! -e "$work/dxvk-build/build.ninja" ]; then
+    rm -rf "$work/dxvk-build"
     CC="gcc -m32" CXX="g++ -m32" PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig \
         meson setup --buildtype release -Denable_d3d8=false -Denable_d3d10=false \
         -Denable_d3d11=false -Denable_dxgi=false -Dnative_sdl2=enabled -Dnative_sdl3=disabled \
@@ -64,16 +68,27 @@ cp -L "$work/dxvk-build/src/d3d9/libdxvk_d3d9.so.0" "$out/lib/"
 
 # vkd3d-shader
 tarball=$work/vkd3d-$VKD3D_VER.tar.xz
-[ -e "$tarball" ] || curl -sSLo "$tarball" "https://dl.winehq.org/vkd3d/source/vkd3d-$VKD3D_VER.tar.xz"
-echo "$VKD3D_SHA256  $tarball" | sha256sum -c --quiet
-[ -d "$work/vkd3d-$VKD3D_VER" ] || tar -C "$work" -xf "$tarball"
-mkdir -p "$work/vkd3d-build"
+if ! echo "$VKD3D_SHA256  $tarball" | sha256sum -c --quiet >/dev/null 2>&1; then
+    rm -rf "$tarball" "$work/vkd3d-$VKD3D_VER" "$work/vkd3d-build"
+    curl -sSLo "$tarball.part" "https://dl.winehq.org/vkd3d/source/vkd3d-$VKD3D_VER.tar.xz"
+    echo "$VKD3D_SHA256  $tarball.part" | sha256sum -c --quiet || { rm -f "$tarball.part"; exit 1; }
+    mv "$tarball.part" "$tarball"
+fi
+if [ ! -e "$work/vkd3d-$VKD3D_VER/configure" ]; then
+    rm -rf "$work/vkd3d-$VKD3D_VER"
+    tar -C "$work" -xf "$tarball"
+fi
 if [ ! -e "$work/vkd3d-build/Makefile" ]; then
+    rm -rf "$work/vkd3d-build"
+    mkdir -p "$work/vkd3d-build"
     (cd "$work/vkd3d-build" && "../vkd3d-$VKD3D_VER/configure" -q CC="gcc -m32" \
         CPPFLAGS="-I$tools/usr/include" VULKAN_LIBS="-l:libvulkan.so.1" SONAME_LIBVULKAN=libvulkan.so.1 \
         --disable-doxygen-doc --disable-tests --without-ncurses >/dev/null)
 fi
-make -C "$work/vkd3d-build" include/private/vkd3d_version.h >/dev/null
+# the generated sources first, one at a time: in parallel the lexer can
+# compile while bison still writes hlsl.tab.h
+make -C "$work/vkd3d-build" -j1 include/private/vkd3d_version.h libs/vkd3d-shader/hlsl.tab.h \
+    libs/vkd3d-shader/preproc.tab.h libs/vkd3d-shader/hlsl.yy.c libs/vkd3d-shader/preproc.yy.c >/dev/null
 make -C "$work/vkd3d-build" -j"$(nproc)" libvkd3d-shader.la >/dev/null 2>"$work/vkd3d-make.log" || { tail -20 "$work/vkd3d-make.log" >&2; exit 1; }
 cp -L "$work/vkd3d-build/.libs/libvkd3d-shader.so.1" "$out/lib/"
 cp "$work/vkd3d-$VKD3D_VER/include/vkd3d_shader.h" "$work/vkd3d-$VKD3D_VER/include/vkd3d_types.h" "$out/include/"
