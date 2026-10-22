@@ -1154,6 +1154,11 @@ const char *Dvar_GetString(const char *dvarName)
         return "";
     }
 
+    /* 0x4375b0 returns the string itself, not a va() copy: callers keep it across other va() calls */
+    if (var->type == DVAR_TYPE_STRING) {
+        return var->current.string;
+    }
+
     return Dvar_ValueToString_impl(var, var->current);
 }
 
