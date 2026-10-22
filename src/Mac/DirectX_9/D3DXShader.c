@@ -83,6 +83,25 @@ typedef struct {
     UINT32 size;
 } CD3DXConstantTableImpl;
 
+/* d3dx9's buffer and constant table objects over a copy of DATA, for
+ * d3dx_vkd3d.c */
+void *D3DX_NewBuffer(const void *data, UINT32 size)
+{
+    return CD3DXBuffer_Create(data, size);
+}
+
+void *D3DX_NewConstantTable(const void *data, UINT32 size)
+{
+    CD3DXConstantTableImpl *ct = (CD3DXConstantTableImpl *)calloc(1, sizeof(CD3DXConstantTableImpl));
+
+    ct->vtable = (void **)vtbl_CD3DXConstantTable;
+    ct->refCount = 1;
+    ct->size = size;
+    ct->data = malloc(size ? size : 1);
+    memcpy(ct->data, data, size);
+    return ct;
+}
+
 HRESULT CD3DXConstantTable_QueryInterface(const void *_this, const IID *iid, void **ppvObj)
 {
     (void)iid;
