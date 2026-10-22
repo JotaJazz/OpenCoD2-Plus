@@ -207,13 +207,6 @@ void Com_LoadSoundAliases(const char *loadspec, const char *loadspecCurGame, snd
 
     strlwr(trimspec);
 
-    if (system == SASYS_UI && g_sa.initialized[SASYS_UI]) {
-        memset(g_sa.pHash, 0, sizeof(g_sa.pHash));
-        memset(&g_sa.aliasInfo[SASYS_UI], 0, sizeof(g_sa.aliasInfo[SASYS_UI]));
-        memset(&g_sa.soundFileInfo[SASYS_UI], 0, sizeof(g_sa.soundFileInfo[SASYS_UI]));
-        g_sa.initialized[SASYS_UI] = 0;
-    }
-
     if (system == 1) {
         const dvar_t *sv_running = com_sv_running;
         if (sv_running->current.enabled != 0) {
@@ -227,13 +220,6 @@ void Com_LoadSoundAliases(const char *loadspec, const char *loadspecCurGame, snd
             g_sa.soundFileInfo[1].files = g_sa.soundFileInfo[2].files;
 
             goto after_load;
-        }
-
-        if (g_sa.initialized[SASYS_UI]) {
-            memset(g_sa.pHash, 0, sizeof(g_sa.pHash));
-            memset(&g_sa.aliasInfo[SASYS_UI], 0, sizeof(g_sa.aliasInfo[SASYS_UI]));
-            memset(&g_sa.soundFileInfo[SASYS_UI], 0, sizeof(g_sa.soundFileInfo[SASYS_UI]));
-            g_sa.initialized[SASYS_UI] = 0;
         }
     }
 
