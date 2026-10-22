@@ -77,6 +77,21 @@ def main():
         check('the map is drawn', colours > 16, f'{colours} colours sampled' if shots else 'no screenshot')
         crashes = glob.glob(os.path.join(home, 'cod2_crash_*.txt'))
         check('no crash report', not crashes)
+
+        # Vulkan has a device DXVK will not take (as an old driver's): a
+        # clean renderer error, not DXVK ending the process
+        nodev_log = os.path.join(home, 'nodevice.log')
+        with open(nodev_log, 'wb') as log:
+            nodev = subprocess.run([binary, '+set', 'fs_basepath', os.path.abspath(args.game_dir),
+                                    '+set', 'fs_homepath', home], stdout=log, stderr=subprocess.STDOUT,
+                                   stdin=subprocess.DEVNULL, cwd=home, timeout=120,
+                                   env=dict(os.environ, DXVK_FILTER_DEVICE_NAME='no such device'))
+        nodev_out = open(nodev_log, errors='replace').read()
+        nodev_crashes = glob.glob(os.path.join(home, 'cod2_crash_*.txt'))
+        check('no usable Vulkan device is a clean error',
+              nodev.returncode == 0 and "Couldn't initialize Direct3D 9" in nodev_out and not nodev_crashes,
+              f'exit {nodev.returncode}, {len(nodev_crashes)} crash report(s)')
+        crashes += nodev_crashes
         if args.keep:
             os.makedirs(args.keep, exist_ok=True)
             for path in [log_path] + shots + crashes:

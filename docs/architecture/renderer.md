@@ -32,7 +32,7 @@ differ from Windows, each `#if defined(GFX_REAL_D3D9) && !defined(_WIN32)`:
 
 | Seam | Linux |
 |---|---|
-| Device (`RealD3D9_Direct3DCreate9`, `src/Mac/DirectX_9/d3d9_real.c`) | `dlopen` of `libdxvk_d3d9.so.0`, next to the executable first; `DXVK_WSI_DRIVER=SDL2`; SDL's video initialised first. DXVK ends the process when Vulkan has no device, so the loader is asked for one before; no library, no device or a failed `CreateDevice` is a fatal renderer error |
+| Device (`RealD3D9_Direct3DCreate9`, `src/Mac/DirectX_9/d3d9_real.c`) | `dlopen` of `libdxvk_d3d9.so.0`, next to the executable first; `DXVK_WSI_DRIVER=SDL2`; SDL's video initialised first. DXVK ends the process when Vulkan has no device it can use (none, or none with Vulkan 1.3), so `Direct3DCreate9` is tried first in a forked child; no library, no usable device or a failed `CreateDevice` is a fatal renderer error |
 | Window (`Sys_CreateD3DWindow`, `src/stubs/macos_compat.c`) | the SDL window with `SDL_WINDOW_VULKAN`, passed as the HWND (DXVK's SDL2 window system takes the `SDL_Window*`) |
 | Shaders (`src/Mac/DirectX_9/d3dx_vkd3d.c`) | `D3DXCompileShader` through `libvkd3d-shader.so.1` (HLSL to Direct3D 9 bytecode, the include object as callbacks); `D3DXGetShaderConstantTable` reads the bytecode's CTAB comment |
 

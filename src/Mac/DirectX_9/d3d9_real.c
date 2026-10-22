@@ -38,56 +38,43 @@ void *RealD3D9_Direct3DCreate9(void)
 #        include <stdlib.h>
 #        include <unistd.h>
 #        include <SDL2/SDL.h>
+#        include <sys/wait.h>
+#        include <signal.h>
 
 typedef void *(*PFN_Direct3DCreate9)(unsigned int SDKVersion);
 
-/* whether the Vulkan loader finds a physical device: a Vulkan instance with
- * nothing enabled, as DXVK's own would find it */
-static int RealD3D9_VulkanHasDevice(void)
+/* DXVK ends the process, from inside, when Vulkan has no device it can use
+ * (none, or only ones without Vulkan 1.3 and its features): try it first in a
+ * child process, which tells with its exit status whether Direct3DCreate9
+ * gave an adapter */
+static int RealD3D9_DxvkHasAdapter(PFN_Direct3DCreate9 pCreate)
 {
-    struct VkInstanceCreateInfoMin {
-        int sType; /* VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO */
-        const void *pNext;
-        unsigned int flags;
-        const void *pApplicationInfo;
-        unsigned int enabledLayerCount;
-        const char *const *ppEnabledLayerNames;
-        unsigned int enabledExtensionCount;
-        const char *const *ppEnabledExtensionNames;
-    } info = { 1 };
-    typedef void *(*PFN_GetProc)(void *instance, const char *name);
-    typedef int (*PFN_CreateInstance)(const void *info, const void *alloc, void **instance);
-    typedef int (*PFN_Enumerate)(void *instance, unsigned int *count, void **devices);
-    typedef void (*PFN_DestroyInstance)(void *instance, const void *alloc);
-    void *lib = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
-    PFN_GetProc getProc;
-    PFN_CreateInstance createInstance;
-    PFN_Enumerate enumerate;
-    PFN_DestroyInstance destroyInstance;
-    void *instance = NULL;
-    unsigned int count = 0;
+    pid_t pid = fork();
+    int status = 0;
 
-    if (!lib) {
-        fprintf(stderr, "[real-d3d9] no Vulkan loader (libvulkan.so.1): %s\n", dlerror());
-        return 0;
+    if (pid < 0)
+        return 1; /* cannot tell: let the real call decide */
+    if (pid == 0) {
+        static const int crashSignals[] = { SIGABRT, SIGSEGV, SIGBUS, SIGILL, SIGFPE };
+        void *iface;
+        unsigned int i;
+
+        /* the client's crash handler would report the child's end as a crash */
+        for (i = 0; i < sizeof(crashSignals) / sizeof(crashSignals[0]); i++)
+            signal(crashSignals[i], SIG_DFL);
+        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+            _exit(2);
+        iface = pCreate(32);
+        /* IDirect3D9::GetAdapterCount, after IUnknown's three and RegisterSoftwareDevice */
+        _exit(iface && ((unsigned int (*)(void *))(*(void ***)iface)[4])(iface) ? 0 : 1);
     }
-    getProc = (PFN_GetProc)dlsym(lib, "vkGetInstanceProcAddr");
-    createInstance = getProc ? (PFN_CreateInstance)getProc(NULL, "vkCreateInstance") : NULL;
-    if (!createInstance || createInstance(&info, NULL, &instance) != 0 || !instance) {
-        fprintf(stderr, "[real-d3d9] vkCreateInstance failed\n");
-        dlclose(lib);
-        return 0;
-    }
-    enumerate = (PFN_Enumerate)getProc(instance, "vkEnumeratePhysicalDevices");
-    destroyInstance = (PFN_DestroyInstance)getProc(instance, "vkDestroyInstance");
-    if (enumerate)
-        enumerate(instance, &count, NULL);
-    if (destroyInstance)
-        destroyInstance(instance, NULL);
-    dlclose(lib);
-    if (!count)
-        fprintf(stderr, "[real-d3d9] Vulkan finds no device\n");
-    return count != 0;
+    if (waitpid(pid, &status, 0) != pid)
+        return 1;
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+        return 1;
+    fprintf(stderr, "[real-d3d9] DXVK finds no Vulkan device it can use (%s %d)\n",
+            WIFSIGNALED(status) ? "signal" : "status", WIFSIGNALED(status) ? WTERMSIG(status) : WEXITSTATUS(status));
+    return 0;
 }
 
 void *RealD3D9_Direct3DCreate9(void)
@@ -109,27 +96,16 @@ void *RealD3D9_Direct3DCreate9(void)
             return NULL;
         }
     }
-    /* DXVK ends the process when Vulkan has no device: look first */
-    if (!RealD3D9_VulkanHasDevice())
-        return NULL;
     /* DXVK native needs its window system named, and SDL's video up to ask
-     * Vulkan's instance extensions; a failure is a C++ exception */
+     * Vulkan's instance extensions */
     setenv("DXVK_WSI_DRIVER", "SDL2", 0);
+    if (!RealD3D9_DxvkHasAdapter(pCreate))
+        return NULL;
     if (!SDL_WasInit(SDL_INIT_VIDEO) && SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "[real-d3d9] SDL_InitSubSystem(VIDEO) failed: %s\n", SDL_GetError());
         return NULL;
     }
-    iface = NULL;
-#        ifdef __cplusplus
-    try {
-        iface = pCreate(32);
-    } catch (...) {
-        fprintf(stderr, "[real-d3d9] Direct3DCreate9 failed (DXVK error, no Vulkan device?)\n");
-        return NULL;
-    }
-#        else
     iface = pCreate(32);
-#        endif
     fprintf(stderr, "[real-d3d9] Direct3DCreate9 -> %p\n", iface);
     return iface;
 }
