@@ -379,9 +379,10 @@ BG_GetSpeed
 */
 float BG_GetSpeed( const playerState_t *ps, int iTime )
 {
+	/* 1.3 (0x4cfa44, 0x4fde06): the horizontal speed */
 	if ( !(ps->pm_flags & PMF_LADDER) )
 	{
-		return VectorLength(ps->velocity);
+		return sqrtf(ps->velocity[0] * ps->velocity[0] + ps->velocity[1] * ps->velocity[1]);
 	}
 
 	if ( iTime - ps->jumpTime < 500 )

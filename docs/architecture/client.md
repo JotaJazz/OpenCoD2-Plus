@@ -80,7 +80,8 @@ kick angles in `v_dmg_pitch`/`v_dmg_roll`; `CG_CalcViewValues` passes
 kick in 100 ms and back in 400. `COD2_TRACE_VIEWDAMAGE` prints the added
 angles in the second after a hit.
 
-The eye's bob follows the same function: the vertical bob raises it, the
+The eye's bob follows the same function, driven by `cg->xyspeed`, the
+horizontal speed (`BG_GetSpeed`; 1.3 `0x4cfa44`): the vertical bob raises it, the
 horizontal one moves it along the view's right (`0x4cef6c`), both capped by
 `bg_bobMax` (a float dvar); a landing time ahead of the clock is put 450 ms
 back (`0x4cf0ca`). `COD2_TRACE_VIEWBOB` prints the horizontal bob and where

@@ -187,6 +187,21 @@ def check_view_animation(text, check):
           + (f', most {max(f[1] for f in moved):.5f} turn' if moved else ''))
 
 
+def check_jump_speed(frames, check):
+    """1.3's xyspeed (0x4cfa44) is the horizontal speed only: a jump in place
+    leaves it near 0 in the 300 ms before the landing."""
+    worst = []
+    for i in range(1, len(frames)):
+        if 0 <= frames[i]['land'] < frames[i - 1]['land'] and frames[i]['lc'] != 0.0:
+            t = frames[i]['t']
+            air = [f['xy'] for f in frames[max(0, i - 200):i] if t - 300 <= f['t'] < t]
+            if air:
+                worst.append(max(air))
+    # the loop jumps standing still only
+    check('a jump in place keeps the horizontal speed', worst and all(w < 5.0 for w in worst),
+          ', '.join(f'{w:.1f}' for w in worst))
+
+
 def check_trace(frames, check):
     check('trace', len(frames) >= 200, f'{len(frames)} frames')
     bad = [f for f in frames if any(v != v or abs(v) == float('inf') for v in f['ofs'])]
@@ -314,6 +329,7 @@ def main():
             with open(args.keep_log, 'w') as f:
                 f.write(text)
         check_trace(parse(text), check)
+        check_jump_speed(parse(text), check)
         check_damage_kick(text, check)
         check_view_bob(text, check)
         check_view_animation(text, check)
