@@ -110,6 +110,8 @@ extern qboolean CG_GetWeapReticleZoom(float *fZoom);
 extern qboolean BG_IsAimDownSightWeapon(int iWeapon);
 extern void BG_CalculateWeaponPosition_Sway(playerState_t *ps, vec_t *swayViewAngles, vec_t *swayOffset, vec_t *swayAngles, float ssSwayScale, int frametime);
 extern void BG_CalculateWeaponAngles(weaponState_t *ws, vec_t *angles);
+extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
+extern const float AngleMod(const float a);
 extern void *Hunk_AllocXAnimPrecache(int size);
 extern void *Hunk_AllocXAnimClient(int size);
 extern itemInfo_t cg_itemsArray[];
@@ -1247,13 +1249,246 @@ static void CG_TraceViewWeapon(const playerState_t *ps, const vec3_t origin)
             CG_TraceDot(delta, cg->refdef.viewaxis[2]));
 }
 
+static WeaponDef *CG_ViewWeaponDef(void)
+{
+    return (WeaponDef *)BG_GetWeaponDef(BG_GetViewmodelWeaponIndex(&cg->predictedPlayerState));
+}
+
+/* 0x4d52e0: the sway, scaled by the weapon's swayShellShockScale while a
+   shellshock fades out */
+static void CG_UpdateViewWeaponSway(void)
+{
+    WeaponDef *weapDef;
+    int remaining;
+    float scale;
+    float frac;
+
+    weapDef = CG_ViewWeaponDef();
+    remaining = cg->shellshock.duration - cg->time + cg->shellshock.startTime;
+    if (remaining > 0 && cg->shellshock.parms) {
+        frac = 1.0f;
+        if (remaining < cg->shellshock.parms->view.fadeTime)
+            frac = (float)remaining / (float)cg->shellshock.parms->view.fadeTime;
+        scale = frac * (3.0f - (frac + frac)) * frac * (weapDef->swayShellShockScale - 1.0f) + 1.0f;
+    } else {
+        scale = 1.0f;
+    }
+    BG_CalculateWeaponPosition_Sway(&cg->predictedPlayerState, cg->swayViewAngles, cg->swayOffset, cg->swayAngles,
+                                    scale, cg->frametime);
+}
+
+/* 0x4d5bc0 */
+static void CG_UpdateViewWeaponADS(void)
+{
+    const playerState_t *ps = &cg->predictedPlayerState;
+
+    if (!CG_ViewWeaponDef()->bADSPositionInfo)
+        return;
+    if (ps->fWeaponPosFrac == 1.0f)
+        cg->playerEntity.bPositionToADS = 0;
+    else if (ps->fWeaponPosFrac == 0.0f)
+        cg->playerEntity.bPositionToADS = 1;
+    cg->playerEntity.fLastWeaponPosFrac = ps->fWeaponPosFrac;
+}
+
+/* 0x4d53d0: the offset for moving and for the stance, eased toward its
+   target at the weapon's move rate; it fades out over the first half of
+   aiming down the sight */
+static void CG_CalculateWeaponMovement(vec3_t out)
+{
+    const playerState_t *ps = &cg->predictedPlayerState;
+    WeaponDef *weapDef;
+    int eFlags;
+    float minSpeed;
+    float frac;
+    float frametime;
+    float step;
+    float minStep;
+    float scale;
+    vec3_t target;
+    int i;
+
+    weapDef = CG_ViewWeaponDef();
+    eFlags = cg->predictedPlayerEntity.nextState.eFlags;
+    minSpeed = CG_DvarValue(imp_cg_gun_move_minspeed);
+    if (eFlags & 8)
+        minSpeed += weapDef->fProneMoveMinSpeed;
+    else if (eFlags & 4)
+        minSpeed += weapDef->fDuckedMoveMinSpeed;
+    else
+        minSpeed += weapDef->fStandMoveMinSpeed;
+
+    if (cg->xyspeed > minSpeed && ps->weaponstate != 5) {
+        const float *move;
+
+        frac = (cg->xyspeed - minSpeed) / ((float)ps->speed - minSpeed);
+        if (frac < 0.0f)
+            frac = 0.0f;
+        if (frac > 1.0f)
+            frac = 1.0f;
+        if (eFlags & 8)
+            move = weapDef->vProneMove;
+        else if (eFlags & 4)
+            move = weapDef->vDuckedMove;
+        else
+            move = weapDef->vStandMove;
+        target[0] = frac * CG_DvarValue(imp_cg_gun_move_f) + frac * move[0];
+        target[1] = frac * CG_DvarValue(imp_cg_gun_move_r) + frac * move[1];
+        target[2] = frac * CG_DvarValue(imp_cg_gun_move_u) + frac * move[2];
+    } else {
+        target[0] = 0.0f;
+        target[1] = 0.0f;
+        target[2] = 0.0f;
+    }
+
+    if (ps->viewHeightTarget == 40) {
+        target[0] = target[0] + weapDef->vDuckedOfs[0] + CG_DvarValue(imp_cg_gun_ofs_f);
+        target[1] = target[1] + weapDef->vDuckedOfs[1] + CG_DvarValue(imp_cg_gun_ofs_r);
+        target[2] = target[2] + weapDef->vDuckedOfs[2] + CG_DvarValue(imp_cg_gun_ofs_u);
+    } else if (ps->viewHeightTarget == 11) {
+        target[0] = target[0] + weapDef->vProneOfs[0] + CG_DvarValue(imp_cg_gun_ofs_f);
+        target[1] = target[1] + weapDef->vProneOfs[1] + CG_DvarValue(imp_cg_gun_ofs_r);
+        target[2] = target[2] + weapDef->vProneOfs[2] + CG_DvarValue(imp_cg_gun_ofs_u);
+    }
+
+    for (i = 0; i < 3; i++) {
+        float *last = &cg->playerEntity.vLastMoveOrg[i];
+
+        if (target[i] == *last)
+            continue;
+        frametime = (float)cg->frametime;
+        step = (target[i] - *last)
+               * (CG_DvarValue(imp_cg_gun_move_rate)
+                  + (ps->viewHeightCurrent == 11.0f ? weapDef->fPosProneMoveRate : weapDef->fPosMoveRate))
+               * frametime * 0.001f;
+        if (*last < target[i]) {
+            minStep = frametime * 0.0001f;
+            if (step < minStep)
+                step = minStep;
+            *last += step;
+            if (*last > target[i])
+                *last = target[i];
+        } else {
+            minStep = frametime * -0.0001f;
+            if (step > minStep)
+                step = minStep;
+            *last += step;
+            if (*last < target[i])
+                *last = target[i];
+        }
+    }
+
+    if (ps->fWeaponPosFrac == 0.0f) {
+        out[0] += cg->playerEntity.vLastMoveOrg[0];
+        out[1] += cg->playerEntity.vLastMoveOrg[1];
+        out[2] += cg->playerEntity.vLastMoveOrg[2];
+    } else if (ps->fWeaponPosFrac < 0.5f) {
+        scale = 1.0f - (ps->fWeaponPosFrac + ps->fWeaponPosFrac);
+        out[0] += cg->playerEntity.vLastMoveOrg[0] * scale;
+        out[1] += cg->playerEntity.vLastMoveOrg[1] * scale;
+        out[2] += cg->playerEntity.vLastMoveOrg[2] * scale;
+    }
+}
+
+/* 0x4d5770 */
+static void CG_CalculateWeaponPosition_MoveOffset(vec3_t origin)
+{
+    vec3_t offset;
+
+    offset[0] = 0.0f;
+    offset[1] = 0.0f;
+    offset[2] = 0.0f;
+    CG_CalculateWeaponMovement(offset);
+    cg->playerEntity.vPositionLastOrg[0] = offset[0];
+    cg->playerEntity.vPositionLastOrg[1] = offset[1];
+    cg->playerEntity.vPositionLastOrg[2] = offset[2];
+    origin[0] += offset[0];
+    origin[1] += offset[1];
+    origin[2] += offset[2];
+}
+
+/* 0x4d57e0: origin from (forward, left, up) along the view model's angles
+   to the world, from the view model's origin */
+static void CG_WeaponOffsetToWorld(vec3_t origin)
+{
+    vec3_t local;
+    vec3_t forward;
+    vec3_t right;
+    vec3_t up;
+    int i;
+
+    local[0] = origin[0];
+    local[1] = origin[1];
+    local[2] = origin[2];
+    AngleVectors(cg->viewModelAngles, forward, right, up);
+    for (i = 0; i < 3; i++)
+        origin[i] = cg->viewModelOrigin[i] + forward[i] * local[0];
+    for (i = 0; i < 3; i++)
+        origin[i] = up[i] * local[2] + right[i] * -local[1] + origin[i];
+}
+
+/* 0x4d58c0 */
+static void CG_SetViewWeaponADSOffsets(const vec3_t origin)
+{
+    const playerState_t *ps = &cg->predictedPlayerState;
+
+    if (CG_ViewWeaponDef()->bADSPositionInfo && ps->fWeaponPosFrac != 0.0f) {
+        cg->gunXOfs = (origin[0] - cg->refdef.vieworg[0]) * ps->fWeaponPosFrac;
+        cg->gunYOfs = (origin[1] - cg->refdef.vieworg[1]) * ps->fWeaponPosFrac;
+        cg->gunZOfs = (origin[2] - cg->refdef.vieworg[2]) * ps->fWeaponPosFrac;
+    } else {
+        cg->gunXOfs = 0.0f;
+        cg->gunYOfs = 0.0f;
+        cg->gunZOfs = 0.0f;
+    }
+}
+
+/* 0x4d5970: lean, movement and sway offsets turned to the world, then the
+   dip after a landing (150 ms down, 300 ms back up) */
+static void CG_CalculateWeaponPosition(vec3_t origin)
+{
+    const playerState_t *ps = &cg->predictedPlayerState;
+    int delta;
+
+    origin[0] = 0.0f;
+    origin[1] = 0.0f;
+    origin[2] = 0.0f;
+    if (ps->leanf != 0.0f && ps->fWeaponPosFrac < 1.0f) {
+        vec3_t angles;
+        vec3_t right;
+        float lean;
+        float scale;
+
+        lean = (2.0f - fabsf(ps->leanf)) * ps->leanf;
+        scale = (1.0f - ps->fWeaponPosFrac) * lean * 1.6f;
+        angles[0] = 0.0f;
+        angles[1] = 0.0f;
+        angles[2] = 0.0f - (lean + lean);
+        AngleVectors(angles, NULL, right, NULL);
+        origin[0] += right[0] * scale;
+        origin[1] += right[1] * scale;
+        origin[2] += right[2] * scale;
+    }
+    CG_CalculateWeaponPosition_MoveOffset(origin);
+    origin[1] -= cg->swayOffset[1];
+    origin[2] += cg->swayOffset[2];
+    CG_WeaponOffsetToWorld(origin);
+
+    delta = cg->time - cg->landTime;
+    if (delta < 150)
+        origin[2] += (float)delta * cg->landChange * 0.25f / 150.0f;
+    else if (delta < 450)
+        origin[2] += (float)(450 - delta) * cg->landChange * 0.25f / 300.0f;
+    CG_SetViewWeaponADSOffsets(origin);
+}
+
 void CG_AddViewWeapon(playerState_t *ps)
 {
     playerState_t *playerState;
     GfxEntity hand;
     vec3_t weaponAngles;
     vec3_t weaponAxis[3];
-    vec3_t finalAxis[3];
+    vec3_t viewAxis[3];
     weaponState_t ws;
     int weaponIndex;
     qboolean drawGun;
@@ -1292,8 +1527,16 @@ void CG_AddViewWeapon(playerState_t *ps)
         return;
     }
 
-    BG_CalculateWeaponPosition_Sway(playerState, cg->swayViewAngles, cg->swayOffset, cg->swayAngles,
-                                    1.0f, cg->frametime);
+    CG_UpdateViewWeaponSway();
+    CG_UpdateViewWeaponADS();
+
+    memset(&hand, 0, sizeof(hand));
+    CG_CalculateWeaponPosition(hand.origin);
+    /* 0x4d6434: cg_gun_x, _y, _z along the view, not the weapon's axis */
+    CG_Madd(hand.origin, cg->viewModelAxis[0], CG_DvarValue(imp_cg_gun_x));
+    CG_Madd(hand.origin, cg->viewModelAxis[1], CG_DvarValue(imp_cg_gun_y));
+    CG_Madd(hand.origin, cg->viewModelAxis[2], CG_DvarValue(imp_cg_gun_z));
+    AnglesToAxis(cg->viewModelAngles, viewAxis);
 
     memset(&ws, 0, sizeof(ws));
     ws.ps = playerState;
@@ -1318,6 +1561,21 @@ void CG_AddViewWeapon(playerState_t *ps)
     ws.swayAngles[2] = cg->swayAngles[2];
     ws.weapIdleTime = &cg->weapIdleTime;
     BG_CalculateWeaponAngles(&ws, weaponAngles);
+    AnglesToAxis(weaponAngles, weaponAxis);
+    MatrixMultiply(weaponAxis, viewAxis, hand.axis);
+
+    /* 0x4d6637: the gun's angles while it aims down its sight */
+    if (((WeaponDef *)BG_GetWeaponDef(playerState->weapon))->bADSPositionInfo && playerState->fWeaponPosFrac != 0.0f
+        && !((WeaponDef *)BG_GetWeaponDef(weaponIndex))->overlayReticle) {
+        vec3_t gunAngles;
+
+        AxisToAngles(hand.axis, gunAngles);
+        cg->gunPitch = AngleMod(gunAngles[0]);
+        cg->gunYaw = AngleMod(gunAngles[1]);
+    } else {
+        cg->gunPitch = cg->refdefViewAngles[0];
+        cg->gunYaw = cg->refdefViewAngles[1];
+    }
 
     /* 0x4d66c4: the motion state carries over to the next frame */
     cg->playerEntity.vLastMoveAng[0] = ws.vLastMoveAng[0];
@@ -1331,31 +1589,7 @@ void CG_AddViewWeapon(playerState_t *ps)
     cg->vGunSpeed[1] = ws.vGunSpeed[1];
     cg->vGunSpeed[2] = ws.vGunSpeed[2];
 
-    AnglesToAxis(weaponAngles, weaponAxis);
-    MatrixMultiply(weaponAxis, cg->refdef.viewaxis, finalAxis);
-
-    memset(&hand, 0, sizeof(hand));
     hand.renderFxFlags = 0xc;
-    AxisCopy(finalAxis, hand.axis);
-
-    hand.origin[0] = cg->refdef.vieworg[0];
-    hand.origin[1] = cg->refdef.vieworg[1];
-    hand.origin[2] = cg->refdef.vieworg[2];
-
-    CG_Madd(hand.origin, finalAxis[0], cg->swayOffset[0] + CG_DvarValue(imp_cg_gun_x));
-    CG_Madd(hand.origin, finalAxis[1], cg->swayOffset[1] + CG_DvarValue(imp_cg_gun_y));
-    CG_Madd(hand.origin, finalAxis[2], cg->swayOffset[2] + CG_DvarValue(imp_cg_gun_z));
-
-    if (BG_IsAimDownSightWeapon(weaponIndex) && playerState->fWeaponPosFrac > 0.0f) {
-        cg->gunPitch = weaponAngles[0];
-        cg->gunYaw = weaponAngles[1];
-        cg->gunXOfs = (hand.origin[0] - cg->refdef.vieworg[0]) * playerState->fWeaponPosFrac;
-        cg->gunYOfs = (hand.origin[1] - cg->refdef.vieworg[1]) * playerState->fWeaponPosFrac;
-        cg->gunZOfs = (hand.origin[2] - cg->refdef.vieworg[2]) * playerState->fWeaponPosFrac;
-    } else {
-        CG_ResetViewWeaponOffsets(cg);
-    }
-
     {
         static int vwTrace;
         if (vwTrace < 8) {
