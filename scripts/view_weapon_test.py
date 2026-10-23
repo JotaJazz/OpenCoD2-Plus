@@ -16,7 +16,9 @@ kick from cg->damageTime minus ps->deltaTime (0x4cee35): it eases to
 v_dmg_pitch and v_dmg_roll in 100 ms and back in 400 and never goes past them.
 Walking, the eye bobs sideways along the view's right (COD2_TRACE_VIEWBOB).
 Firing, reloading and melee move the camera by the view weapon's tag_camera
-bone (0x4cf730, COD2_TRACE_VIEWANIM).
+bone (0x4cf730, COD2_TRACE_VIEWANIM). After 30 s the mod shellshocks the
+player; the perturbed view must stay a rotation (0x4d2320, COD2_TRACE_PERTURB);
+the view weapon checks read the frames before it.
 The client opens a window and needs a CD key in ~/.cod2/preferences; without
 one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
@@ -45,6 +47,7 @@ Callback_StartGameType()
 {
 	character\\mp_american_normandy_braeburn::precache();
 	precacheItem("%(weapon)s");
+	precacheShellShock("default");
 }
 
 Callback_PlayerConnect()
@@ -65,6 +68,20 @@ Callback_PlayerConnect()
 	self setSpawnWeapon("%(weapon)s");
 	logPrint("viewweapon spawned\\n");
 	self thread hurt();
+	self thread shock();
+}
+
+// after 30 seconds, a shellshock every 6 seconds
+shock()
+{
+	self endon("disconnect");
+	wait 30;
+	for(;;)
+	{
+		self shellshock("default", 4);
+		logPrint("viewweapon shocked\\n");
+		wait 6;
+	}
 }
 
 // a 20 point hit without knockback every 4 seconds, healed at once
@@ -136,8 +153,9 @@ def landings(frames):
             while j < len(frames) and 0 <= frames[j]['land'] < 450:
                 window.append((frames[j]['land'], frames[j]['ofs'][2], frames[j]['lc']))
                 j += 1
-            out.append((ref, window))
-            i = j
+            if window:
+                out.append((ref, window))
+            i = max(j, i + 1)
         else:
             i += 1
     return out
@@ -200,6 +218,25 @@ def check_jump_speed(frames, check):
     # the loop jumps standing still only
     check('a jump in place keeps the horizontal speed', worst and all(w < 5.0 for w in worst),
           ', '.join(f'{w:.1f}' for w in worst))
+
+
+PERTURB = re.compile(r'\[perturb\] t=(-?\d+) det=(\S+) delta=(\S+) (\S+)')
+
+
+def check_perturb(text, check):
+    """A shellshock turns the view (0x4d2320) by a rotation: the axis stays
+    right-handed and orthonormal."""
+    frames = [tuple(float(x) for x in m.groups()) for m in PERTURB.finditer(text)]
+    check('a shellshock perturbs the view', len(frames) > 0, f'{len(frames)} frames')
+    bad = [f for f in frames if abs(f[1] - 1.0) > 0.01]
+    check('the shellshocked view is still a rotation', frames and not bad,
+          f'{len(bad)} of {len(frames)} frames' + (f', det {bad[0][1]:+.3f}' if bad else ''))
+
+
+def shock_start(text):
+    """The time of the first shellshocked frame, or None."""
+    m = PERTURB.search(text)
+    return int(m.group(1)) if m else None
 
 
 def check_trace(frames, check):
@@ -300,7 +337,7 @@ def main():
             up = smoke_test.wait_for(lambda: server.poll() is None and smoke_test.query(port, 'getinfo x'), 120)
             check('the server runs the map', up)
             if up:
-                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1', COD2_TRACE_VIEWBOB='1', COD2_TRACE_VIEWANIM='1')
+                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1', COD2_TRACE_VIEWBOB='1', COD2_TRACE_VIEWANIM='1', COD2_TRACE_PERTURB='1')
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
                                                client_home, '+set', 'r_fullscreen', '0', '+set', 'net_port',
@@ -328,8 +365,11 @@ def main():
         if args.keep_log:
             with open(args.keep_log, 'w') as f:
                 f.write(text)
-        check_trace(parse(text), check)
-        check_jump_speed(parse(text), check)
+        start = shock_start(text)
+        frames = [f for f in parse(text) if start is None or f['t'] < start]
+        check_trace(frames, check)
+        check_jump_speed(frames, check)
+        check_perturb(text, check)
         check_damage_kick(text, check)
         check_view_bob(text, check)
         check_view_animation(text, check)

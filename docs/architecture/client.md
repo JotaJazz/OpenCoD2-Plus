@@ -94,6 +94,11 @@ reloading and melee animations move the camera (every viewmodel animation
 keys that bone; at rest it is the identity). `COD2_TRACE_VIEWANIM` prints
 the bone's rotation and offset.
 
+A shellshock's view kick (`CG_UpdateShellShock`) samples a 131-point noise
+table, the binary's at `0x59e1e0`, and `CG_PerturbCamera` (`0x4d2320`) turns
+the view by the rotation with rows (1, `viewDelta`), up × it and it × that.
+`COD2_TRACE_PERTURB` prints the turned axis's determinant.
+
 ## View weapon
 
 `CG_AddViewWeapon` (`src/PC/cgame_mp/cg_weapons.c`, the binary's `0x4d6390`)
