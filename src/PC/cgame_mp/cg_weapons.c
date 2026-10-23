@@ -1222,6 +1222,31 @@ void CG_AddPlayerWeapon(GfxEntity *parent, playerState_t *ps, centity_t *cent, q
     }
 }
 
+/* COD2_TRACE_VIEWWEAPON: one line per frame with the hand's offset from the
+   eye along the view axis, for scripts/view_weapon_test.py. */
+static float CG_TraceDot(const vec3_t a, const vec3_t b)
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+static void CG_TraceViewWeapon(const playerState_t *ps, const vec3_t origin)
+{
+    static int enabled = -1;
+    vec3_t delta;
+
+    if (enabled < 0)
+        enabled = getenv("COD2_TRACE_VIEWWEAPON") != NULL;
+    if (!enabled)
+        return;
+    delta[0] = origin[0] - cg->refdef.vieworg[0];
+    delta[1] = origin[1] - cg->refdef.vieworg[1];
+    delta[2] = origin[2] - cg->refdef.vieworg[2];
+    fprintf(stderr, "[viewweapon] t=%d lean=%.3f vht=%d xy=%.1f land=%d lc=%.3f ads=%.3f ofs=%.3f %.3f %.3f\n",
+            cg->time, ps->leanf, ps->viewHeightTarget, cg->xyspeed, cg->time - cg->landTime, cg->landChange,
+            ps->fWeaponPosFrac, CG_TraceDot(delta, cg->refdef.viewaxis[0]), CG_TraceDot(delta, cg->refdef.viewaxis[1]),
+            CG_TraceDot(delta, cg->refdef.viewaxis[2]));
+}
+
 void CG_AddViewWeapon(playerState_t *ps)
 {
     playerState_t *playerState;
@@ -1341,6 +1366,7 @@ void CG_AddViewWeapon(playerState_t *ps)
             ++vwTrace;
         }
     }
+    CG_TraceViewWeapon(playerState, hand.origin);
     CG_AddPlayerWeapon(&hand, playerState, &cg->predictedPlayerEntity, drawGun);
 }
 
