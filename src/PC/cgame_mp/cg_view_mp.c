@@ -391,6 +391,26 @@ static void CG_TraceViewDamage(const float *angles)
             cg->predictedPlayerState.deltaTime, cg->v_dmg_pitch, cg->v_dmg_roll, angles[0], angles[2]);
 }
 
+/* COD2_TRACE_VIEWBOB: the horizontal bob and where it moved the eye, along
+   the view's forward and right, for scripts/view_weapon_test.py */
+static void CG_TraceViewBob(float hbob, const vec3_t before)
+{
+    static int enabled = -1;
+    vec3_t forward, right, delta;
+
+    if (enabled < 0)
+        enabled = getenv("COD2_TRACE_VIEWBOB") != NULL;
+    if (!enabled)
+        return;
+    AngleVectors(cg->refdefViewAngles, forward, right, NULL);
+    delta[0] = cg->refdef.vieworg[0] - before[0];
+    delta[1] = cg->refdef.vieworg[1] - before[1];
+    delta[2] = cg->refdef.vieworg[2] - before[2];
+    fprintf(stderr, "[viewbob] hbob=%.3f fwd=%.3f right=%.3f\n", hbob,
+            delta[0] * forward[0] + delta[1] * forward[1] + delta[2] * forward[2],
+            delta[0] * right[0] + delta[1] * right[1] + delta[2] * right[2]);
+}
+
 static void CG_CalcViewValues(void)
 {
     playerState_t *ps;
@@ -576,7 +596,7 @@ static void CG_CalcViewValues(void)
     {
         viewState_t viewState;
         float viewAnglesResult[3];
-        float bobMax = (float)bg_bobMax->current.integer;
+        float bobMax = bg_bobMax->current.value;
 
         viewState.ps = ps;
         /* 0x4cee35: hit time and clock both less ps->deltaTime; v_dmg_time,
@@ -608,14 +628,24 @@ static void CG_CalcViewValues(void)
         {
             float hbob = BG_GetHorizontalBobFactor(ps, bobCycle, speed, bobMax);
             float forward[3], right[3], up[3];
+            vec3_t before;
+
+            before[0] = cg->refdef.vieworg[0];
+            before[1] = cg->refdef.vieworg[1];
+            before[2] = cg->refdef.vieworg[2];
             AngleVectors(cg->refdefViewAngles, forward, right, up);
-            cg->refdef.vieworg[0] += hbob * forward[0];
-            cg->refdef.vieworg[1] += hbob * forward[1];
-            cg->refdef.vieworg[2] += hbob * forward[2];
+            /* 0x4cef6c: sideways, along the view's right */
+            cg->refdef.vieworg[0] += hbob * right[0];
+            cg->refdef.vieworg[1] += hbob * right[1];
+            cg->refdef.vieworg[2] += hbob * right[2];
+            CG_TraceViewBob(hbob, before);
         }
 
         {
             int delta = cg->time - cg->landTime;
+            /* 0x4cf0ca: a landing time ahead of the clock is put 450 ms back */
+            if (delta < 0)
+                cg->landTime = cg->time - 450;
             if (delta < 150) {
                 cg->refdef.vieworg[2] += (float)delta / 150.0f * cg->landChange;
             } else if (delta < 450) {

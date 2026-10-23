@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A client leans, crouches, jumps and is hit; its view and view weapon move as 1.3's.
+"""A client leans, crouches, jumps, walks and is hit; its view and view weapon move as 1.3's.
 
     python3 scripts/view_weapon_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH]
 
@@ -14,6 +14,7 @@ The mod also hurts the player every few seconds; with COD2_TRACE_VIEWDAMAGE
 the client prints the angles the view adds after each hit. 1.3 times that
 kick from cg->damageTime minus ps->deltaTime (0x4cee35): it eases to
 v_dmg_pitch and v_dmg_roll in 100 ms and back in 400 and never goes past them.
+Walking, the eye bobs sideways along the view's right (COD2_TRACE_VIEWBOB).
 The client opens a window and needs a CD key in ~/.cod2/preferences; without
 one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
@@ -92,7 +93,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 # wait counts frames; com_maxfps 100 makes 100 about a second
 CONFIG = '''set com_maxfps 100
-set vw_loop "+leanright; wait 300; -leanright; wait 150; +leanleft; wait 300; -leanleft; wait 150; gocrouch; wait 400; +gostand; wait 20; -gostand; wait 150; +moveup; wait 20; -moveup; wait 300; vstr vw_loop"
+set vw_loop "+leanright; wait 300; -leanright; wait 150; +leanleft; wait 300; -leanleft; wait 150; gocrouch; wait 400; +gostand; wait 20; -gostand; wait 150; +moveup; wait 20; -moveup; wait 300; +forward; wait 150; -forward; +back; wait 150; -back; wait 100; vstr vw_loop"
 set vw_start "wait 1000; vstr vw_loop"
 vstr vw_start
 '''
@@ -154,6 +155,21 @@ def check_damage_kick(text, check):
           f'{len(over)} frames over, worst {max((abs(f[5]) - abs(f[3]) for f in over), default=0):+.1f} deg')
     felt = [f for f in hits if abs(f[3]) >= 1.0 and abs(f[5]) >= 0.5 * abs(f[3])]
     check('a hit kicks the view', len(felt) > 0, f'{len(felt)} frames')
+
+
+BOB = re.compile(r'\[viewbob\] hbob=(\S+) fwd=(\S+) right=(\S+)')
+
+
+def check_view_bob(text, check):
+    """1.3 moves the eye by the horizontal bob along the view's right
+    (0x4cef6c), not forward."""
+    bobs = [tuple(float(x) for x in m.groups()) for m in BOB.finditer(text)]
+    moving = [b for b in bobs if abs(b[0]) > 0.1]
+    check('the horizontal bob is traced', len(moving) > 0, f'{len(bobs)} frames, {len(moving)} bobbing')
+    off = [b for b in moving if abs(abs(b[2]) - abs(b[0])) > 0.01 or abs(b[1]) > 0.01]
+    check('the horizontal bob moves the eye sideways', moving and not off,
+          f'{len(off)} of {len(moving)} frames not along the right'
+          + (f', e.g. hbob {off[0][0]:+.2f} fwd {off[0][1]:+.2f} right {off[0][2]:+.2f}' if off else ''))
 
 
 def check_trace(frames, check):
@@ -254,7 +270,7 @@ def main():
             up = smoke_test.wait_for(lambda: server.poll() is None and smoke_test.query(port, 'getinfo x'), 120)
             check('the server runs the map', up)
             if up:
-                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1')
+                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1', COD2_TRACE_VIEWBOB='1')
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
                                                client_home, '+set', 'r_fullscreen', '0', '+set', 'net_port',
@@ -284,6 +300,7 @@ def main():
                 f.write(text)
         check_trace(parse(text), check)
         check_damage_kick(text, check)
+        check_view_bob(text, check)
         check('no crash report from the client', 'CRASH REPORT' not in text)
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
