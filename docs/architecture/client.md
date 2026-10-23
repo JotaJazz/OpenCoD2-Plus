@@ -91,6 +91,16 @@ sway is scaled by the weapon's `swayShellShockScale` while a shellshock
 fades. `COD2_TRACE_VIEWWEAPON` prints the hand's offset from the eye each
 frame (`scripts/view_weapon_test.py` reads it).
 
+`CG_AddViewWeapon` also keeps the aim state other code reads, as 1.3 does:
+`playerEntity.bPositionToADS` (set when the aim starts from 0, cleared at 1,
+`0x4d5bc0`) picks the weapon's zoom-in or zoom-out fractions for the field of
+view (`CG_GetViewFov`), the reticle zoom (`CG_GetWeapReticleZoom`) and the
+crosshair fade (`CG_DrawCrosshair`); `cg->gunPitch`
+and `gunYaw` are the hand's absolute angles while aiming a weapon with
+`bADSPositionInfo` and no overlay reticle, the view's otherwise
+(`CG_CalcCrosshairPosition`); `gunXOfs`–`gunZOfs` are the hand's offset from
+the eye scaled by the aim fraction.
+
 ## Mouse
 
 As the 1.3 binary (`IN_Frame` `0x464b30`, `IN_MouseMove` `0x4649c0`), the SDL

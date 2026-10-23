@@ -134,7 +134,8 @@ def check_trace(frames, check):
         base = statistics.mean(level)
         dr = statistics.mean(right) - base
         dl = statistics.mean(left) - base
-        check('lean moves the weapon sideways', abs(dr) > 0.1 and abs(dl) > 0.1 and dr * dl < 0,
+        # leaning right moves the hand right, against viewaxis[1] (left)
+        check('lean moves the weapon sideways', dr < -0.1 and dl > 0.1,
               f'right {dr:+.3f}, left {dl:+.3f}')
     else:
         check('lean moves the weapon sideways', False, f'{len(level)} level, {len(right)} right, {len(left)} left')

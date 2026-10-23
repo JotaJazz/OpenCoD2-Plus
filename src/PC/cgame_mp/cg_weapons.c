@@ -107,7 +107,6 @@ extern void R_SkinGfxEntityDelayed(GfxEntity *ent);
 extern void SND_SetChannelVolumes(int priority, const float *channelvolume, int fademsec);
 extern void SND_DeactivateChannelVolumes(int priority, int fademsec);
 extern qboolean CG_GetWeapReticleZoom(float *fZoom);
-extern qboolean BG_IsAimDownSightWeapon(int iWeapon);
 extern void BG_CalculateWeaponPosition_Sway(playerState_t *ps, vec_t *swayViewAngles, vec_t *swayOffset, vec_t *swayAngles, float ssSwayScale, int frametime);
 extern void BG_CalculateWeaponAngles(weaponState_t *ws, vec_t *angles);
 extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
