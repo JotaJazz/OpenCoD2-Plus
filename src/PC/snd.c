@@ -432,6 +432,11 @@ void SND_SetChannelVolumes(int priority, const float *channelvolume, int fademse
     snd_channelvolgroup *channelVolGroup;
     float fadetime;
 
+    /* no sound driver (always so on Linux): SND_Init left channelvol unset.
+       1.3 (0x44e400) reads it anyway; its Windows driver always starts */
+    if (!g_snd.channelvol)
+        return;
+
     channelVolGroup = &g_snd.channelVolGroups[priority];
     channelVolGroup->active = 1;
 
