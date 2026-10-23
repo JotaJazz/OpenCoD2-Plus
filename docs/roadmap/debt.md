@@ -30,7 +30,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 | The SDL pump ignores `in_mouse` (not registered there) and `ClickToContinue` (the original posts a click each frame) | `src/unix/linux_input.c` | 1.3's `IN_Frame` `0x464b30` |
 | The Linux X11 fallback pump still sends absolute positions to menus | `src/unix/linux_input.c` | runs only when SDL has no events |
-| The view's `viewState` (`CG_CalcViewValues`) takes `cg->v_dmg_time` and raw `cg->time`; 1.3 (`0x4cee10`) takes `cg->damageTime` and `cg->time`, both minus `ps->deltaTime`, as the view weapon does | `src/PC/cgame_mp/cg_view_mp.c` | differs only with a nonzero `deltaTime` (killcam) and in the view's damage kick timing |
 | `r_fullscreen` cannot be overridden by `+set` on the command line ("is read only") | dvar registration | profile value wins |
 
 ## Deferred decisions

@@ -377,6 +377,20 @@ static void CG_CalcTurretViewValues(void)
     }
 }
 
+/* COD2_TRACE_VIEWDAMAGE: the view's added angles in the second after a hit,
+   for scripts/client_view_test.py */
+static void CG_TraceViewDamage(const float *angles)
+{
+    static int enabled = -1;
+
+    if (enabled < 0)
+        enabled = getenv("COD2_TRACE_VIEWDAMAGE") != NULL;
+    if (!enabled || !cg->damageTime || cg->time - cg->damageTime > 1000)
+        return;
+    fprintf(stderr, "[viewdamage] t=%d dmg=%d delta=%d pitch=%.3f roll=%.3f kick=%.3f %.3f\n", cg->time, cg->damageTime,
+            cg->predictedPlayerState.deltaTime, cg->v_dmg_pitch, cg->v_dmg_roll, angles[0], angles[2]);
+}
+
 static void CG_CalcViewValues(void)
 {
     playerState_t *ps;
@@ -565,8 +579,11 @@ static void CG_CalcViewValues(void)
         float bobMax = (float)bg_bobMax->current.integer;
 
         viewState.ps = ps;
-        viewState.damageTime = cg->v_dmg_time;
-        viewState.time = cg->time;
+        /* 0x4cee35: hit time and clock both less ps->deltaTime; v_dmg_time,
+           half a second ahead of the hit, made the kick start at 15 times
+           its angles */
+        viewState.damageTime = cg->damageTime ? cg->damageTime - ps->deltaTime : 0;
+        viewState.time = cg->time - ps->deltaTime;
         viewState.v_dmg_pitch = cg->v_dmg_pitch;
         viewState.v_dmg_roll = cg->v_dmg_roll;
         viewState.xyspeed = speed;
@@ -575,6 +592,7 @@ static void CG_CalcViewValues(void)
         viewState.weapIdleTime = &cg->weapIdleTime;
 
         BG_CalculateViewAngles(&viewState, viewAnglesResult);
+        CG_TraceViewDamage(viewAnglesResult);
 
         cg->refdefViewAngles[0] += viewAnglesResult[0];
         cg->refdefViewAngles[1] += viewAnglesResult[1];

@@ -71,6 +71,15 @@ A shot's recoil (`BG_WeaponFireRecoil`, from `CG_FireWeapon`) adds to
 kick angles plus `cg->offsetAngles` with the usercmd
 (`CL_SetUserCmdAimValues`), so the view and the aim move together.
 
+## View damage kick
+
+`CG_DamageFeedback` stores the hit's snapshot time in `cg->damageTime` and the
+kick angles in `v_dmg_pitch`/`v_dmg_roll`; `CG_CalcViewValues` passes
+`damageTime` and `cg->time`, both less `ps->deltaTime`, to
+`BG_CalculateViewAngles`, as 1.3 (`0x4cee35`), which eases the view to the
+kick in 100 ms and back in 400. `COD2_TRACE_VIEWDAMAGE` prints the added
+angles in the second after a hit.
+
 ## View weapon
 
 `CG_AddViewWeapon` (`src/PC/cgame_mp/cg_weapons.c`, the binary's `0x4d6390`)

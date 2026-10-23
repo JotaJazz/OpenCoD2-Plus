@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A client leans, crouches and jumps, and its view weapon moves as 1.3's.
+"""A client leans, crouches, jumps and is hit; its view and view weapon move as 1.3's.
 
     python3 scripts/view_weapon_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH]
 
@@ -10,6 +10,10 @@ view weapon's offset from the eye along the view axis each frame; the test
 reads it. 1.3's CG_CalculateWeaponPosition (0x4d5970) moves the weapon
 sideways while leaning, to the weapon's stance offset while crouched, and
 down by landChange * 0.25 at most after a landing (150 ms down, 300 ms back).
+The mod also hurts the player every few seconds; with COD2_TRACE_VIEWDAMAGE
+the client prints the angles the view adds after each hit. 1.3 times that
+kick from cg->damageTime minus ps->deltaTime (0x4cee35): it eases to
+v_dmg_pitch and v_dmg_roll in 100 ms and back in 400 and never goes past them.
 The client opens a window and needs a CD key in ~/.cod2/preferences; without
 one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
@@ -48,7 +52,7 @@ Callback_PlayerConnect()
 	self.archivetime = 0;
 	self.psoffsettime = 0;
 	self.statusicon = "";
-	self.maxhealth = 100000;
+	self.maxhealth = 100;
 	self.health = self.maxhealth;
 	spawnpoints = getentarray("mp_dm_spawn", "classname");
 	self spawn(spawnpoints[0].origin, spawnpoints[0].angles);
@@ -57,6 +61,20 @@ Callback_PlayerConnect()
 	self giveMaxAmmo("%(weapon)s");
 	self setSpawnWeapon("%(weapon)s");
 	logPrint("viewweapon spawned\\n");
+	self thread hurt();
+}
+
+// a 20 point hit without knockback every 4 seconds, healed at once
+hurt()
+{
+	self endon("disconnect");
+	for(;;)
+	{
+		wait 4;
+		self finishPlayerDamage(self, self, 20, 4, "MOD_PISTOL_BULLET", "%(weapon)s", self.origin + (0, 0, 40), (1, 0, 0), "torso_upper", 0);
+		self.health = self.maxhealth;
+		logPrint("viewweapon hurt\\n");
+	}
 }
 
 Callback_PlayerDisconnect()
@@ -120,6 +138,22 @@ def landings(frames):
         else:
             i += 1
     return out
+
+
+KICK = re.compile(r'\[viewdamage\] t=(-?\d+) dmg=(-?\d+) delta=(-?\d+) pitch=(\S+) roll=(\S+) kick=(\S+) (\S+)')
+
+
+def check_damage_kick(text, check):
+    """The view's damage kick never goes past v_dmg_pitch and v_dmg_roll (the
+    idle sway adds well under a degree), and a hit is felt."""
+    frames = [tuple(float(x) for x in m.groups()) for m in KICK.finditer(text)]
+    hits = [f for f in frames if abs(f[3]) >= 1.0 or abs(f[4]) >= 1.0]
+    check('the view damage kick is traced', len(hits) > 0, f'{len(frames)} frames, {len(hits)} after a hit')
+    over = [f for f in hits if abs(f[5]) > abs(f[3]) + 1.0 or abs(f[6]) > abs(f[4]) + 1.0]
+    check('the view damage kick stays within its angles', not over,
+          f'{len(over)} frames over, worst {max((abs(f[5]) - abs(f[3]) for f in over), default=0):+.1f} deg')
+    felt = [f for f in hits if abs(f[3]) >= 1.0 and abs(f[5]) >= 0.5 * abs(f[3])]
+    check('a hit kicks the view', len(felt) > 0, f'{len(felt)} frames')
 
 
 def check_trace(frames, check):
@@ -220,7 +254,7 @@ def main():
             up = smoke_test.wait_for(lambda: server.poll() is None and smoke_test.query(port, 'getinfo x'), 120)
             check('the server runs the map', up)
             if up:
-                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1')
+                env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1')
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
                                                client_home, '+set', 'r_fullscreen', '0', '+set', 'net_port',
@@ -249,6 +283,7 @@ def main():
             with open(args.keep_log, 'w') as f:
                 f.write(text)
         check_trace(parse(text), check)
+        check_damage_kick(text, check)
         check('no crash report from the client', 'CRASH REPORT' not in text)
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
