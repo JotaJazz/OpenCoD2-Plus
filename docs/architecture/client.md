@@ -86,6 +86,13 @@ horizontal one moves it along the view's right (`0x4cef6c`), both capped by
 back (`0x4cf0ca`). `COD2_TRACE_VIEWBOB` prints the horizontal bob and where
 it moved the eye.
 
+After the view is copied to `cg->viewModelOrigin`/`Axis`/`Angles` (for the
+view weapon), `CG_ApplyViewAnimation` (`0x4cf730`) multiplies the view by
+the view weapon's `tag_camera` bone from the skeleton last drawn, so firing,
+reloading and melee animations move the camera (every viewmodel animation
+keys that bone; at rest it is the identity). `COD2_TRACE_VIEWANIM` prints
+the bone's rotation and offset.
+
 ## View weapon
 
 `CG_AddViewWeapon` (`src/PC/cgame_mp/cg_weapons.c`, the binary's `0x4d6390`)

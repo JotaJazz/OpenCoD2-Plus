@@ -73,6 +73,12 @@ extern void FX_AdjustTime(int serverTime);
 extern int CG_PointContents(const vec_t *point, int passEntityNum, int contentmask);
 extern void CG_PredictPlayerState(void);
 extern void AngleVectors(const vec_t *angles, vec_t *forward, vec_t *right, vec_t *up);
+extern void AxisToAngles(vec3_t *axis, vec_t *angles);
+extern void MatrixMultiply43(const float (*in1)[3], const float (*in2)[3], float (*out)[3]);
+extern void ConvertQuatToMat(const DObjAnimMat *mat, float axis[3][3]);
+extern int DObjGetBoneIndex(const DObj *obj, unsigned int boneName);
+extern DObjAnimMat *DObjGetRotTransArray(const struct DObj_s *obj);
+extern weaponInfo_t cg_weaponsArray[];
 extern void CG_TraceCapsule(trace_t *result, const vec_t *start, const vec_t *mins, const vec_t *maxs, const vec_t *end, int skipNumber, int mask);
 extern float CL_GetMenuBlurRadius(void);
 extern void SetScreenScaling(float scaleX, float scaleY, int x, int y, int w, int h);
@@ -411,6 +417,67 @@ static void CG_TraceViewBob(float hbob, const vec3_t before)
             delta[0] * right[0] + delta[1] * right[1] + delta[2] * right[2]);
 }
 
+/* 0x4cf730: the view weapon's animations move the camera by its
+   tag_camera bone, from the skeleton last drawn */
+static void CG_ApplyViewAnimation(void)
+{
+    static int trace = -1;
+    const playerState_t *ps = &cg->predictedPlayerState;
+    DObj *obj;
+    DObjAnimMat *mats;
+    int weaponIndex;
+    int bone;
+    float boneMat[4][3];
+    float view[4][3];
+    float out[4][3];
+    int i;
+
+    if (ps->pm_type == 4 || ps->pm_type == 5 || cg->renderingThirdPerson || (ps->eFlags & 0x300))
+        return;
+    weaponIndex = BG_GetViewmodelWeaponIndex(ps);
+    if (weaponIndex <= 0)
+        return;
+    obj = cg_weaponsArray[weaponIndex].viewModelDObj;
+    if (!obj)
+        return;
+    bone = DObjGetBoneIndex(obj, scr_const.tag_camera);
+    if (bone < 0)
+        return;
+    mats = DObjGetRotTransArray(obj);
+    if (!mats)
+        return;
+    ConvertQuatToMat(&mats[bone], boneMat);
+    boneMat[3][0] = mats[bone].trans[0];
+    boneMat[3][1] = mats[bone].trans[1];
+    boneMat[3][2] = mats[bone].trans[2];
+    for (i = 0; i < 3; i++) {
+        view[i][0] = cg->refdef.viewaxis[i][0];
+        view[i][1] = cg->refdef.viewaxis[i][1];
+        view[i][2] = cg->refdef.viewaxis[i][2];
+    }
+    view[3][0] = cg->refdef.vieworg[0];
+    view[3][1] = cg->refdef.vieworg[1];
+    view[3][2] = cg->refdef.vieworg[2];
+    MatrixMultiply43(boneMat, view, out);
+    for (i = 0; i < 3; i++) {
+        cg->refdef.viewaxis[i][0] = out[i][0];
+        cg->refdef.viewaxis[i][1] = out[i][1];
+        cg->refdef.viewaxis[i][2] = out[i][2];
+    }
+    cg->refdef.vieworg[0] = out[3][0];
+    cg->refdef.vieworg[1] = out[3][1];
+    cg->refdef.vieworg[2] = out[3][2];
+
+    /* COD2_TRACE_VIEWANIM: the bone's rotation (1 - its forward's x) and
+       offset, for scripts/view_weapon_test.py */
+    if (trace < 0)
+        trace = getenv("COD2_TRACE_VIEWANIM") != NULL;
+    if (trace)
+        fprintf(stderr, "[viewanim] t=%d turn=%.6f move=%.4f %.4f %.4f\n", cg->time, 1.0f - boneMat[0][0],
+                boneMat[3][0], boneMat[3][1], boneMat[3][2]);
+    AxisToAngles(cg->refdef.viewaxis, cg->refdefViewAngles);
+}
+
 static void CG_CalcViewValues(void)
 {
     playerState_t *ps;
@@ -714,6 +781,7 @@ post_lean:
         }
     }
 
+    CG_ApplyViewAnimation();
     CG_PerturbCamera();
 
     CG_CalcFov();
