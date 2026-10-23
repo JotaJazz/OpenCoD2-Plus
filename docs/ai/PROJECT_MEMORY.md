@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-23 — view weapon position
+
+- The view weapon sat at the eye plus the sway and `cg_gun_*`: no lean offset, no move or stance offset, no dip after a landing, sway never scaled by shellshock. `CG_AddViewWeapon` now follows the 1.3 binary's `0x4d6390` and its helpers (`0x4d5970`, `0x4d53d0`, `0x4d57e0`, `0x4d52e0`, `0x4d5bc0`, `0x4d58c0`), including the ADS gun angles from the hand's axis.
+- The binary's `cg_t` base is `0x14ee080`; up to `shellshock` its fields sit at the engine's `offsetof` (checked field by field), so the port reads `cg` by name.
+- `scripts/view_weapon_test.py` drives a real client with a `vstr` loop (CoD2 has no `alias`; `wait` ahead of `+connect` would block it) and checks the `COD2_TRACE_VIEWWEAPON` trace: lean ±1.2 at `leanf` 0.5, crouch offset reached, landing dips up to `landChange` × 0.25.
+
 ## 2026-10-22 — Linux client on real Direct3D 9
 
 - `cod2_linux_vk` (`-DCOD2_LINUX_DXVK=ON`): the Windows client's real Direct3D 9 path on DXVK native, with vkd3d-shader compiling the game's HLSL, so Linux gets the game's lighting (the GL device draws the sky white and the world flat). `cod2_linux` stays the GL client.

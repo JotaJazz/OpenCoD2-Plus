@@ -79,6 +79,18 @@ copies the weapon's motion state from `cg` into a `weaponState_t`, runs
 `vGunOffset` and `vGunSpeed` back, so the gun kick spring, the idle factor and
 the move lag carry over between frames. Its time base is `ps->deltaTime`.
 
+The hand's position follows `CG_CalculateWeaponPosition` (`0x4d5970`): an
+offset in the view model's frame (forward, left, up) from the lean (scaled
+out while aiming down the sight), the move and stance offset
+(`CG_CalculateWeaponMovement`, `0x4d53d0`: the weapon's `v*Move` and
+`v*Ofs` plus `cg_gun_move_*` and `cg_gun_ofs_*`, eased at its
+`fPosMoveRate`) and the sway, turned to the world from `cg->viewModelOrigin`
+and `viewModelAngles`; then the dip after a landing (`landChange` × 0.25,
+150 ms down, 300 ms back) and `cg_gun_x`/`_y`/`_z` along the view axis. The
+sway is scaled by the weapon's `swayShellShockScale` while a shellshock
+fades. `COD2_TRACE_VIEWWEAPON` prints the hand's offset from the eye each
+frame (`scripts/view_weapon_test.py` reads it).
+
 ## Mouse
 
 As the 1.3 binary (`IN_Frame` `0x464b30`, `IN_MouseMove` `0x4649c0`), the SDL
