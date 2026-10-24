@@ -16,7 +16,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Item | Why accepted |
 |---|---|
-| Engine's bgame keeps its own animation script (`src/PC/bgame/bg_animation_mp.c`) | predicted legs/torso differ from the server's 4 times over the prediction test, against 20 origin misses |
 | `cod2_linux` keeps the GL device (stand-in shaders) | `cod2_linux_vk` has the game's shaders but needs DXVK, vkd3d-shader and a Vulkan device |
 | `fxRestart` takes hunk memory each time until the next map load | developer command; many restarts on one map end in a drop error |
 | Server browser's find-player list indexes 1-based (`ui_main_mp.c`) | nothing starts that search, in the original either |
@@ -29,12 +28,19 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 
+## CoD2rev-Plus differences from 1.3 (server side, waiting on the user)
+
+| Difference | 1.3 | Effect |
+|---|---|---|
+| `BG_ParseCommands` sets the strafe flags 0x10/0x20 for every condition but STRAFING | `0x4f7f54`: only for STRAFING | the server's legs yaw and STRAFING condition of 55 anims |
+| `BG_IsCrouchingAnim` counts RUNCR, RUNCRBK, TURNRIGHTCR, TURNLEFTCR and not STUMBLE_CROUCH | `0x4f9750` | the server's stance transition time |
+| Double literals in `BG_PlayerAngles`, `BG_SwingAngles`, `BG_SetNewAnimation`, `BG_RunLerpFrameRate` | float constants | last-bit differences in the server's hit-location pose |
+
 ## Deferred decisions
 
 | Decision | Waiting on |
 |---|---|
 | Move MSVC, web and x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
-| Port the engine's animation script to CoD2rev-Plus's | measurable benefit |
 | Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 
 ## Deliberate simplifications

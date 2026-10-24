@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-24 — animation script from CoD2rev-Plus, vendor sync 0267dff
+
+- The engine's animation script (cgame's prediction and other players' animation) follows CoD2rev-Plus, each function checked against the 1.3 client: torso-only anims do not count as set (`0x4f8f20`), UNDERHAND is the view's pitch (`0x4f94b0`), locomotion picks `clientNum % count`, not `rand()` (`0x4f9190`); remote players' turret test, idle yawing, torso clamp, stance transition time, death anims, the animation rate between snapshots (it went back to 1.0 every frame) and the prone back pitch now as 1.3. `scripts/anim_script_test.py` runs both bgames on the same playerstates in one client: 96 of 2.7 million cases differed, none now.
+- Kept the engine's where CoD2rev-Plus differs from 1.3: the parser's strafe flags (CoD2rev-Plus sets 0x10/0x20 for every condition but STRAFING; 1.3 `0x4f7f54` only for it) and the crouch mask (`0x4f9750`). The 2–4 animation misses `prediction_test.py` still counts come from the spawn's weapon and the landing's MOVETYPE condition, which the playerstate does not carry, not from the script.
+- Vendored files at CoD2rev-Plus `0267dff` (the user's zk_libcod port, `sv_libcodUnsafe`, wrap restarts, and the controllers' multipliers as 1.3's floats); the engine gained `Dvar_CanCreate` for the client's local games. Left open, for the user: fixing the strafe flags, the crouch mask and the double literals of `BG_PlayerAngles`/`BG_SwingAngles`/`BG_SetNewAnimation` in CoD2rev-Plus.
+
 ## 2026-10-24 — client mouse as 1.3's IN_Frame
 
 - The SDL pump (Linux and Windows clients, `src/unix/linux_input.c`) now honours `in_mouse 0` as 1.3's `IN_Frame` (`0x464b30`) and `IN_MouseEvent` (`0x464940`): the mouse is never captured, does not move and its buttons do nothing (the wheel still counts, as in 1.3); the X11 fallback moves the menus' cursor by deltas, only when captured, instead of absolute positions. The decisions are `IN_WantMouse` and `IN_MouseButtons` (`src/unix/in_mouse.h`, `test/test_in_mouse.py`).
