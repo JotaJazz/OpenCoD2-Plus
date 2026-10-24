@@ -79,7 +79,8 @@ static void Dvar_RegisterBool_f()
 
 		if ( !dvar || dvar->type == DVAR_TYPE_STRING && dvar->flags & DVAR_EXTERNAL )
 		{
-			Dvar_RegisterBool(dvarName, value, DVAR_EXTERNAL);
+			if ( dvar || Dvar_CanCreate(dvarName) )
+				Dvar_RegisterBool(dvarName, value, DVAR_EXTERNAL);
 		}
 		else if ( dvar->type )
 		{
@@ -117,7 +118,8 @@ static void Dvar_RegisterInt_f()
 
 		if ( !dvar || dvar->type == DVAR_TYPE_STRING && dvar->flags & DVAR_EXTERNAL)
 		{
-			Dvar_RegisterInt(dvarName, value, min, max, DVAR_EXTERNAL);
+			if ( dvar || Dvar_CanCreate(dvarName) )
+				Dvar_RegisterInt(dvarName, value, min, max, DVAR_EXTERNAL);
 		}
 		else if ( dvar->type != DVAR_TYPE_INT && dvar->type != DVAR_TYPE_ENUM )
 		{
@@ -155,7 +157,8 @@ static void Dvar_RegisterFloat_f()
 
 		if ( !dvar || dvar->type == DVAR_TYPE_STRING && dvar->flags & DVAR_EXTERNAL )
 		{
-			Dvar_RegisterFloat(dvarName, value, min, max, DVAR_EXTERNAL);
+			if ( dvar || Dvar_CanCreate(dvarName) )
+				Dvar_RegisterFloat(dvarName, value, min, max, DVAR_EXTERNAL);
 		}
 		else if ( dvar->type != DVAR_TYPE_FLOAT )
 		{

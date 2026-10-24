@@ -154,6 +154,7 @@ void Dvar_SetCommand(const char *dvarName, const char *string);
 bool Dvar_IsAtDefaultValue(const dvar_t *dvar);
 bool Dvar_HasLatchedValue(const dvar_t *var);
 bool Dvar_IsValidName(const char *dvarName);
+bool Dvar_CanCreate(const char *dvarName);
 void Dvar_Reset(dvar_t *dvar, DvarSetSource setSource);
 void Dvar_PrintDomain(DvarType type, DvarLimits domain);
 void Dvar_ForEach(void (*callback)(const char *dvarName));

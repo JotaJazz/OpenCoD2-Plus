@@ -607,6 +607,19 @@ static void Dvar_ReinterpretDvar(dvar_t *dvar, const char *dvarName, DvarType ty
 	}
 }
 
+// A full pool is fatal in Dvar_RegisterNew; dvars named by a script, the
+// console or rcon check here first so they fail on their own
+bool Dvar_CanCreate(const char *dvarName)
+{
+	if (dvarCount < MAX_DVARS)
+	{
+		return true;
+	}
+
+	Com_Printf("Can't create dvar '%s': %i dvars already exist\n", dvarName, MAX_DVARS);
+	return false;
+}
+
 static dvar_t *Dvar_RegisterNew(const char *dvarName, DvarType type, unsigned short flags, DvarValue value, DvarLimits domain)
 {
 	int hash;
@@ -1776,7 +1789,12 @@ static dvar_t *Dvar_SetFromStringByNameFromSource(const char *dvarName, const ch
 	dvar = Dvar_FindVar(dvarName);
 
 	if (!dvar)
+	{
+		if (!Dvar_CanCreate(dvarName))
+			return NULL;
+
 		return Dvar_RegisterString(dvarName, string, flags | DVAR_EXTERNAL);
+	}
 
 	Dvar_SetFromStringFromSource(dvar, string, source);
 	return dvar;

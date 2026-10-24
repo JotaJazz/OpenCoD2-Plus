@@ -4827,6 +4827,14 @@ void GScr_MakeDvarServerInfo()
 	}
 
 	CleanDvarValue(dvarValue, outString, sizeof(outString));
+
+	// a full dvar pool is fatal: make it a script error
+	if ( !Dvar_CanCreate(dvarName) )
+	{
+		Scr_Error(va("Can't create dvar '%s': too many dvars", dvarName));
+		return;
+	}
+
 	Dvar_RegisterString(dvarName, outString, DVAR_CODINFO | DVAR_EXTERNAL);
 }
 
@@ -5058,6 +5066,13 @@ void GScr_SetDvar()
 	if ( !Dvar_IsValidName(dvarName) )
 	{
 		Scr_Error(va("Dvar %s has an invalid dvar name", dvarName));
+	}
+
+	// a full dvar pool is fatal: make it a script error
+	if ( !Dvar_FindVar(dvarName) && !Dvar_CanCreate(dvarName) )
+	{
+		Scr_Error(va("Can't create dvar '%s': too many dvars", dvarName));
+		return;
 	}
 
 	Dvar_SetFromStringByName(dvarName, outString);
