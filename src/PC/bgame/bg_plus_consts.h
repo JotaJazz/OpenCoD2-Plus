@@ -100,6 +100,24 @@
 #ifndef CONTENTS_PLAYERCLIP
 #define CONTENTS_PLAYERCLIP 65536
 #endif
+#ifndef CONTROL_ANGLES_BACK_LOW
+#define CONTROL_ANGLES_BACK_LOW 0
+#endif
+#ifndef CONTROL_ANGLES_BACK_MID
+#define CONTROL_ANGLES_BACK_MID 1
+#endif
+#ifndef CONTROL_ANGLES_BACK_UP
+#define CONTROL_ANGLES_BACK_UP 2
+#endif
+#ifndef CONTROL_ANGLES_HEAD
+#define CONTROL_ANGLES_HEAD 4
+#endif
+#ifndef CONTROL_ANGLES_NECK
+#define CONTROL_ANGLES_NECK 3
+#endif
+#ifndef CONTROL_ANGLES_PELVIS
+#define CONTROL_ANGLES_PELVIS 5
+#endif
 #ifndef CROUCH_VIEWHEIGHT
 #define CROUCH_VIEWHEIGHT 40
 #endif
@@ -112,8 +130,14 @@
 #ifndef EF_AIMDOWNSIGHT
 #define EF_AIMDOWNSIGHT 262144
 #endif
+#ifndef EF_BODY_START
+#define EF_BODY_START 524288
+#endif
 #ifndef EF_CROUCH
 #define EF_CROUCH 4
+#endif
+#ifndef EF_DEAD
+#define EF_DEAD 131072
 #endif
 #ifndef EF_FIRING
 #define EF_FIRING 64

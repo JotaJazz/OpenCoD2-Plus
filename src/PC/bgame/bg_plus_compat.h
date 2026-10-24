@@ -72,6 +72,9 @@ static inline bool Com_BitCheck(const int array[], int bitNum) { return (array[b
 static inline void Com_BitSet(int array[], int bitNum) { array[bitNum >> 5] |= 1 << (bitNum & 31); }
 static inline void Com_BitClear(int array[], int bitNum) { array[bitNum >> 5] &= ~(1 << (bitNum & 31)); }
 
+#define DEG_TO_RAD ( M_PI / 180.0f )
+static inline void FastSinCos(const float value, float *pSin, float *pCos) { *pSin = sin(value); *pCos = cos(value); }
+
 extern const float AngleSubtract(const float a1, const float a2);
 extern float DiffTrack(float tgt, float cur, float rate, float deltaTime);
 extern const float AngleDelta(const float angle1, const float angle2);

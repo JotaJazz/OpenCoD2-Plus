@@ -354,191 +354,228 @@ void BG_AnimUpdatePlayerStateConditions(pmove_t *pmove)
         BG_UpdateConditionValue(ps->clientNum, ANIM_COND_FIRING, qfalse, qtrue);
 }
 
-static inline __attribute__((always_inline)) void BG_SmoothControllerAngles(vec3_t current, const vec3_t goal, float maxChange)
-{
-    int axis;
-
-    for (axis = 0; axis < 3; ++axis) {
-        float delta = goal[axis] - current[axis];
-
-        if (delta > maxChange) {
-            current[axis] += maxChange;
-        } else if (delta < -maxChange) {
-            current[axis] -= maxChange;
-        } else {
-            current[axis] = goal[axis];
-        }
-    }
-}
-
 static inline __attribute__((always_inline)) unsigned int BG_ControllerTagName(int controllerIndex)
 {
     return *(const unsigned short *)controller_names[controllerIndex];
 }
 
+static int BG_GetConditionValue(clientInfo_t *ci, int condition, qboolean checkConversion);
+
+static void BG_LerpAngles(vec3_t angles_goal, float maxAngleChange, vec3_t angles)
+{
+    int i;
+    float diff;
+
+    for (i = 0; i < 3; i++) {
+        diff = angles_goal[i] - angles[i];
+
+        if (diff > maxAngleChange) {
+            angles[i] = angles[i] + maxAngleChange;
+            continue;
+        }
+
+        if (-maxAngleChange > diff) {
+            angles[i] = angles[i] - maxAngleChange;
+            continue;
+        }
+
+        angles[i] = angles_goal[i];
+    }
+}
+
+/* 0x4fa8c4: the controllers' goal angles, as CoD2rev-Plus's
+ * BG_Player_DoControllersInternal (the server's) with 1.3's float constants */
+static void BG_Player_DoControllersInternal(const entityState_t *es, clientInfo_t *ci, vec3_t angles[6],
+                                            vec3_t tag_origin_angles, vec3_t tag_origin_offset)
+{
+    float c;
+    float s;
+    vec3_t vHeadAngles;
+    vec3_t vTorsoAngles;
+    float fLeanFrac;
+
+    if (es->eFlags & EF_TURRET_ACTIVE) {
+        memset(angles, 0, 6 * sizeof(vec3_t));
+        VectorClear(tag_origin_angles);
+        VectorClear(tag_origin_offset);
+        return;
+    }
+
+    VectorClear(tag_origin_angles);
+    VectorClear(vTorsoAngles);
+
+    VectorCopy(ci->playerAngles, vHeadAngles);
+
+    tag_origin_angles[YAW] = ci->legs.yawAngle;
+    vTorsoAngles[YAW] = ci->torso.yawAngle;
+
+    if (!(BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_CLIMBUP) | (1 << ANIM_MT_CLIMBDOWN)))) {
+        vTorsoAngles[PITCH] = ci->torso.pitchAngle;
+
+        if (es->eFlags & EF_PRONE) {
+            vTorsoAngles[PITCH] = AngleNormalize180(vTorsoAngles[PITCH]);
+
+            if (vTorsoAngles[PITCH] > 0) {
+                vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.5f;
+            } else {
+                vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.25f;
+            }
+        }
+    }
+
+    AnglesSubtract(vHeadAngles, vTorsoAngles, vHeadAngles);
+    AnglesSubtract(vTorsoAngles, tag_origin_angles, vTorsoAngles);
+
+    VectorSet(tag_origin_offset, 0, 0, es->fTorsoHeight);
+    fLeanFrac = GetLeanFraction(ci->lerpLean);
+
+    vTorsoAngles[ROLL] = fLeanFrac * 46.25f /* 50 * 0.925, folded as 1.3 */;
+    vHeadAngles[ROLL] = vTorsoAngles[ROLL];
+
+    if (fLeanFrac != 0) {
+        if (es->eFlags & EF_CROUCH) {
+            if (fLeanFrac > 0) {
+                tag_origin_offset[YAW] = -fLeanFrac * 2.5f + tag_origin_offset[YAW];
+            } else {
+                tag_origin_offset[YAW] = -fLeanFrac * 12.5f + tag_origin_offset[YAW];
+            }
+        } else {
+            if (fLeanFrac > 0) {
+                tag_origin_offset[YAW] = -fLeanFrac * 2.5f + tag_origin_offset[YAW];
+            } else {
+                tag_origin_offset[YAW] = -fLeanFrac * 5.0f + tag_origin_offset[YAW];
+            }
+        }
+    }
+
+    if (!(es->eFlags & EF_DEAD)) {
+        tag_origin_angles[YAW] = AngleSubtract(tag_origin_angles[YAW], ci->playerAngles[YAW]);
+    }
+
+    if (es->eFlags & EF_PRONE) {
+        if (fLeanFrac != 0) {
+            vHeadAngles[ROLL] = vHeadAngles[ROLL] * 0.5f;
+        }
+
+        tag_origin_angles[PITCH] = tag_origin_angles[PITCH] + es->fTorsoPitch;
+
+        FastSinCos(vTorsoAngles[YAW] * (float)DEG_TO_RAD, &s, &c);
+
+        tag_origin_offset[PITCH] = (1.0f - c) * -24.0f + tag_origin_offset[PITCH];
+        tag_origin_offset[YAW] = s * -12.0f + tag_origin_offset[YAW];
+
+        if (fLeanFrac * s > 0) {
+            tag_origin_offset[YAW] = -fLeanFrac * (1.0f - c) * 16.0f + tag_origin_offset[YAW];
+        }
+
+        angles[CONTROL_ANGLES_BACK_LOW][PITCH] = 0;
+        angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[ROLL] * -1.2f;
+        angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.30000001f;
+
+        /* the torso's pitch less the waist's (0x4fab8f) */
+        if (es->fTorsoPitch != 0 || es->fWaistPitch != 0) {
+            angles[CONTROL_ANGLES_BACK_LOW][PITCH] = AngleSubtract(es->fTorsoPitch, es->fWaistPitch) + angles[CONTROL_ANGLES_BACK_LOW][PITCH];
+        }
+
+        angles[CONTROL_ANGLES_BACK_MID][PITCH] = 0;
+        angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.1f - vTorsoAngles[ROLL] * 0.2f;
+        angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.2f;
+
+        angles[CONTROL_ANGLES_BACK_UP][PITCH] = vTorsoAngles[PITCH];
+        angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.80000001f + vTorsoAngles[ROLL];
+        angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.2f;
+    } else {
+        if (fLeanFrac != 0) {
+            if (es->eFlags & EF_CROUCH) {
+                if (fLeanFrac <= 0) {
+                    vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25f;
+                    vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25f;
+                }
+            } else {
+                vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25f;
+                vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25f;
+            }
+        }
+
+        tag_origin_angles[ROLL] = fLeanFrac * 3.7500002f /* 50 * 0.075, folded as 1.3 */ + tag_origin_angles[ROLL];
+
+        angles[CONTROL_ANGLES_BACK_LOW][PITCH] = vTorsoAngles[PITCH] * 0.2f;
+        angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[YAW] * 0.40000001f;
+        angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.5f;
+
+        if (es->fTorsoPitch != 0 || es->fWaistPitch != 0) {
+            angles[CONTROL_ANGLES_BACK_LOW][PITCH] = AngleSubtract(es->fTorsoPitch, es->fWaistPitch) + angles[CONTROL_ANGLES_BACK_LOW][PITCH];
+        }
+
+        angles[CONTROL_ANGLES_BACK_MID][PITCH] = vTorsoAngles[PITCH] * 0.30000001f;
+        angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.40000001f;
+        angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.5f;
+
+        angles[CONTROL_ANGLES_BACK_UP][PITCH] = vTorsoAngles[PITCH] * 0.5f;
+        angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.2f;
+        angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.60000002f;
+    }
+
+    angles[CONTROL_ANGLES_NECK][PITCH] = vHeadAngles[PITCH] * 0.30000001f;
+    angles[CONTROL_ANGLES_NECK][YAW] = vHeadAngles[YAW] * 0.30000001f;
+    angles[CONTROL_ANGLES_NECK][ROLL] = 0;
+
+    angles[CONTROL_ANGLES_HEAD][PITCH] = vHeadAngles[PITCH] * 0.69999999f;
+    angles[CONTROL_ANGLES_HEAD][YAW] = vHeadAngles[YAW] * 0.69999999f;
+    angles[CONTROL_ANGLES_HEAD][ROLL] = vHeadAngles[ROLL] * -0.30000001f;
+
+    VectorClear(angles[CONTROL_ANGLES_PELVIS]);
+
+    if (es->fWaistPitch != 0 || es->fTorsoPitch != 0) {
+        angles[CONTROL_ANGLES_PELVIS][PITCH] = AngleSubtract(es->fWaistPitch, es->fTorsoPitch);
+    }
+}
+
+/* COD2_TRACE_CONTROLLERS: once a second, a player's head, neck and back
+   controller angles, for scripts/client_view_test.py */
+static void BG_TraceControllers(const entityState_t *es, const clientInfo_t *ci)
+{
+    static int enabled = -1;
+    static int last;
+
+    if (enabled < 0)
+        enabled = getenv("COD2_TRACE_CONTROLLERS") != NULL;
+    if (!enabled || bgs->time - last < 1000)
+        return;
+    last = bgs->time;
+    fprintf(stderr, "[controllers] t=%d ent=%d low=%.3f %.3f %.3f up=%.3f %.3f %.3f neck=%.3f %.3f %.3f head=%.3f %.3f %.3f\n",
+            bgs->time, es->number, ci->angles[0][0], ci->angles[0][1], ci->angles[0][2], ci->angles[2][0],
+            ci->angles[2][1], ci->angles[2][2], ci->angles[3][0], ci->angles[3][1], ci->angles[3][2], ci->angles[4][0],
+            ci->angles[4][1], ci->angles[4][2]);
+}
+
 void BG_Player_DoControllers(const struct DObj_s *pDObj, const entityState_t *es, int *partBits, clientInfo_t *ci, int frametime)
 {
-    vec3_t goals[8];
-    vec3_t tagOriginAngles;
-    vec3_t torsoAngles;
-    vec3_t headAngles;
-    float leanFrac;
-    float leanDegrees;
-    float waistDelta;
+    vec3_t angles[6];
+    vec3_t tag_origin_angles;
+    vec3_t tag_origin_offset;
     float maxAngleChange;
     int i;
 
-    if ((es->eFlags & 0x3) != 0) {
-        memset(goals, 0, sizeof(goals));
-    } else {
-        tagOriginAngles[0] = 0.0f;
-        tagOriginAngles[1] = ci->legs.yawAngle;
-        tagOriginAngles[2] = 0.0f;
+    BG_Player_DoControllersInternal(es, ci, angles, tag_origin_angles, tag_origin_offset);
 
-        torsoAngles[0] = 0.0f;
-        torsoAngles[1] = ci->torso.yawAngle;
-        torsoAngles[2] = 0.0f;
-
-        headAngles[0] = ci->playerAngles[0];
-        headAngles[1] = ci->playerAngles[1];
-        headAngles[2] = ci->playerAngles[2];
-
-        if ((ci->clientConditions[3][0] & 0xC0000) == 0) {
-            torsoAngles[0] = ci->torso.pitchAngle;
-            if ((es->eFlags & 8) != 0) {
-                torsoAngles[0] = AngleNormalize180(torsoAngles[0]);
-                torsoAngles[0] *= (torsoAngles[0] > 0.0f) ? 0.5f : 0.25f;
-            }
-        }
-
-        AnglesSubtract(headAngles, torsoAngles, headAngles);
-        AnglesSubtract(torsoAngles, tagOriginAngles, torsoAngles);
-
-        goals[7][2] = es->fTorsoHeight;
-
-        leanFrac = GetLeanFraction(ci->lerpLean);
-        leanDegrees = leanFrac * 50.0f;
-        torsoAngles[2] = leanDegrees * 0.925000011920929f;
-        headAngles[2] = leanDegrees * 0.925000011920929f;
-
-        if (leanFrac != 0.0f) {
-            if ((es->eFlags & 4) != 0) {
-                goals[7][1] = (leanFrac > 0.0f) ? (leanFrac * -2.5f) : (leanFrac * -12.5f);
-            } else {
-                goals[7][1] = (leanFrac > 0.0f) ? (leanFrac * -2.5f) : (leanFrac * -5.0f);
-            }
-        } else {
-            goals[7][1] = 0.0f;
-        }
-
-        if ((es->eFlags & 0x20000) == 0) {
-            tagOriginAngles[1] = AngleSubtract(tagOriginAngles[1], ci->playerAngles[1]);
-        }
-
-        if ((es->eFlags & 8) != 0) {
-            float radians;
-            float sinYaw;
-            float oneMinusCos;
-
-            if (leanFrac != 0.0f) {
-                headAngles[2] *= 0.5f;
-            }
-
-            tagOriginAngles[0] += es->fTorsoPitch;
-            radians = torsoAngles[1] * 0.017453292519943295f;
-            sinYaw = sinf(radians);
-            oneMinusCos = 1.0f - cosf(radians);
-
-            goals[7][0] = oneMinusCos * -24.0f;
-            goals[7][1] += sinYaw * -12.0f;
-            if ((sinYaw * leanFrac) > 0.0f) {
-                goals[7][1] += -leanFrac * oneMinusCos * 16.0f;
-            }
-
-            goals[0][0] = 0.0f;
-            goals[0][1] = torsoAngles[2] * -1.2000000476837158f;
-            goals[0][2] = torsoAngles[2] * 0.30000001192092896f;
-
-            if (es->fTorsoPitch != 0.0f || es->fWaistPitch != 0.0f) {
-                goals[0][0] += AngleSubtract(es->fWaistPitch, es->fTorsoPitch);
-            }
-
-            goals[1][0] = 0.0f;
-            goals[1][1] = torsoAngles[1] * 0.10000000149011612f + torsoAngles[2] * -0.20000000298023224f;
-            goals[1][2] = torsoAngles[2] * 0.20000000298023224f;
-
-            goals[2][0] = torsoAngles[0];
-            goals[2][1] = torsoAngles[1] * 0.800000011920929f + torsoAngles[2];
-            goals[2][2] = torsoAngles[2] * -0.20000000298023224f;
-        } else {
-            if (leanFrac != 0.0f) {
-                if ((es->eFlags & 4) == 0 || !(leanFrac > 0.0f)) {
-                    torsoAngles[2] *= 1.25f;
-                    headAngles[2] *= 1.25f;
-                }
-            }
-
-            tagOriginAngles[2] += leanDegrees * 0.07500000298023224f;
-
-            goals[0][0] = torsoAngles[0] * 0.20000000298023224f;
-            goals[0][1] = torsoAngles[1] * 0.4000000059604645f;
-            goals[0][2] = torsoAngles[2] * 0.5f;
-
-            if (es->fTorsoPitch != 0.0f || es->fWaistPitch != 0.0f) {
-                goals[0][0] += AngleSubtract(es->fWaistPitch, es->fTorsoPitch);
-            }
-
-            goals[1][0] = torsoAngles[0] * 0.30000001192092896f;
-            goals[1][1] = torsoAngles[1] * 0.4000000059604645f;
-            goals[1][2] = torsoAngles[2] * 0.5f;
-
-            goals[2][0] = torsoAngles[0] * 0.5f;
-            goals[2][1] = torsoAngles[1] * 0.20000000298023224f;
-            goals[2][2] = torsoAngles[2] * -0.6000000238418579f;
-
-            goals[7][0] = 0.0f;
-        }
-
-        goals[3][0] = headAngles[0] * 0.30000001192092896f;
-        goals[3][1] = headAngles[1] * 0.30000001192092896f;
-        goals[3][2] = 0.0f;
-
-        goals[4][0] = headAngles[0] * 0.699999988079071f;
-        goals[4][1] = headAngles[1] * 0.699999988079071f;
-        goals[4][2] = headAngles[2] * -0.30000001192092896f;
-
-        waistDelta = 0.0f;
-        if (es->fTorsoPitch != 0.0f || es->fWaistPitch != 0.0f) {
-            waistDelta = AngleSubtract(es->fWaistPitch, es->fTorsoPitch);
-        }
-        goals[5][0] = waistDelta;
-        goals[5][1] = 0.0f;
-        goals[5][2] = 0.0f;
-
-        goals[6][0] = tagOriginAngles[0];
-        goals[6][1] = tagOriginAngles[1];
-        goals[6][2] = tagOriginAngles[2];
-    }
-
-    maxAngleChange = (float)frametime * 0.36000001430511475f;
+    maxAngleChange = (float)frametime * 0.36000001f;
 
     for (i = 0; i < 6; ++i) {
-        BG_SmoothControllerAngles(ci->angles[i], goals[i], maxAngleChange);
+        BG_LerpAngles(angles[i], maxAngleChange, ci->angles[i]);
         DObjSetControlTagAngles(pDObj, partBits, BG_ControllerTagName(i), ci->angles[i]);
     }
 
-    BG_SmoothControllerAngles(ci->tag_origin_angles, goals[6], maxAngleChange);
-    BG_LerpOffset(goals[7], (float)frametime * 0.10000000149011612f, ci->tag_origin_offset);
+    BG_LerpAngles(tag_origin_angles, maxAngleChange, ci->tag_origin_angles);
+    BG_LerpOffset(tag_origin_offset, (float)frametime * 0.1f, ci->tag_origin_offset);
     DObjSetLocalTag(pDObj, partBits, ((const scr_const_t *)scr_const_g)->tag_origin,
                     ci->tag_origin_offset, ci->tag_origin_angles);
+    BG_TraceControllers(es, ci);
 }
 
-static int BG_AnimIndexNoToggle(int animIndex)
-{
-    return animIndex & ~0x200;
-}
-
-static animation_t *BG_GetAnimationForIndexChecked(int animIndex)
+/* 1.3's crouch (0x4f9750) and prone (0x4f97b0) movetypes: IDLECR, WALKCR,
+ * WALKCRBK and the two STUMBLE_CROUCH; IDLEPRONE, WALKPRONE, WALKPRONEBK */
+static animation_t *BG_GetAnimationForIndex(int animIndex)
 {
     if ((unsigned int)animIndex >= (unsigned int)globalScriptData->numAnimations) {
         Com_Error(1, "\025BG_GetAnimationForIndex: index out of bounds");
@@ -547,262 +584,247 @@ static animation_t *BG_GetAnimationForIndexChecked(int animIndex)
     return &globalScriptData->animations[animIndex];
 }
 
-static qboolean BG_AnimationHasMoveClass(int animIndex)
+static qboolean BG_IsCrouchingAnim(const clientInfo_t *ci, int animNum)
 {
-    animation_t *anim = BG_GetAnimationForIndexChecked(animIndex);
+    animation_t *anim = BG_GetAnimationForIndex(animNum & ~ANIM_TOGGLEBIT);
+
+    (void)ci;
     return (anim->movetype & ((((long long)0x180) << 32) | 0xc4LL)) != 0;
 }
 
-static qboolean BG_AnimationHasTurnClass(int animIndex)
+static qboolean BG_IsProneAnim(const clientInfo_t *ci, int animNum)
 {
-    animation_t *anim = BG_GetAnimationForIndexChecked(animIndex);
+    animation_t *anim = BG_GetAnimationForIndex(animNum & ~ANIM_TOGGLEBIT);
+
+    (void)ci;
     return (anim->movetype & 0x308LL) != 0;
 }
 
-static float BG_LerpAnimBlendSeconds(const lerpFrame_t *lf)
+/* 0x4f9850 */
+static void BG_SetNewAnimation(clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qboolean bNew)
 {
-    return (float)lf->animationTime * 0.0010000000474974513f;
-}
-
-static void BG_CopyLerpFramePosition(lerpFrame_t *lf, const entityState_t *es)
-{
-    lf->oldFramePos[0] = es->pos.trBase[0];
-    lf->oldFramePos[1] = es->pos.trBase[1];
-    lf->oldFramePos[2] = es->pos.trBase[2];
-}
-
-static float BG_Fabsf(float value)
-{
-    return value < 0.0f ? -value : value;
-}
-
-static void __attribute_regparm__(3) BG_RunLerpFrameRate(clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, entityState_t *es)
-{
-    XAnimTree_s *pAnimTree;
+    qboolean IsCrouchingAnim;
+    qboolean IsProneAnim;
+    qboolean bNoWeight;
+    qboolean proneMatch;
+    qboolean crouchMatch;
+    unsigned int animIndex;
+    unsigned int oldAnimIndex;
+    int cycleLen;
     struct XAnim_s *pXAnims;
-    animation_t *oldAnimation;
+    XAnimTree_s *pAnimTree;
+    float fStartTime;
+    int oldAnimNum;
+    int transitionMin;
     animation_t *anim;
-    int oldAnimationNumber;
-    int oldAnimIndex;
-    int animNum;
-    int bLegsAnim;
-    int hadNoAnimation;
-    qboolean oldAnimationUsesZOnly;
-    float startTime;
+    animation_t *oldanim;
 
-    oldAnimation = lf->animation;
-    oldAnimationUsesZOnly = (oldAnimation != NULL && (oldAnimation->flags & 2) != 0);
+    transitionMin = -1;
+    fStartTime = 0;
+
+    oldanim = lf->animation;
+    oldAnimNum = lf->animationNumber;
+
+    lf->animationNumber = newAnimation;
+    animIndex = newAnimation & ~ANIM_TOGGLEBIT;
+
+    if (animIndex >= (unsigned int)bgs->animScriptData.numAnimations) {
+        Com_Error(1, "\025Player animation index out of range (%i): %i", bgs->animScriptData.numAnimations, animIndex);
+    }
+
     pAnimTree = ci->pXAnimTree;
-    oldAnimationNumber = lf->animationNumber;
+    pXAnims = bgs->animScriptData.animTree.anims;
 
-    if (oldAnimationNumber == newAnimation) {
-        if (oldAnimation != NULL) {
-            animNum = BG_AnimIndexNoToggle(oldAnimationNumber);
-        } else {
-            if (BG_AnimIndexNoToggle(oldAnimationNumber) == 0) {
-                return;
-            }
-            animNum = BG_AnimIndexNoToggle(oldAnimationNumber);
+    if (animIndex) {
+        anim = &bgs->animScriptData.animations[animIndex];
+
+        lf->animation = anim;
+        lf->animationTime = anim->initialLerp;
+
+        IsCrouchingAnim = BG_IsCrouchingAnim(ci, animIndex);
+        crouchMatch = IsCrouchingAnim == BG_IsCrouchingAnim(ci, oldAnimNum);
+
+        IsProneAnim = BG_IsProneAnim(ci, animIndex);
+        proneMatch = IsProneAnim == BG_IsProneAnim(ci, oldAnimNum);
+
+        if (lf == &ci->legs && (!crouchMatch || !proneMatch)) {
+            ci->stanceTransitionTime = bgs->time + 400;
         }
     } else {
-        unsigned int maxAnimations;
-        int oldMoveClass;
-        int newMoveClass;
-        int oldTurnClass;
-        int newTurnClass;
+        anim = NULL;
 
-        bLegsAnim = (lf == &ci->legs);
-        hadNoAnimation = (oldAnimation == NULL);
-        lf->animationNumber = newAnimation;
-        animNum = BG_AnimIndexNoToggle(newAnimation);
+        lf->animation = NULL;
+        lf->animationTime = 200;
+    }
 
-        maxAnimations = (unsigned int)bgs->animScriptData.numAnimations;
-        if ((unsigned int)animNum >= maxAnimations) {
-            Com_Error(1, "\025Player animation index out of range (%i): %i", maxAnimations, animNum);
-        }
-
-        pXAnims = bgs->animScriptData.animTree.anims;
-        if (animNum != 0) {
-            anim = &bgs->animScriptData.animations[animNum];
-            lf->animation = anim;
-            lf->animationTime = anim->initialLerp;
-        } else {
-            anim = NULL;
-            lf->animation = NULL;
-            lf->animationTime = 200;
-        }
-
-        if (animNum != 0) {
-            newMoveClass = BG_AnimationHasMoveClass(animNum);
-            oldAnimIndex = BG_AnimIndexNoToggle(oldAnimationNumber);
-            oldMoveClass = BG_AnimationHasMoveClass(oldAnimIndex);
-            newTurnClass = BG_AnimationHasTurnClass(animNum);
-            oldTurnClass = BG_AnimationHasTurnClass(oldAnimIndex);
-
-            if (bLegsAnim && (newMoveClass != oldMoveClass || newTurnClass != oldTurnClass)) {
-                ci->stanceTransitionTime = bgs->time + 400;
-            }
-        }
-
-        if (hadNoAnimation && bLegsAnim) {
-            lf->animationTime = 0;
-        } else {
-            int maxBlendMsec;
-            float zero = 0.0f;
-
-            if (anim == NULL) {
-                maxBlendMsec = (hadNoAnimation || oldAnimation == NULL || oldAnimation->moveSpeed == zero) ? 170 : 250;
-            } else if (lf->animationTime <= 0) {
-                maxBlendMsec = (anim->moveSpeed == zero) ? ((hadNoAnimation || oldAnimation == NULL || oldAnimation->moveSpeed == zero) ? 170 : 250) : 120;
-            } else {
-                maxBlendMsec = -1;
-            }
-
-            if (maxBlendMsec >= 0) {
-                int elapsed = bgs->time - ci->stanceTransitionTime;
-                if (elapsed > maxBlendMsec) {
-                    elapsed = maxBlendMsec;
-                }
-                if (elapsed > lf->animationTime) {
-                    lf->animationTime = elapsed;
-                }
-            }
-        }
-
-        startTime = 0.0f;
-        if (anim != NULL && anim->moveSpeed != 0.0f) {
-            if (XAnimIsLooped(pXAnims, animNum)) {
-                oldAnimIndex = BG_AnimIndexNoToggle(oldAnimationNumber);
-                if (hadNoAnimation || oldAnimation == NULL || oldAnimation->moveSpeed != 0.0f || !XAnimIsLooped(pXAnims, oldAnimIndex)) {
-                    if (XAnimIsPrimitive(pXAnims, oldAnimIndex)) {
-                        int lengthMsec = XAnimGetLengthMsec(pXAnims, oldAnimIndex) + 200;
-                        float length = (float)lengthMsec;
-                        int msec = bgs->time % lengthMsec;
-                        startTime = ((float)msec / length) + ((float)ci->clientNum * 0.36000001430511475f);
-                        startTime -= (float)(int)startTime;
-                    } else {
-                        int msec = bgs->time % 1000;
-                        startTime = ((float)msec / 1000.0f) + ((float)ci->clientNum * 0.36000001430511475f);
-                        startTime -= (float)(int)startTime;
-                    }
+    if (oldanim || lf != &ci->legs) {
+        if (!anim || lf->animationTime <= 0) {
+            if (!anim || anim->moveSpeed == 0) {
+                if (!oldanim || oldanim->moveSpeed == 0) {
+                    transitionMin = 170;
                 } else {
-                    startTime = XAnimGetTime(pAnimTree, oldAnimIndex);
+                    transitionMin = 250;
                 }
+            } else {
+                transitionMin = 120;
             }
         }
 
-        if (oldAnimation != NULL) {
-            oldAnimIndex = BG_AnimIndexNoToggle(oldAnimationNumber);
-            XAnimClearGoalWeight(pAnimTree, oldAnimIndex, BG_LerpAnimBlendSeconds(lf));
+        if (ci->stanceTransitionTime - bgs->time > transitionMin) {
+            transitionMin = ci->stanceTransitionTime - bgs->time;
         }
 
-        if (animNum == 0) {
-            if (!bLegsAnim) {
-                XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.torsoAnim, 0.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, 0, 0);
-                XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.legsAnim, 1.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, 0, 0);
+        if (lf->animationTime < transitionMin) {
+            lf->animationTime = transitionMin;
+        }
+    } else {
+        lf->animationTime = 0;
+    }
+
+    if (anim && anim->moveSpeed != 0 && XAnimIsLooped(pXAnims, animIndex)) {
+        oldAnimIndex = oldAnimNum & ~ANIM_TOGGLEBIT;
+
+        if (oldanim && oldanim->moveSpeed != 0 && XAnimIsLooped(pXAnims, oldAnimIndex)) {
+            fStartTime = XAnimGetTime(pAnimTree, oldAnimIndex);
+        } else {
+            if (XAnimIsPrimitive(pXAnims, oldAnimIndex)) {
+                cycleLen = XAnimGetLengthMsec(pXAnims, oldAnimIndex) + 200;
+            } else {
+                cycleLen = 1000;
             }
-            return;
+
+            fStartTime = (float)(bgs->time % cycleLen) / (float)cycleLen + (float)ci->clientNum * 0.36000001f;
+            fStartTime = fStartTime - (float)(int)fStartTime;
+        }
+    }
+
+    if (oldanim) {
+        XAnimClearGoalWeight(pAnimTree, oldAnimNum & ~ANIM_TOGGLEBIT, (float)lf->animationTime * 0.001f);
+    }
+
+    if (animIndex) {
+        if (lf != &ci->legs) {
+            ci->leftHandGun = qfalse;
+            ci->dobjDirty = qtrue;
         }
 
-        if (!bLegsAnim) {
-            ci->leftHandGun = 0;
-            ci->dobjDirty = 1;
-        }
-
-        if (bLegsAnim && (anim->flags & 0x40) != 0) {
-            if (XAnimIsLooped(pXAnims, animNum)) {
+        /* a death animation, on the legs or the torso */
+        if (anim->flags & 0x40) {
+            if (XAnimIsLooped(pXAnims, animIndex)) {
                 Com_Error(1, "\025death animation '%s' is looping", anim->name);
             }
 
-            if ((es->eFlags & 0x80000) != 0) {
-                XAnimSetCompleteGoalWeight(pAnimTree, animNum, 1.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, anim->noteType, 0);
-                goto after_set_goal;
+            if (bNew) {
+                XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0f, (float)lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
+            } else {
+                XAnimSetCompleteGoalWeightKnobAll(pAnimTree, animIndex, bgs->generic_human.root.index, 1.0f, 0.0f, 1.0f, 0, 0);
+                XAnimSetTime(pAnimTree, animIndex, 1.0f);
+            }
+        } else {
+            bNoWeight = qfalse;
+
+            if (anim->moveSpeed != 0.0f) {
+                bNoWeight = XAnimGetWeight(pAnimTree, animIndex) == 0.0f;
             }
 
-            XAnimSetCompleteGoalWeightKnobAll(pAnimTree, animNum, bgs->generic_human.root.index, 1.0f, 0.0f, 1.0f, 0, 0);
-            XAnimSetTime(pAnimTree, animNum, 1.0f);
-            goto after_set_goal;
+            XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0f, (float)lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, lf != &ci->legs);
+
+            if (bNoWeight) {
+                XAnimSetTime(pAnimTree, animIndex, fStartTime);
+            }
         }
 
-        if (anim->moveSpeed != 0.0f && XAnimGetWeight(pAnimTree, animNum) == 0.0f) {
-            XAnimSetCompleteGoalWeight(pAnimTree, animNum, 1.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, anim->noteType, !bLegsAnim);
-            XAnimSetTime(pAnimTree, animNum, startTime);
-        } else {
-            XAnimSetCompleteGoalWeight(pAnimTree, animNum, 1.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, anim->noteType, !bLegsAnim);
+        if (lf != &ci->legs) {
+            XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.torsoAnim, 1.0f, (float)lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, 0);
+            XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.legsAnim, 0.0099999998f, (float)lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, 0);
         }
+    } else if (lf != &ci->legs) {
+        XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.torsoAnim, 0.0f, (float)lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
+        XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.legsAnim, 1.0f, (float)lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
+    }
+}
 
-        if (!bLegsAnim) {
-            XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.torsoAnim, 1.0f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, anim->noteType, 0);
-            XAnimSetCompleteGoalWeight(pAnimTree, bgs->animScriptData.legsAnim, 0.009999999776482582f, BG_LerpAnimBlendSeconds(lf), 1.0f, 0, anim->noteType, 0);
-        }
+/* 0x4f9d80; between two snapshots the speed scale stays */
+static void __attribute_regparm__(3) BG_RunLerpFrameRate(clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, entityState_t *es)
+{
+    qboolean bNewAnim = qfalse;
+    float fScaleMax;
+    float moveSpeed;
+    XAnimTree_s *pAnimTree;
+    animation_t *anim;
 
-    after_set_goal:;
+    if (lf->animation) {
+        bNewAnim = lf->animation->flags & 2;
     }
 
-    if (animNum == 0) {
+    pAnimTree = ci->pXAnimTree;
+
+    if (newAnimation != lf->animationNumber || (!lf->animation && (newAnimation & ~ANIM_TOGGLEBIT))) {
+        BG_SetNewAnimation(ci, lf, newAnimation, (es->eFlags & EF_BODY_START) != 0);
+    }
+
+    if (!(newAnimation & ~ANIM_TOGGLEBIT)) {
         return;
     }
 
     anim = lf->animation;
-    if (anim == NULL || anim->moveSpeed == 0.0f || lf->oldFrameSnapshotTime == 0 || lf->oldFrameSnapshotTime == bgs->latestSnapshotTime) {
+
+    if (anim->moveSpeed == 0 || !lf->oldFrameSnapshotTime) {
         lf->animSpeedScale = 1.0f;
         lf->oldFrameSnapshotTime = bgs->latestSnapshotTime;
-        BG_CopyLerpFramePosition(lf, es);
-    } else {
-        int deltaMsec;
-        float dist;
-        float seconds;
 
-        if (oldAnimationUsesZOnly) {
-            dist = BG_Fabsf(lf->oldFramePos[2] - es->pos.trBase[2]);
+        VectorCopy(es->pos.trBase, lf->oldFramePos);
+    } else if (bgs->latestSnapshotTime != lf->oldFrameSnapshotTime) {
+        if (bNewAnim) {
+            moveSpeed = fabsf(lf->oldFramePos[2] - es->pos.trBase[2]);
         } else {
-            dist = Vec3Distance(lf->oldFramePos, es->pos.trBase);
+            moveSpeed = Vec3Distance(lf->oldFramePos, es->pos.trBase);
         }
 
-        deltaMsec = bgs->latestSnapshotTime - lf->oldFrameSnapshotTime;
-        seconds = (float)deltaMsec * 0.0010000000474974513f;
-        lf->animSpeedScale = (dist / seconds) / anim->moveSpeed;
+        lf->animSpeedScale = (moveSpeed / ((float)(bgs->latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001f)) / anim->moveSpeed;
         lf->oldFrameSnapshotTime = bgs->latestSnapshotTime;
-        BG_CopyLerpFramePosition(lf, es);
 
-        if (lf->animSpeedScale < 0.10000000149011612f) {
-            if (lf->animSpeedScale < 0.009999999776482582f && oldAnimationUsesZOnly) {
-                lf->animSpeedScale = 0.0f;
-            } else {
-                lf->animSpeedScale = 0.10000000149011612f;
+        VectorCopy(es->pos.trBase, lf->oldFramePos);
+
+        if (lf->animSpeedScale >= 0.1f) {
+            if (lf->animSpeedScale > 2.0f) {
+                if (anim->flags & 2) {
+                    if (lf->animSpeedScale > 4.0f) {
+                        lf->animSpeedScale = 4.0f;
+                    }
+                } else if (anim->moveSpeed <= 150.0f) {
+                    if (anim->moveSpeed >= 20.0f) {
+                        fScaleMax = 3.0f - (anim->moveSpeed - 20.0f) * 0.0076923077f /* 1 / 130 */;
+
+                        if (lf->animSpeedScale > fScaleMax) {
+                            lf->animSpeedScale = fScaleMax;
+                        }
+                    } else if (lf->animSpeedScale > 3.0f) {
+                        lf->animSpeedScale = 3.0f;
+                    }
+                } else {
+                    lf->animSpeedScale = 2.0f;
+                }
             }
-        } else if (lf->animSpeedScale > 2.0f) {
-            if ((anim->flags & 2) != 0) {
-                if (lf->animSpeedScale > 4.0f) {
-                    lf->animSpeedScale = 4.0f;
-                }
-            } else if (anim->moveSpeed > 150.0f) {
-                lf->animSpeedScale = 2.0f;
-            } else if (anim->moveSpeed < 20.0f) {
-                if (lf->animSpeedScale > 3.0f) {
-                    lf->animSpeedScale = 3.0f;
-                }
-            } else {
-                float fScaleMax = ((anim->moveSpeed - 20.0f) / -130.0f) + 3.0f;
-                if (lf->animSpeedScale > fScaleMax) {
-                    lf->animSpeedScale = fScaleMax;
-                }
-            }
+        } else if (lf->animSpeedScale < 0.0099999998f && bNewAnim) {
+            lf->animSpeedScale = 0;
+        } else {
+            lf->animSpeedScale = 0.1f;
         }
     }
 
-    if (lf->animationNumber != 0) {
-        XAnimSetAnimRate(pAnimTree, BG_AnimIndexNoToggle(lf->animationNumber), lf->animSpeedScale);
+    if (lf->animationNumber) {
+        XAnimSetAnimRate(pAnimTree, lf->animationNumber & ~ANIM_TOGGLEBIT, lf->animSpeedScale);
     }
 }
 
-static void BG_ClearFinishedLerpFrame(const XAnimTree_s *pAnimTree, lerpFrame_t *lf)
+static void BG_PlayerAnimation_VerifyAnim(const XAnimTree_s *pAnimTree, lerpFrame_t *lf)
 {
-    if (lf->animationNumber == 0) {
+    if (!lf->animationNumber) {
         return;
     }
 
-    if (XAnimGetWeight(pAnimTree, BG_AnimIndexNoToggle(lf->animationNumber)) != 0.0f) {
+    if (XAnimGetWeight(pAnimTree, lf->animationNumber & ~ANIM_TOGGLEBIT)) {
         return;
     }
 
@@ -811,180 +833,216 @@ static void BG_ClearFinishedLerpFrame(const XAnimTree_s *pAnimTree, lerpFrame_t 
     lf->animationTime = 150;
 }
 
-static qboolean BG_ConditionValueIsActive(const clientInfo_t *ci, int condition)
+static int BG_GetConditionValue(clientInfo_t *ci, int condition, qboolean checkConversion)
 {
-    int bit;
+    int i;
 
-    if (animConditionsTable[condition].type != ANIM_CONDTYPE_BITFLAGS) {
-        return ci->clientConditions[condition][0] != 0;
+    if (checkConversion && animConditionsTable[condition].type == ANIM_CONDTYPE_BITFLAGS) {
+        // we may need to convert to a value
+        for (i = 0; i < 8 * (int)sizeof(ci->clientConditions[0]); i++) {
+            if (Com_BitCheck(ci->clientConditions[condition], i)) {
+                return i;
+            }
+        }
+        // nothing found
+        return 0;
     }
 
-    for (bit = 1; bit < 64; ++bit) {
-        if ((ci->clientConditions[condition][bit >> 5] & (1 << (bit & 31))) != 0) {
-            return 1;
+    return ci->clientConditions[condition][0];
+}
+
+/* 0x4fa4f0 */
+static void BG_AnimPlayerConditions(entityState_t *es, clientInfo_t *ci)
+{
+    WeaponDef *weaponDef;
+    int legsAnim;
+
+    weaponDef = BG_GetWeaponDef(es->weapon);
+
+    BG_UpdateConditionValue(es->clientNum, ANIM_COND_PLAYERANIMTYPE, weaponDef->playerAnimType, qtrue);
+    BG_UpdateConditionValue(es->clientNum, ANIM_COND_WEAPONCLASS, weaponDef->weapClass, qtrue);
+
+    if (es->eFlags & EF_AIMDOWNSIGHT)
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_WEAPON_POSITION, qtrue, qtrue);
+    else
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_WEAPON_POSITION, qfalse, qtrue);
+
+    if (es->eFlags & EF_TURRET_ACTIVE)
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_MOUNTED, MOUNTED_MG42, qtrue);
+    else
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_MOUNTED, MOUNTED_UNUSED, qtrue);
+
+    BG_UpdateConditionValue(es->clientNum, ANIM_COND_UNDERHAND, ci->playerAngles[PITCH] > 0, qtrue);
+
+    if (es->eFlags & EF_CROUCH)
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_CROUCHING, qtrue, qtrue);
+    else
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_CROUCHING, qfalse, qtrue);
+
+    if (es->eFlags & EF_FIRING)
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_FIRING, qtrue, qtrue);
+    else
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_FIRING, qfalse, qtrue);
+
+    legsAnim = es->legsAnim & ~ANIM_TOGGLEBIT;
+
+    if (bgs->animScriptData.animations[legsAnim].movetype) {
+        if (BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) != bgs->animScriptData.animations[legsAnim].movetype) {
+            BG_UpdateConditionValue(es->clientNum, ANIM_COND_MOVETYPE, (int)bgs->animScriptData.animations[legsAnim].movetype, qfalse);
         }
     }
 
-    return 0;
+    if (bgs->animScriptData.animations[legsAnim].flags & 0x10) {
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_STRAFING, LEANING_LEFT, qtrue);
+    } else if (bgs->animScriptData.animations[legsAnim].flags & 0x20) {
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_STRAFING, LEANING_RIGHT, qtrue);
+    } else {
+        BG_UpdateConditionValue(es->clientNum, ANIM_COND_STRAFING, LEANING_NOT, qtrue);
+    }
 }
 
-static void BG_UpdateEntityPlayerAnimConditions(const entityState_t *es, const clientInfo_t *ci)
+/* 0x4fa230: the legs pivot toward the movement, the torso follows the head
+ * within a tolerance, the head looks at the player's angles */
+static void BG_PlayerAngles(const entityState_t *es, clientInfo_t *ci)
 {
-    int client;
-    WeaponDef *weaponDef;
-    int legsAnim;
-    long long movetype;
+    vec3_t vHeadAngles;
+    vec3_t vTorsoAngles;
+    vec3_t vLegsAngles;
+    float moveDir;
+    float clampTolerance;
+    float destination;
 
-    weaponDef = BG_GetWeaponDef(es->weapon);
-    client = es->clientNum;
+    (void)GetLeanFraction(ci->lerpLean);
+    moveDir = ci->lerpMoveDir;
 
-    BG_UpdateConditionValue(client, 0, weaponDef->playerAnimType, 1);
-    BG_UpdateConditionValue(client, 1, weaponDef->weapClass, 1);
-    BG_UpdateConditionValue(client, 7, (es->eFlags & 0x40000) != 0, 1);
-    BG_UpdateConditionValue(client, 2, (es->eFlags & 0x300) != 0, 1);
-    BG_UpdateConditionValue(client, 4, ci->playerAngles[0] > 0.0f, 1);
-    BG_UpdateConditionValue(client, 5, (es->eFlags & 4) != 0, 1);
-    BG_UpdateConditionValue(client, 6, (es->eFlags & 0x40) != 0, 1);
+    VectorCopy(ci->playerAngles, vHeadAngles);
+    vHeadAngles[YAW] = AngleMod(vHeadAngles[YAW]);
+    VectorClear(vLegsAngles);
+    VectorClear(vTorsoAngles);
 
-    legsAnim = BG_AnimIndexNoToggle(es->legsAnim);
-    movetype = bgs->animScriptData.animations[legsAnim].movetype;
-    if (movetype != 0 && movetype != (long long)(int)bgs->clientinfo[client].clientConditions[3][0]) {
-        bgs->clientinfo[client].clientConditions[3][0] = (int)movetype;
-    }
+    // --------- yaw -------------
 
-    if ((bgs->animScriptData.animations[legsAnim].flags & 0x10) != 0) {
-        BG_UpdateConditionValue(client, 8, 1, 1);
-    } else if ((bgs->animScriptData.animations[legsAnim].flags & 0x20) != 0) {
-        BG_UpdateConditionValue(client, 8, 2, 1);
+    // allow yaw to drift a bit, unless these conditions don't allow them
+    if (es->eFlags & EF_TURRET_ACTIVE) {
+        // if not standing still, always point all in the same direction
+        ci->torso.yawing = qtrue;
+        ci->torso.pitching = qtrue;
+        ci->legs.yawing = qtrue;
+    } else if ((BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_CLIMBUP) | (1 << ANIM_MT_CLIMBDOWN)))) {
+        ci->torso.yawing = qtrue;
+        ci->torso.pitching = qtrue;
+        ci->legs.yawing = qtrue;
+    } else if (es->eFlags & EF_MANTLE) {
+        ci->torso.yawing = qtrue;
+        ci->torso.pitching = qtrue;
+        ci->legs.yawing = qtrue;
+    } else if ((BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_IDLE) | (1 << ANIM_MT_IDLECR)))) {
+        // if firing, make sure torso and head are always aligned
+        if (BG_GetConditionValue(ci, ANIM_COND_FIRING, qtrue)) {
+            ci->torso.yawing = qtrue;
+            ci->torso.pitching = qtrue;
+        }
     } else {
-        BG_UpdateConditionValue(client, 8, 0, 1);
+        ci->torso.yawing = qtrue;
+        ci->torso.pitching = qtrue;
+        ci->legs.yawing = qtrue;
     }
+
+    // adjust legs for movement dir
+    vLegsAngles[YAW] = vHeadAngles[YAW] + moveDir;
+
+    if (es->eFlags & EF_DEAD) {
+        // don't let dead bodies twitch
+        vLegsAngles[YAW] = vHeadAngles[YAW];
+        vTorsoAngles[YAW] = vHeadAngles[YAW];
+        clampTolerance = 90;
+    } else if ((BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_CLIMBUP) | (1 << ANIM_MT_CLIMBDOWN)))) {
+        vTorsoAngles[YAW] = vLegsAngles[YAW];
+        clampTolerance = 0;
+    } else if (es->eFlags & EF_MANTLE) {
+        vTorsoAngles[YAW] = vHeadAngles[YAW];
+        vLegsAngles[YAW] = vHeadAngles[YAW];
+        vTorsoAngles[PITCH] = 90;
+        clampTolerance = 90;
+    } else if (es->eFlags & EF_PRONE) {
+        vTorsoAngles[YAW] = vHeadAngles[YAW];
+        clampTolerance = 90;
+    } else if (es->eFlags & EF_FIRING) {
+        vTorsoAngles[YAW] = vHeadAngles[YAW];
+        clampTolerance = 45;
+    } else if (es->eFlags & EF_AIMDOWNSIGHT) {
+        vTorsoAngles[YAW] = vHeadAngles[YAW];
+        clampTolerance = 90;
+    } else {
+        vTorsoAngles[YAW] = moveDir * 0.30000001f + vHeadAngles[YAW];
+        clampTolerance = 90;
+    }
+
+    // torso
+    BG_SwingAngles(&ci->torso.yawAngle, &ci->torso.yawing, 0, vTorsoAngles[YAW], clampTolerance, (bg_swingSpeed)->current.value);
+
+    // if the legs are yawing (facing heading direction), allow them to rotate a bit, so we don't keep calling
+    // the legs_turn animation while an AI is firing, and therefore his angles will be randomizing according to their accuracy
+
+    clampTolerance = 150;
+
+    if (es->eFlags & EF_DEAD) {
+        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 0, vLegsAngles[YAW], clampTolerance, (bg_swingSpeed)->current.value);
+    } else if (es->eFlags & EF_PRONE) {
+        ci->legs.yawing = qfalse;
+        ci->legs.yawAngle = vHeadAngles[YAW] + moveDir;
+    } else if (bgs->animScriptData.animations[es->legsAnim & ~ANIM_TOGGLEBIT].flags & 0x30) {
+        ci->legs.yawing = qfalse; // set it if they really need to swing
+        vLegsAngles[YAW] = vHeadAngles[YAW];
+        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 0, vHeadAngles[YAW], clampTolerance, (bg_swingSpeed)->current.value);
+    } else if (ci->legs.yawing) {
+        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 0, vLegsAngles[YAW], clampTolerance, (bg_swingSpeed)->current.value);
+    } else {
+        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 40, vLegsAngles[YAW], clampTolerance, (bg_swingSpeed)->current.value);
+    }
+
+    if (es->eFlags & EF_TURRET_ACTIVE) {
+        ci->torso.yawAngle = vHeadAngles[YAW];
+        ci->legs.yawAngle = vHeadAngles[YAW];
+    } else if ((BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_CLIMBUP) | (1 << ANIM_MT_CLIMBDOWN)))) {
+        ci->torso.yawAngle = vHeadAngles[YAW] + moveDir;
+        ci->legs.yawAngle = vHeadAngles[YAW] + moveDir;
+    }
+
+    if (es->eFlags & EF_DEAD) {
+        destination = 0;
+    } else if (es->eFlags & EF_TURRET_ACTIVE) {
+        destination = 0;
+    } else if ((BG_GetConditionValue(ci, ANIM_COND_MOVETYPE, qfalse) & ((1 << ANIM_MT_CLIMBUP) | (1 << ANIM_MT_CLIMBDOWN)))) {
+        destination = 0;
+    } else if (es->eFlags == EF_MANTLE) {
+        destination = 0;
+    } else if (vHeadAngles[PITCH] <= 180) {
+        destination = vHeadAngles[PITCH] * 0.60000002f;
+    } else {
+        destination = (vHeadAngles[PITCH] + -360.0f) * 0.60000002f;
+    }
+
+    BG_SwingAngles(&ci->torso.pitchAngle, &ci->torso.pitching, 0, destination, 45, 0.15000001f);
 }
 
 void BG_PlayerAnimation(const struct DObj_s *pDObj, entityState_t *es, clientInfo_t *ci)
 {
-    float moveDir;
-    float playerPitch;
-    float playerYaw;
-    float moveYaw;
-    float torsoYawDest;
-    float torsoYawClamp;
-    float legsYawDest;
-    float legsSwingTolerance;
-    float torsoPitchDest;
-    float swingSpeed;
     XAnimTree_s *pAnimTree;
-    int eFlags;
 
     (void)pDObj;
-    (void)GetLeanFraction(ci->lerpLean);
 
-    moveDir = ci->lerpMoveDir;
-    playerPitch = ci->playerAngles[0];
-    playerYaw = AngleMod(ci->playerAngles[1]);
-    eFlags = es->eFlags;
-
-    if ((eFlags & 0x3) != 0) {
-        ci->torso.yawing = 1;
-        ci->torso.pitching = 1;
-        ci->legs.yawing = 1;
-    } else if ((ci->clientConditions[3][0] & 0xc0000) != 0) {
-        ci->torso.yawing = 1;
-        ci->torso.pitching = 1;
-        ci->legs.yawing = 1;
-    } else if ((eFlags & 0x40) != 0) {
-        ci->torso.yawing = 1;
-        ci->torso.pitching = 1;
-        ci->legs.yawing = 1;
-    } else if ((ci->clientConditions[3][0] & 6) != 0 && BG_ConditionValueIsActive(ci, 6)) {
-        ci->torso.yawing = 1;
-        ci->torso.pitching = 1;
-    } else {
-        ci->torso.yawing = 1;
-        ci->torso.pitching = 1;
-        ci->legs.yawing = 1;
-    }
-
-    moveYaw = moveDir + playerYaw;
-    swingSpeed = (bg_swingSpeed)->current.value;
-
-    if ((eFlags & 0x20000) != 0) {
-        torsoYawDest = playerYaw;
-        torsoYawClamp = 90.0f;
-        legsYawDest = playerYaw;
-        legsSwingTolerance = 0.0f;
-    } else if ((ci->clientConditions[3][0] & 0xc0000) != 0) {
-        torsoYawDest = moveYaw;
-        torsoYawClamp = 0.0f;
-        legsYawDest = moveYaw;
-        legsSwingTolerance = 0.0f;
-    } else if ((eFlags & 0x4000) != 0) {
-        torsoYawDest = playerYaw;
-        torsoYawClamp = 90.0f;
-        legsYawDest = playerYaw;
-        legsSwingTolerance = 0.0f;
-    } else if ((eFlags & 8) != 0 || (eFlags & 0x40000) != 0) {
-        torsoYawDest = playerYaw;
-        torsoYawClamp = 90.0f;
-        legsYawDest = moveYaw;
-        legsSwingTolerance = 0.0f;
-    } else if ((eFlags & 0x40) != 0) {
-        torsoYawDest = playerYaw;
-        torsoYawClamp = 45.0f;
-        legsYawDest = moveYaw;
-        legsSwingTolerance = 0.0f;
-    } else {
-        torsoYawDest = playerYaw + moveDir * 0.30000001192092896f;
-        torsoYawClamp = 90.0f;
-        legsYawDest = moveYaw;
-        legsSwingTolerance = 40.0f;
-    }
-
-    BG_SwingAngles(&ci->torso.yawAngle, &ci->torso.yawing, 0.0f, torsoYawDest, torsoYawClamp, swingSpeed);
-
-    if ((eFlags & 0x20000) != 0) {
-        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 0.0f, legsYawDest, 150.0f, swingSpeed);
-    } else if ((eFlags & 8) != 0) {
-        ci->legs.yawing = 0;
-        ci->legs.yawAngle = moveYaw;
-    } else if ((bgs->animScriptData.animations[BG_AnimIndexNoToggle(es->legsAnim)].flags & 0x30) != 0) {
-        ci->legs.yawing = 0;
-        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, 0.0f, playerYaw, 150.0f, swingSpeed);
-    } else {
-        BG_SwingAngles(&ci->legs.yawAngle, &ci->legs.yawing, legsSwingTolerance, legsYawDest, 150.0f, swingSpeed);
-    }
-
-    if ((eFlags & 0x3) != 0) {
-        ci->torso.yawAngle = playerYaw;
-        ci->legs.yawAngle = playerYaw;
-    }
-
-    if ((ci->clientConditions[3][0] & 0xc0000) != 0) {
-        ci->torso.yawAngle = moveYaw;
-        ci->legs.yawAngle = moveYaw;
-    }
-
-    if ((eFlags & 0x20000) != 0 || (eFlags & 0x3) != 0 || (ci->clientConditions[3][0] & 0xc0000) != 0 || eFlags == 0x4000) {
-        torsoPitchDest = 0.0f;
-    } else {
-        torsoPitchDest = playerPitch;
-        if (torsoPitchDest > 180.0f) {
-            torsoPitchDest -= 360.0f;
-        }
-        torsoPitchDest *= 0.6000000238418579f;
-    }
-
-    BG_SwingAngles(&ci->torso.pitchAngle, &ci->torso.pitching, 0.0f, torsoPitchDest, 45.0f, 0.15000000596046448f);
-
-    BG_UpdateEntityPlayerAnimConditions(es, ci);
+    BG_PlayerAngles(es, ci);
+    BG_AnimPlayerConditions(es, ci);
 
     pAnimTree = ci->pXAnimTree;
-    BG_ClearFinishedLerpFrame(pAnimTree, &ci->legs);
-    BG_ClearFinishedLerpFrame(pAnimTree, &ci->torso);
 
-    if (ci->leftHandGun && BG_AnimIndexNoToggle(ci->torso.animationNumber) == 0) {
-        ci->leftHandGun = 0;
-        ci->dobjDirty = 1;
+    BG_PlayerAnimation_VerifyAnim(pAnimTree, &ci->legs);
+    BG_PlayerAnimation_VerifyAnim(pAnimTree, &ci->torso);
+
+    if (ci->leftHandGun && !(ci->torso.animationNumber & ~ANIM_TOGGLEBIT)) {
+        ci->leftHandGun = qfalse;
+        ci->dobjDirty = qtrue;
     }
 
     BG_RunLerpFrameRate(ci, &ci->legs, es->legsAnim, es);

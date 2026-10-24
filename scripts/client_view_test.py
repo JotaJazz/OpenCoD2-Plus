@@ -10,11 +10,13 @@ grenade at it, then twice the test has the mod kill the target (rcon
 contact_phase kill): the client draws the corpse the server clones and
 predicts its own moves meanwhile. Last the mod kills the client
 (killmover), which spawns again. The client must still run without a crash
-report, and the hits, deaths and spawns must all have happened.
+report, and the hits, deaths and spawns must all have happened; the
+players' bone controllers it traces (COD2_TRACE_CONTROLLERS) must stay finite
+and within 180 degrees.
 The client opens a window and needs a CD key in ~/.cod2/preferences; without
 one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
-import argparse, os, re, subprocess, sys, tempfile, time
+import argparse, math, os, re, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -80,10 +82,10 @@ def main():
             if target:
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'r_fullscreen', '0', '+set', 'net_port',
+                                               client_home, '+set', 'net_port',
                                                str(port + 1), '+connect', f'127.0.0.1:{port}'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                              cwd=client_home)
+                                              cwd=client_home, env=dict(os.environ, COD2_TRACE_CONTROLLERS='1'))
                 procs.append(client)
                 end = time.time() + 120
                 while time.time() < end and client.poll() is None and 'contact mover' not in game_log(home):
@@ -142,6 +144,13 @@ def main():
                         p.kill()
         text = open(client_log, encoding='latin-1').read() if os.path.exists(client_log) else ''
         check('no crash report from the client', 'CRASH REPORT' not in text)
+        # the players' bone controllers (COD2_TRACE_CONTROLLERS, once a second)
+        angles = [float(x) for line in re.findall(r'\[controllers\] (.*)', text)
+                  for t in re.findall(r'(?:low|up|neck|head)=(\S+) (\S+) (\S+)', line) for x in t]
+        lines = len(re.findall(r'\[controllers\]', text))
+        check('the players\' controllers are traced', lines >= 5, f'{lines} lines')
+        bad = [a for a in angles if not math.isfinite(a) or abs(a) > 180]
+        check('their angles stay within 180 degrees', not bad, ', '.join(f'{a:g}' for a in bad[:5]))
         if failures and 'CRASH REPORT' in text:
             print('\n'.join(l for l in text[text.index('CRASH REPORT'):].splitlines() if l.strip().startswith('#')))
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
