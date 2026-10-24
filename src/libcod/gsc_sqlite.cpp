@@ -561,6 +561,39 @@ void sqlite_db_store_cleanup()
 	Sys_LeaveCriticalSection(CRITSECT_SQLITE);
 }
 
+extern void FS_BuildOSPath(const char *base, const char *game, const char *qpath, char *ospath);
+
+// "<fs_homepath>/<fs_gamedir>/<rel>", as json_save; ":memory:" is kept. Refuses
+// paths that leave that folder and the files the server loads from it.
+static bool sqlite_resolve_path(const char *rel, char *osPath)
+{
+	if ( !strcmp(rel, ":memory:") )
+	{
+		I_strncpyz(osPath, rel, MAX_OSPATH);
+		return true;
+	}
+
+	size_t len = strlen(rel);
+
+	// ':' is a drive, a URI or a Windows stream; Windows drops trailing dots and spaces
+	if ( !len || rel[0] == '/' || rel[0] == '\\' || strchr(rel, ':') || strstr(rel, "..")
+		|| rel[len - 1] == '.' || rel[len - 1] == ' ' )
+		return false;
+
+	const char *ext = strrchr(rel, '.');
+	if ( ext && ( !Q_stricmp(ext, ".iwd") || !Q_stricmp(ext, ".cfg") || !Q_stricmp(ext, ".gsc") || !Q_stricmp(ext, ".so") || !Q_stricmp(ext, ".dll") ) )
+		return false;
+
+	const char *home = Dvar_GetString("fs_homepath");
+
+	// FS_BuildOSPath is fatal on overflow; the margin covers fs_gamedir and the separators
+	if ( !home || !home[0] || strlen(home) + len + MAX_QPATH + 3 >= MAX_OSPATH )
+		return false;
+
+	FS_BuildOSPath(home, "", rel, osPath);
+	return true;
+}
+
 void gsc_sqlite_open()
 {
 	const char *database;
@@ -572,10 +605,18 @@ void gsc_sqlite_open()
 		return;
 	}
 
+	char osPath[MAX_OSPATH];
+	if ( !sqlite_resolve_path(database, osPath) )
+	{
+		stackError("gsc_sqlite_open() the path '%s' must stay inside fs_homepath/<mod>", database);
+		stackPushUndefined();
+		return;
+	}
+
 	sqlite_db_store_cleanup();
 	sqlite3 *db;
 	char error[COD2_MAX_STRINGLENGTH];
-	int rc = sqlite3_open(database, &db);
+	int rc = sqlite3_open(osPath, &db);
 
 	// a failed open still allocates a handle that must be closed
 	if (rc != SQLITE_OK)

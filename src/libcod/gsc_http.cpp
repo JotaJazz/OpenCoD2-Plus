@@ -56,6 +56,7 @@
 
 static dvar_t *sv_httpAllowedHosts;
 static dvar_t *sv_httpCaFile;
+static bool http_allowPrivate;
 
 // guards the fields the workers share with the main thread
 static pthread_mutex_t http_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -140,6 +141,9 @@ void gsc_http_register_dvars()
 {
 	sv_httpAllowedHosts = Dvar_RegisterString("sv_httpAllowedHosts", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_httpCaFile = Dvar_RegisterString("sv_httpCaFile", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+
+	// only from the command line, and read once: setCvar from a script can change any dvar
+	http_allowPrivate = Dvar_RegisterBool("sv_httpAllowPrivate", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
 }
 
 static bool Http_StartThread(void *(*func)(void *), void *arg)
@@ -167,6 +171,7 @@ static const char *Http_PrepareUrl(const char *text, bool websocket, int allowIn
 
 	tls->allowInsecure = allowInsecure != 0;
 	tls->caFile = sv_httpCaFile->current.string;
+	tls->allowPrivate = http_allowPrivate;
 
 	if ( url->tls && tls->allowInsecure )
 		Com_Printf("^3%s: certificate verification is off for %s\n", function, url->host.c_str());

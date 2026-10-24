@@ -102,6 +102,11 @@ void RegisterLibcodDvars()
 	sv_cracked = Dvar_RegisterBool("sv_cracked", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_kickbots = Dvar_RegisterBool("sv_kickbots", false, DVAR_CHANGEABLE_RESET);
 
+	// only from the command line; kept in a variable because setCvar from a script can change any dvar
+	libcod_unsafeBuiltins = Dvar_RegisterBool("sv_libcodUnsafe", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
+	if (libcod_unsafeBuiltins)
+		Com_Printf("^3sv_libcodUnsafe is on: scripts can run shell commands, open any file and read or write raw memory\n");
+
 	jump_bounceEnable = Dvar_RegisterBool("jump_bounceEnable", false, DVAR_CHEAT | DVAR_CODINFO | DVAR_CHANGEABLE_RESET);
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", true, DVAR_CHANGEABLE_RESET);
 

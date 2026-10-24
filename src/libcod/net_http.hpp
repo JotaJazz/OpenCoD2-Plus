@@ -36,6 +36,7 @@ struct NetTlsOptions
 {
 	bool allowInsecure;
 	std::string caFile;   // PEM file with the trusted certificates, empty for the system ones
+	bool allowPrivate;    // connect to loopback, private and link-local addresses too
 };
 
 struct NetHttpRequest

@@ -154,6 +154,7 @@ extern dvar_t *jump_bounceEnable;
 extern dvar_t *g_mantleBlockEnable;
 extern dvar_t *g_fixedWeaponSpreads;
 extern dvar_t *g_dropGrenadeOnDeath;
+extern bool libcod_unsafeBuiltins;
 extern char consolePrefix[64];
 extern char testClientName[];
 

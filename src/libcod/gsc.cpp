@@ -92,13 +92,43 @@ const char *stackGetParamTypeAsString(int param)
 	}
 }
 
+// sv_libcodUnsafe, read once at startup: a script's setCvar does not honour DVAR_INIT
+bool libcod_unsafeBuiltins = false;
+
+extern scr_function_t scriptFunctions[];
+
+// Builtins that reach the shell, files by raw path, raw memory or any network
+// address: without sv_libcodUnsafe a call is a script error
+template <xfunction_t F>
+static void gsc_unsafe()
+{
+	if (libcod_unsafeBuiltins)
+	{
+		F();
+		return;
+	}
+
+	const char *name = "?";
+	for (int i = 0; scriptFunctions[i].name; i++)
+	{
+		if (scriptFunctions[i].call == gsc_unsafe<F>)
+		{
+			name = scriptFunctions[i].name;
+			break;
+		}
+	}
+
+	stackError("%s() is disabled: start the server with +set sv_libcodUnsafe 1 to allow it", name);
+	stackPushUndefined();
+}
+
 scr_function_t scriptFunctions[] =
 {
 #if LIBCOD_COMPILE_EXEC == 1
-	{"exec", gsc_exec, 0},
-	{"exec_async_create", gsc_exec_async_create, 0},
-	{"exec_async_create_nosave", gsc_exec_async_create_nosave, 0},
-	{"exec_async_checkdone", gsc_exec_async_checkdone, 0},
+	{"exec", gsc_unsafe<gsc_exec>, 0},
+	{"exec_async_create", gsc_unsafe<gsc_exec_async_create>, 0},
+	{"exec_async_create_nosave", gsc_unsafe<gsc_exec_async_create_nosave>, 0},
+	{"exec_async_checkdone", gsc_unsafe<gsc_exec_async_checkdone>, 0},
 #endif
 
 #if LIBCOD_COMPILE_LEVEL == 1
@@ -109,16 +139,16 @@ scr_function_t scriptFunctions[] =
 #endif
 
 #if LIBCOD_COMPILE_MEMORY == 1
-	{"memory_malloc", gsc_memory_malloc, 0},
-	{"memory_free", gsc_memory_free, 0},
-	{"memory_int_get", gsc_memory_int_get, 0},
-	{"memory_int_set", gsc_memory_int_set, 0},
-	{"memory_memset", gsc_memory_memset, 0},
-	{"binarybuffer_new", gsc_binarybuffer_new, 0},
-	{"binarybuffer_free", gsc_binarybuffer_free, 0},
-	{"binarybuffer_seek", gsc_binarybuffer_seek, 0},
-	{"binarybuffer_write", gsc_binarybuffer_write, 0},
-	{"binarybuffer_read", gsc_binarybuffer_read, 0},
+	{"memory_malloc", gsc_unsafe<gsc_memory_malloc>, 0},
+	{"memory_free", gsc_unsafe<gsc_memory_free>, 0},
+	{"memory_int_get", gsc_unsafe<gsc_memory_int_get>, 0},
+	{"memory_int_set", gsc_unsafe<gsc_memory_int_set>, 0},
+	{"memory_memset", gsc_unsafe<gsc_memory_memset>, 0},
+	{"binarybuffer_new", gsc_unsafe<gsc_binarybuffer_new>, 0},
+	{"binarybuffer_free", gsc_unsafe<gsc_binarybuffer_free>, 0},
+	{"binarybuffer_seek", gsc_unsafe<gsc_binarybuffer_seek>, 0},
+	{"binarybuffer_write", gsc_unsafe<gsc_binarybuffer_write>, 0},
+	{"binarybuffer_read", gsc_unsafe<gsc_binarybuffer_read>, 0},
 #endif
 
 #if LIBCOD_COMPILE_MYSQL == 1
@@ -163,32 +193,32 @@ scr_function_t scriptFunctions[] =
 
 #if LIBCOD_COMPILE_UTILS == 1
 	{"printf", gsc_utils_printf, 0},
-	{"printoutofband", gsc_utils_outofbandprint, 0},
+	{"printoutofband", gsc_unsafe<gsc_utils_outofbandprint>, 0},
 	{"getarraykeys", gsc_utils_getarraykeys, 0},
 	{"getascii", gsc_utils_getAscii, 0},
 	{"toupper", gsc_utils_toupper, 0},
-	{"system", gsc_utils_system, 0},
+	{"system", gsc_unsafe<gsc_utils_system>, 0},
 	{"exponent", gsc_utils_exponent, 0},
 	{"round", gsc_utils_round, 0},
-	{"file_link", gsc_utils_file_link, 0},
-	{"file_unlink", gsc_utils_file_unlink, 0},
-	{"file_exists", gsc_utils_file_exists, 0},
-	{"fs_loaddir", gsc_utils_FS_LoadDir, 0},
-	{"loaddir", gsc_utils_FS_LoadDir, 0},
+	{"file_link", gsc_unsafe<gsc_utils_file_link>, 0},
+	{"file_unlink", gsc_unsafe<gsc_utils_file_unlink>, 0},
+	{"file_exists", gsc_unsafe<gsc_utils_file_exists>, 0},
+	{"fs_loaddir", gsc_unsafe<gsc_utils_FS_LoadDir>, 0},
+	{"loaddir", gsc_unsafe<gsc_utils_FS_LoadDir>, 0},
 	{"gettype", gsc_utils_getType, 0},
 	{"float", gsc_utils_float, 0},
 	{"cmd_executestring", gsc_utils_ExecuteString, 0},
 	{"executecommand", gsc_utils_ExecuteString, 0},
 	{"sendgameservercommand", gsc_utils_sendgameservercommand, 0},
 	{"sendcommandtoclient", gsc_utils_sendgameservercommand, 0},
-	{"sendpacket", gsc_utils_sendpacket, 0},
-	{"scandir", gsc_utils_scandir, 0},
-	{"fopen", gsc_utils_fopen, 0},
-	{"fread", gsc_utils_fread, 0},
-	{"fwrite", gsc_utils_fwrite, 0},
-	{"fclose", gsc_utils_fclose, 0},
-	{"fsize", gsc_utils_fsize, 0},
-	{"ftime", gsc_utils_ftime, 0},
+	{"sendpacket", gsc_unsafe<gsc_utils_sendpacket>, 0},
+	{"scandir", gsc_unsafe<gsc_utils_scandir>, 0},
+	{"fopen", gsc_unsafe<gsc_utils_fopen>, 0},
+	{"fread", gsc_unsafe<gsc_utils_fread>, 0},
+	{"fwrite", gsc_unsafe<gsc_utils_fwrite>, 0},
+	{"fclose", gsc_unsafe<gsc_utils_fclose>, 0},
+	{"fsize", gsc_unsafe<gsc_utils_fsize>, 0},
+	{"ftime", gsc_unsafe<gsc_utils_ftime>, 0},
 	{"sprintf", gsc_utils_sprintf, 0},
 	{"getsystemtime", gsc_utils_getsystemtime, 0},
 	{"getserverstarttime", gsc_utils_getserverstarttime, 0},
@@ -230,8 +260,8 @@ scr_function_t scriptFunctions[] =
 	{"getmaxmsglen", gsc_utils_getmaxmsglen, 0},
 	{"bullethiteffect", gsc_utils_bullethiteffect, 0},
 	{"vectorscale", gsc_utils_vectorscale, 0},
-	{"remove_file", gsc_utils_remove_file, 0},
-	{"fremove", gsc_utils_remove_file, 0},
+	{"remove_file", gsc_unsafe<gsc_utils_remove_file>, 0},
+	{"fremove", gsc_unsafe<gsc_utils_remove_file>, 0},
 	{"putchar", gsc_utils_putchar, 0},
 	{"processremotecommand", gsc_utils_processremotecommand, 0},
 #endif

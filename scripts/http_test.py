@@ -183,6 +183,9 @@ httpTests()
 	setCvar("sv_httpAllowedHosts", "example.com 127.0.0.1");
 	fetch("allowed", level.ht_http + "/json", "GET", "", "", 10);
 	setCvar("sv_httpAllowedHosts", "");
+	// read once at startup: a script cannot turn it off (or on)
+	setCvar("sv_httpAllowPrivate", "0");
+	fetch("private_setcvar", level.ht_http + "/json", "GET", "", "", 10);
 
 	fetch("https_noca", level.ht_https + "/json", "GET", "", "", 10);
 	setCvar("sv_httpCaFile", level.ht_ca);
@@ -806,7 +809,7 @@ def main():
                  '+set', 'fs_game', MOD, '+set', 'dedicated', '1', '+set', 'net_port', str(port),
                  '+set', 'sv_cracked', '1', '+set', 'rcon_password', password, '+set', 'g_gametype', 'tdm',
                  '+set', 'scr_tdm_timelimit', '0', '+set', 'g_logSync', '1', '+set', 'sv_maxclients', '8',
-                 '+set', 'ht_http', f'127.0.0.1:{http_port}',
+                 '+set', 'sv_httpAllowPrivate', '1', '+set', 'ht_http', f'127.0.0.1:{http_port}',
                  '+set', 'ht_https', f'127.0.0.1:{https_port}', '+set', 'ht_https_port', str(https_port),
                  '+set', 'ht_ws', f'127.0.0.1:{ws_port}', '+set', 'ht_wss', f'127.0.0.1:{wss_port}',
                  '+set', 'ht_ca', ca, '+set', 'ht_closed', str(closed_port), '+set', 'ht_phase', '1',
@@ -889,6 +892,7 @@ def main():
         expect('refused', r'^error ms=\d+ Connection refused$')
         expect('notallowed', r'^error ms=\d+ Host not allowed by sv_httpAllowedHosts$')
         expect('allowed', r'^done 200 ')
+        expect('private_setcvar', r'^done 200 ')
         expect('https_noca', r'^error ms=\d+ TLS: certificate verification failed')
         expect('https_ca', r'^done 200 len=18 ')
         expect('https_localhost', r'^done 200 len=18 ')

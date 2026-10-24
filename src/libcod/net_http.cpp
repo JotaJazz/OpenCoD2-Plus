@@ -202,7 +202,42 @@ static void Net_SetNonBlocking(net_socket_t fd)
 	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
 }
 
-static net_socket_t Net_ConnectTcp(const char *host, int port, int64_t deadline, const volatile int *cancel, std::string *error)
+// Loopback, private, shared (CGNAT), link-local, multicast and reserved
+// addresses, IPv4-mapped ones included; checked after resolving, so a public
+// name that resolves to one is refused as well
+static bool Net_IsPrivateIPv4(const unsigned char *a)
+{
+	return a[0] == 0 || a[0] == 10 || a[0] == 127 || a[0] >= 224
+		|| ( a[0] == 100 && ( a[1] & 0xc0 ) == 64 )
+		|| ( a[0] == 169 && a[1] == 254 )
+		|| ( a[0] == 172 && ( a[1] & 0xf0 ) == 16 )
+		|| ( a[0] == 192 && a[1] == 168 );
+}
+
+static bool Net_IsPrivateAddress(const struct sockaddr *sa)
+{
+	if ( sa->sa_family == AF_INET )
+		return Net_IsPrivateIPv4((const unsigned char *)&((const struct sockaddr_in *)sa)->sin_addr);
+
+	if ( sa->sa_family != AF_INET6 )
+		return true;
+
+	const unsigned char *a = (const unsigned char *)&((const struct sockaddr_in6 *)sa)->sin6_addr;
+	static const unsigned char mapped[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+	static const unsigned char zero[15] = { 0 };
+
+	if ( !memcmp(a, mapped, 12) )
+		return Net_IsPrivateIPv4(a + 12);
+
+	// :: and ::1
+	if ( !memcmp(a, zero, 15) && a[15] <= 1 )
+		return true;
+
+	// fc00::/7 unique local, fe80::/10 link-local, fec0::/10 site-local, ff00::/8 multicast
+	return ( a[0] & 0xfe ) == 0xfc || a[0] == 0xff || ( a[0] == 0xfe && ( a[1] & 0x80 ) );
+}
+
+static net_socket_t Net_ConnectTcp(const char *host, int port, bool allowPrivate, int64_t deadline, const volatile int *cancel, std::string *error)
 {
 	struct addrinfo hints, *list = NULL, *ai;
 	char service[16];
@@ -224,6 +259,12 @@ static net_socket_t Net_ConnectTcp(const char *host, int port, int64_t deadline,
 	*error = "Connection refused";
 	for ( ai = list; ai; ai = ai->ai_next )
 	{
+		if ( !allowPrivate && Net_IsPrivateAddress(ai->ai_addr) )
+		{
+			*error = "Private address not allowed by sv_httpAllowPrivate";
+			continue;
+		}
+
 		fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if ( fd == NET_INVALID_SOCKET )
 			continue;
@@ -496,7 +537,7 @@ static NetConn *Net_Open(const NetUrl *url, const NetTlsOptions *tls, int64_t de
 
 	// the connection and the TLS handshake each have at most NET_CONNECT_TIMEOUT
 	int64_t limit = NetHttp_Milliseconds() + NET_CONNECT_TIMEOUT;
-	c->fd = Net_ConnectTcp(url->host.c_str(), url->port, deadline < limit ? deadline : limit, cancel, error);
+	c->fd = Net_ConnectTcp(url->host.c_str(), url->port, tls->allowPrivate, deadline < limit ? deadline : limit, cancel, error);
 	if ( c->fd == NET_INVALID_SOCKET )
 	{
 		if ( *error == "Timeout" )
