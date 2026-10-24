@@ -175,7 +175,7 @@ static void CG_InterpolatePlayerState(qboolean grabAngles)
    reach the time of the previous prediction, the legs and torso animations
    of the two, which differ where the client's animation script does not
    follow the server's; for scripts/prediction_test.py */
-static void CG_TracePredictedAnim(const playerState_t *before, const playerState_t *again)
+static void CG_TracePredictedAnim(const playerState_t *before, const playerState_t *again, float originMiss)
 {
     static int enabled = -1;
 
@@ -183,8 +183,8 @@ static void CG_TracePredictedAnim(const playerState_t *before, const playerState
         enabled = getenv("COD2_TRACE_PREDANIM") != NULL;
     if (!enabled || (before->legsAnim == again->legsAnim && before->torsoAnim == again->torsoAnim))
         return;
-    fprintf(stderr, "Prediction anim miss: t=%d legs %d %d torso %d %d\n", again->commandTime, before->legsAnim,
-            again->legsAnim, before->torsoAnim, again->torsoAnim);
+    fprintf(stderr, "Prediction anim miss: t=%d legs %d %d torso %d %d origin %.2f\n", again->commandTime,
+            before->legsAnim, again->legsAnim, before->torsoAnim, again->torsoAnim, (double)originMiss);
 }
 
 void CG_PredictPlayerState(void)
@@ -309,9 +309,8 @@ void CG_PredictPlayerState(void)
             delta[1] = ((playerState_t *)oldPlayerState)->origin[1] - oldOrigin[1];
             delta[2] = ((playerState_t *)oldPlayerState)->origin[2] - oldOrigin[2];
 
-            CG_TracePredictedAnim((playerState_t *)oldPlayerState, ps);
-
             len = sqrtf(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
+            CG_TracePredictedAnim((playerState_t *)oldPlayerState, ps, len);
             if (len > 0.1f) {
                 float *predictedError;
                 float errorDecayVal;

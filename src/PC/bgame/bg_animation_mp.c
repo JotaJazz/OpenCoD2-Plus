@@ -3,6 +3,7 @@
 #include "bytematch.h"
 #include <stdlib.h>
 #include <stdarg.h>
+#include "bg_plus_compat.h"
 #include <string.h>
 extern scr_const_t scr_const;
 
@@ -70,7 +71,6 @@ extern int BG_GetViewmodelWeaponIndex(const playerState_t *ps);
 extern WeaponDef *BG_GetWeaponDef(int weaponIndex);
 extern const float AngleSubtract(const float a1, const float a2);
 extern const float AngleMod(const float a);
-extern const float AngleNormalize180(const float angle);
 extern float GetLeanFraction(const float fFrac);
 extern void AnglesSubtract(const vec_t *v1, const vec_t *v2, vec_t *v3);
 extern qboolean DObjSetControlTagAngles(const struct DObj_s *obj, int *partBits, unsigned int tagName, vec_t *angles);
@@ -105,70 +105,69 @@ void BG_InitWeaponStrings(void)
     BG_LoadWeaponStrings();
 }
 
-static inline __attribute__((always_inline))
-
-int
-BG_PlayAnim_core(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
+/* 0x4f8f20 */
+int BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
 {
     int duration;
-    int wasSet = 0;
-    int oldAnim;
-    int toggleBit;
+    qboolean wasSet = qfalse;
 
     if (forceDuration) {
         duration = forceDuration;
     } else {
-        duration = globalScriptData->animations[animNum].duration + 0x32;
+        duration = globalScriptData->animations[animNum].duration + 50;   // account for lerping between anims
     }
 
-    if (bodyPart == 3 || bodyPart == 1) {
-        if (ps->legsTimer <= 0x31 || force) {
-            oldAnim = ps->legsAnim;
-            if (isContinue && (oldAnim & ~0x200) == animNum) {
-                if (setTimer && (globalScriptData->animations[animNum].flags & 0x80)) {
-                    ps->legsTimer = duration;
-                }
-            } else {
-                toggleBit = (oldAnim & 0x200) ^ 0x200;
+    switch (bodyPart) {
+    case ANIM_BP_BOTH:
+    case ANIM_BP_LEGS:
+
+        if ((ps->legsTimer < 50) || force) {
+            if (!isContinue || !((ps->legsAnim & ~ANIM_TOGGLEBIT) == animNum)) {
+                wasSet = qtrue;
                 ps->legsAnimDuration = duration;
-                ps->legsAnim = animNum | toggleBit;
+                ps->legsAnim = ((ps->legsAnim & ANIM_TOGGLEBIT) ^ ANIM_TOGGLEBIT) | animNum;
                 if (setTimer) {
                     ps->legsTimer = duration;
                 }
-                wasSet = 1;
+            } else if (setTimer && globalScriptData->animations[animNum].flags & 0x80) {
+                ps->legsTimer = duration;
             }
         }
 
-        if (bodyPart == 3) {
+        if (bodyPart == ANIM_BP_LEGS) {
+            break;
+        }
+
+        if (bodyPart == ANIM_BP_BOTH) {
             animNum = 0;
         }
-    }
 
-    if (bodyPart == 2 || bodyPart == 3) {
-        if (ps->torsoTimer <= 0x31 || force) {
-            oldAnim = ps->torsoAnim;
-            if (isContinue && (oldAnim & ~0x200) == animNum) {
-                if (setTimer && (globalScriptData->animations[animNum].flags & 0x80)) {
-                    ps->torsoTimer = duration;
-                }
-            } else {
-                toggleBit = (oldAnim & 0x200) ^ 0x200;
-                ps->torsoAnim = animNum | toggleBit;
+    case ANIM_BP_TORSO:
+
+        /* the torso's own anim does not count as set (1.3 too) */
+        if ((ps->torsoTimer < 50) || force) {
+            if (!isContinue || !((ps->torsoAnim & ~ANIM_TOGGLEBIT) == animNum)) {
+                ps->torsoAnim = ((ps->torsoAnim & ANIM_TOGGLEBIT) ^ ANIM_TOGGLEBIT) | animNum;
                 if (setTimer) {
                     ps->torsoTimer = duration;
                 }
                 ps->torsoAnimDuration = duration;
-                wasSet = 1;
+            } else if (setTimer && globalScriptData->animations[animNum].flags & 0x80) {
+                ps->torsoTimer = duration;
             }
         }
+
+        break;
+
+    default:
+        break;
     }
 
-    return wasSet ? duration : -1;
-}
+    if (!wasSet) {
+        return -1;
+    }
 
-int BG_PlayAnim(playerState_t *ps, int animNum, animBodyPart_t bodyPart, int forceDuration, qboolean setTimer, qboolean isContinue, qboolean force)
-{
-    return BG_PlayAnim_core(ps, animNum, bodyPart, forceDuration, setTimer, isContinue, force);
+    return duration;
 }
 
 static __attribute_regparm__(2) __attribute_sseregparm__
@@ -307,35 +306,52 @@ void BG_LerpOffset(vec_t *offset_goal, float maxOffsetChange, vec_t *offset)
     offset[2] = offset_goal[2];
 }
 
-static inline __attribute__((always_inline)) void BG_UpdateConditionValue_core(int client, int condition, int value, qboolean checkConversion)
+void BG_UpdateConditionValue(int client, int condition, int value, qboolean checkConversion)
 {
-    if (checkConversion && !animConditionsTable[condition].type) {
-        bgs->clientinfo[client].clientConditions[condition][0] = 0;
-        bgs->clientinfo[client].clientConditions[condition][1] = 0;
-        bgs->clientinfo[client].clientConditions[condition][value >> 5] |= 1 << (value & 31);
-        return;
-    }
+    if (checkConversion) {
+        if (animConditionsTable[condition].type == ANIM_CONDTYPE_BITFLAGS) {
+            bgs->clientinfo[client].clientConditions[condition][0] = 0;
+            bgs->clientinfo[client].clientConditions[condition][1] = 0;
 
+            Com_BitSet(bgs->clientinfo[client].clientConditions[condition], value);
+            return;
+        }
+    }
     bgs->clientinfo[client].clientConditions[condition][0] = value;
 }
 
-void BG_UpdateConditionValue(int client, int condition, int value, qboolean checkConversion)
-{
-    BG_UpdateConditionValue_core(client, condition, value, checkConversion);
-}
-
+/* 0x4f94b0 */
 void BG_AnimUpdatePlayerStateConditions(pmove_t *pmove)
 {
-    playerState_t *ps = pmove->ps;
-    WeaponDef *weaponDef = BG_GetWeaponDef(BG_GetViewmodelWeaponIndex(ps));
-    int client = ps->clientNum;
+    WeaponDef *weaponDef;
+    playerState_t *ps;
 
-    BG_UpdateConditionValue_core(client, 0, weaponDef->playerAnimType, 1);
-    BG_UpdateConditionValue_core(client, 1, weaponDef->weapClass, 1);
-    BG_UpdateConditionValue_core(client, 7, (ps->eFlags & 0x40000) != 0, 1);
-    BG_UpdateConditionValue_core(client, 2, (ps->eFlags & 0x300) != 0, 1);
-    BG_UpdateConditionValue_core(client, 4, ps->fWeaponPosFrac > 0.0f, 1);
-    BG_UpdateConditionValue_core(client, 6, (pmove->cmd.buttons & 1) != 0, 1);
+    ps = pmove->ps;
+
+    weaponDef = BG_GetWeaponDef(BG_GetViewmodelWeaponIndex(ps));
+
+    // WEAPON
+    BG_UpdateConditionValue(ps->clientNum, ANIM_COND_PLAYERANIMTYPE, weaponDef->playerAnimType, qtrue);
+    BG_UpdateConditionValue(ps->clientNum, ANIM_COND_WEAPONCLASS, weaponDef->weapClass, qtrue);
+
+    if (ps->eFlags & EF_AIMDOWNSIGHT)
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_WEAPON_POSITION, qtrue, qtrue);
+    else
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_WEAPON_POSITION, qfalse, qtrue);
+
+    // MOUNTED
+    if (ps->eFlags & EF_TURRET_ACTIVE)
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_MOUNTED, MOUNTED_MG42, qtrue);
+    else
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_MOUNTED, MOUNTED_UNUSED, qtrue);
+
+    // UNDERHAND: the view's pitch (0x4f9668), not the weapon's position
+    BG_UpdateConditionValue(ps->clientNum, ANIM_COND_UNDERHAND, ps->viewangles[PITCH] > 0, qtrue);
+
+    if (pmove->cmd.buttons & BUTTON_ATTACK)
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_FIRING, qtrue, qtrue);
+    else
+        BG_UpdateConditionValue(ps->clientNum, ANIM_COND_FIRING, qfalse, qtrue);
 }
 
 static inline __attribute__((always_inline)) void BG_SmoothControllerAngles(vec3_t current, const vec3_t goal, float maxChange)
@@ -822,13 +838,13 @@ static void BG_UpdateEntityPlayerAnimConditions(const entityState_t *es, const c
     weaponDef = BG_GetWeaponDef(es->weapon);
     client = es->clientNum;
 
-    BG_UpdateConditionValue_core(client, 0, weaponDef->playerAnimType, 1);
-    BG_UpdateConditionValue_core(client, 1, weaponDef->weapClass, 1);
-    BG_UpdateConditionValue_core(client, 7, (es->eFlags & 0x40000) != 0, 1);
-    BG_UpdateConditionValue_core(client, 2, (es->eFlags & 0x300) != 0, 1);
-    BG_UpdateConditionValue_core(client, 4, ci->playerAngles[0] > 0.0f, 1);
-    BG_UpdateConditionValue_core(client, 5, (es->eFlags & 4) != 0, 1);
-    BG_UpdateConditionValue_core(client, 6, (es->eFlags & 0x40) != 0, 1);
+    BG_UpdateConditionValue(client, 0, weaponDef->playerAnimType, 1);
+    BG_UpdateConditionValue(client, 1, weaponDef->weapClass, 1);
+    BG_UpdateConditionValue(client, 7, (es->eFlags & 0x40000) != 0, 1);
+    BG_UpdateConditionValue(client, 2, (es->eFlags & 0x300) != 0, 1);
+    BG_UpdateConditionValue(client, 4, ci->playerAngles[0] > 0.0f, 1);
+    BG_UpdateConditionValue(client, 5, (es->eFlags & 4) != 0, 1);
+    BG_UpdateConditionValue(client, 6, (es->eFlags & 0x40) != 0, 1);
 
     legsAnim = BG_AnimIndexNoToggle(es->legsAnim);
     movetype = bgs->animScriptData.animations[legsAnim].movetype;
@@ -837,11 +853,11 @@ static void BG_UpdateEntityPlayerAnimConditions(const entityState_t *es, const c
     }
 
     if ((bgs->animScriptData.animations[legsAnim].flags & 0x10) != 0) {
-        BG_UpdateConditionValue_core(client, 8, 1, 1);
+        BG_UpdateConditionValue(client, 8, 1, 1);
     } else if ((bgs->animScriptData.animations[legsAnim].flags & 0x20) != 0) {
-        BG_UpdateConditionValue_core(client, 8, 2, 1);
+        BG_UpdateConditionValue(client, 8, 2, 1);
     } else {
-        BG_UpdateConditionValue_core(client, 8, 0, 1);
+        BG_UpdateConditionValue(client, 8, 0, 1);
     }
 }
 
@@ -1771,6 +1787,19 @@ void BG_InitWeaponString(int index, const char *name)
     weaponStrings[index].hash = hash;   /* was hardcoded index*8+4 (x86 stride) -> wrong slot on x64 */
 }
 
+#if COD2_PLUS_CLIENT_SERVER
+/* src/compat/client_server_anim_check.cpp: compares this script's functions
+ * with CoD2rev-Plus's (COD2_CHECK_ANIMSCRIPT) */
+extern void BG_CheckAnimScript(void);
+
+static int BG_CheckNoSound(int client, snd_alias_list_t *aliasList)
+{
+    (void)client;
+    (void)aliasList;
+    return 0;
+}
+#endif
+
 void BG_LoadAnim(void)
 {
     LargeLocal playerAnims_large_local;
@@ -1921,45 +1950,40 @@ void BG_LoadAnim(void)
     }
 
     ZN10LargeLocalD1Ev(&playerAnims_large_local);
+
+#if COD2_PLUS_CLIENT_SERVER
+    if (getenv("COD2_CHECK_ANIMSCRIPT")) {
+        int (*playSoundAlias)(int, snd_alias_list_t *) = globalScriptData->playSoundAlias;
+
+        globalScriptData->playSoundAlias = BG_CheckNoSound;
+        BG_CheckAnimScript();
+        globalScriptData->playSoundAlias = playSoundAlias;
+    }
+#endif
 }
 
+/* returns the duration of the animation, -1 if no anim was set (0x4f9060) */
 int BG_ExecuteCommand(playerState_t *ps, animScriptCommand_t *scriptCommand, qboolean setTimer, qboolean isContinue, qboolean force)
 {
-    int duration;
-    qboolean playedLegsAnim;
-    short bodyPart;
+    int duration = -1;
+    qboolean playedLegsAnim = qfalse;
 
-    duration = -1;
-    playedLegsAnim = 0;
-    bodyPart = scriptCommand->bodyPart[0];
-
-    if (bodyPart) {
-        duration = scriptCommand->animDuration[0] + 0x32;
-
-        if (bodyPart == 1 || bodyPart == 3) {
-            playedLegsAnim = BG_PlayAnim_core(ps, scriptCommand->animIndex[0],
-                                              (animBodyPart_t)bodyPart, duration,
-                                              setTimer, isContinue, force) != -1;
+    if (scriptCommand->bodyPart[0]) {
+        duration = scriptCommand->animDuration[0] + 50;
+        if (scriptCommand->bodyPart[0] == ANIM_BP_LEGS || scriptCommand->bodyPart[0] == ANIM_BP_BOTH) {
+            playedLegsAnim = (BG_PlayAnim(ps, scriptCommand->animIndex[0], (animBodyPart_t)scriptCommand->bodyPart[0], duration, setTimer, isContinue, force) > -1);
         } else {
-            BG_PlayAnim_core(ps, scriptCommand->animIndex[0],
-                             (animBodyPart_t)bodyPart, duration,
-                             setTimer, isContinue, force);
-            playedLegsAnim = 0;
+            BG_PlayAnim(ps, scriptCommand->animIndex[0], (animBodyPart_t)scriptCommand->bodyPart[0], duration, setTimer, isContinue, force);
         }
     }
 
-    bodyPart = scriptCommand->bodyPart[1];
-    if (bodyPart) {
-        duration = scriptCommand->animDuration[0] + 0x32;
-
-        if (scriptCommand->bodyPart[0] == 1 || scriptCommand->bodyPart[0] == 3) {
-            playedLegsAnim = BG_PlayAnim_core(ps, scriptCommand->animIndex[1],
-                                              (animBodyPart_t)bodyPart, duration,
-                                              setTimer, isContinue, force) != -1;
+    if (scriptCommand->bodyPart[1]) {
+        duration = scriptCommand->animDuration[0] + 50;
+        // just play the animation for the torso
+        if (scriptCommand->bodyPart[0] == ANIM_BP_LEGS || scriptCommand->bodyPart[0] == ANIM_BP_BOTH) {
+            playedLegsAnim = (BG_PlayAnim(ps, scriptCommand->animIndex[1], (animBodyPart_t)scriptCommand->bodyPart[1], duration, setTimer, isContinue, force) > -1);
         } else {
-            BG_PlayAnim_core(ps, scriptCommand->animIndex[1],
-                             (animBodyPart_t)bodyPart, duration,
-                             setTimer, isContinue, force);
+            BG_PlayAnim(ps, scriptCommand->animIndex[1], (animBodyPart_t)scriptCommand->bodyPart[1], duration, setTimer, isContinue, force);
         }
     }
 
@@ -1967,143 +1991,128 @@ int BG_ExecuteCommand(playerState_t *ps, animScriptCommand_t *scriptCommand, qbo
         globalScriptData->playSoundAlias(ps->clientNum, scriptCommand->soundAlias);
     }
 
-    return playedLegsAnim ? duration : -1;
+    if (!playedLegsAnim) {
+        return -1;
+    }
+
+    return duration;
 }
 
-static BM_NOINLINE qboolean BG_AnimScriptItemMatches(clientInfo_t *ci, animScriptItem_t *scriptItem)
+static qboolean BG_EvaluateConditions(clientInfo_t *ci, animScriptItem_t *scriptItem)
 {
-    int conditionIndex;
+    int i;
+    animScriptCondition_t *cond;
 
-    for (conditionIndex = 0; conditionIndex < scriptItem->numConditions; ++conditionIndex) {
-        animScriptCondition_t *condition = &scriptItem->conditions[conditionIndex];
-        int conditionType = condition->index;
-        int testType = animConditionsTable[conditionType].type;
-
-        if (testType == 0) {
-            if ((ci->clientConditions[conditionType][0] & condition->value[0]) == 0 &&
-                (ci->clientConditions[conditionType][1] & condition->value[1]) == 0) {
-                return 0;
+    for (i = 0, cond = scriptItem->conditions; i < scriptItem->numConditions; i++, cond++) {
+        switch (animConditionsTable[cond->index].type) {
+        case ANIM_CONDTYPE_BITFLAGS:
+            if (!(ci->clientConditions[cond->index][0] & cond->value[0]) &&
+                !(ci->clientConditions[cond->index][1] & cond->value[1])) {
+                return qfalse;
             }
-        } else if (testType == 1 &&
-                   ci->clientConditions[conditionType][0] != condition->value[0]) {
-            return 0;
+            break;
+        case ANIM_CONDTYPE_VALUE:
+            if (!(ci->clientConditions[cond->index][0] == cond->value[0])) {
+                return qfalse;
+            }
+            break;
+        default:
+            break;
         }
     }
 
-    return 1;
+    // all conditions must have passed
+    return qtrue;
 }
 
-static BM_NOINLINE animScriptItem_t *BG_FirstValidAnimScriptItem(int client, animScript_t *script)
+/* the first script item that passes all its conditions, NULL if none */
+static animScriptItem_t *BG_FirstValidItem(int client, animScript_t *script)
 {
-    clientInfo_t *ci = &bgs->clientinfo[client];
-    int itemIndex;
+    animScriptItem_t **ppScriptItem;
 
-    for (itemIndex = 0; itemIndex < script->numItems; ++itemIndex) {
-        animScriptItem_t *scriptItem = script->items[itemIndex];
+    int i;
 
-        if (BG_AnimScriptItemMatches(ci, scriptItem)) {
-            return scriptItem;
+    for (i = 0, ppScriptItem = script->items; i < script->numItems; i++, ppScriptItem++) {
+        if (BG_EvaluateConditions(&bgs->clientinfo[client], *ppScriptItem)) {
+            return *ppScriptItem;
         }
     }
 
     return NULL;
 }
 
+/* the duration in milliseconds that this model should be paused, -1 if no
+ * event found */
 int BG_AnimScriptEvent(playerState_t *ps, scriptAnimEventTypes_t event, qboolean isContinue, qboolean force)
 {
-    int client;
     animScript_t *script;
     animScriptItem_t *scriptItem;
-    int numCommands;
-    int randIdx;
+    animScriptCommand_t *scriptCommand;
 
-    if ((int)event != 1) {
-        if (ps->pm_type > 5)
-            return -1;
+    if (event != ANIM_ET_DEATH && ps->pm_type >= PM_DEAD) {
+        return -1;
     }
 
     script = &globalScriptData->scriptEvents[event];
-    if (script->numItems == 0)
+    if (!script->numItems) {
         return -1;
-
-    client = ps->clientNum;
-    scriptItem = BG_FirstValidAnimScriptItem(client, script);
-    if (!scriptItem)
+    }
+    // find the first script item, that passes all the conditions for this event
+    scriptItem = BG_FirstValidItem(ps->clientNum, script);
+    if (!scriptItem) {
         return -1;
-
-    numCommands = scriptItem->numCommands;
-    if (numCommands == 0)
+    }
+    if (!scriptItem->numCommands) {
         return -1;
+    }
+    // pick a random command
+    scriptCommand = &scriptItem->commands[rand() % scriptItem->numCommands];
 
-    randIdx = rand() % numCommands;
-    return BG_ExecuteCommand(ps, &scriptItem->commands[randIdx], 1, isContinue, force);
+    // run it
+    return BG_ExecuteCommand(ps, scriptCommand, qtrue, isContinue, force);
 }
 
+/* runs the normal locomotive animations; 1 if an animation was set, -1 if
+ * no animation was found, 0 otherwise (0x4f9190) */
 int BG_AnimScriptAnimation(playerState_t *ps, aistateEnum_t state, scriptAnimMoveTypes_t movetype, qboolean isContinue)
 {
-    int client;
-    clientInfo_t *ci;
+    animScript_t *script = NULL;
+    animScriptItem_t *scriptItem = NULL;
+    animScriptCommand_t *scriptCommand = NULL;
 
-    if (ps->pm_type > 5)
+    // Allow fallen movetype while dead
+    if (ps->pm_type >= PM_DEAD) {
         return -1;
-    if (state < 0)
-        return -1;
-
-    client = ps->clientNum;
-    ci = &bgs->clientinfo[client];
-
-    while (state >= 0) {
-        animScript_t *script = &globalScriptData->scriptAnims[state][movetype];
-        int i;
-
-        for (i = 0; i < script->numItems; ++i) {
-            animScriptItem_t *scriptItem = script->items[i];
-            int j;
-            int matched = 1;
-
-            for (j = 0; j < scriptItem->numConditions; ++j) {
-                animScriptCondition_t *condition = &scriptItem->conditions[j];
-                int conditionIndex = condition->index;
-                int conditionType = animConditionsTable[conditionIndex].type;
-
-                if (conditionType == ANIM_CONDTYPE_BITFLAGS) {
-                    if (ci->clientConditions[conditionIndex][0] & condition->value[0])
-                        continue;
-                    if (ci->clientConditions[conditionIndex][1] & condition->value[1])
-                        continue;
-                    matched = 0;
-                    break;
-                }
-
-                if (conditionType == ANIM_CONDTYPE_VALUE) {
-                    if (ci->clientConditions[conditionIndex][0] == condition->value[0])
-                        continue;
-                    matched = 0;
-                    break;
-                }
-            }
-
-            if (!matched)
-                continue;
-
-            if (!scriptItem->numCommands)
-                return -1;
-
-            if (animConditionsTable[3].type == ANIM_CONDTYPE_BITFLAGS) {
-                ci->clientConditions[3][0] = 0;
-                ci->clientConditions[3][1] = 0;
-                ci->clientConditions[3][movetype >> 5] |= 1 << (movetype & 31);
-            } else {
-                ci->clientConditions[3][0] = movetype;
-            }
-
-            return BG_ExecuteCommand(ps, &scriptItem->commands[rand() % scriptItem->numCommands], 0, isContinue, 0) != -1;
-        }
-
-        state = (aistateEnum_t)(state - 1);   /* VC7.1 C++: no -- on enum */
     }
 
-    return -1;
+    // try finding a match in all states ABOVE the given state
+    while (!scriptItem && state >= AISTATE_RELAXED) {
+        script = &globalScriptData->scriptAnims[state][movetype];
+        if (!script->numItems) {
+            state = (aistateEnum_t)(state - 1);   /* VC7.1 C++: no -- on enum */
+            continue;
+        }
+        // find the first script item, that passes all the conditions for this event
+        scriptItem = BG_FirstValidItem(ps->clientNum, script);
+        if (!scriptItem) {
+            state = (aistateEnum_t)(state - 1);
+            continue;
+        }
+    }
+
+    if (!scriptItem) {
+        return -1;
+    }
+    if (!scriptItem->numCommands) {
+        return -1;
+    }
+    // save this as our current movetype
+    BG_UpdateConditionValue(ps->clientNum, ANIM_COND_MOVETYPE, movetype, qtrue);
+    // the same command for a client each time, not a random one (0x4f9212)
+    scriptCommand = &scriptItem->commands[ps->clientNum % scriptItem->numCommands];
+
+    // run it
+    return (BG_ExecuteCommand(ps, scriptCommand, qfalse, isContinue, qfalse) != -1);
 }
 
 animStringItem_t animBodyPartsStr[8] = {
