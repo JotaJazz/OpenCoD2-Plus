@@ -21,6 +21,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/listen_test.py` | a client hosts, another joins, through `map_restart` and a map change; `--host-binary EXE --host-wine WINE` hosts on the Windows client | yes |
 | `scripts/client_view_test.py` | a real client is shot, blasted, watches deaths, dies and respawns without crashing | yes |
 | `scripts/view_weapon_test.py` | a real client leans, crouches and jumps; its view weapon (traced with `COD2_TRACE_VIEWWEAPON`) moves sideways, to the stance offset and dips on landing as 1.3's; hits every 4 s kick the view within `v_dmg_pitch`/`v_dmg_roll` (`COD2_TRACE_VIEWDAMAGE`); walking, the eye bobs along the view's right (`COD2_TRACE_VIEWBOB`); firing, reloading and melee move the camera by `tag_camera` (`COD2_TRACE_VIEWANIM`); a jump in place keeps `xyspeed` at 0; after 30 s shellshocks: the client keeps running and the shaken view stays a rotation (`COD2_TRACE_PERTURB`) | yes |
+| `scripts/server_eye_test.py` | a walking player's eye on the server (libcod `getViewOrigin`, where shots start) bobs sideways; thrown straight up mid-walk, it stays over the origin, as 1.3 | no |
 | `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); `--moves CFG`, `--spot` | yes |
 | `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
