@@ -21,6 +21,8 @@ dvar_t *sv_botKickMessages;
 dvar_t *sv_noAuthorize;
 dvar_t *sv_authorizeTimeout;
 dvar_t *sv_limitLocalRcon;
+dvar_t *sv_isLookingAtOnDemand;
+dvar_t *sv_fastDownloadSpeed;
 
 // set while the map, gametype main and startupgametype scripts run, where
 // g_reservedModels does not apply
@@ -125,6 +127,8 @@ void RegisterLibcodDvars()
 	sv_noAuthorize = Dvar_RegisterBool("sv_noAuthorize", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", AUTHORIZE_TIMEOUT, 0, 1200000, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_fastDownloadSpeed = Dvar_RegisterInt("sv_fastDownloadSpeed", MAX_DOWNLOAD_WINDOW, 1, MAX_DOWNLOAD_WINDOW, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 
 	// only from the command line; kept in a variable because setCvar from a script can change any dvar
 	libcod_unsafeBuiltins = Dvar_RegisterBool("sv_libcodUnsafe", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
@@ -172,6 +176,44 @@ void Libcod_SpawnServerConfigstrings()
 		// load; effect index 0 can't be played, so the stand-in is index 1
 		SV_SetConfigstring(CS_EFFECT_NAMES + 1, "0");
 		G_SetModelIndex(1, "xmodel/default_static_model");
+	}
+}
+
+// Called by SV_SpawnServer before it saves the systeminfo. With
+// sv_minimizeSysteminfo the dvars below go to clients with the gamestate
+// (DVAR_CODINFO) instead of the systeminfo, which leaves room in it for the
+// names and checksums of more iwds. Later changes reach a client only with
+// its next gamestate. zk_libcod's levels 2 and 3 move dvars this server
+// does not have, so every level above 0 does the same here.
+void Libcod_MinimizeSysteminfo()
+{
+	static const char *names[] =
+	{
+		"bg_fallDamageMaxHeight", "bg_fallDamageMinHeight", "timescale", "g_synchronousClients",
+		"sv_cheats", "sv_disableClientConsole", "sv_voice", "sv_voiceQuality"
+	};
+	static unsigned short moved[ARRAY_COUNT(names)];
+
+	dvar_t *minimize = Dvar_RegisterInt("sv_minimizeSysteminfo", 0, 0, 3, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+
+	for ( size_t i = 0; i < ARRAY_COUNT(names); i++ )
+	{
+		dvar_t *dvar = Dvar_FindVar(names[i]);
+
+		if ( !dvar )
+			continue;
+
+		if ( minimize->current.integer && ( dvar->flags & DVAR_SYSTEMINFO ) )
+		{
+			// remember which ones had DVAR_CODINFO already
+			moved[i] = DVAR_SYSTEMINFO | ( ~dvar->flags & DVAR_CODINFO );
+			dvar->flags = ( dvar->flags & ~DVAR_SYSTEMINFO ) | DVAR_CODINFO;
+		}
+		else if ( !minimize->current.integer && moved[i] )
+		{
+			dvar->flags = ( dvar->flags & ~moved[i] ) | DVAR_SYSTEMINFO;
+			moved[i] = 0;
+		}
 	}
 }
 

@@ -1478,6 +1478,12 @@ void ScrCmd_IsLookingAt( scr_entref_t entref )
 	}
 
 	pOther = Scr_GetEntity(0);
+#ifdef LIBCOD
+	if ( sv_isLookingAtOnDemand->current.boolean )
+	{
+		Player_UpdateLookAtEntity(pSelf);
+	}
+#endif
 	Scr_AddBool( pSelf->client->pLookatEnt == pOther );
 }
 

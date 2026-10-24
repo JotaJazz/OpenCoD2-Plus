@@ -942,7 +942,7 @@ void SV_SendClientMessages( void )
 
 #ifdef LIBCOD
 		extern int client_challenge_ping[MAX_CLIENTS];
-		for ( int j = 0; j < MAX_DOWNLOAD_WINDOW; j++ )
+		for ( int j = 0; j < sv_fastDownloadSpeed->current.integer; j++ )
 		{
 			if ( !sv_fastDownload->current.boolean || !*c->downloadName || c->downloadingWWW || c->clientDownloadingWWW || client_challenge_ping[i] > 100 )
 			{

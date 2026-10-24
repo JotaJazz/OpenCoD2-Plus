@@ -1329,6 +1329,10 @@ void ClientEndFrame( gentity_t *ent )
 
 	client->currentAimSpreadScale = client->ps.aimSpreadScale / 255;
 
+#ifdef LIBCOD
+	// sv_isLookingAtOnDemand traces only when a script calls isLookingAt
+	if ( !sv_isLookingAtOnDemand->current.boolean )
+#endif
 	Player_UpdateLookAtEntity(ent);
 	Player_UpdateCursorHints(ent);
 

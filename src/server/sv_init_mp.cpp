@@ -1096,6 +1096,10 @@ void SV_SpawnServer( char *server )
 	Dvar_SetString(sv_referencedIwds, FS_ReferencedIwdChecksums());
 	Dvar_SetString(sv_referencedIwdNames, FS_ReferencedIwdNames());
 
+#ifdef LIBCOD
+	Libcod_MinimizeSysteminfo();
+#endif
+
 	// save systeminfo and serverinfo strings
 	SV_SaveSystemInfo();
 
