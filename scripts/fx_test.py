@@ -142,7 +142,7 @@ def main():
         log_path = os.path.join(home, 'out.log')
         with open(log_path, 'wb') as log:
             client = subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(args.game_dir),
-                                       '+set', 'fs_homepath', home, '+set', 'r_fullscreen', '0',
+                                       '+set', 'fs_homepath', home,
                                        '+set', 'com_maxfps', '20', '+set', 'fs_game', 'fxtest',
                                        '+set', 'g_gametype', 'dm', '+map', 'mp_toujane', '+exec', 'fx.cfg'],
                                       cwd=home, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)

@@ -275,7 +275,7 @@ def main():
                    '+set', 'fs_game', 'hittest', '+set', 'net_port', str(port), '+set', 'sv_cracked', '1',
                    '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'dm', '+set', 'g_log', 'games_mp.log',
                    '+set', 'g_logSync', '1', '+set', 'developer', '1', '+set', 'sv_maxclients', '8']
-        command += ['+set', 'r_fullscreen', '0'] if args.listen else ['+set', 'dedicated', '1']
+        command += [] if args.listen else ['+set', 'dedicated', '1']
         log_path = os.path.join(home, 'out.log')
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(command + ['+map', args.map], stdin=subprocess.DEVNULL, stdout=log,

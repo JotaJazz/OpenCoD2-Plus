@@ -144,7 +144,7 @@ def main():
             if target:
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'r_fullscreen', '0', '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', '20',
+                                               client_home, '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', '20',
                                                '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,

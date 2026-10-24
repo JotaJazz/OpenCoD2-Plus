@@ -340,7 +340,7 @@ def main():
                 env = dict(os.environ, COD2_TRACE_VIEWWEAPON='1', COD2_TRACE_VIEWDAMAGE='1', COD2_TRACE_VIEWBOB='1', COD2_TRACE_VIEWANIM='1', COD2_TRACE_PERTURB='1')
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'r_fullscreen', '0', '+set', 'net_port',
+                                               client_home, '+set', 'net_port',
                                                str(port + 1), '+connect', f'127.0.0.1:{port}', '+exec', 'vw.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                               cwd=client_home, env=env)

@@ -52,7 +52,7 @@ def main():
         env = dict(os.environ, REALD3D9_SHLOG='1', VKD3DX_SELFTEST='1')
         with open(log_path, 'wb') as log:
             client = subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(args.game_dir),
-                                       '+set', 'fs_homepath', home, '+set', 'r_fullscreen', '0',
+                                       '+set', 'fs_homepath', home,
                                        '+set', 'g_gametype', 'dm', '+map', 'mp_toujane', '+exec', 'shot.cfg'],
                                       stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, cwd=home,
                                       env=env)

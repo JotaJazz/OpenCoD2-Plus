@@ -60,12 +60,11 @@ def wine_path(path):
 def client(binary, game_dir, home, args, log, wine=None):
     if wine:
         return subprocess.Popen([wine, binary, '+set', 'fs_basepath', wine_path(game_dir), '+set', 'fs_homepath',
-                                 wine_path(home), '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log,
+                                 wine_path(home)] + args, cwd=home, stdout=log,
                                 stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                 env=dict(os.environ, COD2_CONSOLE_STDOUT='1', COD2_CRASH_NOPOPUP='1'))
-    return subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(game_dir), '+set', 'fs_homepath', home,
-                             '+set', 'r_fullscreen', '0'] + args, cwd=home, stdout=log, stderr=subprocess.STDOUT,
-                            stdin=subprocess.DEVNULL)
+    return subprocess.Popen([binary, '+set', 'fs_basepath', os.path.abspath(game_dir), '+set', 'fs_homepath', home]
+                            + args, cwd=home, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
 
 
 def main():
