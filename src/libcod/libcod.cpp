@@ -23,6 +23,11 @@ dvar_t *sv_authorizeTimeout;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_isLookingAtOnDemand;
 dvar_t *sv_fastDownloadSpeed;
+dvar_t *fs_callbacks;
+dvar_t *fs_gametypes;
+dvar_t *fs_mapScriptDirectories;
+dvar_t *fs_replaceStockMaps;
+dvar_t *loc_loadLocalizedMods;
 
 // set while the map, gametype main and startupgametype scripts run, where
 // g_reservedModels does not apply
@@ -108,6 +113,11 @@ void RegisterLibcodDvars()
 	sv_master[4] = Dvar_RegisterString("sv_master5", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 
 	fs_library = Dvar_RegisterString("fs_library", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	fs_callbacks = Dvar_RegisterString("fs_callbacks", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	fs_gametypes = Dvar_RegisterString("fs_gametypes", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	fs_mapScriptDirectories = Dvar_RegisterInt("fs_mapScriptDirectories", 0, 0, 2, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	fs_replaceStockMaps = Dvar_RegisterBool("fs_replaceStockMaps", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 
 	g_playerCollision = Dvar_RegisterBool("g_playerCollision", true, DVAR_CHANGEABLE_RESET);
 	g_playerEject = Dvar_RegisterBool("g_playerEject", true, DVAR_CHANGEABLE_RESET);
@@ -217,21 +227,55 @@ void Libcod_MinimizeSysteminfo()
 	}
 }
 
+// fs_callbacks: the script with the CodeCallback_* functions
+const char *Libcod_CallbacksScript()
+{
+	return fs_callbacks->current.string[0] ? fs_callbacks->current.string : "maps/mp/gametypes/_callbacksetup";
+}
+
+// fs_gametypes: the folder with the gametype scripts
+const char *Libcod_GametypesFolder()
+{
+	return fs_gametypes->current.string[0] ? fs_gametypes->current.string : "maps/mp/gametypes";
+}
+
+// fs_mapScriptDirectories: 1 loads the map's main from maps/mp/<map>/<map>,
+// 2 tries that first and then maps/mp/<map>
+int Libcod_LoadLevelScript(const char *mapname)
+{
+	char filename[MAX_QPATH];
+	int handle = 0;
+
+	if ( fs_mapScriptDirectories->current.integer )
+	{
+		Com_sprintf(filename, sizeof(filename), "maps/mp/%s/%s", mapname, mapname);
+		handle = GScr_LoadScriptAndLabel(filename, "main", qfalse);
+
+		if ( handle || fs_mapScriptDirectories->current.integer == 1 )
+			return handle;
+	}
+
+	Com_sprintf(filename, sizeof(filename), "maps/mp/%s", mapname);
+	return GScr_LoadScriptAndLabel(filename, "main", qfalse);
+}
+
 void InitLibcodCallbacks()
 {
-	codecallback_playercommand = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerCommand", 0);
-	codecallback_userinfochanged = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_UserInfoChanged", 0);
-	codecallback_fire_grenade = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_FireGrenade", 0);
-	codecallback_vid_restart = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_VidRestart", 0);
-	codecallback_error = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_Error", 0);
-	codecallback_hitchwarning = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_HitchWarning", 0);
-	codecallback_pickup = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_Pickup", 0);
-	codecallback_suicide = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_Suicide", 0);
-	codecallback_weapon_change = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_WeaponChange", 0);
-	codecallback_remotecommand = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_RemoteCommand", 0);
+	const char *callbacks = Libcod_CallbacksScript();
+
+	codecallback_playercommand = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_PlayerCommand", 0);
+	codecallback_userinfochanged = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_UserInfoChanged", 0);
+	codecallback_fire_grenade = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_FireGrenade", 0);
+	codecallback_vid_restart = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_VidRestart", 0);
+	codecallback_error = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_Error", 0);
+	codecallback_hitchwarning = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_HitchWarning", 0);
+	codecallback_pickup = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_Pickup", 0);
+	codecallback_suicide = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_Suicide", 0);
+	codecallback_weapon_change = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_WeaponChange", 0);
+	codecallback_remotecommand = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_RemoteCommand", 0);
 
 	for (size_t i = 0; i < ARRAY_COUNT(buttonCallbacks); i++)
-		buttonCallbacks[i].handle = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", buttonCallbacks[i].name, 0);
+		buttonCallbacks[i].handle = GScr_LoadScriptAndLabel(callbacks, buttonCallbacks[i].name, 0);
 
 	Libcod_LoadCallbacks();
 
@@ -493,7 +537,8 @@ void manymaps_prepare(const char *mapname, int read)
 
 	closedir(dir);
 
-	if (map_exists)
+	// a stock map's own iwd stays unless fs_replaceStockMaps
+	if (map_exists && (!map_found || fs_replaceStockMaps->current.boolean))
 	{
 		char src[MAX_OSPATH];
 		char dst[MAX_OSPATH];

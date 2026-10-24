@@ -2572,7 +2572,12 @@ const char *FS_LoadedIwdNames()
 		if ( !search->iwd )
 			continue;
 
+#ifdef LIBCOD
+		// loc_loadLocalizedMods lists the mod's localized iwds too
+		if ( !search->localized || ( loc_loadLocalizedMods->current.boolean && I_strnicmp( search->iwd->iwdGamename, BASEGAME, strlen( BASEGAME ) ) ) )
+#else
 		if ( !search->localized )
+#endif
 		{
 			if ( *info )
 				I_strncat( info, sizeof( info ), " " );
@@ -2645,7 +2650,12 @@ const char *FS_LoadedIwdChecksums()
 		if ( !search->iwd )
 			continue;
 
+#ifdef LIBCOD
+		// loc_loadLocalizedMods lists the mod's localized iwds too
+		if ( !search->localized || ( loc_loadLocalizedMods->current.boolean && I_strnicmp( search->iwd->iwdGamename, BASEGAME, strlen( BASEGAME ) ) ) )
+#else
 		if ( !search->localized )
+#endif
 			I_strncat( info, sizeof( info ), va( "%i ", search->iwd->checksum ) );
 	}
 

@@ -825,7 +825,12 @@ void Scr_ParseGameTypeList()
 	n = 0;
 
 	memset(g_scr_data.gametype.list, 0, sizeof(g_scr_data.gametype.list));
-	c = FS_GetFileList("maps/mp/gametypes", "gsc", FS_LIST_PURE_ONLY, listbuf, sizeof(listbuf));
+#ifdef LIBCOD
+	const char *folder = Libcod_GametypesFolder();
+#else
+	const char *folder = "maps/mp/gametypes";
+#endif
+	c = FS_GetFileList(folder, "gsc", FS_LIST_PURE_ONLY, listbuf, sizeof(listbuf));
 
 	src = listbuf;
 
@@ -854,17 +859,17 @@ void Scr_ParseGameTypeList()
 		I_strncpyz(entry->pszScript, src, sizeof(entry->pszScript));
 		I_strlwr(entry->pszScript);
 
-		len = FS_FOpenFileByMode(va("maps/mp/gametypes/%s.txt", src), &f, FS_READ);
+		len = FS_FOpenFileByMode(va("%s/%s.txt", folder, src), &f, FS_READ);
 
 		if ( len <= 0 || len >= sizeof(buffer) )
 		{
 			if ( len <= 0 )
 			{
-				Com_Printf("WARNING: Could not load GameType description file %s for gametype %s\n", va("maps/mp/gametypes/%s.txt", src), src);
+				Com_Printf("WARNING: Could not load GameType description file %s for gametype %s\n", va("%s/%s.txt", folder, src), src);
 			}
 			else
 			{
-				Com_Printf("WARNING: GameType description file %s is too big to load.\n", va("maps/mp/gametypes/%s.txt", src));
+				Com_Printf("WARNING: GameType description file %s is too big to load.\n", va("%s/%s.txt", folder, src));
 			}
 
 			I_strncpyz(entry->pszName, entry->pszScript, sizeof(entry->pszScript));
@@ -1246,14 +1251,21 @@ void GScr_LoadGameTypeScript()
 {
 	char filename[MAX_QPATH];
 
+#ifdef LIBCOD
+	// fs_gametypes and fs_callbacks move these scripts
+	const char *callbacks = Libcod_CallbacksScript();
+	Com_sprintf(filename, sizeof(filename), "%s/%s", Libcod_GametypesFolder(), g_gametype->current.string);
+#else
+	const char *callbacks = "maps/mp/gametypes/_callbacksetup";
 	Com_sprintf(filename, sizeof(filename), "maps/mp/gametypes/%s", g_gametype->current.string);
+#endif
 
 	g_scr_data.gametype.main = GScr_LoadScriptAndLabel(filename, "main", qtrue);
-	g_scr_data.gametype.startupgametype = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_StartGameType", qtrue);
-	g_scr_data.gametype.playerconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerConnect", qtrue);
-	g_scr_data.gametype.playerdisconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerDisconnect", qtrue);
-	g_scr_data.gametype.playerdamage = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerDamage", qtrue);
-	g_scr_data.gametype.playerkilled = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerKilled", qtrue);
+	g_scr_data.gametype.startupgametype = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_StartGameType", qtrue);
+	g_scr_data.gametype.playerconnect = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_PlayerConnect", qtrue);
+	g_scr_data.gametype.playerdisconnect = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_PlayerDisconnect", qtrue);
+	g_scr_data.gametype.playerdamage = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_PlayerDamage", qtrue);
+	g_scr_data.gametype.playerkilled = GScr_LoadScriptAndLabel(callbacks, "CodeCallback_PlayerKilled", qtrue);
 
 #ifdef LIBCOD
 	InitLibcodCallbacks();
@@ -5961,6 +5973,12 @@ void GScr_LoadLevelScript()
 	char filename[MAX_QPATH];
 
 	dvar_t *mapname = Dvar_RegisterString("mapname", "", DVAR_SERVERINFO | DVAR_ROM | DVAR_CHANGEABLE_RESET);
+#ifdef LIBCOD
+	// fs_mapScriptDirectories can look in maps/mp/<map>/ first
+	(void)filename;
+	g_scr_data.levelscript = Libcod_LoadLevelScript(mapname->current.string);
+#else
 	Com_sprintf(filename, sizeof(filename), "maps/mp/%s", mapname->current.string);
 	g_scr_data.levelscript = GScr_LoadScriptAndLabel(filename, "main", qfalse);
+#endif
 }

@@ -6,7 +6,8 @@
 
 // Callbacks from zk_libcod (same names and parameters): events, notifies,
 // blocked movers, the map's weapons and turrets, debug prints and request
-// spam. Each is looked up in _callbacksetup.gsc when the scripts load.
+// spam. Each is looked up in _callbacksetup.gsc (or fs_callbacks) when the
+// scripts load.
 
 int codecallback_playerevent = 0;
 int codecallback_entityevent = 0;
@@ -31,7 +32,7 @@ void Libcod_RegisterCallbackDvars()
 
 void Libcod_LoadCallbacks()
 {
-	const char *file = "maps/mp/gametypes/_callbacksetup";
+	const char *file = Libcod_CallbacksScript();
 
 	codecallback_playerevent = GScr_LoadScriptAndLabel(file, "CodeCallback_PlayerEvent", 0);
 	codecallback_entityevent = GScr_LoadScriptAndLabel(file, "CodeCallback_EntityEvent", 0);
