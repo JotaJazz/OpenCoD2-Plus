@@ -734,6 +734,13 @@ void G_CallSpawn(void)
 		return;
 	}
 
+#ifdef LIBCOD
+	if ( Libcod_SkipMapEntity(classname) )
+	{
+		return;
+	}
+#endif
+
 	gitem_t *item = G_GetItemForClassname(classname);
 
 	// check item spawn functions
@@ -787,6 +794,10 @@ void G_SpawnEntitiesFromString( void )
 	}
 	SP_worldspawn();
 
+#ifdef LIBCOD
+	Libcod_ClearMapItems();
+#endif
+
 	// parse ents
 	while ( G_ParseSpawnVars( &level.spawnVar ) )
 	{
@@ -805,6 +816,10 @@ void Scr_Notify( gentity_t *ent, unsigned short stringValue, unsigned int paramc
 	assert(ent->s.number == ent - g_entities);
 	assert(ent->r.inuse);
 
+#ifdef LIBCOD
+	Libcod_Notify(ent, stringValue, paramcount);
+	return;
+#endif
 	Scr_NotifyNum(ent->s.number, CLASS_NUM_ENTITY, stringValue, paramcount);
 }
 

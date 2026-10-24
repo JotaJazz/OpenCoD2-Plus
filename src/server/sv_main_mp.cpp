@@ -487,7 +487,8 @@ void SVC_Info( netadr_t from )
 	// Prevent using getinfo as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		if ( !Libcod_SpamCallback( "INFO:ADDRESS", from ) )
+			Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
 		return;
 	}
 
@@ -658,7 +659,8 @@ void SVC_Status( netadr_t from )
 	// Prevent using getstatus as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		if ( !Libcod_SpamCallback( "STATUS:ADDRESS", from ) )
+			Com_DPrintf( "SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
 		return;
 	}
 

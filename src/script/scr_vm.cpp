@@ -2678,6 +2678,11 @@ void VM_Notify( unsigned int notifyListOwnerId, unsigned int stringValue, Variab
 	int size, newSize, len, bufLen, type;
 	bool bNoStack;
 
+#ifdef LIBCOD
+	extern void Libcod_QueueNotifyDebug(unsigned int objectId, unsigned int stringValue, VariableValue *top);
+	Libcod_QueueNotifyDebug(notifyListOwnerId, stringValue, top);
+#endif
+
 	notifyListId = FindVariable(notifyListOwnerId, OBJECT_NOTIFY_LIST);
 
 	if ( !notifyListId )

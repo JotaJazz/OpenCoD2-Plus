@@ -338,6 +338,22 @@ void Com_DPrintf( const char *fmt, ... )
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
 
+#ifdef LIBCOD
+	// CodeCallback_DPrintf gets every debug print, developer or not
+	extern int codecallback_dprintf;
+	if ( codecallback_dprintf )
+	{
+		extern void Libcod_DPrintf(const char *message);
+
+		va_start( argptr, fmt );
+		Q_vsnprintf( msg, sizeof(msg), fmt, argptr );
+		va_end( argptr );
+
+		msg[MAXPRINTMSG - 1] = 0;
+		Libcod_DPrintf( msg );
+	}
+#endif
+
 	if ( !com_developer || !com_developer->current.integer )
 	{
 		return;			// don't confuse non-developers with techie stuff...

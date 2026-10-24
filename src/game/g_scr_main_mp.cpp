@@ -1165,6 +1165,7 @@ Scr_LoadGameType
 void Scr_LoadGameType()
 {
 #ifdef LIBCOD
+	Libcod_MapItemsCallbacks();
 	libcod_precaching = true;
 #endif
 	Scr_FreeThread( Scr_ExecThread( g_scr_data.gametype.main, 0 ) );

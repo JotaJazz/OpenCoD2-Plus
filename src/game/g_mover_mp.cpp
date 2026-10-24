@@ -551,6 +551,15 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 
 		// the move was blocked an entity
 
+#ifdef LIBCOD
+		// CodeCallback_MoverBlockage, and g_noMoverBlockage lets the mover go on
+		if ( Libcod_MoverBlocked( check, pusher ) )
+		{
+			SV_LinkEntity( check );
+			continue;
+		}
+#endif
+
 		// bobbing entities are instant-kill and never get blocked
 		if ( pusher->s.pos.trType == TR_SINE || pusher->s.apos.trType == TR_SINE )
 		{

@@ -109,6 +109,7 @@ void RegisterLibcodDvars()
 	sv_cracked = Dvar_RegisterBool("sv_cracked", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_kickbots = Dvar_RegisterBool("sv_kickbots", false, DVAR_CHANGEABLE_RESET);
 	logErrors = Dvar_RegisterBool("logErrors", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	Libcod_RegisterCallbackDvars();
 
 	// only from the command line; kept in a variable because setCvar from a script can change any dvar
 	libcod_unsafeBuiltins = Dvar_RegisterBool("sv_libcodUnsafe", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
@@ -175,6 +176,8 @@ void InitLibcodCallbacks()
 	for (size_t i = 0; i < ARRAY_COUNT(buttonCallbacks); i++)
 		buttonCallbacks[i].handle = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", buttonCallbacks[i].name, 0);
 
+	Libcod_LoadCallbacks();
+
 }
 
 // Script objects and threads of the previous level are gone, which async
@@ -213,6 +216,7 @@ void Libcod_InitLevel()
 // reinitializes the variable system, after which those ids mean nothing.
 void Libcod_ShutdownLevel()
 {
+	Libcod_ShutdownCallbacks();
 #if LIBCOD_COMPILE_EXEC == 1
 	gsc_exec_async_shutdown_level();
 #endif
@@ -271,6 +275,8 @@ void Scr_RunFrameCallbacks()
 	}
 	runningErrorCallback = false;
 	numQueuedScriptErrors = 0;
+
+	Libcod_RunCallbacksFrame();
 
 #if LIBCOD_COMPILE_HTTP == 1
 	gsc_http_frame();

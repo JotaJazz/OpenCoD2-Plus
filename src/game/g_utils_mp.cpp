@@ -38,6 +38,10 @@ void G_AddEvent( gentity_t *ent, int event, int eventParm )
 	}
 	ent->eventTime = level.time;
 	ent->r.eventTime = level.time;
+
+#ifdef LIBCOD
+	Libcod_EntityEvent(ent, event, eventParm);
+#endif
 }
 
 /*

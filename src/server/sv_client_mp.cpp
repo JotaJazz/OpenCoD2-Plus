@@ -389,7 +389,8 @@ void SV_GetChallenge( netadr_t from )
 	// Prevent using getchallenge as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
-		Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		if ( !Libcod_SpamCallback( "CHALLENGE:ADDRESS", from ) )
+			Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
 		return;
 	}
 

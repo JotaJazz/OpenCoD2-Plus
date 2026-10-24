@@ -122,6 +122,11 @@ void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerSta
 	ps->events[ps->eventSequence & ( MAX_EVENTS - 1 )] = newEvent;
 	ps->eventParms[ps->eventSequence & ( MAX_EVENTS - 1 )] = eventParm;
 	ps->eventSequence++;
+
+#ifdef LIBCOD
+	extern void Libcod_PlayerEvent(const playerState_t *ps, int event, int eventParm);
+	Libcod_PlayerEvent(ps, newEvent, eventParm);
+#endif
 }
 
 /*
