@@ -185,6 +185,15 @@ static void SV_Map_f( void )
 	// and thus nuke the arguments of the map command
 	FS_ConvertPath(mapname);
 
+	// svs.time only goes back to 0 when the server shuts down, which SV_Frame
+	// forces at 0x70000000 (about day 21.7) in the middle of a match; after
+	// 0x60000000 (about day 18.6) do it here, between maps
+	if ( com_sv_running->current.boolean && svs.time > 0x60000000 )
+	{
+		Com_Printf("Restarting the server before its time wraps\n");
+		Com_Shutdown("EXE_SERVERRESTARTTIMEWRAP");
+	}
+
 	// start up the map
 	SV_SpawnServer(mapname);
 

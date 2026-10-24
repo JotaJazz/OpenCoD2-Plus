@@ -751,7 +751,12 @@ void SV_Shutdown( const char *finalmsg )
 	}
 
 	SV_FreeArchivedSnapshot();
+
+	// a shutdown from an rcon command (killserver, a map change) still owes
+	// that command its reply
+	netadr_t redirectAddress = svs.redirectAddress;
 	memset(&svs, 0, sizeof(svs));
+	svs.redirectAddress = redirectAddress;
 
 #ifndef DEDICATED
 	if ( com_dedicated->current.integer )
