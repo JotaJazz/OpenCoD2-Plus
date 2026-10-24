@@ -1742,6 +1742,19 @@ static void Dvar_InsertSorted(dvar_t *dvar)
     *link = dvar;
 }
 
+/* CoD2rev-Plus's server and game ask before a script or the console names a
+ * new dvar, so a full pool fails that one call instead of the fatal error
+ * below (its Dvar_CanCreate, src/universal/dvar.cpp) */
+Bool Dvar_CanCreate(const char *dvarName)
+{
+    if (dvarCount < DVAR_MAX_COUNT) {
+        return 1;
+    }
+
+    Com_Printf("Can't create dvar '%s': %i dvars already exist\n", dvarName, DVAR_MAX_COUNT);
+    return 0;
+}
+
 static const dvar_t *Dvar_RegisterVariant_impl(
     const char *dvarName, int type, unsigned int flags, DvarValue value, DvarLimits domain)
 {

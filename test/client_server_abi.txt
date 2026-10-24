@@ -104,6 +104,7 @@ DiffTrack f4 4,4,4,4
 DiffTrackAngle f4 4,4,4,4,4,4,4
 DirToByte i1 4
 Dvar_AddFlags v0 4,4
+Dvar_CanCreate i1 4
 Dvar_ClearModified v0 4
 Dvar_FindVar i4 4
 Dvar_GetBool i1 4
@@ -258,6 +259,7 @@ Swap_Init v0 -
 Sys_FreeFileList v0 4
 Sys_GetValue i4 4
 Sys_IsLANAddress i4 20
+Sys_IsMainThread i1 -
 Sys_ListFiles i4 4,4,4,4,4
 Sys_LoadingKeepAlive v0 -
 Sys_SnapVector v0 4

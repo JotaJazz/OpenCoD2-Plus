@@ -547,6 +547,11 @@ static_assert(cod2_abi_slot<int>() == 4, "Dvar_AddFlags: parameter 1 differs fro
 extern "C" decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>())) cod2c_Dvar_AddFlags(dvar_s* a0, int a1) __asm__(COD2_SYM("Dvar_AddFlags"));
 decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>())) Dvar_AddFlags(dvar_s* a0, int a1) { return cod2c_Dvar_AddFlags(a0, a1); }
 
+static_assert(cod2_abi_class<decltype(Dvar_CanCreate(std::declval<char const*>()))>() == 'i' || cod2_abi_class<decltype(Dvar_CanCreate(std::declval<char const*>()))>() == 'v', "Dvar_CanCreate: return class differs from the engine");
+static_assert(cod2_abi_slot<char const*>() == 4, "Dvar_CanCreate: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Dvar_CanCreate(std::declval<char const*>())), 1> cod2c_Dvar_CanCreate(char const* a0) __asm__(COD2_SYM("Dvar_CanCreate"));
+decltype(Dvar_CanCreate(std::declval<char const*>())) Dvar_CanCreate(char const* a0) { return (decltype(Dvar_CanCreate(std::declval<char const*>())))cod2c_Dvar_CanCreate(a0); }
+
 static_assert(cod2_abi_class<decltype(Dvar_ClearModified(std::declval<dvar_s*>()))>() == 'v', "Dvar_ClearModified: return class differs from the engine");
 static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_ClearModified: parameter 0 differs from the engine");
 extern "C" decltype(Dvar_ClearModified(std::declval<dvar_s*>())) cod2c_Dvar_ClearModified(dvar_s* a0) __asm__(COD2_SYM("Dvar_ClearModified"));
@@ -1383,6 +1388,10 @@ static_assert(cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>())
 static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLANAddress: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_IsLANAddress(std::declval<netadr_t>())), 4> cod2c_Sys_IsLANAddress(netadr_t a0) __asm__(COD2_SYM("Sys_IsLANAddress"));
 decltype(Sys_IsLANAddress(std::declval<netadr_t>())) Sys_IsLANAddress(netadr_t a0) { return (decltype(Sys_IsLANAddress(std::declval<netadr_t>())))cod2c_Sys_IsLANAddress(a0); }
+
+static_assert(cod2_abi_class<decltype(Sys_IsMainThread())>() == 'i' || cod2_abi_class<decltype(Sys_IsMainThread())>() == 'v', "Sys_IsMainThread: return class differs from the engine");
+extern "C" cod2_abi_int<decltype(Sys_IsMainThread()), 1> cod2c_Sys_IsMainThread() __asm__(COD2_SYM("Sys_IsMainThread"));
+decltype(Sys_IsMainThread()) Sys_IsMainThread() { return (decltype(Sys_IsMainThread()))cod2c_Sys_IsMainThread(); }
 
 static_assert(cod2_abi_class<decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(Sys_ListFiles(std::declval<char const*>(), std::declval<char const*>(), std::declval<char const*>(), std::declval<int*>(), std::declval<int>()))>() == 'v', "Sys_ListFiles: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == 4, "Sys_ListFiles: parameter 0 differs from the engine");
