@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-24 — walkable normal, r_fullscreen
+
+- `MIN_WALK_NORMAL` is the float `0.7`, as every site that uses it in 1.3 (`0x5c427c`): fixed in CoD2rev-Plus `b60ab35` and vendored; the engine's bgame follows through `bg_plus_consts.h`. Prediction misses stay within their run-to-run spread (13–21).
+- `+set r_fullscreen 0` and a profile's `r_fullscreen 0` are both ignored, by the original too: run under Wine, 1.3 prints `r_fullscreen is read only` and opens full screen, because its renderer DLL registers the dvar read only (`0x2040`), which resets it to 1. Kept as 1.3 (the user's choice); the debt entry is gone and `validation.md` no longer claims the profile helps.
+
 ## 2026-10-23 — vendor sync with CoD2rev-Plus f77014a
 
 - Vendored files moved from `dfb5099` to `f77014a`: upstream's reviewed xanim (`xanim_calc.cpp` folded into `xanim.cpp`), the walkable-normal and trace constants (`cm_mesh.cpp` now compares with `0.7f`; prediction misses unchanged, 19), and two server fixes made in CoD2rev-Plus first: `BG_GetSpeed` horizontal (`0x4fde06`) and `BG_GetBobCycle` divided as a float (`0x4fddb6`), whose integer division had kept the server's eye from ever bobbing. No bridge change.

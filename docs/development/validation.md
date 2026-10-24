@@ -33,7 +33,10 @@ Contributors need their own copy of Call of Duty 2 patched to 1.3.
 ## Runtime comparison
 
 Running the original under Wine needs a stub `mss32.dll` (the real Miles DLL
-fails to initialize there) and a profile with `r_fullscreen 0`; its own
+fails to initialize there; one that returns 0 from each `_AIL_*@N` import is
+enough to reach the menu). It opens full screen whatever the command line or
+the profile says: its renderer registers `r_fullscreen` read only, which
+resets it to 1 (this engine does the same). Its own
 screenshot reads black under Wine, so capturing the back buffer needs a
 `d3d9.dll` proxy. Placing both clients at the same spot (`setviewpos` with
 `devmap`) gives comparable pictures.
