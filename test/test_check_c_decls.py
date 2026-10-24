@@ -50,6 +50,16 @@ class Differs(unittest.TestCase):
     def test_extra_arguments(self):
         self.assertIsNone(c.differs(('void', ('ptr',), False), ('void', ('ptr', 'int4'), False)))
 
+    def test_swapped_pointers(self):
+        # R_AddCmdDrawFullScreenColoredQuad(..., color, material) declared
+        # (..., material, color): the renderer took colorWhite as a material
+        self.assertIn('parameter 6 points to struct', c.differs(
+            ('void', ('float4',) * 4 + ('ptr:float', 'ptr:struct'), False),
+            ('void', ('float4',) * 4 + ('ptr', 'ptr:float'), False)))
+
+    def test_void_pointer_matches_any(self):
+        self.assertIsNone(c.differs(('void', ('ptr:struct', 'ptr'), False), ('void', ('ptr', 'ptr:float'), False)))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -30,3 +30,16 @@ XModelUnoptimize
 # declared int so that cg_draw_mp.c keeps the original's `return
 # Window_RemoveDynamicFlags(...)` shape; the result is unused
 Window_RemoveDynamicFlags
+# pointers to another kind of thing that reach the same memory: a byte or
+# int buffer for a struct, a struct whose first member is what the callee
+# reads (GfxViewParms.origin, D3DXMATRIX's floats), an out-parameter cast
+CG_AddPlayerWeapon
+CG_TraceCapsule
+CL_GetScreenDimensions
+D3DXMatrixMultiply
+FX_GetBoneOrientation
+RB_ShowLightVisCachePoints
+R_AddScaledDebugString
+R_GetRigidTransform
+StMutexLock_StMutexLock
+UI_OwnerDrawHandleKey

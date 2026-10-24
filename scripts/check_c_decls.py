@@ -92,7 +92,14 @@ def parse(readelf, path):
         if tag in ('DW_TAG_typedef', 'DW_TAG_const_type', 'DW_TAG_volatile_type', 'DW_TAG_restrict_type'):
             return kind(ref(a.get('DW_AT_type', '')), seen + 1)
         if tag in ('DW_TAG_pointer_type', 'DW_TAG_reference_type', 'DW_TAG_rvalue_reference_type',
-                   'DW_TAG_array_type', 'DW_TAG_subroutine_type'):
+                   'DW_TAG_array_type'):
+            # what it points to, as a category: a call that swaps a color
+            # (float *) and a material (struct *) passes the right sizes
+            target = kind(ref(a.get('DW_AT_type', '')), seen + 1) if 'DW_AT_type' in a else 'void'
+            category = re.match(r'[a-z]+', target)
+            category = category.group(0) if category else '?'
+            return 'ptr' if category in ('void', 'ptr', 'DW') or target == '?' else 'ptr:' + category
+        if tag == 'DW_TAG_subroutine_type':
             return 'ptr'
         # readelf prints the larger sizes in hex
         size = re.search(r'(0x[0-9a-f]+|\d+)\s*$', a.get('DW_AT_byte_size', ''))
@@ -142,7 +149,7 @@ def ret_class(k):
         return 'x87'
     if k.startswith('struct'):
         return 'sret'
-    if k == 'ptr':
+    if k.startswith('ptr'):
         return 'eax4'
     m = re.match(r'(int|bool)(\d+)', k)
     if m:
@@ -152,7 +159,7 @@ def ret_class(k):
 
 def param_class(k):
     """How a parameter of kind k sits on the stack."""
-    if k == 'ptr':
+    if k.startswith('ptr'):
         return 'int4'
     m = re.match(r'(int|bool)(\d+)', k)
     if m:
@@ -187,6 +194,10 @@ def differs(defn, decl):
     for n, (a, b) in enumerate(zip(dp, cp)):
         if a != b:
             return f'parameter {n + 1} is {dparams[n]}, called as {cparams[n]}'
+    for n, (a, b) in enumerate(zip(dparams, cparams)):
+        # both point to something known, but not to the same kind of thing
+        if a.startswith('ptr:') and b.startswith('ptr:') and a != b:
+            return f'parameter {n + 1} points to {a[4:]}, called as pointing to {b[4:]}'
     return None
 
 
