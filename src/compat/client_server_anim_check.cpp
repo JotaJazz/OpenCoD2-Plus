@@ -15,6 +15,7 @@ void cod2e_AnimUpdatePlayerStateConditions(pmove_t *pm) __asm__(COD2_SYM("BG_Ani
 int cod2e_AnimScriptAnimation(playerState_t *ps, int state, int movetype, int isContinue) __asm__(COD2_SYM("BG_AnimScriptAnimation"));
 int cod2e_AnimScriptEvent(playerState_t *ps, scriptAnimEventTypes_t event, int isContinue, int force) __asm__(COD2_SYM("BG_AnimScriptEvent"));
 int cod2e_GetNumWeapons(void) __asm__(COD2_SYM("BG_GetNumWeapons"));
+int cod2e_AnimInfo(int index, int *flags, long long *movetype, int *duration, float *moveSpeed) __asm__(COD2_SYM("BG_CheckAnimInfo"));
 }
 
 namespace {
@@ -76,6 +77,30 @@ extern "C" void BG_CheckAnimScript(void)
 		Com_Printf("animscript check: no local server\n");
 		return;
 	}
+
+	// the parsed animations (noteType aside: the server leaves it unset)
+	const animScriptData_t *data = &level_bgs.animData.animScriptData;
+	int numAnims = cod2e_AnimInfo(-1, NULL, NULL, NULL, NULL);
+	int animsDiffer = numAnims != data->numAnimations;
+
+	for (int i = 0; i < numAnims && i < data->numAnimations; ++i)
+	{
+		int flags, duration;
+		long long movetype;
+		float moveSpeed;
+
+		cod2e_AnimInfo(i, &flags, &movetype, &duration, &moveSpeed);
+		if (flags != data->animations[i].flags || movetype != data->animations[i].movetype
+		        || duration != data->animations[i].duration || moveSpeed != data->animations[i].moveSpeed)
+		{
+			if (animsDiffer < 10)
+				Com_Printf("animscript check: animation %d %s: engine flags %x movetype %llx, Plus flags %x movetype %llx\n",
+				           i, data->animations[i].name, flags, (unsigned long long)movetype, data->animations[i].flags,
+				           (unsigned long long)data->animations[i].movetype);
+			++animsDiffer;
+		}
+	}
+	Com_Printf("animscript check: %d animations, %d differ\n", numAnims, animsDiffer);
 
 	void (*playSoundAlias)(int, snd_alias_list_t *) = level_bgs.animData.animScriptData.playSoundAlias;
 	level_bgs.animData.animScriptData.playSoundAlias = NoSound;

@@ -1850,6 +1850,21 @@ void BG_InitWeaponString(int index, const char *name)
  * with CoD2rev-Plus's (COD2_CHECK_ANIMSCRIPT) */
 extern void BG_CheckAnimScript(void);
 
+/* one parsed animation, for the check to compare with CoD2rev-Plus's;
+ * returns the number of animations */
+int BG_CheckAnimInfo(int index, int *flags, long long *movetype, int *duration, float *moveSpeed)
+{
+    if (index >= 0 && index < globalScriptData->numAnimations) {
+        const animation_t *anim = &globalScriptData->animations[index];
+
+        *flags = anim->flags;
+        *movetype = anim->movetype;
+        *duration = anim->duration;
+        *moveSpeed = anim->moveSpeed;
+    }
+    return globalScriptData->numAnimations;
+}
+
 static int BG_CheckNoSound(int client, snd_alias_list_t *aliasList)
 {
     (void)client;

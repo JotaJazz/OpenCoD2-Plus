@@ -8,8 +8,10 @@ COD2_CHECK_ANIMSCRIPT=1: once cgame has loaded the animation script, the
 client runs the engine's playerstate functions (src/PC/bgame, which predict)
 and CoD2rev-Plus's (the local server's) on the same playerstates, every
 weapon, stance, aim, pitch, firing, state, movetype and event, and prints
-"animscript check: N cases, M differ". Exits with 0 when at least MIN_CASES
-cases ran, none differs, and the client leaves no crash report. The client
+"animscript check: N cases, M differ"; before that it compares the parsed
+animations' flags, movetypes, durations and speeds (not the note types, which
+the server leaves unset). Exits with 0 when at least MIN_CASES
+cases ran, no case or animation differs, and the client leaves no crash report. The client
 opens a window; it needs no CD key.
 """
 import argparse, os, re, subprocess, sys, tempfile, time
@@ -55,8 +57,12 @@ def main():
             except subprocess.TimeoutExpired:
                 client.kill()
         text = open(log_path, encoding='latin-1').read()
-        for line in re.findall(r'animscript check: (?:anim|event) .*', text):
+        for line in re.findall(r'animscript check: (?:anim|event|animation) .*', text):
             print('  ' + line)
+        anims = re.search(r'animscript check: (\d+) animations, (\d+) differ', text)
+        if anims:
+            check('the engine parses the animations as CoD2rev-Plus', int(anims.group(1)) > 0 and anims.group(2) == '0',
+                  f'{anims.group(2)} of {anims.group(1)} differ')
         result = re.search(r'animscript check: (\d+) cases, (\d+) differ', text)
         reports = [n for n in os.listdir(home) if n.startswith('cod2_crash_')]
         check('the check ran on a local server', result is not None,
