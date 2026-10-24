@@ -1,5 +1,5 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: dfb5099
+# revision: f77014a
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
@@ -130,7 +130,6 @@ src/zlib/unzip.c
 src/zlib/ioapi.c
 src/zlib/crypt.h
 src/xanim/dobj.cpp
-src/xanim/xanim_calc.cpp
 src/xanim/xanim.cpp
 src/xanim/xanim_load_obj.cpp
 src/xanim/xmodel.cpp
