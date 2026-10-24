@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-23 — vendor sync with CoD2rev-Plus f77014a
+
+- Vendored files moved from `dfb5099` to `f77014a`: upstream's reviewed xanim (`xanim_calc.cpp` folded into `xanim.cpp`), the walkable-normal and trace constants (`cm_mesh.cpp` now compares with `0.7f`; prediction misses unchanged, 19), and two server fixes made in CoD2rev-Plus first: `BG_GetSpeed` horizontal (`0x4fde06`) and `BG_GetBobCycle` divided as a float (`0x4fddb6`), whose integer division had kept the server's eye from ever bobbing. No bridge change.
+- `scripts/server_eye_test.py` checks the server's eye through libcod's `getViewOrigin`; the stock `getEye` is only the origin plus 40, and a jump from a stop shows nothing because standing resets the bob cycle.
+- Left open: the CoD2rev-Plus commits `a335fc6` and `f77014a` are local there, not pushed.
+
 ## 2026-10-23 — view kicks, bob, camera animation, shellshock
 
 - Several view effects of `CG_CalcViewValues` (1.3 `0x4cf900`) and its first-person offset (`0x4cee10`) were missing or wrong: the damage kick timed itself from `v_dmg_time`, the kick's end, instead of the hit (now `damageTime` less `deltaTime`, `0x4cee35`); the horizontal bob moved the eye forward and `bg_bobMax` was read as an integer (`0x4cef6c`); the view weapon's `tag_camera` bone never moved the camera (`0x4cf730`); `BG_GetSpeed` counted vertical speed, so jumps bobbed (`0x4cfa44`).
