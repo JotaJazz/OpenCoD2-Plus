@@ -384,7 +384,7 @@ static void CG_CalcTurretViewValues(void)
 }
 
 /* COD2_TRACE_VIEWDAMAGE: the view's added angles in the second after a hit,
-   for scripts/client_view_test.py */
+   for scripts/view_weapon_test.py */
 static void CG_TraceViewDamage(const float *angles)
 {
     static int enabled = -1;

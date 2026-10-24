@@ -7,7 +7,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 ## 2026-10-23 — view kicks, bob, camera animation, shellshock
 
-- Several view effects of `CG_CalcViewValues` (1.3 `0x4cee10`) were missing or wrong: the damage kick read `v_dmg_time`, never written (now `damageTime` less `deltaTime`, `0x4cee35`); the horizontal bob moved the eye forward and `bg_bobMax` was read as an integer (`0x4cef6c`); the view weapon's `tag_camera` bone never moved the camera (`0x4cf730`); `BG_GetSpeed` counted vertical speed, so jumps bobbed (`0x4cfa44`).
+- Several view effects of `CG_CalcViewValues` (1.3 `0x4cf900`) and its first-person offset (`0x4cee10`) were missing or wrong: the damage kick timed itself from `v_dmg_time`, the kick's end, instead of the hit (now `damageTime` less `deltaTime`, `0x4cee35`); the horizontal bob moved the eye forward and `bg_bobMax` was read as an integer (`0x4cef6c`); the view weapon's `tag_camera` bone never moved the camera (`0x4cf730`); `BG_GetSpeed` counted vertical speed, so jumps bobbed (`0x4cfa44`).
 - A shellshock never shook the view (`cg_perturbations` empty; now the binary's table at `0x59e1e0`) and, once it did, mirrored it: `CG_PerturbCamera` passed three separate vectors as a 3×3 matrix (`0x4d2320`). It also crashed the Linux client: `SND_SetChannelVolumes` read `channelvol`, unset with no sound driver.
 - Left open: CoD2rev-Plus's vendored `BG_GetSpeed` had the same 3D length (server side); fixed there in `a335fc6`, it comes here with the next vendor sync, which also brings upstream's xanim rewrite. `scripts/view_weapon_test.py` checks each fix with its own `COD2_TRACE_VIEW*` trace.
 
