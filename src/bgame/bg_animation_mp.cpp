@@ -943,7 +943,7 @@ void BG_Player_DoControllers( DObj *obj, const gentity_s *ent, int *partBits, cl
 
 	BG_Player_DoControllersInternal(obj, &ent->s, partBits, ci, &info);
 
-	maxAngleChange = frametime * 0.36000001;
+	maxAngleChange = frametime * 0.36000001f;
 
 	for ( i = 0; i < CONTROL_ANGLES_COUNT; ++i )
 	{
@@ -952,7 +952,7 @@ void BG_Player_DoControllers( DObj *obj, const gentity_s *ent, int *partBits, cl
 	}
 
 	BG_LerpAngles(info.tag_origin_angles, maxAngleChange, ci->control.tag_origin_angles);
-	BG_LerpOffset(info.tag_origin_offset, frametime * 0.1, ci->control.tag_origin_offset);
+	BG_LerpOffset(info.tag_origin_offset, frametime * 0.1f, ci->control.tag_origin_offset);
 
 	DObjSetLocalTag(obj, partBits, scr_const.tag_origin, ci->control.tag_origin_offset, ci->control.tag_origin_angles);
 }
@@ -1112,7 +1112,8 @@ qboolean BG_IsProneAnim( const clientInfo_t *ci, int animNum )
 {
 	animation_t *anim = BG_GetAnimationForIndex(ci->clientNum, animNum & ~ANIM_TOGGLEBIT);
 
-	return anim->movetype & ((1<<ANIM_MT_IDLEPRONE)|(1<<ANIM_MT_WALKPRONE)|(1<<ANIM_MT_WALKPRONEBK));
+	// 1.3 0x4f97b0 answers 0 or 1, which BG_SetNewAnimation compares
+	return ( anim->movetype & ((1<<ANIM_MT_IDLEPRONE)|(1<<ANIM_MT_WALKPRONE)|(1<<ANIM_MT_WALKPRONEBK)) ) != 0;
 }
 
 /*
@@ -1120,13 +1121,14 @@ qboolean BG_IsProneAnim( const clientInfo_t *ci, int animNum )
 BG_IsCrouchingAnim
 =================
 */
-qboolean BG_IsCrouchingAnim( const clientInfo_t *ci, int animNum ) // not sure about this
+qboolean BG_IsCrouchingAnim( const clientInfo_t *ci, int animNum )
 {
 	animation_t *anim = BG_GetAnimationForIndex(ci->clientNum, animNum & ~ANIM_TOGGLEBIT);
 
-	return anim->movetype & ((1<<ANIM_MT_IDLECR)|(1<<ANIM_MT_WALKCR)|(1<<ANIM_MT_WALKCRBK)
-	                         |(1<<ANIM_MT_RUNCR)|(1<<ANIM_MT_RUNCRBK)|(1<<ANIM_MT_TURNRIGHTCR)
-	                         |(1<<ANIM_MT_TURNLEFTCR));
+	// 1.3 0x4f9750: idle and walk crouched and the crouched stumbles, not
+	// the crouched runs and turns
+	return ( anim->movetype & ((1LL<<ANIM_MT_IDLECR)|(1LL<<ANIM_MT_WALKCR)|(1LL<<ANIM_MT_WALKCRBK)
+	                           |(1LL<<ANIM_MT_STUMBLE_CROUCH_FORWARD)|(1LL<<ANIM_MT_STUMBLE_CROUCH_BACKWARD)) ) != 0;
 }
 
 /*
@@ -1328,26 +1330,27 @@ void BG_ParseCommands( const char **input, animScriptItem_t *scriptItem, animScr
 						scriptData->animations[command->animIndex[partIndex]].flags |= 2;
 					}
 
+					// the item's STRAFING condition marks a strafe left or right
+					// animation; the first one only (1.3 0x4f7f54)
 					for ( int i = 0; i < scriptItem->numConditions; i++ )
 					{
-						switch ( scriptItem->conditions[i].index )
+						if ( scriptItem->conditions[i].index != ANIM_COND_STRAFING )
 						{
-						case ANIM_COND_STRAFING:
+							continue;
+						}
+
+						switch ( scriptItem->conditions[i].value[0] )
+						{
+						case 1:
+							scriptData->animations[command->animIndex[partIndex]].flags |= 0x10;
+							break;
+						case 2:
+							scriptData->animations[command->animIndex[partIndex]].flags |= 0x20;
 							break;
 						default:
-							switch ( scriptItem->conditions[i].value[0] )
-							{
-							case 1:
-								scriptData->animations[command->animIndex[partIndex]].flags |= 0x10;
-								break;
-							case 2:
-								scriptData->animations[command->animIndex[partIndex]].flags |= 0x20;
-								break;
-							default:
-								break;
-							}
 							break;
 						}
+						break;
 					}
 				}
 
@@ -1822,10 +1825,10 @@ void BG_SwingAngles( float destination,  float swingTolerance, float clampTolera
 	// modify the speed depending on the delta
 	// so it doesn't seem so linear
 	swing = AngleSubtract( destination, *angle );
-	scale = I_fabs( swing ) * 0.050000001;
-	if ( scale < 0.5 )
+	scale = I_fabs( swing ) * 0.050000001f;
+	if ( scale < 0.5f )
 	{
-		scale = 0.5;
+		scale = 0.5f;
 	}
 	// swing towards the destination angle
 	if ( swing >= 0 )
@@ -1980,7 +1983,7 @@ void BG_PlayerAngles( const entityState_s *es, clientInfo_t *ci ) // not sure ab
 	}
 	else
 	{
-		vTorsoAngles[YAW] = moveDir * 0.30000001 + vHeadAngles[YAW];
+		vTorsoAngles[YAW] = moveDir * 0.30000001f + vHeadAngles[YAW];
 		clampTolerance = 90;
 	}
 
@@ -2047,14 +2050,14 @@ void BG_PlayerAngles( const entityState_s *es, clientInfo_t *ci ) // not sure ab
 	}
 	else if ( vHeadAngles[PITCH] <= 180 )
 	{
-		destination = vHeadAngles[0] * 0.60000002;
+		destination = vHeadAngles[0] * 0.60000002f;
 	}
 	else
 	{
-		destination = (vHeadAngles[0] + -360.0) * 0.60000002;
+		destination = (vHeadAngles[0] + -360.0f) * 0.60000002f;
 	}
 
-	BG_SwingAngles(destination, 0, 45, 0.15000001, &ci->torso.pitchAngle, &ci->torso.pitching);
+	BG_SwingAngles(destination, 0, 45, 0.15000001f, &ci->torso.pitchAngle, &ci->torso.pitching);
 }
 
 /*
@@ -2388,14 +2391,14 @@ void BG_SetNewAnimation( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qb
 				cycleLen = 1000;
 			}
 
-			fStartTime = (level_bgs.time % cycleLen) / cycleLen + ci->clientNum * 0.36000001;
+			fStartTime = (float)(level_bgs.time % cycleLen) / (float)cycleLen + (float)ci->clientNum * 0.36000001f;
 			fStartTime = fStartTime - (int)fStartTime;
 		}
 	}
 
 	if ( oldanim )
 	{
-		XAnimClearGoalWeight(pAnimTree, oldAnimNum & ~ANIM_TOGGLEBIT, lf->animationTime * 0.001);
+		XAnimClearGoalWeight(pAnimTree, oldAnimNum & ~ANIM_TOGGLEBIT, lf->animationTime * 0.001f);
 	}
 
 	if ( animIndex )
@@ -2415,24 +2418,24 @@ void BG_SetNewAnimation( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qb
 
 			if ( bNew )
 			{
-				XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0, lf->animationTime * 0.001, 1.0, 0, 0, 0);
+				XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0f, lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
 			}
 			else
 			{
-				XAnimSetCompleteGoalWeightKnobAll(pAnimTree, animIndex, level_bgs.animData.generic_human.root.index, 1.0, 0.0, 1.0, 0, 0);
-				XAnimSetTime(pAnimTree, animIndex, 1.0);
+				XAnimSetCompleteGoalWeightKnobAll(pAnimTree, animIndex, level_bgs.animData.generic_human.root.index, 1.0f, 0.0f, 1.0f, 0, 0);
+				XAnimSetTime(pAnimTree, animIndex, 1.0f);
 			}
 		}
 		else
 		{
 			bNoWeight = qfalse;
 
-			if ( anim->moveSpeed != 0.0 )
+			if ( anim->moveSpeed != 0.0f )
 			{
-				bNoWeight = XAnimGetWeight(pAnimTree, animIndex) == 0.0;
+				bNoWeight = XAnimGetWeight(pAnimTree, animIndex) == 0.0f;
 			}
 
-			XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0, lf->animationTime * 0.001, 1.0, 0, anim->noteType, lf != &ci->legs);
+			XAnimSetCompleteGoalWeight(pAnimTree, animIndex, 1.0f, lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, lf != &ci->legs);
 
 			if ( bNoWeight )
 			{
@@ -2442,14 +2445,14 @@ void BG_SetNewAnimation( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qb
 
 		if ( lf != &ci->legs )
 		{
-			XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.torsoAnim, 1.0, lf->animationTime * 0.001, 1.0, 0, anim->noteType, 0);
-			XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.legsAnim, 0.0099999998, lf->animationTime * 0.001, 1.0, 0, anim->noteType, 0);
+			XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.torsoAnim, 1.0f, lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, 0);
+			XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.legsAnim, 0.0099999998f, lf->animationTime * 0.001f, 1.0f, 0, anim->noteType, 0);
 		}
 	}
 	else if ( lf != &ci->legs )
 	{
-		XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.torsoAnim, 0.0, lf->animationTime * 0.001, 1.0, 0, 0, 0);
-		XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.legsAnim, 1.0, lf->animationTime * 0.001, 1.0, 0, 0, 0);
+		XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.torsoAnim, 0.0f, lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
+		XAnimSetCompleteGoalWeight(pAnimTree, level_bgs.animData.animScriptData.legsAnim, 1.0f, lf->animationTime * 0.001f, 1.0f, 0, 0, 0);
 	}
 }
 
@@ -2560,7 +2563,7 @@ void BG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 
 	if ( anim->moveSpeed == 0 || !lf->oldFrameSnapshotTime )
 	{
-		lf->animSpeedScale = 1.0;
+		lf->animSpeedScale = 1.0f;
 		lf->oldFrameSnapshotTime = level_bgs.latestSnapshotTime;
 
 		VectorCopy(es->pos.trBase, lf->oldFramePos);
@@ -2576,51 +2579,51 @@ void BG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 			moveSpeed = Vec3Distance(lf->oldFramePos, es->pos.trBase);
 		}
 
-		lf->animSpeedScale = (moveSpeed / ((level_bgs.latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001)) / anim->moveSpeed;
+		lf->animSpeedScale = (moveSpeed / ((level_bgs.latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001f)) / anim->moveSpeed;
 		lf->oldFrameSnapshotTime = level_bgs.latestSnapshotTime;
 
 		VectorCopy(es->pos.trBase, lf->oldFramePos);
 
-		if ( lf->animSpeedScale >= 0.1 )
+		if ( lf->animSpeedScale >= 0.1f )
 		{
-			if ( lf->animSpeedScale > 2.0 )
+			if ( lf->animSpeedScale > 2.0f )
 			{
 				if ( anim->flags & 2 )
 				{
-					if ( lf->animSpeedScale > 4.0 )
+					if ( lf->animSpeedScale > 4.0f )
 					{
-						lf->animSpeedScale = 4.0;
+						lf->animSpeedScale = 4.0f;
 					}
 				}
-				else if ( anim->moveSpeed <= 150.0 )
+				else if ( anim->moveSpeed <= 150.0f )
 				{
-					if ( anim->moveSpeed >= 20.0 )
+					if ( anim->moveSpeed >= 20.0f )
 					{
-						fScaleMax = 3.0 - (anim->moveSpeed - 20.0) / 130.0;
+						fScaleMax = 3.0f - (anim->moveSpeed - 20.0f) * 0.0076923077f; // 1 / 130, as 1.3 multiplies
 
 						if ( lf->animSpeedScale > fScaleMax )
 						{
 							lf->animSpeedScale = fScaleMax;
 						}
 					}
-					else if ( lf->animSpeedScale > 3.0 )
+					else if ( lf->animSpeedScale > 3.0f )
 					{
-						lf->animSpeedScale = 3.0;
+						lf->animSpeedScale = 3.0f;
 					}
 				}
 				else
 				{
-					lf->animSpeedScale = 2.0;
+					lf->animSpeedScale = 2.0f;
 				}
 			}
 		}
-		else if ( lf->animSpeedScale < 0.0099999998 && bNewAnim )
+		else if ( lf->animSpeedScale < 0.0099999998f && bNewAnim )
 		{
 			lf->animSpeedScale = 0;
 		}
 		else
 		{
-			lf->animSpeedScale = 0.1;
+			lf->animSpeedScale = 0.1f;
 		}
 	}
 
