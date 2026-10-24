@@ -40,7 +40,7 @@ Checks it runs (each a script in `scripts/`):
 | `check_bridge_symbols.py` | dedicated server, client | a bridge import calls a data symbol |
 | `check_bgame_names.py` | Linux client | a plain bgame name is left where `eng_` should apply |
 | `bgame_plus_consts.py --check` | Linux | `bg_plus_consts.h` differs from CoD2rev-Plus's values |
-| `check_c_decls.py` | Linux | a call's types differ from the definition's (DWARF) |
+| `check_c_decls.py` | Linux | a call's types differ from the definition's (DWARF); pointers by what they point to (float, integer, struct; `void *` matches any) |
 | `check_var_sizes.py` | Linux | a global is used as larger than the binary defines it |
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,

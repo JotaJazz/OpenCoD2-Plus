@@ -9,6 +9,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 - The three CoD2rev-Plus differences from 1.3 left open by the previous stage are fixed there (`1094533`, user-approved, pushed with `0267dff`) and vendored: strafe flags from STRAFING only (`0x4f7f54`), crouch and prone masks as 1.3's and answering 0 or 1 (`0x4f9750`, `0x4f97b0`; a bit mask made two prone anims look like a stance change), 1.3's float constants. Found on the way: `BG_SetNewAnimation` divided the start time as integers, so every looping anim started at frame 0 (`0x4f9adb`).
 - `scripts/anim_script_test.py` also compares the parsed animations (flags, movetype, duration, speed): 55 of 301 differed on `0267dff`, none now; the engine and the server parse and pick alike.
+- Playing CTF with bots, the Windows client crashed whenever a grenade exploded in view: with a dynamic point light `R_DrawScene` clears alpha and stencil with a full-screen quad, which `r_scene.c` declared with color and material swapped (upstream code), so `colorWhite` was drawn as a material. Found by a new crash-report line (the last surface begun and its caller); `check_c_decls.py` now compares pointer parameters by what they point to, which caught it and ten harmless casts (allowlisted).
 
 ## 2026-10-24 — animation script from CoD2rev-Plus, vendor sync 0267dff
 
