@@ -782,11 +782,11 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 
 			if ( vTorsoAngles[PITCH] > 0 )
 			{
-				vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.5;
+				vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.5f;
 			}
 			else
 			{
-				vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.25;
+				vTorsoAngles[PITCH] = vTorsoAngles[PITCH] * 0.25f;
 			}
 		}
 	}
@@ -797,7 +797,7 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 	VectorSet(tag_origin_offset, 0, 0, es->fTorsoHeight);
 	fLeanFrac = GetLeanFraction(ci->lerpLean);
 
-	vTorsoAngles[ROLL] = fLeanFrac * 50.0 * 0.92500001;
+	vTorsoAngles[ROLL] = fLeanFrac * 46.25f /* 50 * 0.925, folded as 1.3 */;
 	vHeadAngles[ROLL] = vTorsoAngles[ROLL];
 
 	if ( fLeanFrac != 0 )
@@ -806,22 +806,22 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 		{
 			if ( fLeanFrac > 0 )
 			{
-				tag_origin_offset[YAW] = -fLeanFrac * 2.5 + tag_origin_offset[YAW];
+				tag_origin_offset[YAW] = -fLeanFrac * 2.5f + tag_origin_offset[YAW];
 			}
 			else
 			{
-				tag_origin_offset[YAW] = -fLeanFrac * 12.5 + tag_origin_offset[YAW];
+				tag_origin_offset[YAW] = -fLeanFrac * 12.5f + tag_origin_offset[YAW];
 			}
 		}
 		else
 		{
 			if ( fLeanFrac > 0 )
 			{
-				tag_origin_offset[YAW] = -fLeanFrac * 2.5 + tag_origin_offset[YAW];
+				tag_origin_offset[YAW] = -fLeanFrac * 2.5f + tag_origin_offset[YAW];
 			}
 			else
 			{
-				tag_origin_offset[YAW] = -fLeanFrac * 5.0 + tag_origin_offset[YAW];
+				tag_origin_offset[YAW] = -fLeanFrac * 5.0f + tag_origin_offset[YAW];
 			}
 		}
 	}
@@ -835,24 +835,24 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 	{
 		if ( fLeanFrac != 0 )
 		{
-			vHeadAngles[ROLL] = vHeadAngles[ROLL] * 0.5;
+			vHeadAngles[ROLL] = vHeadAngles[ROLL] * 0.5f;
 		}
 
 		tag_origin_angles[PITCH] = tag_origin_angles[PITCH] + es->fTorsoPitch;
 
-		FastSinCos(vTorsoAngles[YAW] * DEG_TO_RAD, &s, &c);
+		FastSinCos(vTorsoAngles[YAW] * ( float )DEG_TO_RAD, &s, &c);
 
-		tag_origin_offset[PITCH] = (1.0 - c) * -24.0 + tag_origin_offset[PITCH];
-		tag_origin_offset[YAW] = s * -12.0 + tag_origin_offset[YAW];
+		tag_origin_offset[PITCH] = (1.0f - c) * -24.0f + tag_origin_offset[PITCH];
+		tag_origin_offset[YAW] = s * -12.0f + tag_origin_offset[YAW];
 
 		if ( fLeanFrac * s > 0 )
 		{
-			tag_origin_offset[YAW] = -fLeanFrac * (1.0 - c) * 16.0 + tag_origin_offset[YAW];
+			tag_origin_offset[YAW] = -fLeanFrac * (1.0f - c) * 16.0f + tag_origin_offset[YAW];
 		}
 
 		angles[CONTROL_ANGLES_BACK_LOW][PITCH] = 0;
-		angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[ROLL] * -1.2;
-		angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.30000001;
+		angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[ROLL] * -1.2f;
+		angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.30000001f;
 
 		if ( es->fTorsoPitch != 0 || es->fWaistPitch != 0 )
 		{
@@ -860,12 +860,12 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 		}
 
 		angles[CONTROL_ANGLES_BACK_MID][PITCH] = 0;
-		angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.1 - vTorsoAngles[ROLL] * 0.2;
-		angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.2;
+		angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.1f - vTorsoAngles[ROLL] * 0.2f;
+		angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.2f;
 
 		angles[CONTROL_ANGLES_BACK_UP][PITCH] = vTorsoAngles[PITCH];
-		angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.80000001 + vTorsoAngles[ROLL];
-		angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.2;
+		angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.80000001f + vTorsoAngles[ROLL];
+		angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.2f;
 	}
 	else
 	{
@@ -875,44 +875,44 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 			{
 				if ( fLeanFrac <= 0 )
 				{
-					vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25;
-					vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25;
+					vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25f;
+					vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25f;
 				}
 			}
 			else
 			{
-				vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25;
-				vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25;
+				vTorsoAngles[ROLL] = vTorsoAngles[ROLL] * 1.25f;
+				vHeadAngles[ROLL] = vHeadAngles[ROLL] * 1.25f;
 			}
 		}
 
-		tag_origin_angles[ROLL] = fLeanFrac * 50.0 * 0.075000003 + tag_origin_angles[ROLL];
+		tag_origin_angles[ROLL] = fLeanFrac * 3.7500002f /* 50 * 0.075, folded as 1.3 */ + tag_origin_angles[ROLL];
 
-		angles[CONTROL_ANGLES_BACK_LOW][PITCH] = vTorsoAngles[PITCH] * 0.2;
-		angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[YAW] * 0.40000001;
-		angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.5;
+		angles[CONTROL_ANGLES_BACK_LOW][PITCH] = vTorsoAngles[PITCH] * 0.2f;
+		angles[CONTROL_ANGLES_BACK_LOW][YAW] = vTorsoAngles[YAW] * 0.40000001f;
+		angles[CONTROL_ANGLES_BACK_LOW][ROLL] = vTorsoAngles[ROLL] * 0.5f;
 
 		if ( es->fTorsoPitch != 0 || es->fWaistPitch != 0 )
 		{
 			angles[CONTROL_ANGLES_BACK_LOW][PITCH] = AngleSubtract(es->fTorsoPitch, es->fWaistPitch) + angles[CONTROL_ANGLES_BACK_LOW][PITCH];
 		}
 
-		angles[CONTROL_ANGLES_BACK_MID][PITCH] = vTorsoAngles[PITCH] * 0.30000001;
-		angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.40000001;
-		angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.5;
+		angles[CONTROL_ANGLES_BACK_MID][PITCH] = vTorsoAngles[PITCH] * 0.30000001f;
+		angles[CONTROL_ANGLES_BACK_MID][YAW] = vTorsoAngles[YAW] * 0.40000001f;
+		angles[CONTROL_ANGLES_BACK_MID][ROLL] = vTorsoAngles[ROLL] * 0.5f;
 
-		angles[CONTROL_ANGLES_BACK_UP][PITCH] = vTorsoAngles[PITCH] * 0.5;
-		angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.2;
-		angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.60000002;
+		angles[CONTROL_ANGLES_BACK_UP][PITCH] = vTorsoAngles[PITCH] * 0.5f;
+		angles[CONTROL_ANGLES_BACK_UP][YAW] = vTorsoAngles[YAW] * 0.2f;
+		angles[CONTROL_ANGLES_BACK_UP][ROLL] = vTorsoAngles[ROLL] * -0.60000002f;
 	}
 
-	angles[CONTROL_ANGLES_NECK][PITCH] = vHeadAngles[PITCH] * 0.30000001;
-	angles[CONTROL_ANGLES_NECK][YAW] = vHeadAngles[YAW] * 0.30000001;
+	angles[CONTROL_ANGLES_NECK][PITCH] = vHeadAngles[PITCH] * 0.30000001f;
+	angles[CONTROL_ANGLES_NECK][YAW] = vHeadAngles[YAW] * 0.30000001f;
 	angles[CONTROL_ANGLES_NECK][ROLL] = 0;
 
-	angles[CONTROL_ANGLES_HEAD][PITCH] = vHeadAngles[PITCH] * 0.69999999;
-	angles[CONTROL_ANGLES_HEAD][YAW] = vHeadAngles[YAW] * 0.69999999;
-	angles[CONTROL_ANGLES_HEAD][ROLL] = vHeadAngles[ROLL] * -0.30000001;
+	angles[CONTROL_ANGLES_HEAD][PITCH] = vHeadAngles[PITCH] * 0.69999999f;
+	angles[CONTROL_ANGLES_HEAD][YAW] = vHeadAngles[YAW] * 0.69999999f;
+	angles[CONTROL_ANGLES_HEAD][ROLL] = vHeadAngles[ROLL] * -0.30000001f;
 
 	VectorClear(angles[CONTROL_ANGLES_PELVIS]);
 
