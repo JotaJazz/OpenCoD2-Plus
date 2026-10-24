@@ -1483,6 +1483,110 @@ void gsc_player_isallowingspectators(scr_entref_t id)
 	stackPushBool(!libcodClients[id.entnum].notAllowingSpectators);
 }
 
+// The authorize server's answer for the player's CD key ("KEY_IS_GOOD",
+// "INVALID_CDKEY", "BANNED_CDKEY"...), or "" when it was not asked (LAN,
+// sv_noAuthorize, a timeout), as zk_libcod
+void gsc_player_getauthorizationstatus(scr_entref_t id)
+{
+	if (!gsc_player_isclient(id, "gsc_player_getauthorizationstatus"))
+		return;
+
+	stackPushString(libcodClients[id.entnum].authorizationStatus);
+}
+
+// With 1, a use (pick up a weapon, plant, use a trigger) happens when the
+// player lets go of the use button instead of when it is pressed
+void gsc_player_setactivateonusebuttonrelease(scr_entref_t id)
+{
+	int value;
+
+	if (!stackGetParams("i", &value))
+	{
+		stackError("gsc_player_setactivateonusebuttonrelease() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!gsc_player_isclient(id, "gsc_player_setactivateonusebuttonrelease"))
+		return;
+
+	libcodClients[id.entnum].activateOnUseButtonRelease = value != 0;
+	libcodClients[id.entnum].heldUseButton = false;
+
+	stackPushBool(qtrue);
+}
+
+// lookAtKiller(inflictor, attacker): turns a dead player's view to the
+// killer as the engine does on death; the arguments are entity numbers
+void gsc_player_lookatkiller(scr_entref_t id)
+{
+	int inflictor, attacker;
+
+	if (!stackGetParams("ii", &inflictor, &attacker))
+	{
+		stackError("gsc_player_lookatkiller() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!gsc_player_isclient(id, "gsc_player_lookatkiller"))
+		return;
+
+	if (inflictor < 0 || inflictor >= MAX_GENTITIES || !g_entities[inflictor].r.inuse
+	        || attacker < 0 || attacker >= MAX_GENTITIES || !g_entities[attacker].r.inuse)
+	{
+		stackError("gsc_player_lookatkiller() inflictor or attacker is not an entity in use");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *self = &g_entities[id.entnum];
+	if (!self->client)
+	{
+		stackError("gsc_player_lookatkiller() entity %i is not connected", id.entnum);
+		stackPushUndefined();
+		return;
+	}
+
+	LookAtKiller(self, &g_entities[inflictor], &g_entities[attacker]);
+	stackPushBool(qtrue);
+}
+
+// playScriptAnimation(event, isContinue, force): plays an animation script
+// event (scriptAnimEventTypes_t) on the player's model; returns the
+// animation's duration, or -1
+void gsc_player_playscriptanimation(scr_entref_t id)
+{
+	int event, isContinue, force;
+
+	if (!stackGetParams("iii", &event, &isContinue, &force))
+	{
+		stackError("gsc_player_playscriptanimation() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (!gsc_player_isclient(id, "gsc_player_playscriptanimation"))
+		return;
+
+	if (event < 0 || event >= NUM_ANIM_EVENTTYPES)
+	{
+		stackError("gsc_player_playscriptanimation() %i is not an animation script event", event);
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *self = &g_entities[id.entnum];
+	if (!self->client)
+	{
+		stackError("gsc_player_playscriptanimation() entity %i is not connected", id.entnum);
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushInt(BG_AnimScriptEvent(&self->client->ps, (scriptAnimEventTypes_t)event, isContinue != 0, force != 0));
+}
+
 // Sends one configstring to this player only. The next gamestate (map change,
 // reconnect) brings back the value every player has.
 void gsc_player_setconfigstringforplayer(scr_entref_t id)

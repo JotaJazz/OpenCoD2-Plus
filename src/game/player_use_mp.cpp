@@ -27,6 +27,33 @@ void Player_UpdateActivate( gentity_t *ent )
 		return;
 	}
 
+#ifdef LIBCOD
+	// setActivateOnUseButtonRelease: the use happens when the button is let go
+	libcodClient_t *libcodClient = &libcodClients[ent->s.number];
+	if ( libcodClient->activateOnUseButtonRelease )
+	{
+		if ( ent->client->latched_buttons & ( BUTTON_USE | BUTTON_USERELOAD ) )
+		{
+			libcodClient->heldUseButton = true;
+		}
+		else if ( !( ent->client->buttons & ( BUTTON_USE | BUTTON_USERELOAD ) ) && libcodClient->heldUseButton )
+		{
+			useSucceeded = Player_ActivateCmd(ent);
+			libcodClient->heldUseButton = false;
+		}
+
+		if ( ent->client->useHoldEntity != ENTITYNUM_NONE || useSucceeded )
+		{
+			Player_ActivateHoldCmd(ent);
+		}
+		else if ( ent->client->latched_buttons & BUTTON_USERELOAD )
+		{
+			ent->client->ps.pm_flags |= PMF_RELOAD;
+		}
+		return;
+	}
+#endif
+
 	if ( ent->client->latched_buttons & ( BUTTON_USE | BUTTON_USERELOAD ) )
 	{
 		useSucceeded = Player_ActivateCmd(ent);

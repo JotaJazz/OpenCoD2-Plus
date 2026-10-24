@@ -184,6 +184,8 @@ void SV_ExecuteRemoteCommand(netadr_t from, const char *command);
 void InitLibcodCallbacks();
 void Libcod_SpawnServerConfigstrings();
 void Libcod_MinimizeSysteminfo();
+void Libcod_SetAuthorizationState(int challengeIndex, const char *state);
+void Libcod_ConnectAuthorizationState(int clientNum, int challengeIndex);
 const char *Libcod_CallbacksScript();
 const char *Libcod_GametypesFolder();
 int Libcod_LoadLevelScript(const char *mapname);

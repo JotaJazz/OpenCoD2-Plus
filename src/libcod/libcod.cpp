@@ -861,6 +861,21 @@ void Libcod_FreeEntity(int entityNum)
 
 // Called when a client slot is freed: what scripts set for the old player
 // must not carry over to the next one in that slot
+// The authorize server's answer per challenge, for getAuthorizationStatus
+static char authorizationStates[MAX_CHALLENGES][32];
+
+void Libcod_SetAuthorizationState(int challengeIndex, const char *state)
+{
+	I_strncpyz(authorizationStates[challengeIndex], state, sizeof(authorizationStates[0]));
+}
+
+// challengeIndex is -1 for a client that had no challenge (local)
+void Libcod_ConnectAuthorizationState(int clientNum, int challengeIndex)
+{
+	I_strncpyz(libcodClients[clientNum].authorizationStatus, challengeIndex >= 0 ? authorizationStates[challengeIndex] : "",
+	           sizeof(libcodClients[clientNum].authorizationStatus));
+}
+
 void Libcod_ResetClient(int clientNum)
 {
 	libcodClient_t *client = &libcodClients[clientNum];

@@ -433,6 +433,9 @@ void SV_GetChallenge( netadr_t from )
 		challenge->time = svs.time;
 		challenge->connected = qfalse;
 		i = oldest;
+#ifdef LIBCOD
+		Libcod_SetAuthorizationState(i, "");
+#endif
 	}
 
 	// if they are on a lan address, send the challengeResponse immediately
@@ -665,6 +668,9 @@ void SV_DirectConnect( netadr_t from )
 	int count;
 	int guid;
 	int ping;
+#ifdef LIBCOD
+	int authorizationChallenge = -1;
+#endif
 
 	Com_DPrintf("SV_DirectConnect()\n");
 	Q_strncpyz( userinfo, Cmd_Argv( 1 ), sizeof( userinfo ) );
@@ -717,6 +723,9 @@ void SV_DirectConnect( netadr_t from )
 				if ( challenge == svs.challenges[i].challenge )
 				{
 					guid = svs.challenges[i].guid;
+#ifdef LIBCOD
+					authorizationChallenge = i;
+#endif
 					break;
 				}
 			}
@@ -861,6 +870,10 @@ gotnewcl:
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof( newcl->userinfo ) );
 
+#ifdef LIBCOD
+	Libcod_ConnectAuthorizationState(clientNum, authorizationChallenge);
+#endif
+
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = ClientConnect(clientNum, newcl->scriptId);
 
@@ -974,6 +987,11 @@ void SV_AuthorizeIpPacket( netadr_t from )
 
 	s = SV_Cmd_Argv( 2 );
 	r = SV_Cmd_Argv( 3 );
+
+#ifdef LIBCOD
+	// for getAuthorizationStatus, before sv_cracked changes it
+	Libcod_SetAuthorizationState(i, r);
+#endif
 
 #ifdef LIBCOD
 	if (sv_cracked->current.boolean)

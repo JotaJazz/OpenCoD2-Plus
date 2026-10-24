@@ -29,6 +29,13 @@ typedef struct
 	bool noEarthquakes;
 	bool silent;
 
+	// setActivateOnUseButtonRelease: use when the button is let go
+	bool activateOnUseButtonRelease;
+	bool heldUseButton;
+
+	// the authorize server's answer for this player's CD key
+	char authorizationStatus[32];
+
 	// setCollisionTeam: which players this one collides with
 	int collisionTeam;
 
