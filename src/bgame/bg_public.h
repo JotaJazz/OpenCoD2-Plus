@@ -1271,7 +1271,7 @@ enum EffectiveStance
 
 #define PRONE_FEET_DIST_TURNED 45
 
-#define MIN_WALK_NORMAL 0.69999999
+#define MIN_WALK_NORMAL 0.7f
 
 #define STEPSIZE        18
 #define STEPSIZE_PRONE  10
