@@ -129,7 +129,7 @@ void RegisterLibcodDvars()
 	sv_graphAstarMaxIterations = Dvar_RegisterInt("sv_graphAstarMaxIterations", 0, 0, 100000, DVAR_CHANGEABLE_RESET);
 	sv_graphAstarWeight = Dvar_RegisterFloat("sv_graphAstarWeight", 1.0, 1.0, 2.0, DVAR_CHANGEABLE_RESET);
 	sv_graphMaxGraphs = Dvar_RegisterInt("sv_graphMaxGraphs", 8, 1, 64, DVAR_CHANGEABLE_RESET);
-	sv_graphMaxNodes = Dvar_RegisterInt("sv_graphMaxNodes", 8192, 64, 65535, DVAR_CHANGEABLE_RESET);
+	sv_graphMaxNodes = Dvar_RegisterInt("sv_graphMaxNodes", 16384, 64, 65535, DVAR_CHANGEABLE_RESET);
 #endif
 }
 
