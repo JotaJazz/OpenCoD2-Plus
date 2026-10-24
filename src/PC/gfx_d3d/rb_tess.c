@@ -1292,17 +1292,19 @@ void RB_TessEntity(const GfxEntity *re)
                 return;
 
             {
+                /* 1.3 0x1003fd90: one radius, w * 2 * height * (row . axis) */
                 float *orthoRow = (float *)&((GfxViewParms *)viewParms)->inverseViewProjectionMatrix;
+                vec3_t screenAxis;
                 int k;
                 screenHeight *= 2.0f;
                 for (k = 0; k < 3; k++)
-                    worldRadius[k] = screenHeight * orthoRow[0x10 / 4 + k];
+                    screenAxis[k] = screenHeight * orthoRow[0x10 / 4 + k];
 
                 {
                     float *viewRight = ((GfxViewParms *)viewParms)->axis[2];
-                    float dotRight = worldRadius[0] * viewRight[0] +
-                                     worldRadius[1] * viewRight[1] +
-                                     worldRadius[2] * viewRight[2];
+                    float dotRight = screenAxis[0] * viewRight[0] +
+                                     screenAxis[1] * viewRight[1] +
+                                     screenAxis[2] * viewRight[2];
                     dotRight *= w;
                     screenOffset[0] = dotRight;
                 }
