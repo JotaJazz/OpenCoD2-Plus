@@ -220,9 +220,22 @@ static void RB_X64TraceSampler(const char *stage, const Material *material, int 
 #endif
 }
 
+/* the last surface begun and who began it, for the crash report */
+volatile struct RbBeginDbg {
+    const void *material;
+    const void *caller;
+    int techType;
+    int cmd;
+} g_rb_begin_dbg;
+volatile int g_rb_cur_cmd;
+
 void RB_BeginSurface(const Material *material, MaterialTechniqueType techType, int lmapIndex)
 {
     char *tess = RB_TessBase();
+    g_rb_begin_dbg.material = material;
+    g_rb_begin_dbg.caller = __builtin_return_address(0);
+    g_rb_begin_dbg.techType = techType;
+    g_rb_begin_dbg.cmd = g_rb_cur_cmd;
     (*(int *)&((materialCommands_t *)tess)->declType) = 0;
     (*(int *)&((materialCommands_t *)tess)->optimizedVertexSource) = 0;
     ((materialCommands_t *)tess)->indexCount = 0;

@@ -459,6 +459,21 @@ static void cr_win_backtrace(int fd, CONTEXT *ctxIn)
                 g_rb_draw_dbg.material, g_rb_draw_dbg.iteration, g_rb_draw_dbg.drawSurfCount,
                 g_rb_draw_dbg.sort);
         { extern volatile int g_rigid_step; cr_emit(fd, "rigid draw step=%d (1=strm 2=push 3=wmtx 4=drawtech 5=done)\n", g_rigid_step); }
+        {
+            extern volatile struct RbBeginDbg { const void *material; const void *caller; int techType; int cmd; } g_rb_begin_dbg;
+            extern volatile int g_rb_cur_cmd;
+            cr_emit(fd, "last surface begun: material=%p techType=%d in cmd %d by %p (current cmd %d)\n",
+                    g_rb_begin_dbg.material, g_rb_begin_dbg.techType, g_rb_begin_dbg.cmd, g_rb_begin_dbg.caller, g_rb_cur_cmd);
+            /* the fault read material+0x38, so its first 0x40 bytes are mapped */
+            if (g_rb_begin_dbg.material) {
+                const unsigned int *m = (const unsigned int *)g_rb_begin_dbg.material;
+                int k;
+                cr_emit(fd, "material words:");
+                for (k = 0; k < 16; ++k)
+                    cr_emit(fd, " %08x", m[k]);
+                cr_emit(fd, "\n");
+            }
+        }
         { extern volatile int g_lastdraw[6]; cr_emit(fd, "last DrawIndexedPrim: baseVertex=%d minIndex=%d numVerts=%d startIndex=%d primCount=%d (#%d)\n\n",
                 g_lastdraw[0], g_lastdraw[1], g_lastdraw[2], g_lastdraw[3], g_lastdraw[4], g_lastdraw[5]); }
     }

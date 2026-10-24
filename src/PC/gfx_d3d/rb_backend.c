@@ -3246,6 +3246,7 @@ void RB_ExecuteRenderCommands(const void *data)
                 Com_Printf("[cmdexec] #%d id=%u bytes=%u\n", execTraceCount, h->id, h->byteCount);
                 ++execTraceCount;
             }
+            { extern volatile int g_rb_cur_cmd; g_rb_cur_cmd = cmd; }
             RB_RenderCommandTable[cmd](&execState);
             cmd = *(unsigned short *)execState.cmd;
         }
