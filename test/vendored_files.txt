@@ -1,5 +1,5 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: b60ab35
+# revision: 0267dff
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
@@ -171,6 +171,7 @@ src/libcod/gsc_utils.hpp
 src/libcod/gsc_weapons.cpp
 src/libcod/gsc_weapons.hpp
 src/libcod/libcod.cpp
+src/libcod/libcod_callbacks.cpp
 src/libcod/libcod_client.h
 src/libcod/libcod_physics.cpp
 src/libcod/libcod_sound.cpp
