@@ -1095,12 +1095,12 @@ void SV_Frame( int msec )
 	}
 
 	// this can happen considerably earlier when lots of clients play and the map doesn't change
+	// SV_SpawnServer resets the snapshot counters below, so reloading the map
+	// is enough; a shutdown would drop every player
 	if ( svs.nextSnapshotEntities >= 0x7FFFFFFE - svs.numSnapshotEntities )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15numSnapshotEntities wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "numSnapshotEntities wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1108,9 +1108,7 @@ void SV_Frame( int msec )
 	if ( svs.nextCachedSnapshotEntities >= 0x7FFFFFFE - CACHED_SNAPSHOT_ENTITY_SIZE )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15nextCachedSnapshotEntities wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "nextCachedSnapshotEntities wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1118,9 +1116,7 @@ void SV_Frame( int msec )
 	if ( svs.nextCachedSnapshotClients >= 0x7FFFFFFE - CACHED_SNAPSHOT_CLIENT_SIZE )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15nextCachedSnapshotClients wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "nextCachedSnapshotClients wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1128,9 +1124,7 @@ void SV_Frame( int msec )
 	if ( svs.nextArchivedSnapshotFrames >= 0x7FFFFFFE - NUM_ARCHIVED_FRAMES )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15nextArchivedSnapshotFrames wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "nextArchivedSnapshotFrames wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1138,9 +1132,7 @@ void SV_Frame( int msec )
 	if ( svs.nextArchivedSnapshotBuffer >= 0x7FFFFFFE - ARCHIVED_SNAPSHOT_BUFFER_SIZE )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15nextArchivedSnapshotBuffer wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "nextArchivedSnapshotBuffer wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1148,9 +1140,7 @@ void SV_Frame( int msec )
 	if ( svs.nextCachedSnapshotFrames >= 0x7FFFFFFE - NUM_CACHED_FRAMES )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15svs.nextCachedSnapshotFrames wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "svs.nextCachedSnapshotFrames wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
@@ -1158,9 +1148,7 @@ void SV_Frame( int msec )
 	if ( svs.nextSnapshotClients >= 0x7FFFFFFE - svs.numSnapshotClients )
 	{
 		Q_strncpyz( mapname, sv_mapname->current.string, MAX_QPATH );
-		Com_Shutdown( "EXE_SERVERRESTARTMISC\x15numSnapshotClients wrapping" );
-		// Com_Restart( );
-		// TTimo see above
+		Com_Printf( "numSnapshotClients wrapping, reloading the map\n" );
 		Cbuf_AddText( va( "map %s\n", mapname ) );
 		return;
 	}
