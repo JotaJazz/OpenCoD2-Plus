@@ -1299,8 +1299,8 @@ qboolean Cmd_FollowCycle_f( gentity_t *ent, int dir )
 		}
 
 #ifdef LIBCOD
-		// nor a player a script closed to spectators
-		if ( libcodClients[clientnum].notAllowingSpectators )
+		// nor a player a script closed to spectators, nor bots with g_spectateBots 0
+		if ( libcodClients[clientnum].notAllowingSpectators || ( svs.clients[clientnum].bIsTestClient && !g_spectateBots->current.boolean ) )
 		{
 			continue;
 		}

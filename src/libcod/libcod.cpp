@@ -14,6 +14,13 @@ dvar_t *sv_kickbots;
 dvar_t *g_safePrecache;
 dvar_t *g_reservedModels;
 dvar_t *logErrors;
+dvar_t *g_corpseHit;
+dvar_t *g_spectateBots;
+dvar_t *g_logPickup;
+dvar_t *sv_botKickMessages;
+dvar_t *sv_noAuthorize;
+dvar_t *sv_authorizeTimeout;
+dvar_t *sv_limitLocalRcon;
 
 // set while the map, gametype main and startupgametype scripts run, where
 // g_reservedModels does not apply
@@ -110,6 +117,14 @@ void RegisterLibcodDvars()
 	sv_kickbots = Dvar_RegisterBool("sv_kickbots", false, DVAR_CHANGEABLE_RESET);
 	logErrors = Dvar_RegisterBool("logErrors", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	Libcod_RegisterCallbackDvars();
+
+	g_corpseHit = Dvar_RegisterBool("g_corpseHit", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	g_spectateBots = Dvar_RegisterBool("g_spectateBots", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	g_logPickup = Dvar_RegisterBool("g_logPickup", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_noAuthorize = Dvar_RegisterBool("sv_noAuthorize", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", AUTHORIZE_TIMEOUT, 0, 1200000, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 
 	// only from the command line; kept in a variable because setCvar from a script can change any dvar
 	libcod_unsafeBuiltins = Dvar_RegisterBool("sv_libcodUnsafe", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
@@ -587,9 +602,9 @@ bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period )
 	return true;
 }
 
-bool SVC_RateLimitAddress( netadr_t from, int burst, int period )
+bool SVC_RateLimitAddress( netadr_t from, int burst, int period, bool limitLAN )
 {
-	if (Sys_IsLANAddress(from))
+	if (!limitLAN && Sys_IsLANAddress(from))
 		return false;
 
 	leakyBucket_t *bucket = SVC_BucketForAddress( from, burst, period );

@@ -403,7 +403,7 @@ void SV_DirectConnect( netadr_t from );
 void SVC_RemoteCommand( netadr_t from, msg_t *msg );
 
 bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period );
-bool SVC_RateLimitAddress( netadr_t from, int burst, int period );
+bool SVC_RateLimitAddress( netadr_t from, int burst, int period, bool limitLAN = false );
 
 void SV_SendClientSnapshot(client_s *client);
 void SV_ExecuteClientMessage(client_s *cl, msg_t *msg);

@@ -1066,6 +1066,13 @@ void Touch_Item( gentity_t *ent, gentity_t *other, qboolean touched )
 	I_strncpyz(cleanname, other->client->sess.cs.name, sizeof(cleanname));
 	I_CleanStr(cleanname);
 
+#ifdef LIBCOD
+	if ( !g_logPickup->current.boolean )
+	{
+		// no Weapon; or Item; line in the game log
+	}
+	else
+#endif
 	if ( item->giType == IT_WEAPON )
 	{
 		weapDef = BG_GetWeaponDef(item->giTag);

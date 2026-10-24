@@ -436,7 +436,12 @@ void SV_GetChallenge( netadr_t from )
 	}
 
 	// if they are on a lan address, send the challengeResponse immediately
+#ifdef LIBCOD
+	// sv_noAuthorize skips the authorize server for everyone (zero GUIDs)
+	if ( sv_noAuthorize->current.boolean || ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) ) )
+#else
 	if ( !net_lanauthorize->current.boolean && Sys_IsLANAddress(from) )
+#endif
 	{
 		challenge->pingTime = svs.time;
 		NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
@@ -470,7 +475,11 @@ void SV_GetChallenge( netadr_t from )
 	// if they have been challenging for a long time and we
 	// haven't heard anything from the authoirze server, go ahead and
 	// let them in, assuming the id server is down
+#ifdef LIBCOD
+	if ( svs.time - challenge->firstTime > sv_authorizeTimeout->current.integer )
+#else
 	if ( svs.time - challenge->firstTime > AUTHORIZE_TIMEOUT )
+#endif
 	{
 		netadr_t adr = *SV_MasterAddress();
 
@@ -595,7 +604,11 @@ void SV_DropClient( client_t *drop, const char *reason )
 	// tell everyone why they got dropped
 	if ( I_stricmp(reason, "EXE_DISCONNECTED")
 	        && ( sv_kickMessages->current.boolean || I_stricmp(reason, "EXE_PLAYERKICKED") )
-	        && ( sv_timeoutMessages->current.boolean || I_stricmp(reason, "EXE_TIMEDOUT") ) )
+	        && ( sv_timeoutMessages->current.boolean || I_stricmp(reason, "EXE_TIMEDOUT") )
+#ifdef LIBCOD
+	        && ( sv_botKickMessages->current.boolean || !drop->bIsTestClient || I_stricmp(reason, "EXE_PLAYERKICKED") )
+#endif
+	   )
 	{
 		// VoroN: another stock bug fix for broken disconnect msg due to absence of localizedstrings
 		if ( !I_strnicmp(reason, "EXE", 3) || !I_strnicmp(reason, "GAME", 4) || !I_strnicmp(reason, "PC", 2) )

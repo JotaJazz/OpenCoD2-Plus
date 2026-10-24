@@ -802,7 +802,12 @@ void Bullet_Fire_Extended( const gentity_t *source, gentity_t *attacker,
 		tent->s.eventParm  = DirToByte(tr.normal);
 		tent->s.eventParm2 = DirToByte(reflect);
 
+#ifdef LIBCOD
+		// g_corpseHit 0 hits a corpse as the surface under it
+		if ( traceEnt->s.eType == ET_PLAYER_CORPSE && g_corpseHit->current.boolean )
+#else
 		if ( traceEnt->s.eType == ET_PLAYER_CORPSE )
+#endif
 			tent->s.surfType = SURF_TYPE_FLESH;
 		else
 			tent->s.surfType = SURF_TYPEINDEX( tr.surfaceFlags );

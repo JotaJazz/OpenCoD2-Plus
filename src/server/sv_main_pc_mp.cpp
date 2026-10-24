@@ -268,7 +268,7 @@ void SVC_RemoteCommand( netadr_t from, msg_t *msg )
 #if LIBCOD_COMPILE_RATELIMITER == 1
 	static leakyBucket_t bucket;
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( SVC_RateLimitAddress( from, 10, 1000, sv_limitLocalRcon->current.boolean ) )
 	{
 		if ( !Libcod_SpamCallback( "RCON:ADDRESS", from ) )
 			Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
