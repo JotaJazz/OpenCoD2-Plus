@@ -39,5 +39,38 @@ class InMouse(unittest.TestCase):
         self.assertEqual(out, '11110000 10')
 
 
+MOTION = r'''
+#include <stdio.h>
+#include "in_mouse.h"
+int main(void)
+{
+    IN_MotionState s = { 0, 0, 0 };
+    int dx, dy;
+    IN_MotionDelta(&s, 10, 10, &dx, &dy); printf("%d,%d ", dx, dy);    /* the first motion moves nothing */
+    IN_MotionDelta(&s, 15, 12, &dx, &dy); printf("%d,%d ", dx, dy);    /* then by the pointer's moves */
+    IN_MotionReset(&s);                                               /* the capture changes */
+    IN_MotionDelta(&s, 400, 300, &dx, &dy); printf("%d,%d ", dx, dy);  /* the warp to the center: nothing */
+    IN_MotionDelta(&s, 402, 299, &dx, &dy); printf("%d,%d", dx, dy);
+    return 0;
+}
+'''
+
+
+class MotionDelta(unittest.TestCase):
+    """The X11 fallback moves the cursor by the pointer's moves; the first
+    motion after the capture changes (the pointer warped to the window's
+    center) moves nothing."""
+
+    def test_motion_delta(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = os.path.join(tmp, 't.c')
+            exe = os.path.join(tmp, 't')
+            with open(src, 'w') as f:
+                f.write(MOTION)
+            subprocess.run(['gcc', '-I', os.path.join(ROOT, 'src', 'unix'), src, '-o', exe], check=True)
+            out = subprocess.run([exe], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(out, '0,0 5,2 0,0 2,-1')
+
+
 if __name__ == '__main__':
     unittest.main()

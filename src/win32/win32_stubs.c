@@ -11,6 +11,7 @@ void CMacGameEngine_DrawSplashScreen(void) {}
 #ifdef W32_CLIENT
 
 int Linux_PollInputEvent(void *event) { (void)event; return 0; }
+void Linux_ResetMouseDelta(void) {}
 #else
 void IN_Frame(void) {}
 #endif

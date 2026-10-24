@@ -47,6 +47,7 @@ typedef struct LinuxInputEvent {
 } LinuxInputEvent;
 
 extern int Linux_PollInputEvent(LinuxInputEvent *event);
+extern void Linux_ResetMouseDelta(void);
 
 #define K_BACKSPACE  0x7f
 #define K_COMMAND    0x96
@@ -287,6 +288,7 @@ void IN_Frame(void)
             if (sdl_gl_window)
                 SDL_SetWindowGrab(sdl_gl_window, wantGrab ? SDL_TRUE : SDL_FALSE);
             SDL_SetRelativeMouseMode(wantGrab ? SDL_TRUE : SDL_FALSE);
+            Linux_ResetMouseDelta();
             in_mouseCaptured = wantGrab;
         }
     }

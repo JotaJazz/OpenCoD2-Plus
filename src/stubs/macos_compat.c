@@ -443,6 +443,7 @@ void Sys_GetDesktopSize(int *width, int *height)
 #    endif
 
 #    if !defined(__EMSCRIPTEN__) && !defined(_WIN32)
+#include "unix/in_mouse.h"
 typedef struct LinuxInputEvent {
     int type;
     int value;
@@ -460,9 +461,7 @@ static XImage *linux_x11_image;
 static unsigned char *linux_gl_pixels;
 static int linux_present_width;
 static int linux_present_height;
-static int linux_last_mouse_x;
-static int linux_last_mouse_y;
-static int linux_have_mouse_pos;
+static IN_MotionState linux_motion;
 
 static int Linux_InitX11Window(void)
 {
@@ -565,6 +564,12 @@ static int Linux_X11KeyNum(KeySym sym)
     }
 }
 
+/* the capture changed: the next motion is the pointer's warp, not a move */
+void Linux_ResetMouseDelta(void)
+{
+    IN_MotionReset(&linux_motion);
+}
+
 int Linux_PollInputEvent(LinuxInputEvent *out)
 {
     XEvent event;
@@ -580,13 +585,7 @@ int Linux_PollInputEvent(LinuxInputEvent *out)
         out->type = 1;
         out->x = event.xmotion.x;
         out->y = event.xmotion.y;
-        if (linux_have_mouse_pos) {
-            out->dx = out->x - linux_last_mouse_x;
-            out->dy = out->y - linux_last_mouse_y;
-        }
-        linux_last_mouse_x = out->x;
-        linux_last_mouse_y = out->y;
-        linux_have_mouse_pos = 1;
+        IN_MotionDelta(&linux_motion, out->x, out->y, &out->dx, &out->dy);
         return 1;
     case ButtonPress:
     case ButtonRelease:
