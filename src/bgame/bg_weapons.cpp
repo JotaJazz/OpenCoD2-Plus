@@ -20,7 +20,7 @@ BG_GetBobCycle
 float BG_GetBobCycle( const playerState_t *ps )
 {
 	assert(ps);
-	return (ps->bobCycle & 255) / 255 * M_PI + (ps->bobCycle & 255) / 255 * M_PI + (M_PI * 2);
+	return (float)(ps->bobCycle & 255) / 255.0f * (float)(M_PI * 2) + (float)(M_PI * 2);
 }
 
 /*
