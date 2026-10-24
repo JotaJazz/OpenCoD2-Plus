@@ -1466,6 +1466,9 @@ XModel* G_GetModel(int modelIndex);
 void G_SafeDObjFree(gentity_s *ent);
 void G_DObjUpdate(gentity_s *ent);
 int G_ModelIndex( const char *name );
+#ifdef LIBCOD
+void G_SetModelIndex( int modelIndex, const char *name );
+#endif
 void G_OverrideModel(int modelIndex, const char *defaultModelName);
 void G_RunThink(gentity_s *ent);
 void G_CheckHitTriggerDamage( gentity_t *pActivator, const vec3_t vStart, const vec3_t vEnd, int iDamage, int iMOD );

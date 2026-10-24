@@ -965,6 +965,10 @@ void SV_SpawnServer( char *server )
 		sv.configstrings[i] = CopyString( "" );
 	}
 
+#ifdef LIBCOD
+	Libcod_SpawnServerConfigstrings();
+#endif
+
 	Dvar_ResetScriptInfo();
 
 	// allocate the snapshot entities on the hunk

@@ -1148,7 +1148,13 @@ Scr_PlayerConnect
 */
 void Scr_StartupGameType()
 {
+#ifdef LIBCOD
+	libcod_precaching = true;
+#endif
 	Scr_FreeThread( Scr_ExecThread( g_scr_data.gametype.startupgametype, 0 ) );
+#ifdef LIBCOD
+	libcod_precaching = false;
+#endif
 }
 
 /*
@@ -1158,7 +1164,13 @@ Scr_LoadGameType
 */
 void Scr_LoadGameType()
 {
+#ifdef LIBCOD
+	libcod_precaching = true;
+#endif
 	Scr_FreeThread( Scr_ExecThread( g_scr_data.gametype.main, 0 ) );
+#ifdef LIBCOD
+	libcod_precaching = false;
+#endif
 }
 
 /*
@@ -1173,7 +1185,13 @@ void Scr_LoadLevel()
 		return;
 	}
 
+#ifdef LIBCOD
+	libcod_precaching = true;
+#endif
 	Scr_FreeThread( Scr_ExecThread( g_scr_data.levelscript, 0 ) );
+#ifdef LIBCOD
+	libcod_precaching = false;
+#endif
 }
 
 /*

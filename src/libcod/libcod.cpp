@@ -11,6 +11,13 @@ dvar_t *sv_downloadMessage;
 dvar_t *sv_fastDownload;
 dvar_t *sv_cracked;
 dvar_t *sv_kickbots;
+dvar_t *g_safePrecache;
+dvar_t *g_reservedModels;
+dvar_t *logErrors;
+
+// set while the map, gametype main and startupgametype scripts run, where
+// g_reservedModels does not apply
+bool libcod_precaching;
 dvar_t *jump_bounceEnable;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_fixedWeaponSpreads;
@@ -101,6 +108,7 @@ void RegisterLibcodDvars()
 	sv_fastDownload = Dvar_RegisterBool("sv_fastDownload", false, DVAR_CHANGEABLE_RESET);
 	sv_cracked = Dvar_RegisterBool("sv_cracked", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_kickbots = Dvar_RegisterBool("sv_kickbots", false, DVAR_CHANGEABLE_RESET);
+	logErrors = Dvar_RegisterBool("logErrors", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 
 	// only from the command line; kept in a variable because setCvar from a script can change any dvar
 	libcod_unsafeBuiltins = Dvar_RegisterBool("sv_libcodUnsafe", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
@@ -131,6 +139,24 @@ void RegisterLibcodDvars()
 	sv_graphMaxGraphs = Dvar_RegisterInt("sv_graphMaxGraphs", 8, 1, 64, DVAR_CHANGEABLE_RESET);
 	sv_graphMaxNodes = Dvar_RegisterInt("sv_graphMaxNodes", 16384, 64, 65535, DVAR_CHANGEABLE_RESET);
 #endif
+}
+
+// Called by SV_SpawnServer once the configstrings are empty. The precache
+// dvars are latched, so registering them again applies a new value from this
+// map on. With g_safePrecache, index 1 of models and effects holds a stand-in
+// for what does not fit.
+void Libcod_SpawnServerConfigstrings()
+{
+	g_reservedModels = Dvar_RegisterInt("g_reservedModels", 0, 0, 255, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	g_safePrecache = Dvar_RegisterBool("g_safePrecache", false, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+
+	if ( g_safePrecache->current.boolean )
+	{
+		// the client shows fx/misc/missing_fx.efx for an effect it can't
+		// load; effect index 0 can't be played, so the stand-in is index 1
+		SV_SetConfigstring(CS_EFFECT_NAMES + 1, "0");
+		G_SetModelIndex(1, "xmodel/default_static_model");
+	}
 }
 
 void InitLibcodCallbacks()

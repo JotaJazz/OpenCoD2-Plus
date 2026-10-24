@@ -554,6 +554,21 @@ void G_OverrideModel( int modelIndex, const char *defaultModelName )
 	Hunk_OverrideDataForFile(FILEDATA_XMODEL, modelName + 7, model);
 }
 
+#ifdef LIBCOD
+/*
+====================
+G_SetModelIndex
+
+Puts a model in a given index, for the g_safePrecache stand-in
+====================
+*/
+void G_SetModelIndex( int modelIndex, const char *name )
+{
+	cached_models[modelIndex] = SV_XModelGet(name);
+	SV_SetConfigstring( CS_MODELS + modelIndex, name );
+}
+#endif
+
 /*
 ================
 G_FindConfigstringIndex
@@ -594,6 +609,14 @@ int G_FindConfigstringIndex( const char *name, int start, int max, qboolean crea
 
 	if ( i >= max )
 	{
+#ifdef LIBCOD
+		// effect index 1 is the stand-in Libcod_SpawnServerConfigstrings set
+		if ( g_safePrecache->current.boolean && start == CS_EFFECT_NAMES )
+		{
+			Com_Printf("WARNING: too many effects, \"%s\" is shown as the missing effect\n", name);
+			return 1;
+		}
+#endif
 		Com_Error(ERR_DROP, "G_FindConfigstringIndex: overflow (%d): %s", start, name);
 	}
 
@@ -662,13 +685,22 @@ int G_ModelIndex( const char *name )
 {
 	int i;
 	const char *s;
+	int limit = MAX_MODELS;
 
 	if ( !name[0] )
 	{
 		return 0;
 	}
 
-	for ( i = 1; i < MAX_MODELS; i++ )
+#ifdef LIBCOD
+	// the map's own entities leave g_reservedModels slots to the scripts
+	if ( level.initializing && !libcod_precaching )
+	{
+		limit -= g_reservedModels->current.integer;
+	}
+#endif
+
+	for ( i = 1; i < limit; i++ )
 	{
 		s = SV_GetConfigstringConst( CS_MODELS + i );
 
@@ -685,11 +717,26 @@ int G_ModelIndex( const char *name )
 
 	if ( !level.initializing )
 	{
+#ifdef LIBCOD
+		// model index 1 is the stand-in Libcod_SpawnServerConfigstrings set
+		if ( g_safePrecache->current.boolean )
+		{
+			Com_Printf("WARNING: model '%s' not precached, shown as the default model\n", name);
+			return 1;
+		}
+#endif
 		Scr_Error(va("model '%s' not precached", name));
 	}
 
-	if ( i == MAX_MODELS )
+	if ( i == limit )
 	{
+#ifdef LIBCOD
+		if ( g_safePrecache->current.boolean )
+		{
+			Com_Printf("WARNING: too many models, '%s' is shown as the default model\n", name);
+			return 1;
+		}
+#endif
 		Com_Error(ERR_DROP, "G_ModelIndex: overflow");
 	}
 

@@ -129,6 +129,10 @@ scr_function_t scriptFunctions[] =
 	{"exec_async_create", gsc_unsafe<gsc_exec_async_create>, 0},
 	{"exec_async_create_nosave", gsc_unsafe<gsc_exec_async_create_nosave>, 0},
 	{"exec_async_checkdone", gsc_unsafe<gsc_exec_async_checkdone>, 0},
+	{"execute", gsc_unsafe<gsc_exec>, 0},
+	{"execute_async_create", gsc_unsafe<gsc_exec_async_create>, 0},
+	{"execute_async_create_nosave", gsc_unsafe<gsc_exec_async_create_nosave>, 0},
+	{"execute_async_checkdone", gsc_unsafe<gsc_exec_async_checkdone>, 0},
 #endif
 
 #if LIBCOD_COMPILE_LEVEL == 1
@@ -193,6 +197,7 @@ scr_function_t scriptFunctions[] =
 
 #if LIBCOD_COMPILE_UTILS == 1
 	{"printf", gsc_utils_printf, 0},
+	{"error", gsc_utils_error, 0},
 	{"printoutofband", gsc_unsafe<gsc_utils_outofbandprint>, 0},
 	{"getarraykeys", gsc_utils_getarraykeys, 0},
 	{"getascii", gsc_utils_getAscii, 0},

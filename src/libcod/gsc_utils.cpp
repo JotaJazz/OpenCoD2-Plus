@@ -61,6 +61,28 @@ static int gsc_utils_append(char *result, int num, const char *format, ...)
 	return num + written;
 }
 
+// error(message, [terminal]): a script error, or with terminal set one that
+// ends the map, as zk_libcod
+void gsc_utils_error()
+{
+	const char *message;
+	int terminal = 0;
+
+	if ( !stackGetParams("s", &message) )
+	{
+		stackError("gsc_utils_error() argument is undefined or has a wrong type");
+		return;
+	}
+
+	if ( Scr_GetNumParam() > 1 )
+		terminal = Scr_GetInt(1);
+
+	if ( terminal )
+		Com_Error(ERR_SCRIPT_DROP, "\x15%s\n", message);
+
+	Scr_Error(message);
+}
+
 void gsc_utils_printf()
 {
 	char result[COD2_MAX_STRINGLENGTH];

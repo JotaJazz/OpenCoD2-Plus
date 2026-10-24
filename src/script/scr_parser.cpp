@@ -744,6 +744,14 @@ void RuntimeError( const char *codePos, unsigned int index, const char *msg, con
 
 		if ( !scrVmPub.terminal_error )
 		{
+#ifdef LIBCOD
+			// without developer the file and line are not kept, only the message
+			extern dvar_t *logErrors;
+			if ( logErrors->current.boolean )
+			{
+				Com_Printf("******* script runtime error *******\n%s\n************************************\n", msg);
+			}
+#endif
 			return;
 		}
 	}
