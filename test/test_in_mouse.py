@@ -16,6 +16,7 @@ int main(void)
     printf("%d", IN_WantMouse(1, 0, 0, 1, 1));  /* no focus: let go */
     printf("%d", IN_WantMouse(0, 1, 0, 1, 1));  /* no client yet */
     printf("%d", IN_WantMouse(1, 1, 0, 1, 0));  /* in_mouse 0: never */
+    printf(" %d%d", IN_MouseButtons(1), IN_MouseButtons(0));  /* buttons only with in_mouse */
     return 0;
 }
 '''
@@ -24,7 +25,8 @@ int main(void)
 class InMouse(unittest.TestCase):
     """When the client captures the mouse, as 1.3's IN_Frame (0x464b30):
     with the window focused, unless the console is open in a window, and
-    never with in_mouse 0."""
+    never with in_mouse 0, whose buttons do nothing either (IN_MouseEvent
+    0x464940 returns at once without mouseInitialized)."""
 
     def test_want_mouse(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -34,7 +36,7 @@ class InMouse(unittest.TestCase):
                 f.write(PROGRAM)
             subprocess.run(['gcc', '-I', os.path.join(ROOT, 'src', 'unix'), src, '-o', exe], check=True)
             out = subprocess.run([exe], capture_output=True, text=True, check=True).stdout
-        self.assertEqual(out, '11110000')
+        self.assertEqual(out, '11110000 10')
 
 
 if __name__ == '__main__':

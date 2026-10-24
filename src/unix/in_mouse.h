@@ -12,4 +12,11 @@ static inline int IN_WantMouse(int haveClient, int focused, int keyCatchers, int
     return !((keyCatchers & 1) && !fullscreen);
 }
 
+/* Whether a mouse button counts: as the 1.3 binary's IN_MouseEvent
+ * (0x464940), which returns at once when IN_Init found in_mouse 0. */
+static inline int IN_MouseButtons(int inMouse)
+{
+    return inMouse != 0;
+}
+
 #endif

@@ -29,6 +29,13 @@ extern void Sys_QueEvent(int time, sysEventType_t type, int value, int value2,
 extern void CL_MouseEvent(int dx, int dy);
 extern Bool Dvar_GetBool(const char *dvarName);
 
+/* in_mouse, registered by IN_Init (mac_input.c); latched, so its value
+ * stays the one IN_Init saw, as 1.3's mouseInitialized */
+static int in_mouseOn(void)
+{
+    return Dvar_GetBool("in_mouse");
+}
+
 typedef struct LinuxInputEvent {
     int type;
     int value;
@@ -195,7 +202,7 @@ int SDL_PumpInputEvents(void)
             break;
         }
         case SDL_MOUSEBUTTONDOWN: {
-            int k = sdl_button_to_keynum(ev.button.button);
+            int k = IN_MouseButtons(in_mouseOn()) ? sdl_button_to_keynum(ev.button.button) : 0;
             if (k) {
                 Sys_QueEvent(0, SE_KEY, k, 1, 0, 0);
                 ++inputEventCount;
@@ -203,7 +210,7 @@ int SDL_PumpInputEvents(void)
             break;
         }
         case SDL_MOUSEBUTTONUP: {
-            int k = sdl_button_to_keynum(ev.button.button);
+            int k = IN_MouseButtons(in_mouseOn()) ? sdl_button_to_keynum(ev.button.button) : 0;
             if (k) {
                 Sys_QueEvent(0, SE_KEY, k, 0, 0, 0);
                 ++inputEventCount;
@@ -275,7 +282,7 @@ void IN_Frame(void)
         /* the mouse stays captured and its cursor hidden in menus (in_mouse.h) */
         int wantGrab = IN_WantMouse(cl && sdl_gl_window,
                                     sdl_gl_window && (SDL_GetWindowFlags(sdl_gl_window) & SDL_WINDOW_INPUT_FOCUS),
-                                    keyCatchers, Dvar_GetBool("r_fullscreen"), Dvar_GetBool("in_mouse"));
+                                    keyCatchers, Dvar_GetBool("r_fullscreen"), in_mouseOn());
         if (wantGrab != in_mouseCaptured) {
             if (sdl_gl_window)
                 SDL_SetWindowGrab(sdl_gl_window, wantGrab ? SDL_TRUE : SDL_FALSE);
@@ -313,10 +320,12 @@ void IN_Frame(void)
                 CL_MouseEvent(event.dx, event.dy);
             break;
         case 2:
-            Sys_QueEvent(0, SE_KEY, event.value, 1, 0, 0);
+            if (IN_MouseButtons(in_mouseOn()))
+                Sys_QueEvent(0, SE_KEY, event.value, 1, 0, 0);
             break;
         case 3:
-            Sys_QueEvent(0, SE_KEY, event.value, 0, 0, 0);
+            if (IN_MouseButtons(in_mouseOn()))
+                Sys_QueEvent(0, SE_KEY, event.value, 0, 0, 0);
             break;
         case 4:
             if (event.value)

@@ -7,7 +7,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 ## 2026-10-24 — client mouse as 1.3's IN_Frame
 
-- The SDL pump (Linux and Windows clients, `src/unix/linux_input.c`) now honours `in_mouse 0` as 1.3's `IN_Frame` (`0x464b30`): the mouse is never captured and does not move; the X11 fallback moves the menus' cursor by deltas, only when captured, instead of absolute positions. The decision is `IN_WantMouse` (`src/unix/in_mouse.h`, `test/test_in_mouse.py`).
+- The SDL pump (Linux and Windows clients, `src/unix/linux_input.c`) now honours `in_mouse 0` as 1.3's `IN_Frame` (`0x464b30`) and `IN_MouseEvent` (`0x464940`): the mouse is never captured, does not move and its buttons do nothing (the wheel still counts, as in 1.3); the X11 fallback moves the menus' cursor by deltas, only when captured, instead of absolute positions. The decisions are `IN_WantMouse` and `IN_MouseButtons` (`src/unix/in_mouse.h`, `test/test_in_mouse.py`).
 - Rejected (user's choice): porting `ClickToContinue`, a click per frame from a dvar nothing sets; it is listed under deliberate simplifications.
 
 ## 2026-10-24 — walkable normal, r_fullscreen
