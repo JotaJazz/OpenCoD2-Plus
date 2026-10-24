@@ -30,6 +30,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 | The SDL pump ignores `in_mouse` (not registered there) and `ClickToContinue` (the original posts a click each frame) | `src/unix/linux_input.c` | 1.3's `IN_Frame` `0x464b30` |
 | The Linux X11 fallback pump still sends absolute positions to menus | `src/unix/linux_input.c` | runs only when SDL has no events |
+| The server's `BG_GetSpeed` is the velocity's 3D length; 1.3's game (`0x4fde06`) takes x and y only | CoD2rev-Plus `src/bgame/bg_pmove.cpp` (vendored) | the client's is fixed; on the server it changes the eye position while jumping |
 | `r_fullscreen` cannot be overridden by `+set` on the command line ("is read only") | dvar registration | profile value wins |
 
 ## Deferred decisions
