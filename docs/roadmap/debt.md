@@ -28,8 +28,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|---|
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
-| The SDL pump ignores `in_mouse` (not registered there) and `ClickToContinue` (the original posts a click each frame) | `src/unix/linux_input.c` | 1.3's `IN_Frame` `0x464b30` |
-| The Linux X11 fallback pump still sends absolute positions to menus | `src/unix/linux_input.c` | runs only when SDL has no events |
 
 ## Deferred decisions
 
@@ -44,4 +42,5 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Simplification | Notes |
 |---|---|
 | Full screen on the Direct3D 9 path is a borderless desktop window with the frame stretched, not an exclusive mode change | resolution comes from `r_mode` as in the original |
+| `ClickToContinue` not ported: 1.3's `IN_Frame` (`0x464b30`) posts a left click each frame while that dvar is set | nothing registers or sets it, in the game's data or the engine; porting it means emulating `IN_MouseEvent`'s button state |
 | Shaders' `//` comments blanked before compiling | Wine's compiler rejects one after an `#include` |

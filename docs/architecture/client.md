@@ -134,7 +134,7 @@ the eye scaled by the aim fraction.
 As the 1.3 binary (`IN_Frame` `0x464b30`, `IN_MouseMove` `0x4649c0`), the SDL
 event pump (`src/unix/linux_input.c`) keeps the mouse captured and the system
 cursor hidden (SDL relative mode) in menus too; it lets the mouse go only when
-the window loses focus or the console is open with `r_fullscreen 0`. Menus'
+the window loses focus or the console is open with `r_fullscreen 0`, and never captures it with `in_mouse 0` (`IN_WantMouse`, `src/unix/in_mouse.h`). Menus'
 cursor moves by the mouse's deltas (`CL_MouseEvent` → `UI_MouseEvent`), so it
 does not depend on the window's size.
 
