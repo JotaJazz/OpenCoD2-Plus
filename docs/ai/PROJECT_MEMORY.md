@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-24 — the server's animation script as 1.3, vendor sync 1094533
+
+- The three CoD2rev-Plus differences from 1.3 left open by the previous stage are fixed there (`1094533`, user-approved, pushed with `0267dff`) and vendored: strafe flags from STRAFING only (`0x4f7f54`), crouch and prone masks as 1.3's and answering 0 or 1 (`0x4f9750`, `0x4f97b0`; a bit mask made two prone anims look like a stance change), 1.3's float constants. Found on the way: `BG_SetNewAnimation` divided the start time as integers, so every looping anim started at frame 0 (`0x4f9adb`).
+- `scripts/anim_script_test.py` also compares the parsed animations (flags, movetype, duration, speed): 55 of 301 differed on `0267dff`, none now; the engine and the server parse and pick alike.
+
 ## 2026-10-24 — animation script from CoD2rev-Plus, vendor sync 0267dff
 
 - The engine's animation script (cgame's prediction and other players' animation) follows CoD2rev-Plus, each function checked against the 1.3 client: torso-only anims do not count as set (`0x4f8f20`), UNDERHAND is the view's pitch (`0x4f94b0`), locomotion picks `clientNum % count`, not `rand()` (`0x4f9190`); remote players' turret test, idle yawing, torso clamp, stance transition time, death anims, the animation rate between snapshots (it went back to 1.0 every frame) and the prone back pitch now as 1.3. `scripts/anim_script_test.py` runs both bgames on the same playerstates in one client: 96 of 2.7 million cases differed, none now.

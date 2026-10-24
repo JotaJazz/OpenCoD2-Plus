@@ -28,14 +28,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 
-## CoD2rev-Plus differences from 1.3 (server side, waiting on the user)
-
-| Difference | 1.3 | Effect |
-|---|---|---|
-| `BG_ParseCommands` sets the strafe flags 0x10/0x20 for every condition but STRAFING | `0x4f7f54`: only for STRAFING | the server's legs yaw and STRAFING condition of 55 anims |
-| `BG_IsCrouchingAnim` counts RUNCR, RUNCRBK, TURNRIGHTCR, TURNLEFTCR and not STUMBLE_CROUCH | `0x4f9750` | the server's stance transition time |
-| Double literals in `BG_PlayerAngles`, `BG_SwingAngles`, `BG_SetNewAnimation`, `BG_RunLerpFrameRate` | float constants | last-bit differences in the server's hit-location pose |
-
 ## Deferred decisions
 
 | Decision | Waiting on |
