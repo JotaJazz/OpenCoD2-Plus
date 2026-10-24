@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Counts a real client's prediction misses while it moves, jumps and fires.
 
-    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--moves CFG] [--spot 'X Y Z YAW']
+    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--max-anim-misses N] [--moves CFG] [--spot 'X Y Z YAW']
 
 Runs the dedicated server with scripts/contact_test.py's mod and a minimal
 client as its target, and a real client (cod2_linux, held at 20 fps) as the
@@ -19,7 +19,10 @@ reads as dvar_developer) it prints "Prediction miss: <distance>" when they
 differ by more than 0.1. Prints the number of misses and their total and
 largest distance, and exits with 0 when the client still runs, walked over
 300 units (as the target sees it), left no crash report, and the misses are
-at most --max-misses (60). The client opens a window and needs a CD key in
+at most --max-misses (60). With COD2_TRACE_PREDANIM the client also prints
+"Prediction anim miss" when the moves predicted again give other legs or
+torso animations than it had predicted; those must be at most
+--max-anim-misses (0). The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
 import argparse, os, re, subprocess, sys, tempfile, time
@@ -64,6 +67,9 @@ SPOT = '2450 2200 80 90'
 # 12 to 34 in 1.3 and 1.0 when the client's prediction follows the server's
 # code; 119 to 153 before
 MAX_MISSES = 60
+# the client's animation script follows the server's: the legs and torso it
+# predicts never change when it predicts again (4 before)
+MAX_ANIM_MISSES = 0
 
 
 def main():
@@ -74,6 +80,8 @@ def main():
     ap.add_argument('--server')
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
+    ap.add_argument('--max-anim-misses', type=int, default=MAX_ANIM_MISSES,
+                    help=f'fail above this many legs/torso animation misses (default {MAX_ANIM_MISSES})')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
     ap.add_argument('--spot', default=SPOT, help="'x y z yaw' to put the client at when it joins (the mod's spot phase); "
                     "'' leaves it where it spawns")
@@ -136,7 +144,7 @@ def main():
                                                '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                              cwd=client_home)
+                                              cwd=client_home, env=dict(os.environ, COD2_TRACE_PREDANIM='1'))
                 procs.append(client)
                 end = time.time() + 120
                 while time.time() < end and client.poll() is None and 'contact mover' not in game_log(home):
@@ -185,6 +193,11 @@ def main():
         misses = [float(m) for m in re.findall(r'Prediction miss: ([0-9.]+)', text)]
         print(f'misses: {len(misses)}, total {sum(misses):.1f}, largest {max(misses, default=0):.1f}')
         check(f'at most {args.max_misses} prediction misses', len(misses) <= args.max_misses, f'{len(misses)}')
+        anim = re.findall(r'Prediction anim miss: (.*)', text)
+        for line in anim[:10]:
+            print(f'  anim miss: {line}')
+        print(f'anim misses: {len(anim)}')
+        check(f'at most {args.max_anim_misses} animation misses', len(anim) <= args.max_anim_misses, f'{len(anim)}')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
 

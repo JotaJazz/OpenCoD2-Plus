@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include <math.h>
+#include <stdlib.h>
 #include "imports.h"
 #include "bytematch.h"
 #include "headers/PC/cgame_mp/cg_local.h"
@@ -170,6 +171,22 @@ static void CG_InterpolatePlayerState(qboolean grabAngles)
                           (next->ps.fWeaponPosFrac - prev->ps.fWeaponPosFrac) * f;
 }
 
+/* COD2_TRACE_PREDANIM: when the moves predicted again from a new snapshot
+   reach the time of the previous prediction, the legs and torso animations
+   of the two, which differ where the client's animation script does not
+   follow the server's; for scripts/prediction_test.py */
+static void CG_TracePredictedAnim(const playerState_t *before, const playerState_t *again)
+{
+    static int enabled = -1;
+
+    if (enabled < 0)
+        enabled = getenv("COD2_TRACE_PREDANIM") != NULL;
+    if (!enabled || (before->legsAnim == again->legsAnim && before->torsoAnim == again->torsoAnim))
+        return;
+    fprintf(stderr, "Prediction anim miss: t=%d legs %d %d torso %d %d\n", again->commandTime, before->legsAnim,
+            again->legsAnim, before->torsoAnim, again->torsoAnim);
+}
+
 void CG_PredictPlayerState(void)
 {
     byte ll[32];
@@ -291,6 +308,8 @@ void CG_PredictPlayerState(void)
             delta[0] = ((playerState_t *)oldPlayerState)->origin[0] - oldOrigin[0];
             delta[1] = ((playerState_t *)oldPlayerState)->origin[1] - oldOrigin[1];
             delta[2] = ((playerState_t *)oldPlayerState)->origin[2] - oldOrigin[2];
+
+            CG_TracePredictedAnim((playerState_t *)oldPlayerState, ps);
 
             len = sqrtf(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
             if (len > 0.1f) {
