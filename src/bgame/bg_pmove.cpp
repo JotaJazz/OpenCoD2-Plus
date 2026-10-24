@@ -308,7 +308,7 @@ float BG_GetSpeed( const playerState_t *ps, int iTime )
 {
 	if ( !(ps->pm_flags & PMF_LADDER) )
 	{
-		return VectorLength(ps->velocity);
+		return Vec2Length(ps->velocity);
 	}
 
 	if ( iTime - ps->jumpTime < 500 )
