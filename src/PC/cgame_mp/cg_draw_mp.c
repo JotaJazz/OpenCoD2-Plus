@@ -13,7 +13,6 @@ extern const dvar_t *cg_chatTime;
 extern const dvar_t *cg_crosshairAlpha;
 extern const dvar_t *cg_crosshairAlphaMin;
 extern const dvar_t *cg_crosshairDynamic;
-extern const dvar_t *cg_crosshairEnemyColor;
 extern const dvar_t *cg_draw2D;
 extern const dvar_t *cg_drawCrosshair;
 extern const dvar_t *cg_drawCrosshairNames;
@@ -999,19 +998,50 @@ void CG_DrawBoldGameMessages(void)
     Con_DrawBoldMessages(0, -60, alpha, MWM_BOTTOMUP_CENTERED);
 }
 
+// Crosshair color: green over a friendly, else white; alpha is scale times
+// cg_crosshairAlpha, as the 1.3 binary (0x4c8d50)
+static void CG_GetCrosshairColor(vec4_t color, float scale)
+{
+    if (cg->predictedPlayerState.pm_flags & 0x100000) {
+        color[0] = 0.25f;
+        color[1] = 1.0f;
+        color[2] = 0.25f;
+    } else {
+        color[0] = 1.0f;
+        color[1] = 1.0f;
+        color[2] = 1.0f;
+    }
+    color[3] = scale * cg_crosshairAlpha->current.value;
+}
+
+// The turret weapon's own center reticle, at the screen's center, as the
+// 1.3 binary (0x4c8da0)
 void CG_DrawTurretCrossHair(void)
 {
-    const dvar_t *drawTurretCrosshair;
-    vec4_t color = { 1.0f, 1.0f, 1.0f, 0.75f };
+    vec4_t color;
+    int weapon;
+    MaterialHandle material;
+    float size;
 
-    drawTurretCrosshair = cg_drawTurretCrosshair;
-    if (drawTurretCrosshair && !drawTurretCrosshair->current.enabled)
+    if (!cg_drawTurretCrosshair->current.enabled)
+        return;
+    if (cg_paused->current.integer)
         return;
 
-    if (!cgs)
+    weapon = cg_entities[cg->predictedPlayerState.viewlocked_entNum].nextState.weapon;
+    if (!weapon)
         return;
 
-    UI_DrawHandlePic(316.0f, 236.0f, 8.0f, 8.0f, 0, 0, color, cgs->media.whiteMaterial);
+    material = (*(weaponInfo_t **)imp_cg_weapons)[weapon].hReticleCenter;
+    if (!material)
+        return;
+    if (cg_crosshairAlpha->current.value <= 0.01f)
+        return;
+
+    CG_GetCrosshairColor(color, 1.0f);
+    size = (float)((WeaponDef *)BG_GetWeaponDef(weapon))->iReticleCenterSize;
+    CL_DrawStretchPic(size * -0.5f, size * -0.5f, size, size, 2, 2,
+                      0.0f, 0.0f, 1.0f, 1.0f, color, material);
 }
 
 static unsigned int CG_DrawSpectatorMessage(void)
@@ -1428,10 +1458,10 @@ unsigned int CG_DrawCrosshair(void)
     vec4_t color;
     vec4_t reticleColor;
     float posLerp;
+    float reticleFrac;
     float transScale;
     float centerX;
     float centerY;
-    int pmFlags;
     int weaponstate;
 
     if (cg->renderingThirdPerson)
@@ -1451,34 +1481,15 @@ unsigned int CG_DrawCrosshair(void)
         return 0;
 
     weapDef = (WeaponDef *)BG_GetWeaponDef(weapIndex);
-    CG_DrawWeapReticle();
+    reticleFrac = CG_DrawWeapReticle();
 
     if (!drawHudMenus)
         return 0;
 
-    pmFlags = ps->pm_flags;
-    if (pmFlags & 0x100000) {
-        color[0] = 0.25f;
-        color[1] = 1.0f;
-        color[2] = 0.25f;
-    } else if (pmFlags & 0x200000) {
-        if (!cg_crosshairEnemyColor->current.enabled) {
-            color[0] = 1.0f;
-            color[1] = 1.0f;
-            color[2] = 1.0f;
-        } else {
-            color[0] = 1.0f;
-            color[1] = 0.25f;
-            color[2] = 0.25f;
-        }
-    } else {
-        color[0] = 1.0f;
-        color[1] = 1.0f;
-        color[2] = 1.0f;
-    }
-
-    color[3] = posLerp * cg_crosshairAlpha->current.value;
-    if (color[3] < 0.01f)
+    // the alpha follows the ADS overlay's fade, not fWeaponPosFrac: at the
+    // hip that is 0 and hid the crosshair (1.3 0x4c95b9)
+    CG_GetCrosshairColor(color, reticleFrac);
+    if (color[3] <= 0.01f)
         return 0;
 
     if (posLerp == 1.0f && cg_drawGun->current.enabled)
