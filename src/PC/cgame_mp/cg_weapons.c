@@ -804,11 +804,13 @@ void CG_RegisterWeapon(int weaponNum)
 
     weapInfo->missileDlight = (float)weapDef->iProjectileDLight;
 
+    // slot weaponNum + 4, after usable/health/friendly; no HUD icon shows
+    // hint_usable, as the 1.3 binary (0x4d4dfe)
     if (weapDef->szHudIcon[0]) {
         weapInfo->hHudIcon = (MaterialHandle)CL_RegisterMaterial(weapDef->szHudIcon, 7);
-        cgs->media.hintMaterials[weaponNum + 2] = weapInfo->hHudIcon;
+        cgs->media.hintMaterials[weaponNum + 4] = weapInfo->hHudIcon;
     } else {
-        cgs->media.hintMaterials[weaponNum + 2] = cgs->media.hintMaterials[0];
+        cgs->media.hintMaterials[weaponNum + 4] = cgs->media.hintMaterials[2];
     }
 
     if (weapDef->killIcon[0]) {
