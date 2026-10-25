@@ -9,6 +9,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 - glibc 2.43 gave i386's `acosf`, `asinf`, `atan2f`, `log10f` and `sqrtf` new versions, raising the Linux binaries' floor past 2.34: `glibc_compat.h` binds them to `GLIBC_2.0` (`.symver`) and is now force-included in C too (speex calls `sqrtf`); its `<features.h>` part stays C++-only, since included first in C it hid sqlite3.c's `mremap`.
 - `readelf` translates its DWARF dump: in a Spanish locale `check_c_decls.py` and `check_var_sizes.py` found "no DWARF". The nine scripts that parse binutils' output set `LC_ALL=C` (`test/test_check_c_decls.py` reads a dump with `es_CL`).
+- Ubuntu 26.04's MinGW is GCC 13, which rejects `-Wno-error=return-mismatch` (GCC 14's): CMake adds it only when the compiler knows the warning.
 
 ## 2026-10-25 — GL client loads color_channel_mixer
 
