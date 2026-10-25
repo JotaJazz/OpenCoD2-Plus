@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from check_c_decls import ATTR, DIE, objects
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 
 def declared(readelf, path):

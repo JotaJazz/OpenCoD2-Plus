@@ -16,6 +16,7 @@ which objcopy reads, so the mingw variant needs no wine. Prints 'ok <type>' or
 'DIFF <type>: <field> <A> != <B>', and exits with 0 when nothing differs.
 """
 import argparse, json, os, shlex, struct, subprocess, sys, tempfile
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')

@@ -28,6 +28,7 @@ with another return or parameter type than its definition's
 (scripts/check_var_sizes.py).
 """
 import argparse, os, re, subprocess, sys
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)

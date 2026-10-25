@@ -24,6 +24,7 @@ and widens an integer return the two sides give different sizes.
 --names prints the imports and exports instead, one per line.
 """
 import argparse, glob, os, re, subprocess, sys
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
