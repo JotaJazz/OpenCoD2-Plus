@@ -138,11 +138,14 @@ static void __attribute_regparm__(3) Image_LoadBitmap(GfxImage *image, const Gfx
                     int p;
                     byte *dst = expandedData;
                     const byte *src = srcPtr;
+                    /* RGB24 is stored [B,G,R]: copied as is with X last, the
+                       X8R8G8B8 memory order, as the 1.3 renderer (0x1000f6e0).
+                       The PowerPC original's swap turned orange tracers blue. */
                     for (p = 0; p < mipPixels; p++) {
-                        dst[0] = 0xFF;
-                        dst[1] = src[2];
-                        dst[2] = src[1];
-                        dst[3] = src[0];
+                        dst[0] = src[0];
+                        dst[1] = src[1];
+                        dst[2] = src[2];
+                        dst[3] = 0xFF;
                         dst += 4;
                         src += 3;
                     }
