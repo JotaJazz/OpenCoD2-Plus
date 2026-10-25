@@ -612,6 +612,7 @@ separate_arguments(COD2_FEATURE_LIST UNIX_COMMAND "${COD2_FEATURE_CFLAGS}")
 
 add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:${SDL2_CFLAGS_OTHER}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_OPT_FLAGS}>"

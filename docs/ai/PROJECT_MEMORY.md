@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-25 — checks pass on Ubuntu 26.04 in Spanish
+
+- glibc 2.43 gave i386's `acosf`, `asinf`, `atan2f`, `log10f` and `sqrtf` new versions, raising the Linux binaries' floor past 2.34: `glibc_compat.h` binds them to `GLIBC_2.0` (`.symver`) and is now force-included in C too (speex calls `sqrtf`); its `<features.h>` part stays C++-only, since included first in C it hid sqlite3.c's `mremap`.
+
 ## 2026-10-25 — GL client loads color_channel_mixer
 
 - The GL clients (no `GFX_REAL_D3D9`) logged `color_channel_mixer.tech, line 15: expected 'sampler' or 'material', found 'constant'` and loaded the material from partial data: their `D3DXGetShaderConstantTable` stub returns no constants, so `Material_SetPassShaderArguments` takes the reconstruction's fallback (1.3 always has d3dx9's table), which parsed every value as a sampler. It now skips, as unused, every constant but `colorMapSampler`, the only one it keeps; `constant.materialColor` is the stock data's only `constant.` in a shader block.
