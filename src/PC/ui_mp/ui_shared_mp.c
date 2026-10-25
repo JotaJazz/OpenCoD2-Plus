@@ -1125,6 +1125,7 @@ void Menus_Close(displayContextDef_t *dc, menuDef_t *menu)
     byte *d = (byte *)dc;
     int openCount, i, menuIndex;
     qboolean wasVisible = 0;
+    qboolean inStack = 0;
     byte tempItem[0x2a0];
 
     openCount = (((displayContextDef_s*)(d))->openMenuCount);
@@ -1133,8 +1134,16 @@ void Menus_Close(displayContextDef_t *dc, menuDef_t *menu)
             int flags = menu->window.dynamicFlags[0];
             if (flags & 4)
                 wasVisible = (flags >> 1) & 1;
+            inStack = 1;
             break;
         }
+    }
+
+    // a menu not on the stack only loses its flags, its onClose not run,
+    // as the 1.3 binary (0x53acfc)
+    if (!inStack) {
+        Window_RemoveDynamicFlags( (itemDef_t *)((void *)menu), 6);
+        return;
     }
 
     int flags = menu->window.dynamicFlags[0];
@@ -1175,12 +1184,12 @@ void Menus_Close(displayContextDef_t *dc, menuDef_t *menu)
 
 void Menus_CloseAll(displayContextDef_t *dc)
 {
-    byte *d = (byte *)dc;
+    int i;
 
-    while ((((displayContextDef_s*)(d))->openMenuCount) > 0) {
-        int top = (((displayContextDef_s*)(d))->openMenuCount) - 1;
-        Menus_Close(dc, *(menuDef_t **)((char *)&((displayContextDef_s *)d)->menuStack[top]));
-    }
+    // every loaded menu, not only the open stack: one visible since it was
+    // parsed (player_profile) is hidden too, as the 1.3 binary (0x53adc0)
+    for (i = 0; i < dc->menuCount; i++)
+        Menus_Close(dc, dc->Menus[i]);
 }
 
 void Item_SetTextExtents(itemDef_t *item, int *width, int *height, const char *text)
