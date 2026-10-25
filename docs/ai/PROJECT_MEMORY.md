@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-25 — GL client loads color_channel_mixer
+
+- The GL clients (no `GFX_REAL_D3D9`) logged `color_channel_mixer.tech, line 15: expected 'sampler' or 'material', found 'constant'` and loaded the material from partial data: their `D3DXGetShaderConstantTable` stub returns no constants, so `Material_SetPassShaderArguments` takes the reconstruction's fallback (1.3 always has d3dx9's table), which parsed every value as a sampler. It now skips, as unused, every constant but `colorMapSampler`, the only one it keeps; `constant.materialColor` is the stock data's only `constant.` in a shader block.
+- `scripts/fx_test.py` also fails when a material does not load (`FinishLoadingInstance failed`). Checked here with the native client's log on the stock iwds (the test needs a CD key this box lacks): the two lines gone, no other warning changed.
+- The material only draws `r_showFbColorDebug 2` and `sc_showDebug`; whether the GL backend draws it right was not looked at.
+
 ## 2026-10-25 — HUD and menus seen online, as 1.3
 
 - Playing online on a CoD2rev-Plus server: no hip crosshair (its alpha came from `fWeaponPosFrac`, 0 at the hip; 1.3 uses `CG_DrawWeapReticle`'s return, `0x4c95b9`), a white square for the turret's reticle (`0x4c8da0` draws the turret weapon's own), the MG42's use hint showing the grenade icon (weapon icons stored at `weaponNum + 2`, not `+ 4`, `0x4d4dfe`), blue tracers (RGB24 images loaded with the PowerPC byte swap, `0x1000f6e0`) and an empty "Name" list in the in-game menu (`player_profile`, visible since parsed, never closed: `Menus_CloseAll` walks every loaded menu, `0x53adc0`).

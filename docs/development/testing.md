@@ -24,7 +24,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/server_eye_test.py` | a walking player's eye on the server (libcod `getViewOrigin`, where shots start) bobs sideways; thrown straight up mid-walk with its horizontal velocity cleared, it stays over the origin, as 1.3 (horizontal speed 0) | no |
 | `scripts/anim_script_test.py` | in a local game the engine's animation script (cgame's prediction) and CoD2rev-Plus's (the server's) parse the same animations (flags, movetype, duration, speed) and pick the same legs and torso animations, timers and durations for every weapon, stance, aim, pitch, state, movetype and event (`COD2_CHECK_ANIMSCRIPT`) | yes |
 | `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); legs and torso that change when predicted again stay under `--max-anim-misses` (6; `COD2_TRACE_PREDANIM`: the spawn's weapon and the landing's MOVETYPE condition, which the playerstate does not carry); `--moves CFG`, `--spot` | yes |
-| `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
+| `scripts/fx_test.py` | effects change the picture; no effect or material fails to load | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
