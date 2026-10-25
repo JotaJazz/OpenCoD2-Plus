@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-25 — HUD and menus seen online, as 1.3
+
+- Playing online on a CoD2rev-Plus server: no hip crosshair (its alpha came from `fWeaponPosFrac`, 0 at the hip; 1.3 uses `CG_DrawWeapReticle`'s return, `0x4c95b9`), a white square for the turret's reticle (`0x4c8da0` draws the turret weapon's own), the MG42's use hint showing the grenade icon (weapon icons stored at `weaponNum + 2`, not `+ 4`, `0x4d4dfe`), blue tracers (RGB24 images loaded with the PowerPC byte swap, `0x1000f6e0`) and an empty "Name" list in the in-game menu (`player_profile`, visible since parsed, never closed: `Menus_CloseAll` walks every loaded menu, `0x53adc0`).
+- The crosshair's red-on-enemy color was not 1.3's: its color helper (`0x4c8d50`) is only green over a friendly, else white.
+- Left open: the view still jumps now and then online (ping 35–45), not yet measured (`cg_showmiss 1` prints the misses); the scoreboard's columns differ from 1.3's table (`0x59e628`: status and talking icons first).
+
 ## 2026-10-24 — the server's animation script as 1.3, vendor sync 1094533
 
 - The three CoD2rev-Plus differences from 1.3 left open by the previous stage are fixed there (`1094533`, user-approved, pushed with `0267dff`) and vendored: strafe flags from STRAFING only (`0x4f7f54`), crouch and prone masks as 1.3's and answering 0 or 1 (`0x4f9750`, `0x4f97b0`; a bit mask made two prone anims look like a stance change), 1.3's float constants. Found on the way: `BG_SetNewAnimation` divided the start time as integers, so every looping anim started at frame 0 (`0x4f9adb`).
