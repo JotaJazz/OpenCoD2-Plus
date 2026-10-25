@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Counts a real client's prediction misses while it moves, jumps and fires.
 
-    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--max-anim-misses N] [--moves CFG] [--spot 'X Y Z YAW']
+    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--max-anim-misses N] [--moves CFG] [--spot 'X Y Z YAW'] [--delay MS] [--maxfps N]
 
 Runs the dedicated server with scripts/contact_test.py's mod and a minimal
 client as its target, and a real client (cod2_linux, held at 20 fps) as the
@@ -27,10 +27,13 @@ predict, not from its animation script (scripts/anim_script_test.py
 compares that with the server's): the weapon the mod gives at spawn, and the
 MOVETYPE condition the landing event reads, which lives outside the
 playerstate and is not set back when the moves are predicted again (3 or 4
-per run, all with no origin miss). The client opens a window and needs a CD key in
+per run, all with no origin miss). --delay MS puts a UDP relay between the
+client and the server that holds each packet MS milliseconds each way (a
+ping of twice that, as online); --maxfps sets the client's com_maxfps
+(default 20). The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
-import argparse, os, re, subprocess, sys, tempfile, time
+import argparse, heapq, os, re, socket, subprocess, sys, tempfile, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -76,6 +79,68 @@ MAX_MISSES = 60
 MAX_ANIM_MISSES = 6
 
 
+class Relay:
+    """A UDP relay on 127.0.0.1 that holds each packet `delay` seconds
+    before passing it on: client -> listen port -> server, and back."""
+
+    def __init__(self, server_port, delay):
+        self.server = ('127.0.0.1', server_port)
+        self.delay = delay
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('127.0.0.1', 0))
+        self.port = self.sock.getsockname()[1]
+        self.client = None
+        self.queue = []
+        self.lock = threading.Condition()
+        self.running = True
+        threading.Thread(target=self._receive, daemon=True).start()
+        threading.Thread(target=self._send, daemon=True).start()
+
+    def _receive(self):
+        self.sock.settimeout(0.5)
+        n = 0
+        while self.running:
+            try:
+                data, addr = self.sock.recvfrom(65536)
+            except socket.timeout:
+                continue
+            except OSError:
+                return
+            if addr == self.server:
+                to = self.client
+            else:
+                self.client = addr
+                to = self.server
+            if to is None:
+                continue
+            with self.lock:
+                n += 1
+                heapq.heappush(self.queue, (time.monotonic() + self.delay, n, data, to))
+                self.lock.notify()
+
+    def _send(self):
+        while self.running:
+            with self.lock:
+                while self.running and not self.queue:
+                    self.lock.wait(0.5)
+                if not self.queue:
+                    continue
+                due, _, data, to = self.queue[0]
+                wait = due - time.monotonic()
+                if wait > 0:
+                    self.lock.wait(wait)
+                    continue
+                heapq.heappop(self.queue)
+            try:
+                self.sock.sendto(data, to)
+            except OSError:
+                pass
+
+    def close(self):
+        self.running = False
+        self.sock.close()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('game_dir')
@@ -89,6 +154,8 @@ def main():
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
     ap.add_argument('--spot', default=SPOT, help="'x y z yaw' to put the client at when it joins (the mod's spot phase); "
                     "'' leaves it where it spawns")
+    ap.add_argument('--delay', type=int, default=0, help='milliseconds a relay holds each packet, each way (default 0: no relay)')
+    ap.add_argument('--maxfps', type=int, default=20, help="the client's com_maxfps (default 20)")
     args = ap.parse_args()
     if args.spot and len(args.spot.split()) != 4:
         ap.error("--spot takes 'x y z yaw'")
@@ -102,6 +169,7 @@ def main():
     failures = []
     procs = []
     target = None
+    relay = None
 
     def check(name, ok, detail=''):
         print(f'{"ok  " if ok else "FAIL"} {name}' + (f' ({detail})' if detail else ''), flush=True)
@@ -142,10 +210,14 @@ def main():
                         target, why = None, 'not in the game'
                 check('the target joins', target is not None, why)
             if target:
+                connect_port = port
+                if args.delay:
+                    relay = Relay(port, args.delay / 1000.0)
+                    connect_port = relay.port
                 with open(client_log, 'wb') as log:
                     client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', '20',
-                                               '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{port}',
+                                               client_home, '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', str(args.maxfps),
+                                               '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{connect_port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                               cwd=client_home, env=dict(os.environ, COD2_TRACE_PREDANIM='1'))
@@ -184,6 +256,8 @@ def main():
         finally:
             if target:
                 target.close()
+            if relay:
+                relay.close()
             for p in procs:
                 if p.poll() is None:
                     p.terminate()
