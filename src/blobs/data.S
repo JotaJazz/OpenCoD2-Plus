@@ -6047,8 +6047,9 @@ etaText:
 .size dlText, 31
 .align 4
 dlText:
+    /* "EXE_DOWNLOADING" (0x5ddc44): "ING" is text, not a pointer */
     .byte 0x45, 0x58, 0x45, 0x5f, 0x44, 0x4f, 0x57, 0x4e, 0x4c, 0x4f, 0x41, 0x44
-    .long scrMemTreeGlob+517961
+    .byte 0x49, 0x4e, 0x47, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 .globl g_qport
@@ -8221,11 +8222,11 @@ svc_strings:
 .size cg_shock_dvar_names, 128
 .align 4
 cg_shock_dvar_names:
+    /* the 1.3 binary's table (0x5d89c8): no cg_shock_viewKickFadeTime */
     .long str_002a85bc
     .long str_002a85d8
     .long str_002a85f8
     .long str_002a8610
-    .long str_cg_shock_viewKickFadeTime
     .long str_002a8628
     .long str_002a8638
     .long str_002a8654
@@ -8251,7 +8252,7 @@ cg_shock_dvar_names:
     .long str_002a884c
     .long str_002a8868
     .long str_002a8888
-    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 .globl s_barrelTags
 .type s_barrelTags, @object

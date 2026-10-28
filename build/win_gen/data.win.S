@@ -5881,8 +5881,9 @@ _etaText:
 .globl _dlText
 .align 4
 _dlText:
+    /* "EXE_DOWNLOADING" (0x5ddc44): "ING" is text, not a pointer */
     .byte 0x45, 0x58, 0x45, 0x5f, 0x44, 0x4f, 0x57, 0x4e, 0x4c, 0x4f, 0x41, 0x44
-    .long _scrMemTreeGlob+517961
+    .byte 0x49, 0x4e, 0x47, 0x00
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 #if !COD2_PLUS_SERVER /* CoD2rev-Plus's code defines it */
@@ -8012,11 +8013,11 @@ _svc_strings:
 .globl _cg_shock_dvar_names
 .align 4
 _cg_shock_dvar_names:
+    /* the 1.3 binary's table (0x5d89c8): no cg_shock_viewKickFadeTime */
     .long _str_002a85bc
     .long _str_002a85d8
     .long _str_002a85f8
     .long _str_002a8610
-    .long _str_cg_shock_viewKickFadeTime
     .long _str_002a8628
     .long _str_002a8638
     .long _str_002a8654
@@ -8042,7 +8043,7 @@ _cg_shock_dvar_names:
     .long _str_002a884c
     .long _str_002a8868
     .long _str_002a8888
-    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #endif
 
 .globl _s_barrelTags

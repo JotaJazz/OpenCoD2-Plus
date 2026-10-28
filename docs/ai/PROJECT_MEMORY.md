@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-28 — shell shock files and the download label, as 1.3
+
+- After downloading the Titan mod the client dropped with "couldn't register shell shock 'medical'": the table of dvars a `.shock` file sets had `cg_shock_viewKickFadeTime` at index 4, so of the 29 read `cg_shock_mouse_fadeTime` was left out and a file without the former was refused; 1.3's table (`0x5d89c8`) has neither that dvar nor the gap. Fixed in `cg_shellshock.c` and `data.S`; a local game with such a file failed before and loads now.
+- The download label still read `EXE_DOWNLOA...`: the builds take `dlText` from the generated blobs (`build/win_gen/data.win.S`, `build/native_gen/data32.c`, also `src/blobs/data.S` and `build/web_gen/data.c`), where the blob's `"ING\0"` had been taken for a pointer (`scrMemTreeGlob+517961`); only `src/blobs/data.c` was fixed before. `test/test_blob_tables.py` pins the label in the blobs and the shock table.
+- Not changed: a local game over a `main` folder holding many downloaded `.iwd` drops with `FS_PureServerSetReferencedIwds: count mismatch`, because `systeminfo` passes 1024 bytes and loses `sv_referencedIwds`; 1.3's `Info_SetValueForKey_Big` has the same 1024 limit (`0x44b14b`).
+
 ## 2026-10-28 — HTTP downloads on Windows, SD stopwatch, loading screen names
 
 - The Windows client never downloaded over HTTP: MinGW linked `win32_stubs.c`'s curl stubs (`curl_multi_init` answered 0), so every redirected download failed, the client sent `wwwdl fail` and `bbl8r` as 1.3 does (`0x414055`) and servers that ask for it dropped it; the slow downloads seen before were servers' UDP fallback. `src/win32/win_wininet.c` gives `dl_main.c` libcurl's calls on WinINet (1.3 itself uses libwww over WSOCK32); `scripts/www_download_test.py` (a local HTTP server) passes on Linux and under Wine, failed with the old exe. The bytes received now reach `cl_downloadCount`, as 1.3's read callback does (`0x4b58e0`): the bar stayed at 0% on both clients.
