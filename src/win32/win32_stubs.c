@@ -132,6 +132,8 @@ void _ZN21CDirect3DVertexShaderD0Ev(void){} void _ZN21CDirect3DVertexShaderD1Ev(
 void FD_ZERO(void *s){ if(s)*(unsigned*)s=0; }
 void FD_SET(unsigned fd, void *s){ unsigned *c=(unsigned*)s; if(*c<64){((unsigned*)((char*)s+4))[*c]=fd;(*c)++;} }
 
+/* the MinGW client downloads through WinINet (win_wininet.c) */
+#if !(defined(W32_CLIENT) && defined(__MINGW32__))
 void *curl_easy_init(void){return 0;}
 int   curl_easy_setopt(void*a,int b,...){(void)a;(void)b;return 0;}
 int   curl_easy_getinfo(void*a,int b,...){(void)a;(void)b;return 0;}
@@ -142,6 +144,7 @@ int   curl_multi_add_handle(void*a,void*b){(void)a;(void)b;return 0;}
 int   curl_multi_remove_handle(void*a,void*b){(void)a;(void)b;return 0;}
 int   curl_multi_perform(void*a,int*b){(void)a;if(b)*b=0;return 0;}
 void *curl_multi_info_read(void*a,int*b){(void)a;if(b)*b=0;return 0;}
+#endif
 #if !COD2_PLUS_SERVER  /* the dedicated server's bridge stops on it (test/server_fatal.txt) */
 void  Sys_OpenURL(const char *url, int activate){(void)url;(void)activate;}
 #endif

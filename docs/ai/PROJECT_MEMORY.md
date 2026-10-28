@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-28 — HTTP downloads on Windows, SD stopwatch, loading screen names
+
+- The Windows client never downloaded over HTTP: MinGW linked `win32_stubs.c`'s curl stubs (`curl_multi_init` answered 0), so every redirected download failed, the client sent `wwwdl fail` and `bbl8r` as 1.3 does (`0x414055`) and servers that ask for it dropped it; the slow downloads seen before were servers' UDP fallback. `src/win32/win_wininet.c` gives `dl_main.c` libcurl's calls on WinINet (1.3 itself uses libwww over WSOCK32); `scripts/www_download_test.py` (a local HTTP server) passes on Linux and under Wine, failed with the old exe. The bytes received now reach `cl_downloadCount`, as 1.3's read callback does (`0x4b58e0`): the bar stayed at 0% on both clients.
+- Online screenshots: the download box showed `EXE_DOWNLOAD` over the file name (the key is `EXE_DOWNLOADING`, `0x5ddc44`); SD's stopwatch drew a checkered diamond, its hand looked up as `<face>_hand` instead of `<face>needle` (`0x4dda60`); the loading screen showed `sd` and `mp_carentan`: it compared the gametype with the display name and never took the map's `longname` (`0x539211` uses the menus' lookups, `0x532d90`, `0x532cd0`).
+- Left open: the online view jumps (the traced session was too short; `COD2_TRACE_PREDDIFF` stays uncommitted); the MSVC client still has the curl stubs.
+
 ## 2026-10-25 — HUD and menus seen online, as 1.3
 
 - Playing online on a CoD2rev-Plus server: no hip crosshair (its alpha came from `fWeaponPosFrac`, 0 at the hip; 1.3 uses `CG_DrawWeapReticle`'s return, `0x4c95b9`), a white square for the turret's reticle (`0x4c8da0` draws the turret weapon's own), the MG42's use hint showing the grenade icon (weapon icons stored at `weaponNum + 2`, not `+ 4`, `0x4d4dfe`), blue tracers (RGB24 images loaded with the PowerPC byte swap, `0x1000f6e0`) and an empty "Name" list in the in-game menu (`player_profile`, visible since parsed, never closed: `Menus_CloseAll` walks every loaded menu, `0x53adc0`).

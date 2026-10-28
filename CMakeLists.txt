@@ -441,7 +441,7 @@ if(COD2_WIN32_CLIENT)
   add_compile_definitions(W32_CLIENT)
   include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
   list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
-  list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid
+  list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid wininet
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)
   if(COD2_PLUS_CLIENT_SERVER)

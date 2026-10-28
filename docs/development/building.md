@@ -58,6 +58,10 @@ never called there: `src/unix/linux_ded_stubs.c` (Linux) and
 `src/win32/win32_stubs.c` (MinGW) stand in for them, each returning 0. When the
 glibc/client-library check fails, the missing stub goes there.
 
+The MinGW client downloads redirected files (`sv_wwwBaseURL`) through WinINet:
+`src/win32/win_wininet.c` implements the part of libcurl's API that
+`src/PC/qcommon/dl_main.c` calls, so the download logic is the Linux client's.
+
 Linux builds use `_FILE_OFFSET_BITS=64`: the 32-bit `readdir` fails with
 `EOVERFLOW` on file systems with large inode numbers (Windows drives under WSL).
 

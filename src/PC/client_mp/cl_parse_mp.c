@@ -529,6 +529,8 @@ void CL_WWWDownload(void)
 
     DL_DownloadLoop();
     st = DL_GetStatus();
+    if (!DL_DLIsMotd())
+        *(int *)((*download_ui_ptr) + 0x14) = DL_BytesReceived();
 
     if (st == DL_STATUS_IN_PROGRESS || st == DL_STATUS_IDLE)
         return;

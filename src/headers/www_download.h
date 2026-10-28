@@ -26,6 +26,7 @@ void       DL_CancelDownload(void);
 int        DL_InProgress(void);
 int        DL_DLIsMotd(void);
 dlStatus_t DL_GetStatus(void);
+int        DL_BytesReceived(void);
 
 #else
 
@@ -36,6 +37,7 @@ static inline void       DL_CancelDownload(void) {}
 static inline int        DL_InProgress(void) { return 0; }
 static inline int        DL_DLIsMotd(void) { return 0; }
 static inline dlStatus_t DL_GetStatus(void) { return DL_STATUS_IDLE; }
+static inline int        DL_BytesReceived(void) { return 0; }
 
 #endif
 

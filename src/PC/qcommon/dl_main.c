@@ -62,10 +62,14 @@ static int dl_isMotd = 0;
 static dlStatus_t dl_status = DL_STATUS_IDLE;
 static int dl_debug = 0;
 static char dl_localName[1024];
+static int dl_bytes = 0;
 
 static size_t DL_WriteCb(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-    return fwrite(ptr, size, nmemb, (FILE *)stream);
+    size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
+
+    dl_bytes += (int)(written * size);
+    return written;
 }
 
 static void DL_Teardown(void)
@@ -100,6 +104,7 @@ int DL_BeginDownload(const char *localName, const char *remoteName, int debug)
     dl_status = DL_STATUS_FAILED;
     dl_debug = debug;
     dl_isMotd = 0;
+    dl_bytes = 0;
 
     if (!localName || !remoteName) {
         Com_DPrintf("Empty download URL or empty local file name\n");
@@ -215,6 +220,13 @@ int DL_InProgress(void)
 int DL_DLIsMotd(void)
 {
     return dl_isMotd;
+}
+
+/* the bytes written so far, for cl_downloadCount (the 1.3 binary's read
+   progress callback, 0x4b58e0) */
+int DL_BytesReceived(void)
+{
+    return dl_bytes;
 }
 
 dlStatus_t DL_GetStatus(void)
