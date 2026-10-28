@@ -4413,32 +4413,12 @@ void UI_DrawConnectScreen(void)
 
     if (g_mapname[0] != '\0') {
 
-        int numGameTypes = sharedUiInfo.numGameTypes;
-        pszGameType = g_gametype;
-
-        if (numGameTypes > 0) {
-            int gi;
-            byte *base = (byte *)&sharedUiInfo;
-            for (gi = 0; gi < numGameTypes; gi++) {
-                if (I_stricmp(g_gametype, sharedUiInfo.gameTypes[gi].gameTypeName) == 0) {   /* was base+0x114c+gi*8 (x86) */
-                    pszGameType = sharedUiInfo.gameTypes[gi].gameTypeName;
-                    break;
-                }
-            }
-        }
-
+        /* 0x539211: the gametype's and the map's display names, as the
+           menus show them (0x532d90, 0x532cd0) */
+        pszGameType = UI_GetGameTypeDisplayName(g_gametype);
         UI_DrawCenteredText(UI_SafeTranslateString(pszGameType), font, connectScale, 89.0f, (const vec_t *)imp_colorWhite, 6);
 
-        {
-            int numMaps = sharedUiInfo.mapCount;
-            int mi;
-            mapDisplayName = g_mapname;
-            for (mi = 0; mi < numMaps; mi++) {
-                if (I_stricmp(g_mapname, sharedUiInfo.mapList[mi].mapName) == 0)   /* was &sharedUiInfo+mi*0xa4+0x1358 (x86) */
-                    break;
-            }
-        }
-
+        mapDisplayName = UI_GetMapDisplayName(g_mapname);
         UI_DrawCenteredText(mapDisplayName, font, connectScale, 119.0f, (const vec_t *)imp_colorWhite, 6);
 
         bConnectInfoDisplayed = 1;

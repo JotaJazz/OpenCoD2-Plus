@@ -3017,7 +3017,7 @@ unsigned char etaText[18] = {
     0x54, 0x00
 };
 
-char dlText[16] = "EXE_DOWNLOAD";
+char dlText[16] = "EXE_DOWNLOADING";  /* 0x5ddc44 */
 
 char g_qport[4] = {0};
 

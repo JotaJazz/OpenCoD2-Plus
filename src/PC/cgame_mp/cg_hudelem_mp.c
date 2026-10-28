@@ -747,7 +747,7 @@ void CG_Draw2dHudElems(qboolean foreground)
                     continue;
 
                 void *faceMaterial = CL_RegisterMaterialNoMip(materialName, 7);
-                I_strncat(materialName, 64, "_hand");
+                I_strncat(materialName, 64, "needle");  /* 0x4dda60 */
                 void *handMaterial = CL_RegisterMaterialNoMip(materialName, 7);
 
                 float timeVal = 0.0f;
