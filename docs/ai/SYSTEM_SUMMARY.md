@@ -47,7 +47,7 @@ cod2rad/             upstream tool (not built by default)
 | Renderer | real D3D9 on Windows; GL elsewhere | [../architecture/renderer.md](../architecture/renderer.md) |
 | Effects | all primitives per 1.3 | [../architecture/effects.md](../architecture/effects.md) |
 | Sound (Windows) | game's `mss32.dll` | not testable under Wine |
-| Online play | CD key auth, HTTP downloads | 1.3 servers |
+| Online play | CD key auth, HTTP downloads (curl on Linux, WinINet on Windows) | 1.3 servers; prediction measured against 1.3 on a modded server |
 
 Open items: [../roadmap/debt.md](../roadmap/debt.md).
 
