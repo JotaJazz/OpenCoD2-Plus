@@ -189,6 +189,72 @@ static void CG_TracePredictedAnim(const playerState_t *before, const playerState
     fprintf(stderr, "Prediction anim miss: t=%d legs %d %d torso %d %d origin %.2f\n", again->commandTime,
             before->legsAnim, again->legsAnim, before->torsoAnim, again->torsoAnim, (double)originMiss);
 }
+/* COD2_TRACE_PREDDIFF: the playerstate the client predicted for each
+   commandTime, compared with the server's when a snapshot for that time
+   arrives; where the origins differ, every 4-byte word of the two states
+   that differs; for finding which part of the move the client computes
+   unlike the server */
+#define PREDDIFF_RING 64
+static byte cg_predDiffStates[PREDDIFF_RING][0x26a8];
+static int cg_predDiffTimes[PREDDIFF_RING];
+static int cg_predDiffLastSnap;
+
+static int CG_PredDiffEnabled(void)
+{
+    static int enabled = -1;
+
+    if (enabled < 0) {
+        enabled = getenv("COD2_TRACE_PREDDIFF") != NULL;
+        if (enabled)
+            Com_Printf("PredDiff: trace on\n");
+    }
+    return enabled;
+}
+
+static void CG_PredDiffStore(const playerState_t *ps)
+{
+    int slot;
+
+    if (!CG_PredDiffEnabled())
+        return;
+    slot = ps->commandTime & (PREDDIFF_RING - 1);
+    cg_predDiffTimes[slot] = ps->commandTime;
+    memcpy(cg_predDiffStates[slot], ps, 0x26a8);
+}
+
+static void CG_PredDiffCompare(const playerState_t *server)
+{
+    const unsigned int *a, *b;
+    int slot, i, shown;
+    float d;
+
+    if (!CG_PredDiffEnabled() || server->commandTime == cg_predDiffLastSnap)
+        return;
+    cg_predDiffLastSnap = server->commandTime;
+    slot = server->commandTime & (PREDDIFF_RING - 1);
+    if (cg_predDiffTimes[slot] != server->commandTime)
+        return;
+    a = (const unsigned int *)cg_predDiffStates[slot];
+    b = (const unsigned int *)server;
+    d = fabsf(((const playerState_t *)a)->origin[0] - server->origin[0]) +
+        fabsf(((const playerState_t *)a)->origin[1] - server->origin[1]) +
+        fabsf(((const playerState_t *)a)->origin[2] - server->origin[2]);
+    if (d == 0.0f)
+        return;
+    Com_Printf("PredDiff t=%d origin %.5f\n", server->commandTime, (double)d);
+    for (i = 0; i < cg_numSolidEntities; i++) {
+        const entityState_t *es = &cg_solidEntities[i]->nextState;
+        Com_Printf("  solid %d type %d at %.2f %.2f %.2f\n", es->number, es->eType, (double)es->pos.trBase[0],
+                (double)es->pos.trBase[1], (double)es->pos.trBase[2]);
+    }
+    for (i = 0, shown = 0; i < 0x26a8 / 4 && shown < 48; i++) {
+        if (a[i] == b[i])
+            continue;
+        Com_Printf("  +0x%04x client %08x %g server %08x %g\n", i * 4, a[i], (double)*(const float *)&a[i],
+                b[i], (double)*(const float *)&b[i]);
+        shown++;
+    }
+}
 
 void CG_PredictPlayerState(void)
 {
@@ -257,6 +323,7 @@ void CG_PredictPlayerState(void)
 
     nextSnap = cg->nextSnap;
     memcpy(ps, &nextSnap->ps, REAL_PS_SIZE);
+    CG_PredDiffCompare(&nextSnap->ps);
 
     cg->physicsTime = nextSnap->serverTime;
 
@@ -355,6 +422,7 @@ void CG_PredictPlayerState(void)
         }
 
         Pmove(&cg_pmove[0]);
+        CG_PredDiffStore(ps);
 
         {
             int pm_type;

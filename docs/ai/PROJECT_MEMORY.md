@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-28 — online prediction measured against 1.3; hud alignment
+
+- Same server (Titan), `cg_showmiss 1`: the original client missed 26 times (median 1.6, max 9.6), ours 53 (median 1.8) plus bursts of up to 32 units while rubbing another player. Collision with players (`0x4de2f0`, interpolated origin, box one unit smaller), the `centity_t` layout and the frame's order (`0x4d002d`..`0x4d0047`) are 1.3's; the misses far from players have the server moving slower than predicted, likely the mod's speed scale, which the playerstate does not carry. No client bug found; `COD2_TRACE_PREDDIFF` (per-word playerstate diff) kept as a tool. The prediction messages are 1.3's (`dvar_developer` was an alias of `cg_showmiss`).
+- The killcam's title and timer were drawn at the screen's edges, half way down: hud elements read `alignScreen`'s horizontal from bits 0-2 and vertical from 3-5, the other way round from the server (and 1.3, `0x4dd04b`); pairs like left/top look the same either way. Materials with `alignX` center or right went off screen too: without a label `labelWidth` was never set and a material's width adds it (1.3 zeroes it, `0x4dd715`). `scripts/hud_align_test.py` failed on both, passes now.
+
 ## 2026-10-28 — shell shock files and the download label, as 1.3
 
 - After downloading the Titan mod the client dropped with "couldn't register shell shock 'medical'": the table of dvars a `.shock` file sets had `cg_shock_viewKickFadeTime` at index 4, so of the 29 read `cg_shock_mouse_fadeTime` was left out and a file without the former was refused; 1.3's table (`0x5d89c8`) has neither that dvar nor the gap. Fixed in `cg_shellshock.c` and `data.S`; a local game with such a file failed before and loads now.

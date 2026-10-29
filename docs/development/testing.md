@@ -25,6 +25,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/anim_script_test.py` | in a local game the engine's animation script (cgame's prediction) and CoD2rev-Plus's (the server's) parse the same animations (flags, movetype, duration, speed) and pick the same legs and torso animations, timers and durations for every weapon, stance, aim, pitch, state, movetype and event (`COD2_CHECK_ANIMSCRIPT`) | yes |
 | `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); legs and torso that change when predicted again stay under `--max-anim-misses` (6; `COD2_TRACE_PREDANIM`: the spawn's weapon and the landing's MOVETYPE condition, which the playerstate does not carry); `--moves CFG`, `--spot`; `--delay MS` relays the packets through a UDP relay that holds each MS ms each way (online ping), `--maxfps N` sets the client's frame rate (default 20) | yes |
 | `scripts/www_download_test.py GAME` | a client joins a 1.3 server whose mod it lacks: it fetches the mod's `.iwd` over HTTP (`sv_wwwBaseURL`, a local HTTP server), keeps it byte for byte and joins; `--disconnect` (`sv_wwwDlDisconnected 1`: leave, download, reconnect); `--wine WINE --binary EXE` runs the Windows client (WinINet) | yes |
+| `scripts/hud_align_test.py` | hud elements land where their `horzAlign`/`vertAlign` and `alignX`/`alignY` put them: three colored boxes (center_safearea/top centered, right/bottom, left/middle) found in a screenshot | yes |
 | `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
@@ -40,7 +41,8 @@ the scripts pick the binary from `--protocol` (`--binary` overrides it).
 | Note | Detail |
 |---|---|
 | Minimal client | `scripts/hit_location_test.py`'s client sends pitch, move keys and buttons every command: a field left unchanged keeps the server's previous command's value |
-| Prediction misses | `cg_showmiss 1` is read as `dvar_developer` in the reconstruction; running into another player always misses (the client clips players with a box one unit smaller per side, as the original) |
+| Prediction misses | `cg_showmiss 1` prints them, with 1.3's messages (`prediction error`, `Prediction miss`); running into another player always misses (the client clips players at their interpolated origin with a box one unit smaller per side, as the original). `COD2_TRACE_PREDDIFF=1` prints, for each snapshot whose origin differs from what the client predicted for that time, every 4-byte word of the playerstate that differs and the solid entities around |
+| Game folder | `GAME` must hold only the stock `.iwd`: files downloaded from servers into `main` make local games drop with `FS_PureServerSetReferencedIwds: count mismatch` (`systeminfo` passes 1024 bytes, as 1.3); a folder of links to the stock files works |
 | Bots flake | "search paths sparingly" failed 2 runs in 5 with the client as host, on one bot-second; it is the tail of the same behavior as the dedicated server |
 | `layout_parity.py` | runs nothing: values are read from the compiled objects with `objcopy`, so MinGW needs no Wine |
 | UI trace | `MTRACE=1` prints the open menus to the console |
