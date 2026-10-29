@@ -44,6 +44,9 @@ extern void Com_Printf(const char *fmt, ...);
 extern const dvar_t **dvar_nopredict;
 extern const dvar_t **dvar_synchronous;
 extern const dvar_t **dvar_developer;
+/* the prediction messages, as 1.3 (0x4debaf..0x4deea7); dvar_developer
+   above is an alias of the same dvar */
+extern const dvar_t *cg_showmiss;
 extern const dvar_t **dvar_autoPickup;
 extern const dvar_t **dvar_errorDecay;
 
@@ -242,8 +245,8 @@ void CG_PredictPlayerState(void)
     {
         usercmd_t oldestCmd;
         if (!CL_GetUserCmd(oldest, &oldestCmd)) {
-            if (dvar_get_int_safe(dvar_developer) != 0)
-                Com_Printf("CG_PredictPlayerState: CMD_BACKUP exceeded\n");
+            if (cg_showmiss->current.integer)
+                Com_Printf("exceeded PACKET_BACKUP on commands\n");
             goto cleanup;
         }
     }
@@ -294,14 +297,14 @@ void CG_PredictPlayerState(void)
 
             ps->delta_angles[1] += (int)(deltaAngles[1] * (65536.0f / 360.0f)) & 0xffff;
 
-            if (dvar_get_int_safe(dvar_developer) != 0) {
+            if (cg_showmiss->current.integer) {
 
                 float *oldOrig = &((playerState_t *)oldPlayerState)->origin[0];
                 isMatch = (oldOrig[0] == oldOrigin[0] &&
                            oldOrig[1] == oldOrigin[1] &&
                            oldOrig[2] == oldOrigin[2]);
                 if (!isMatch) {
-                    Com_Printf("CG_PredictPlayerState: prediction not matched\n");
+                    Com_Printf("prediction error\n");
                 }
             }
 
@@ -315,7 +318,7 @@ void CG_PredictPlayerState(void)
                 float *predictedError;
                 float errorDecayVal;
 
-                if (dvar_get_int_safe(dvar_developer) != 0)
+                if (cg_showmiss->current.integer)
                     Com_Printf("Prediction miss: %f\n", (double)len);
 
                 errorDecayVal = dvar_get_float_safe(dvar_errorDecay);
@@ -335,7 +338,7 @@ void CG_PredictPlayerState(void)
                     if (t < 0.0f)
                         t = 0.0f;
 
-                    if (t > 0.0f && dvar_get_int_safe(dvar_developer) != 0)
+                    if (t > 0.0f && cg_showmiss->current.integer)
                         Com_Printf("Double prediction decay: %f\n", (double)t);
 
                     predictedError[0] *= t;
@@ -404,7 +407,7 @@ void CG_PredictPlayerState(void)
 
 postPredict:
 
-    if (dvar_get_int_safe(dvar_developer) > 1) {
+    if (cg_showmiss->current.integer > 1) {
         Com_Printf("[%i : %i] ", cg_pmove[0].cmd.serverTime, cg->time);
     }
 
@@ -419,8 +422,8 @@ postPredict:
             ps->origin, deltaAngles);
     } else {
 
-        if (dvar_get_int_safe(dvar_developer) != 0)
-            Com_Printf("not moved\n");
+        if (cg_showmiss->current.integer)
+            Com_Printf("no prediction run\n");
     }
 
     CG_TransitionPlayerState(ps, (playerState_t *)oldPlayerState);

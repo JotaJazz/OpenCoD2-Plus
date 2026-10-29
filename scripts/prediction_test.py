@@ -14,8 +14,8 @@ the original does), so running into one misses by design.
 
 With each snapshot the client predicts its moves again from the server's
 playerstate, with its own bgame, and compares the result with what it had
-predicted for the same time; with cg_showmiss 1 (which the reconstruction
-reads as dvar_developer) it prints "Prediction miss: <distance>" when they
+predicted for the same time; with cg_showmiss 1 it prints, as 1.3,
+"Prediction miss: <distance>" when they
 differ by more than 0.1. Prints the number of misses and their total and
 largest distance, and exits with 0 when the client still runs, walked over
 300 units (as the target sees it), left no crash report, and the misses are
