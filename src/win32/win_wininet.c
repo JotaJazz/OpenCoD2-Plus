@@ -121,7 +121,14 @@ static unsigned __stdcall WinInet_Transfer(void *arg)
         WinInet_Finish(e, CURLE_COULDNT_CONNECT);
         return 0;
     }
+    /* a stop that came while the URL opened found no request to close */
     EnterCriticalSection(&e->lock);
+    if (e->aborted) {
+        LeaveCriticalSection(&e->lock);
+        InternetCloseHandle(request);
+        WinInet_Finish(e, CURLE_ABORTED_BY_CALLBACK);
+        return 0;
+    }
     e->request = request;
     LeaveCriticalSection(&e->lock);
 
