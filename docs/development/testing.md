@@ -73,6 +73,7 @@ plus:
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
    `prediction`.
+   `hostile_server_test.py` (118 only: a fake server sends malformed messages).
    `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py` and `http_test.py` with `--binary build/check-linux/cod2_lnxded`.
 
