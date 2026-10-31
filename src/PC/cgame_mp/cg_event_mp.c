@@ -1478,9 +1478,13 @@ void CG_EntityEvent(centity_t *cent, int event)
                 /* two digits: the binary's cgs + 0x5f80 + (c0 * 10 + c1) * 4 is
                  * fxs[(c0 - '0') * 10 + c1 - '0'] with '0' * 11 folded in */
                 int fxIdx2 = (c0 - '0') * 10 + (c1 - '0');
-                EffectTemplate *effect = cgs->fxs[fxIdx2];
+                EffectTemplate *effect;
                 FxBoltInfo boltInfo;
                 scr_string_t tagName;
+
+                if ((unsigned int)fxIdx2 >= 64)
+                    return;
+                effect = cgs->fxs[fxIdx2];
 
                 boltInfo.dobjHandle = cent->nextState.number;
                 tagName = SL_GetString(csStr2 + 2, 0);

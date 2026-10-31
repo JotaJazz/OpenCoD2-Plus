@@ -270,6 +270,18 @@ void CL_GetCurrentSnapshotNumber(int *snapshotNumber, int *serverTime)
     *serverTime = cl->snap.serverTime;
 }
 
+/* Not in 1.3: these fields are wider on the wire than the arrays cgame indexes
+ * with them, so a value only a hostile server sends is dropped here, once. */
+static void CL_SanitizeEntityState(entityState_t *es)
+{
+    if ((es->eType == 1 || es->eType == 2) && (unsigned int)es->clientNum >= 64)
+        es->eType = 0;
+    if (es->eType == 2 && (es->number < 64 || es->number >= 72))
+        es->eType = 0;
+    if ((unsigned int)es->surfType >= 23)
+        es->surfType = 0;
+}
+
 qboolean CL_GetSnapshot(int snapshotNumber, snapshot_t *snapshot)
 {
     clientActive_t *cl = CL_LOCAL;
@@ -304,6 +316,12 @@ qboolean CL_GetSnapshot(int snapshotNumber, snapshot_t *snapshot)
     snapshot->serverTime = clSnap->serverTime;
 
     memcpy(&snapshot->ps, &clSnap->ps, sizeof(playerState_t));
+    if ((unsigned int)snapshot->ps.clientNum >= 64)
+        snapshot->ps.clientNum = 0;
+    if ((unsigned int)snapshot->ps.viewlocked_entNum >= 1024)
+        snapshot->ps.viewlocked_entNum = 1023;
+    if ((unsigned int)snapshot->ps.shellshockIndex >= 16)
+        snapshot->ps.shellshockIndex = 0;
 
     count = clSnap->numEntities;
     if (count > 256) {
@@ -320,6 +338,7 @@ qboolean CL_GetSnapshot(int snapshotNumber, snapshot_t *snapshot)
     for (i = 0; i < count; i++) {
         int entIdx = (i + clSnap->parseEntitiesNum) & 0x7ff;
         memcpy(&snapshot->entities[i], &cl->parseEntities[entIdx], sizeof(entityState_t));
+        CL_SanitizeEntityState(&snapshot->entities[i]);
     }
 
     int clientCount = clSnap->numClients;

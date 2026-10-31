@@ -34,6 +34,7 @@ FRAGMENT_SIZE = 1300            # a fragment this long says more follow
 NO_ENTITY = 1023
 ET_PLAYER = 1
 ET_CORPSE = 2
+ET_SCRIPTMOVER = 6
 LONG_KEY = 'EXE_ERR_GET_NEWEST_DRIVERS'     # its English text is 441 characters
 ESCAPE = f'cod2_hostile_escape_{os.getpid()}'
 LONG_NAME = 'y' * 80        # cut at originalDownloadName's 64 bytes, it loses its .iwd
@@ -114,19 +115,36 @@ def entity(w, number, fields):
     for i in range(last):
         if i in fields:
             value, bits = fields[i]
-            w.bits(1, 1)
-            w.bits(value, bits)
+            w.bits(3, 2)        # changed, not zero
+            w.bits(value, bits & 7)
+            for shift in range(bits & 7, bits, 8):
+                w.byte(value >> shift)
         else:
             w.bits(0, 1)
 
 
-def snapshot(server_time, lc=0, junk=b'', entities=()):
+def viewlocked_ps():
+    """Only viewlocked_entNum, 60000: (playerstate lc, its bits)."""
+    from cod2snap import PLAYERSTATE_FIELDS
+    names = [f[0] for f in PLAYERSTATE_FIELDS]
+    index = names.index('viewlocked_entNum')
+    return index + 1, 60000
+
+
+def snapshot(server_time, lc=0, junk=b'', entities=(), ps_fields=None):
     w = MsgWriter()
     w.byte(SVC_SNAPSHOT)
     w.long(server_time)
     w.byte(0)           # no delta
     w.byte(0)           # flags
-    w.byte(lc)
+    if ps_fields:
+        lc, value = ps_fields
+        w.byte(lc)
+        w.bits(0, lc - 1)       # no change, up to the last field
+        w.bits(1, 1)
+        w.data += value.to_bytes(2, 'little')
+    else:
+        w.byte(lc)
     w.data += junk      # the fields a bad lc reads
     if not junk:
         w.bits(0, 1)    # stats
@@ -280,7 +298,8 @@ def make_cases(strings):
     # cod2snap.ENTITY_FIELDS: eType and clientNum's positions
     from cod2snap import ENTITY_FIELDS
     names = [f[0] for f in ENTITY_FIELDS]
-    etype, clientnum = names.index('eType'), names.index('clientNum')
+    etype, clientnum, eflags = names.index('eType'), names.index('clientNum'), names.index('eFlags')
+    xmodel = names.index('index')
     return [
         Case('configstring_negative', 'gamestate', raw_index=-1, expect='MAX_CONFIGSTRINGS'),
         Case('playerstate_lc', after=bad_lc, expect='bad field count'),
@@ -296,12 +315,16 @@ def make_cases(strings):
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
         Case('items_long', 'gamestate', strings={8: 'f' * 2000}),
         Case('weapons_many', 'gamestate', strings={7: ' a' * 500}),
-        Case('reverb_prio', after=command('r 99 1 1 1')),
+        Case('reverb_prio', after=command('r 99 generic 1 1 1')),
+        Case('reverb_off_prio', after=command('D 99 1')),
+        Case('channelvol_off_prio', after=command('F 99 1')),
         Case('mute_negative', after=command('J -5000')),
         Case('info_response_full', 'gamestate', after=info_response),
         Case('channelvol', after=command('E 99 99 1')),
-        Case('corpse_entnum', after=entities((1000, {etype: (ET_CORPSE, 8)}))),
+        Case('corpse_entnum', after=entities((1000, {etype: (ET_CORPSE, 8), eflags: (8, 24)}))),
         Case('player_clientnum', after=entities((5, {etype: (ET_PLAYER, 8), clientnum: (200, 8)}))),
+        Case('viewlocked', after=lambda srv, run: srv.send(snapshot(run.time(), ps_fields=viewlocked_ps()))),
+        Case('xmodel_index', after=entities((100, {etype: (ET_SCRIPTMOVER, 8), xmodel: (1000, 10)}))),
     ]
 
 

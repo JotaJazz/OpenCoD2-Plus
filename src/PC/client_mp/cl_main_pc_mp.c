@@ -546,6 +546,8 @@ found_status:
 
 void CL_ResetPlayerMuting(int clientIndex)
 {
+    if ((unsigned int)clientIndex >= 64)
+        return;
     s_playerMute[clientIndex] = 0;
 }
 

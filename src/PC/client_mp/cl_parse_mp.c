@@ -272,6 +272,9 @@ void CL_ParseGamestate(msg_t *msg)
 
     clc = (clientConnection_t *)*clc_ptr;
     clc->clientNum = MSG_ReadLong(msg);
+    if ((unsigned int)clc->clientNum >= 64) {
+        Com_Error(1, "\x15" "CL_ParseGamestate: bad client number");
+    }
 
     clc->checksumFeed = MSG_ReadLong(msg);
 

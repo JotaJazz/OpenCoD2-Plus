@@ -632,6 +632,9 @@ void CG_General(centity_t *cent)
     if (s1->eFlags & 0x20)
         return;
 
+    if ((unsigned int)s1->index.xmodel >= 256)
+        return;
+
     obj = CG_PreProcess_GetDObj(s1->number, s1->eType, cgs->gameModels[s1->index.xmodel]);
     if (!obj)
         return;
@@ -874,6 +877,9 @@ static void CG_Turret(centity_t *cent)
     GfxEntity ent;
 
     if (s1->eFlags & 0x20)
+        return;
+
+    if ((unsigned int)s1->index.xmodel >= 256)
         return;
 
     obj = CG_PreProcess_GetDObj(s1->number, s1->eType, cgs->gameModels[s1->index.xmodel]);
