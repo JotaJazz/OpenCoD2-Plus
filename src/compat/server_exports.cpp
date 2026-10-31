@@ -1919,6 +1919,12 @@ void cod2x_MSG_ReadBitsCompress(void)
     Com_Error( ERR_FATAL, "%s is not in the dedicated server", "MSG_ReadBitsCompress" );
 }
 
+extern "C" void cod2x_MSG_ReadBitsCompressLimit(void) __asm__(COD2_SYM("MSG_ReadBitsCompressLimit"));
+void cod2x_MSG_ReadBitsCompressLimit(void)
+{
+    Com_Error( ERR_FATAL, "%s is not in the dedicated server", "MSG_ReadBitsCompressLimit" );
+}
+
 static_assert(cod2_bridge_returns_scalar<decltype(MSG_ReadByte(std::declval<msg_t*>()))>::value, "MSG_ReadByte returns a struct");
 static_assert(cod2_abi_class<decltype(MSG_ReadByte(std::declval<msg_t*>()))>() == 'i', "MSG_ReadByte: return class differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<msg_t*>() == 4, "MSG_ReadByte: parameter 0 differs from src/PC/server_mp");

@@ -105,7 +105,7 @@ extern void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerStat
 extern qboolean MSG_ReadDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int number);
 extern qboolean MSG_ReadDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, int number);
 extern void MSG_Init(msg_t *buf, byte *data, int length);
-extern int MSG_ReadBitsCompress(byte *from, byte *to, int size);
+extern int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern char *va(const char *format, ...);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern fileHandle_t FS_SV_FOpenFileWrite(const char *filename);
@@ -230,7 +230,7 @@ void CL_ParseGamestate(msg_t *msg)
         if (cmd == 2) {
 
             i = MSG_ReadShort(msg);
-            if (i > 0x7ff) {
+            if (i < 0 || i > 0x7ff) {
                 Com_Error(1, "\x15"
                              "configstring > MAX_CONFIGSTRINGS");
             }
@@ -341,6 +341,11 @@ void CL_ParseDownload(msg_t *msg)
     }
 
     size = MSG_ReadShort(msg);
+
+    /* not in 1.3: FS_Write takes a negative size as a huge one */
+    if (size < 0 || size > MAX_MSGLEN) {
+        Com_Error(1, "CL_ParseDownload: bad download block size %i", size);
+    }
 
     if (size > 0) {
 
@@ -1027,9 +1032,10 @@ void CL_ParseServerMessage(msg_t *msg)
 
     MSG_Init(&msgCompressed, msgCompressed_buf, MAX_MSG_DECOMPRESS_BYTES);
 
-    msgCompressed.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount,
-                                                 msgCompressed_buf,
-                                                 msg->cursize - msg->readcount);
+    msgCompressed.cursize = MSG_ReadBitsCompressLimit(msg->data + msg->readcount,
+                                                      msgCompressed_buf,
+                                                      msg->cursize - msg->readcount,
+                                                      MAX_MSG_DECOMPRESS_BYTES);
 
 #if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
     if (x64TraceCount < 16) {

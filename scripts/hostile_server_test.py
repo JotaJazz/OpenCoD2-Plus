@@ -192,13 +192,12 @@ class FakeServer:
     def raw(self, data):
         self.sock.sendto(data, self.addr)
 
-    def send(self, payload, compressed=None):
+    def send(self, payload):
         """One message: the sequence, the reliable acknowledge, then the
         payload compressed and XORed. The client's command slot 0 is empty, so
         the XOR's string is empty too."""
         self.sequence += 1
-        body = compressed if compressed is not None else huffman_compress(payload)
-        body = xor_codec(body, (CHALLENGE ^ self.sequence) & 0xff, '')
+        body = xor_codec(huffman_compress(payload), (CHALLENGE ^ self.sequence) & 0xff, '')
         message = EMPTY_COMMAND_SLOT.to_bytes(4, 'little') + body
         if len(message) < FRAGMENT_SIZE:
             self.raw(self.sequence.to_bytes(4, 'little') + message)
@@ -236,9 +235,8 @@ def missing_iwd(strings, name='main/zz_hostile'):
 
 
 def huffman_bomb(srv, run):
-    # nops take two bits: this decompresses to four times MAX_MSGLEN
-    compressed = b'\0' * 0x1ff00
-    srv.send(b'', compressed=compressed)
+    # nops take two bits: under MAX_MSGLEN bytes decompress to four times that
+    srv.send(b'\0' * 0x7f000)
 
 
 def bad_lc(srv, run):

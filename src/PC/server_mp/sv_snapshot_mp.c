@@ -100,7 +100,7 @@ extern int MSG_ReadBits(msg_t *msg, int bits);
 extern int MSG_ReadLong(msg_t *msg);
 extern void MSG_Init(msg_t *msg, byte *data, int length);
 extern int MSG_WriteBitsCompress(byte *from, byte *to, int size);
-extern int MSG_ReadBitsCompress(byte *from, byte *to, int size);
+extern int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern void MSG_WriteDeltaEntity(msg_t *msg, byte *from, byte *to, int force);
 extern void MSG_WriteDeltaClient(msg_t *msg, byte *from, byte *to, int force);
 extern void MSG_WriteDeltaPlayerstate(msg_t *msg, byte *from, byte *to);
@@ -961,7 +961,7 @@ void SV_SendMessageToClient(msg_t *msg, client_t *client)
             verifyBuf = (byte *)LargeLocal_GetBuf((const LargeLocal *)verifyBuf_ll);
 
             originalSize = msg->cursize - 4;
-            verifySize = MSG_ReadBitsCompress(compressedBuf + 4, verifyBuf, compressedSize - 4);
+            verifySize = MSG_ReadBitsCompressLimit(compressedBuf + 4, verifyBuf, compressedSize - 4, MAX_MSGLEN);
             compareSize = verifySize < originalSize ? verifySize : originalSize;
             mismatch = -1;
             for (i = 0; i < compareSize; ++i) {

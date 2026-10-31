@@ -280,6 +280,7 @@ MSG_ReadBigString
 MSG_ReadBit
 MSG_ReadBits
 MSG_ReadBitsCompress
+MSG_ReadBitsCompressLimit
 MSG_ReadByte
 MSG_ReadData
 MSG_ReadDeltaClient
