@@ -235,12 +235,15 @@ class Case:
     """stage: 'gamestate' sends strings/raw_index in the gamestate and goes no
     further than `after`; 'active' first brings the client to its first
     snapshot, then sends `after`. expect: text the log must hold. absent: files
-    that must not exist, relative to the client's main folder's parent."""
+    that must not exist, relative to the client's main folder's parent. forbid:
+    text the log must not hold. args: the client's. hold: seconds to watch it
+    after that. silent: no more snapshots after that."""
 
     def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=(),
-                 forbid=None):
+                 forbid=None, args=(), hold=12, silent=False):
         self.name, self.stage, self.strings, self.raw_index = name, stage, strings or {}, raw_index
         self.after, self.expect, self.absent, self.forbid = after, expect, absent, forbid
+        self.args, self.hold, self.silent = list(args), hold, silent
 
 
 def command(text):
@@ -311,6 +314,9 @@ def make_cases(strings):
         Case('download_long_name', 'gamestate', strings=missing_iwd(strings, 'main/' + LONG_NAME),
              after=http_redirect, absent=['main/' + LONG_NAME[:58]]),
         Case('open_file_url', 'gamestate', strings=missing_iwd(strings), after=open_file_url, expect='non-http'),
+        # a connection times out when packets stop, not some time after connecting
+        Case('timeout_keeps_playing', args=['+set', 'cl_timeout', '15'], hold=30, forbid='timed out'),
+        Case('timeout_when_silent', args=['+set', 'cl_timeout', '5'], hold=15, silent=True, expect='timed out'),
         # not hostile: a mod's physics, which prediction needs
         Case('codinfo_dvars_apply', strings={0x8e: 'jump_height', 0xee: '60'},
              forbid='protected cvar'),
@@ -364,8 +370,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
         log_path = os.path.join(home, 'out.log')
         with open(log_path, 'wb') as log:
             cl = client(binary, game_dir, home,
-                        ['+set', 'cl_allowDownload', '1', '+set', 'net_port', str(smoke_test.free_port()),
-                         '+connect', f'127.0.0.1:{srv.port}'], log)
+                        ['+set', 'cl_allowDownload', '1', '+set', 'net_port', str(smoke_test.free_port())]
+                        + case.args + ['+connect', f'127.0.0.1:{srv.port}'], log)
         text = lambda: open(log_path, encoding='latin-1').read()
         run = ClientRun(srv, strings, case)
         run.http_port = httpd.server_address[1]
@@ -389,10 +395,10 @@ def run_case(case, base, binary, game_dir, timeout=120):
                 time.sleep(2)
             if case.after:
                 case.after(srv, run)
-            end = time.time() + 12
+            end = time.time() + case.hold
             while time.time() < end and cl.poll() is None:
                 srv.poll()
-                if case.stage == 'active':
+                if case.stage == 'active' and not case.silent:
                     run.tick()
                 time.sleep(0.05)
             code = cl.poll()

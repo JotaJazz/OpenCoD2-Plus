@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — sessions no longer end at cl_timeout
+
+- `CL_CheckTimeout`'s path in `CL_Frame` measured from `connectTime`, not `lastPacketTime` as 1.3 (`0x40f480`): every online session ended "timed out" 200 seconds after connecting, however well the network ran, which also explains why every traced session lasted about 3 minutes. `hostile_server_test.py` has `timeout_keeps_playing` and `timeout_when_silent`.
+
 ## 2026-10-31 — the filter let the server's physics through again
 
 - The filter refused every CHEAT dvar, so a server's `jump_height`, `friction`, `player_*` and `bg_*` never reached the client, whose prediction then ran other physics: seen as stutter on a public server, whose log listed 52 refused dvars. CODINFO and cheat dvars pass now; `hostile_server_test.py` has `codinfo_dvars_apply`.
