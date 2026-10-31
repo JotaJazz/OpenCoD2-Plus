@@ -18,7 +18,7 @@ const dvar_t *Dvar_FindVar(const char *name)
     static const struct { const char *name; unsigned flags; } vars[] = {
         {"fs_game", 0x101c}, {"sv_pure", 0x100c}, {"sv_serverid", 0x1048},
         {"com_maxfps", 0x1}, {"r_gamma", 0x1}, {"ro_test", 0x40}, {"cheat_test", 0x80},
-        {"init_test", 0x10},
+        {"init_test", 0x10}, {"jump_height", 0x1180}, {"player_moveThreshhold", 0x11c0}, {"cg_fovscale", 0x80},
     };
     for (unsigned i = 0; i < sizeof(vars) / sizeof(vars[0]); i++) {
         if (!strcasecmp(vars[i].name, name)) {
@@ -82,7 +82,12 @@ class NetHardening(unittest.TestCase):
         self.assert_cvars(['r_gamma', 'cg_foo', 'ui_bar', 'scr_baz', 'unknown_new'], '1')
 
     def test_readonly_blocked(self):
-        self.assert_cvars(['ro_test', 'cheat_test', 'init_test'], '0')
+        self.assert_cvars(['ro_test', 'init_test'], '0')
+
+    def test_game_dvars_pass(self):
+        # the server sends these for the client's prediction (flags CHEAT and
+        # CODINFO); without them the client predicts other physics
+        self.assert_cvars(['jump_height', 'player_moveThreshhold', 'cheat_test', 'cg_fovscale'], '1')
 
     def test_valid_download_names(self):
         for name in ['main/a.iwd', 'mods/x/y.iwd', 'main/a.0012abcd.iwd']:

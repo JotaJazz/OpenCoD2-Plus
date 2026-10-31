@@ -237,9 +237,10 @@ class Case:
     snapshot, then sends `after`. expect: text the log must hold. absent: files
     that must not exist, relative to the client's main folder's parent."""
 
-    def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=()):
+    def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=(),
+                 forbid=None):
         self.name, self.stage, self.strings, self.raw_index = name, stage, strings or {}, raw_index
-        self.after, self.expect, self.absent = after, expect, absent
+        self.after, self.expect, self.absent, self.forbid = after, expect, absent, forbid
 
 
 def command(text):
@@ -310,6 +311,9 @@ def make_cases(strings):
         Case('download_long_name', 'gamestate', strings=missing_iwd(strings, 'main/' + LONG_NAME),
              after=http_redirect, absent=['main/' + LONG_NAME[:58]]),
         Case('open_file_url', 'gamestate', strings=missing_iwd(strings), after=open_file_url, expect='non-http'),
+        # not hostile: a mod's physics, which prediction needs
+        Case('codinfo_dvars_apply', strings={0x8e: 'jump_height', 0xee: '60'},
+             forbid='protected cvar'),
         Case('huffman_bomb', after=huffman_bomb),
         Case('disconnect_percent', after=command('w "%s%s%s%s%n"')),
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
@@ -400,6 +404,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
                 return f'exit code {code}'
             if case.expect and case.expect not in log_text:
                 return f'no {case.expect!r} in the log'
+            if case.forbid and case.forbid in log_text:
+                return f'{case.forbid!r} in the log'
             for name in case.absent:
                 path = os.path.normpath(os.path.join(home, name))
                 if os.path.exists(path):

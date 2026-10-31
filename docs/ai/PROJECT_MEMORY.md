@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — the filter let the server's physics through again
+
+- The filter refused every CHEAT dvar, so a server's `jump_height`, `friction`, `player_*` and `bg_*` never reached the client, whose prediction then ran other physics: seen as stutter on a public server, whose log listed 52 refused dvars. CODINFO and cheat dvars pass now; `hostile_server_test.py` has `codinfo_dvars_apply`.
+
 ## 2026-10-31 — audit: a server is not trusted; checks that fail; dead sources removed
 
 - `COD2_FEATURE_NET_HARDENING` was off in every build. A server could run console commands through `activeAction`, write outside the game's folder over HTTP and crash the client in a dozen ways; `scripts/hostile_server_test.py` reproduced them on a real client before the fixes. The dvar rule lets SYSTEMINFO dvars through: blocking `fs_` and `sv_` outright, as the old code did, would have broken mod servers.

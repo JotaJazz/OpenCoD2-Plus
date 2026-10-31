@@ -41,9 +41,10 @@ cgame loads its own weapons and mantle anims, as with a remote server.
 A server is not trusted; 1.3 trusted it. With `COD2_FEATURE_NET_HARDENING` (on
 in every build), `NetHardening_ServerMaySetCvar` (`src/PC/qcommon/net_hardening.c`)
 decides which dvars a server sets through systeminfo, `v` and the codinfo
-configstrings: dvars flagged SYSTEMINFO always, never `activeAction`,
+configstrings: dvars flagged SYSTEMINFO or CODINFO always (the physics prediction
+needs, such as `jump_height` and `player_*`, are CODINFO), never `activeAction`,
 `nextdemo`, the download switches, `fs_`, `sv_`, `net_`, `rcon` and `in_` names,
-or read-only, init and cheat dvars. A download's local name must be a relative
+or other read-only and init dvars. A download's local name must be a relative
 `.iwd` without `..`, and a redirect's URL `http` or `https`. A transfer shorter
 than the size the server gave counts as failed.
 

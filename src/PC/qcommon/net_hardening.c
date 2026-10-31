@@ -13,9 +13,9 @@ extern int I_stricmp(const char *s1, const char *s2);
 extern int I_strnicmp(const char *s1, const char *s2, size_t n);
 
 #    define NH_DVAR_FLAG_SYSTEMINFO 0x08
+#    define NH_DVAR_FLAG_CODINFO 0x100
 #    define NH_DVAR_FLAG_READONLY 0x40
 #    define NH_DVAR_FLAG_WRITEPROTECTED 0x10
-#    define NH_DVAR_FLAG_CHEAT 0x80
 
 static int NetHardening_HasBadSubstring(const char *name)
 {
@@ -98,8 +98,9 @@ int NetHardening_ServerMaySetCvar(const char *key)
     dvar = Dvar_FindVar(key);
     flags = dvar ? (unsigned int)dvar->flags : 0;
 
-    /* what a server sends every client: fs_game, sv_pure, sv_serverid... */
-    if (flags & NH_DVAR_FLAG_SYSTEMINFO)
+    /* what a server sends every client: fs_game, sv_pure, sv_serverid..., and
+     * the physics prediction needs, some of them read-only for the player */
+    if (flags & (NH_DVAR_FLAG_SYSTEMINFO | NH_DVAR_FLAG_CODINFO))
         return 1;
 
     for (i = 0; i < sizeof(names) / sizeof(names[0]); ++i) {
@@ -111,7 +112,7 @@ int NetHardening_ServerMaySetCvar(const char *key)
             return 0;
     }
 
-    return !(flags & (NH_DVAR_FLAG_READONLY | NH_DVAR_FLAG_WRITEPROTECTED | NH_DVAR_FLAG_CHEAT));
+    return !(flags & (NH_DVAR_FLAG_READONLY | NH_DVAR_FLAG_WRITEPROTECTED));
 }
 
 typedef struct {
