@@ -336,8 +336,7 @@ file(GLOB_RECURSE WEB_MAC_C   RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/Mac/
 file(GLOB_RECURSE WEB_STUBS_C RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.c")
 file(GLOB         WEB_ROOT_C  RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WEB_C ${WEB_PC_C} ${WEB_MAC_C} ${WEB_STUBS_C} ${WEB_ROOT_C})
-# native asm-data .c, and the blobs replaced by the generated web versions.
-list(FILTER WEB_C EXCLUDE REGEX "^src/(data|import_pointers|literals|bss|rodata|strings)\\.c$")
+# the stubs the generated web versions replace.
 list(FILTER WEB_C EXCLUDE REGEX "^src/stubs/(link_stubs|missing_c_syms)\\.c$")
 # the Linux platform layer + bundled zlib + web glue are added explicitly.
 list(APPEND WEB_C
@@ -472,7 +471,6 @@ file(GLOB_RECURSE W_STUBS_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${CO
 file(GLOB_RECURSE W_WIN_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/win32/*.c")
 file(GLOB         W_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WIN_C ${W_PC_C} ${W_MAC_C} ${W_STUBS_C} ${W_WIN_C} ${W_ROOT_C})
-list(FILTER WIN_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
 list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
 # the MSVC build's shims (its own dirent, SDL2 stubs, link glue): with MinGW
 # their readdir replaced the C runtime's, whose struct dirent differs, so
@@ -675,8 +673,6 @@ file(GLOB         COD2_ROOT_ASM  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} 
 set(ALL_ASM ${COD2_PC_ASM} ${COD2_STUBS_ASM} ${COD2_ROOT_ASM})
 
 list(FILTER ALL_C EXCLUDE REGEX "(^|/)(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
-list(FILTER ALL_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
-list(FILTER ALL_ASM EXCLUDE REGEX "^src/(data|import_pointers|literals|vtables)\\.S$|^src/stubs/cpp_trampoline\\.S$")
 
 list(APPEND ALL_C
   src/blobs/bss.c src/unix/linux_common.c src/unix/linux_input.c src/unix/linux_net.c src/unix/sysdiff_statehash.c)

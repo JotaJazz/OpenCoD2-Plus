@@ -1,5 +1,3 @@
-output/*
-!output/data_home_map.json
 *.o
 *.a
 *.so
@@ -13,6 +11,8 @@ toolchain/
 /build-native/
 /build-web/
 /build-win32/
+/build/native/
+/build/win32/
 /build/msvc-x64
 build/cmake/
 build/msvc/
@@ -31,8 +31,6 @@ build/win32c/*.bak
 /cod2_lnxded.exe
 build/web/*.wasm
 build/web/*.js
-# compiled equiv-harness runner (built from native_equiv_runner.c)
-utils/decomp/native_equiv_runner
 
 # transient runtime / snapshot artifacts
 servercache.dat
