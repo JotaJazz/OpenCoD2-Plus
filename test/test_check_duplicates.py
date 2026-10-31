@@ -28,6 +28,18 @@ class CheckDuplicates(unittest.TestCase):
             f.write('c++ -m32 ' + ' '.join(objects) + ' -o ded\n')
         return subprocess.run([sys.executable, SCRIPT, self.dir, 'ded'], capture_output=True, text=True)
 
+    def test_nm_failure_fails(self):
+        obj = self.compile('cod2_objs.dir', 'literals', 'int faceAxis = 0;\n')
+        os.makedirs(os.path.join(self.dir, 'CMakeFiles', 'ded.dir'), exist_ok=True)
+        with open(os.path.join(self.dir, 'CMakeFiles', 'ded.dir', 'link.txt'), 'w') as f:
+            f.write(f'c++ -m32 {obj} -o ded\n')
+        r = subprocess.run([sys.executable, SCRIPT, self.dir, 'ded', '--nm', 'false'], capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_no_objects_fails(self):
+        r = subprocess.run([sys.executable, SCRIPT, self.dir, 'ded'], capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
     def test_blob_and_plus_define_the_same_global(self):
         # a blob's placeholder left unguarded wins silently with --allow-multiple-definition
         r = self.link(self.compile('cod2_plus_server.dir', 'game', 'int bg_numItems = 131;\n'),

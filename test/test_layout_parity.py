@@ -23,6 +23,17 @@ class LayoutParity(unittest.TestCase):
         return subprocess.run([sys.executable, SCRIPT, '--headers-a', a, '--headers-b', b, '--types', t,
                                '--flags=-m32'], capture_output=True, text=True)
 
+    def test_no_types_fails(self):
+        a = self.write('a.h', 'struct S { int x; };\n')
+        r = self.run_parity(a, a, '# only a comment\n')
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+
+    def test_type_without_fields_fails(self):
+        a = self.write('a.h', 'struct A { int x; };\n')
+        b = self.write('b.h', 'struct A { int x; int y; };\n')
+        r = self.run_parity(a, b, 'A~\n')
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+
     def test_identical(self):
         a = self.write('a.h', 'struct S { int x; char c; int y; };\n')
         b = self.write('b.h', 'struct S { int x; char c; int y; };\n')

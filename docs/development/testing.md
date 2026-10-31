@@ -67,7 +67,7 @@ plus:
 
 ## Full suite (before merging a phase)
 
-1. `python3 scripts/build_check.py all`
+1. `python3 scripts/build_check.py all` (a skipped variant fails it; `--allow-skip` accepts that)
 2. `python3 -m unittest discover -s test` and `python3 scripts/check_docs.py`
 3. For P in 118 and 115: `opencod2_smoke.py`, `two_players`, `map_reload`,
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),

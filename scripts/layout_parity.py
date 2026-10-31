@@ -113,6 +113,13 @@ def main():
     args = ap.parse_args()
 
     types = load_types(args.types)
+    if not types:
+        print(f'no types in {args.types}')
+        return 1
+    empty = [name for name, fields, fields_only in types if fields_only and not fields]
+    if empty:
+        print(f'nothing to compare: {", ".join(empty)}')
+        return 1
     if args.flags is not None:
         compiler, flags_a = 'g++', shlex.split(args.flags)
         flags_b = flags_a

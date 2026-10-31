@@ -15,6 +15,17 @@ class CheckSingleImpl(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_nm_failure_fails(self):
+        self.link('int other(void) { return 0; }\n')
+        r = subprocess.run([sys.executable, SCRIPT, self.dir, 'ded', '--interface', self.interface, '--nm', 'false'],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_no_objects_fails(self):
+        r = subprocess.run([sys.executable, SCRIPT, self.dir, 'missing', '--interface', self.interface],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
     def link(self, code):
         obj_dir = os.path.join(self.dir, 'CMakeFiles', 'cod2_objs.dir')
         os.makedirs(obj_dir, exist_ok=True)

@@ -21,6 +21,14 @@ class CheckCLinkage(unittest.TestCase):
     def run_check(self, *extra):
         return subprocess.run([sys.executable, SCRIPT, self.dir] + list(extra), capture_output=True, text=True)
 
+    def test_no_objects_fails(self):
+        r = subprocess.run([sys.executable, SCRIPT, os.path.join(self.dir, 'missing')], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 1)
+
+    def test_nm_failure_fails(self):
+        self.compile('gcc', '.c', 'int foo(void){return 0;}\n')
+        self.assertNotEqual(self.run_check('--nm', 'false').returncode, 0)
+
     def test_c_object_clean(self):
         self.compile('gcc', '.c', 'int foo(void){return 0;}\n')
         self.assertEqual(self.run_check().returncode, 0)
