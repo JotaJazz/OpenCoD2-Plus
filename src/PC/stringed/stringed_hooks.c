@@ -519,6 +519,7 @@ const char *SEH_LocalizeTextMessage(const char *pszInputBuffer, const char *pszM
                     }
                 }
                 Com_Printf("%s too long when translated: \"%s\"\n", pszMessageType, pszInputBuffer);
+                break;  /* not in 1.3, which copies on past szStrings */
             }
 
             if (iTokenLen - 2 > 0) {

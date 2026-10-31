@@ -470,7 +470,7 @@ restart:
             const char *reason = SEH_SafeTranslateString(Cmd_Argv(1));
             const char *base = SEH_SafeTranslateString("EXE_SERVERDISCONNECTREASON");
             const char *msg = UI_ReplaceConversionString(base, reason);
-            Com_Error(ERR_SERVERDISCONNECT, msg);
+            Com_Error(ERR_SERVERDISCONNECT, "%s", msg);
         }
 
     case 'x':

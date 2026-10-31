@@ -1673,7 +1673,7 @@ const char *UI_ReplaceConversions(const char *sourceString, ConversionArguments 
     memset(outputString, 0, 0x400);
 
     if (sourceStringLength <= 0)
-        return va(outputString);
+        return va("%s", outputString);
 
     outputStringCounter = 0;
     index = 0;
@@ -1693,7 +1693,7 @@ const char *UI_ReplaceConversions(const char *sourceString, ConversionArguments 
                     int argLen = strlen(arguments->args[argIndex]);
                     int j;
 
-                    for (j = 0; j < argLen; j++) {
+                    for (j = 0; j < argLen && outputStringCounter < 0x3ff; j++) {
                         outputString[outputStringCounter] = arguments->args[argIndex][j];
                         outputStringCounter++;
                     }
@@ -1703,12 +1703,14 @@ const char *UI_ReplaceConversions(const char *sourceString, ConversionArguments 
             }
         }
 
-        outputString[outputStringCounter] = sourceString[index];
-        outputStringCounter++;
+        if (outputStringCounter < 0x3ff) {
+            outputString[outputStringCounter] = sourceString[index];
+            outputStringCounter++;
+        }
         index++;
     }
 
-    return va(outputString);
+    return va("%s", outputString);
 }
 
 const char *UI_ReplaceConversionString(const char *sourceString, const char *replaceString)

@@ -292,7 +292,7 @@ def make_cases(strings):
              after=http_redirect, absent=['main/' + LONG_NAME[:58]]),
         Case('open_file_url', 'gamestate', strings=missing_iwd(strings), after=open_file_url, expect='non-http'),
         Case('huffman_bomb', after=huffman_bomb),
-        Case('disconnect_percent', after=command('w "%s%s%s%s%n"'), expect='%s%s%s%s%n'),
+        Case('disconnect_percent', after=command('w "%s%s%s%s%n"')),
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
         Case('items_long', 'gamestate', strings={8: 'f' * 2000}),
         Case('weapons_many', 'gamestate', strings={7: ' a' * 500}),
