@@ -41,7 +41,13 @@ Checks it runs (each a script in `scripts/`):
 | `check_bgame_names.py` | Linux client | a plain bgame name is left where `eng_` should apply |
 | `bgame_plus_consts.py --check` | Linux | `bg_plus_consts.h` differs from CoD2rev-Plus's values |
 | `check_c_decls.py` | Linux | a call's types differ from the definition's (DWARF); pointers by what they point to (float, integer, struct; `void *` matches any) |
-| `check_var_sizes.py` | Linux | a global is used as larger than the binary defines it |
+| `check_var_sizes.py` | Linux | a global, array or not, is used as larger than the binary defines it |
+| `check_c_linkage.py` | `linux`, `linux-10` | a C++-mangled name is not in `test/c_linkage_allowlist.txt` |
+| `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from CoD2rev-Plus's |
+| `gen_script_bridge.py` | `all` only | `src/compat` differs from what the generator writes |
+
+A variant skipped for lack of SDL2 or DXVK fails the run unless `--allow-skip`
+is given.
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,
 even if a previous link was cut short. If a binary is suspiciously small,

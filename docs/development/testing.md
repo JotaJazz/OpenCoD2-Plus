@@ -59,8 +59,6 @@ plus:
 
 | Script | Checks |
 |---|---|
-| `scripts/layout_parity.py` | types in `test/layout_parity_types.txt` lay out alike in this repo and CoD2rev-Plus (1.3, 1.0, MinGW) |
-| `scripts/check_c_linkage.py BUILD` | no unexpected C++-mangled names (`test/c_linkage_allowlist.txt`) |
 | `scripts/vendor_check.py PLUS_CHECKOUT` | vendored files equal CoD2rev-Plus at `test/vendored_files.txt`'s revision |
 | `scripts/check_docs.py` | docs: links, repository paths, personal data, memory stages |
 | `python3 -m unittest discover -s test` | unit tests of the scripts |

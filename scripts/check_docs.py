@@ -76,7 +76,7 @@ def check_file(root, path):
                 token = token.strip('\'"').split('=')[-1].strip('\'"').split('#')[0].rstrip('.,:;)')
                 if not token.startswith(REPO_DIRS) or any(c in token for c in '*<>{}$|'):
                     continue
-                if not os.path.exists(os.path.join(root, token)):
+                if path != MEMORY and not os.path.exists(os.path.join(root, token)):
                     problems.append(where + 'no such path %s' % token)
     return problems
 

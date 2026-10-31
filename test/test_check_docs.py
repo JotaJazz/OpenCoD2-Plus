@@ -35,6 +35,10 @@ class CheckDocs(unittest.TestCase):
         self.assertEqual(self.problems('docs/a.md', 'run `scripts/real.py` and `cod2_linux`\n'), [])
         self.assertEqual(self.problems('docs/a.md', '`test/smoke_expected_failures_*.txt` `src/<module>`\n'), [])
 
+    def test_memory_may_name_removed_paths(self):
+        # its stages are never rewritten: a file named there may be gone
+        self.assertEqual(self.problems('docs/ai/PROJECT_MEMORY.md', '`src/gone.c`\n'), [])
+
     def test_paths_inside_commands(self):
         self.write('scripts/real.py', '')
         self.write('CMakeLists.txt', '')

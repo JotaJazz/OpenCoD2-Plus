@@ -10,6 +10,8 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | MSVC build unchecked | may not build or may diverge | not covered by `build_check.py`; compiles C with the reconstructed VM and server |
 | Engine's server/game/collision still used by MSVC, web, x64 | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
 | x64 port | compiles, does not run | `COD2_X64` |
+| Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
+| A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |
 
 ## Accepted debt
@@ -41,5 +43,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Simplification | Notes |
 |---|---|
 | Full screen on the Direct3D 9 path is a borderless desktop window with the frame stretched, not an exclusive mode change | resolution comes from `r_mode` as in the original |
+| `COD2_FEATURE_GAMEPAD`, `COD2_FEATURE_RUMBLE` blocks remain | their sources were removed: nothing set the macros; turning one on no longer links |
 | `ClickToContinue` not ported: 1.3's `IN_Frame` (`0x464b30`) posts a left click each frame while that dvar is set | nothing registers or sets it, in the game's data or the engine; porting it means emulating `IN_MouseEvent`'s button state |
 | Shaders' `//` comments blanked before compiling | Wine's compiler rejects one after an `#include` |

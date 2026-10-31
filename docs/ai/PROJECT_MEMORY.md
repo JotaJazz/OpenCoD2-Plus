@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — audit: a server is not trusted; checks that fail; dead sources removed
+
+- `COD2_FEATURE_NET_HARDENING` was off in every build. A server could run console commands through `activeAction`, write outside the game's folder over HTTP and crash the client in a dozen ways; `scripts/hostile_server_test.py` reproduced them on a real client before the fixes. The dvar rule lets SYSTEMINFO dvars through: blocking `fs_` and `sv_` outright, as the old code did, would have broken mod servers.
+- `build_check.py` now fails on a skip, a crashed script and bridge drift, and runs `layout_parity` and `check_c_linkage`; `check_var_sizes.py` reads arrays, which found `cl_pinglist` and `cl_serverStatusList` short in 1.0 and `buf` declared larger than defined.
+- `third_party/libjpeg-turbo`, four stale `src/blobs` files and the gamepad and rumble sources are gone; `cod2rad/` stays by decision. Rejected: reworking the gamepad `#if` blocks. Left open: the debt list's CoD2rev-Plus entries, and WinINet's cut transfers.
+
 ## 2026-10-28 — online prediction measured against 1.3; hud alignment
 
 - Same server (Titan), `cg_showmiss 1`: the original client missed 26 times (median 1.6, max 9.6), ours 53 (median 1.8) plus bursts of up to 32 units while rubbing another player. Collision with players (`0x4de2f0`, interpolated origin, box one unit smaller), the `centity_t` layout and the frame's order (`0x4d002d`..`0x4d0047`) are 1.3's; the misses far from players have the server moving slower than predicted, likely the mod's speed scale, which the playerstate does not carry. No client bug found; `COD2_TRACE_PREDDIFF` (per-word playerstate diff) kept as a tool. The prediction messages are 1.3's (`dvar_developer` was an alias of `cg_showmiss`).
