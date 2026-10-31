@@ -141,6 +141,9 @@ if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
 else()
   set(COD2_PROTOCOL 118)
 endif()
+if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))
+  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web and MSVC builds")
+endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
 # the generated bridge in src/compat (scripts/gen_script_bridge.py), and the

@@ -72,11 +72,13 @@ plus:
 3. For P in 118 and 115: `opencod2_smoke.py`, `two_players`, `map_reload`,
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
-   `prediction`.
+   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`.
    `hostile_server_test.py` (118 only: a fake server sends malformed messages).
    `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py` and `http_test.py` with `--binary build/check-linux/cod2_lnxded`.
 5. `www_download_test.py` plain, with `--disconnect`, `--http-404` and `--truncate` (118 only).
+
+A `skipped:` line means a test did not run: a run with skips does not count for a merge.
 
 ## Ad-hoc client checks
 
