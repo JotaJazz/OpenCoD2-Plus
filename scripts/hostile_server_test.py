@@ -237,13 +237,14 @@ class Case:
     snapshot, then sends `after`. expect: text the log must hold. absent: files
     that must not exist, relative to the client's main folder's parent. forbid:
     text the log must not hold. args: the client's. hold: seconds to watch it
-    after that. silent: no more snapshots after that."""
+    after that. silent: no more snapshots after that. limit: (text, the most times
+    the log may hold it)."""
 
     def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=(),
-                 forbid=None, args=(), hold=12, silent=False):
+                 forbid=None, args=(), hold=12, silent=False, limit=None):
         self.name, self.stage, self.strings, self.raw_index = name, stage, strings or {}, raw_index
         self.after, self.expect, self.absent, self.forbid = after, expect, absent, forbid
-        self.args, self.hold, self.silent = list(args), hold, silent
+        self.args, self.hold, self.silent, self.limit = list(args), hold, silent, limit
 
 
 def command(text):
@@ -314,6 +315,9 @@ def make_cases(strings):
         Case('download_long_name', 'gamestate', strings=missing_iwd(strings, 'main/' + LONG_NAME),
              after=http_redirect, absent=['main/' + LONG_NAME[:58]]),
         Case('open_file_url', 'gamestate', strings=missing_iwd(strings), after=open_file_url, expect='non-http'),
+        # with snapshots on time the clock stays in step: no jumps to catch up
+        Case('client_clock_steady', args=['+set', 'cl_showTimeDelta', '1'], hold=30,
+             limit=('cl_showTimeDelta: average', 2)),
         # a connection times out when packets stop, not some time after connecting
         Case('timeout_keeps_playing', args=['+set', 'cl_timeout', '15'], hold=30, forbid='timed out'),
         Case('timeout_when_silent', args=['+set', 'cl_timeout', '5'], hold=15, silent=True, expect='timed out'),
@@ -344,12 +348,13 @@ class ClientRun:
         self.srv, self.base = srv, strings
         self.case = case
         self.server_time = 10000
+        self.started = time.monotonic()
         self.http_port = None
         self.sequence = 0
 
     def time(self):
-        self.server_time += 50
-        return self.server_time
+        """The clock of a server: it does not depend on when a snapshot leaves."""
+        return self.server_time + int((time.monotonic() - self.started) * 1000)
 
     def commands(self, text):
         self.sequence += 1
@@ -412,6 +417,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
                 return f'no {case.expect!r} in the log'
             if case.forbid and case.forbid in log_text:
                 return f'{case.forbid!r} in the log'
+            if case.limit and log_text.count(case.limit[0]) > case.limit[1]:
+                return f'{log_text.count(case.limit[0])} times {case.limit[0]!r} in the log'
             for name in case.absent:
                 path = os.path.normpath(os.path.join(home, name))
                 if os.path.exists(path):

@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — the client's clock stays in step
+
+- `CL_SetCGameTime` marked `extrapolatedSnapshot` with its comparison inverted (1.3 `0x4031a5` is `>=`): every snapshot took 2 ms off the clock until it was 100 ms behind, then `CL_AdjustTimeDelta` averaged it forward, a visible jump about every 2.3 seconds, in every online game since the reconstruction. `hostile_server_test.py client_clock_steady` went from 13 jumps in 30 s to 2 at the start. The earlier online prediction gap against 1.3 may have come from this; it was not measured again.
+
 ## 2026-10-31 — sessions no longer end at cl_timeout
 
 - `CL_CheckTimeout`'s path in `CL_Frame` measured from `connectTime`, not `lastPacketTime` as 1.3 (`0x40f480`): every online session ended "timed out" 200 seconds after connecting, however well the network ran, which also explains why every traced session lasted about 3 minutes. `hostile_server_test.py` has `timeout_keeps_playing` and `timeout_when_silent`.

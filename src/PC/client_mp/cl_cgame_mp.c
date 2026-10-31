@@ -1382,10 +1382,12 @@ void CL_SetCGameTime(void)
             cl->oldServerTime = cl->serverTime;
 
             int serverTime = cl->snap.serverTime;
-            if (timeDelta + realtime < serverTime - 5) {
+            /* almost past the last snapshot, as 1.3 (0x4031a5); the next one
+             * pulls the clock back by 2 ms */
+            if (timeDelta + realtime >= serverTime - 5) {
                 cl->extrapolatedSnapshot = 1;
                 if (CL_DvarCurrentBool(imp_cl_showTimeDelta)) {
-                    Com_Printf("%.6f extrapolating\n");
+                    Com_Printf("Extrapolating snapshot!\n");
                 }
             }
         } else {
