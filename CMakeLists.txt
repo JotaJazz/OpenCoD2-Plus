@@ -536,7 +536,9 @@ elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
-add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
+enable_language(RC)
+add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS}
+  ${COD2_SRC_DIR}/win32/opencod2.rc)
 if(COD2_LIBCOD_CLIENT)
   # the engine's Com_Frame and Com_EventLoop (common.c) work for libcod
   target_compile_definitions(${W32_EXE} PRIVATE COD2_PLUS_LIBCOD=1)

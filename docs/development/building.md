@@ -15,7 +15,8 @@ top of it.
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
 | MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
-| x64 | `-DCOD2_X64=ON` | compiles, does not run |
+| Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
+| x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 
 ## build_check.py
 
@@ -25,6 +26,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | Variant | Flags |
 |---|---|
 | `linux`, `linux-10` | native, 1.3 / 1.0 |
+| `linux-x64`, `linux-x64-10` | 64-bit dedicated server (`cmake/lnxded64`), 1.3 / 1.0; only the glibc and library checks apply |
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |

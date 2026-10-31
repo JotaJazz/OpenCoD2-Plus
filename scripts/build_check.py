@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
@@ -46,15 +46,23 @@ for _v in ('mingw', 'mingw-client'):
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
 # the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
 VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+# the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
+VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
+VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
 LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
 # the MinGW client links the static SDL2 the user supplies
 LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
 
+def is_x64(variant):
+    return variant.startswith('linux-x64')
+
+
 def build(variant, extra):
     build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
-    configure = subprocess.run(['cmake', '-S', ROOT, '-B', build_dir] + VARIANTS[variant] + extra,
+    source = os.path.join(ROOT, 'cmake', 'lnxded64') if is_x64(variant) else ROOT
+    configure = subprocess.run(['cmake', '-S', source, '-B', build_dir] + VARIANTS[variant] + ([] if is_x64(variant) else extra),
                                cwd=ROOT, capture_output=True, text=True)
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
@@ -256,9 +264,9 @@ def main():
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
-        if not errors:
+        if not errors and not is_x64(variant):
             errors = duplicates(variant, build_dir)
-        if not errors and variant.startswith('linux'):
+        if not errors and variant.startswith('linux') and not is_x64(variant):
             errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir) + var_sizes(build_dir)
         if not errors and variant in ('linux', 'linux-10'):
             errors = c_linkage(build_dir)

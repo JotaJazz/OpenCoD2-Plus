@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="icon-title">
+  <title id="icon-title">OpenCoD2-Plus</title>
+  <!-- the banner's colors: two chevrons, as on a corporal's sleeve, and the Plus -->
+  <rect x="4" y="4" width="248" height="248" rx="44" fill="#2f3524" stroke="#c9b37e" stroke-width="8"/>
+  <rect x="106" y="18" width="44" height="90" fill="#e8d7a3"/>
+  <rect x="82" y="41" width="92" height="44" fill="#e8d7a3"/>
+  <polygon points="30,198 128,148 226,198 226,166 128,116 30,166" fill="#c9b37e"/>
+  <polygon points="30,240 128,190 226,240 226,208 128,158 30,208" fill="#c9b37e"/>
+</svg>
