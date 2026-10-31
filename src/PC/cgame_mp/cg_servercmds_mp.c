@@ -154,10 +154,12 @@ void CG_ParseCodinfo(void)
         if (*key == '\0') {
             break;
         }
+#if COD2_FEATURE_NET_HARDENING
         if (!NetHardening_ServerMaySetCvar(key)) {
             Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", key);
             continue;
         }
+#endif
         Dvar_SetFromStringByName(key, CL_GetConfigString(i + 0x60));
     }
 }
@@ -488,10 +490,14 @@ static void __attribute_regparm__(2) CG_SetClientDvarFromServer(const char *dvar
         cg->drawHud = hud;
     } else if (stricmp(dvarname, (const char *)"g_scriptMainMenu") == 0) {
         I_strncpyz(cg->scriptMainMenu, value, sizeof(cg->scriptMainMenu));
-    } else if (NetHardening_ServerMaySetCvar(dvarname)) {
-        Dvar_SetFromStringByName(dvarname, value);
     } else {
-        Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", dvarname);
+#if COD2_FEATURE_NET_HARDENING
+        if (!NetHardening_ServerMaySetCvar(dvarname)) {
+            Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", dvarname);
+            return;
+        }
+#endif
+        Dvar_SetFromStringByName(dvarname, value);
     }
 }
 

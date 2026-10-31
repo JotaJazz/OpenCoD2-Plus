@@ -8,7 +8,7 @@
 
 void Com_Printf(const char *fmt, ...);
 void Com_DPrintf(const char *fmt, ...);
-void FS_CreatePath(const char *path);
+int FS_CreatePath(char *OSPath);
 
 typedef void CURL;
 typedef void CURLM;
@@ -117,7 +117,10 @@ int DL_BeginDownload(const char *localName, const char *remoteName, int debug)
 
     dl_isMotd = (strstr(remoteName, "motd.txt") != 0);
 
-    FS_CreatePath(localName);
+    if (FS_CreatePath((char *)localName)) {
+        Com_DPrintf("DL_BeginDownload: refusing the path '%s'\n", localName);
+        return 0;
+    }
     {
         size_t n = strlen(localName);
         if (n >= sizeof(dl_localName))

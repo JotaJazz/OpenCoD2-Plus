@@ -10,7 +10,9 @@ fetch the .iwd over HTTP (a GET answered 200), keep it byte for byte, and then
 join the game. --disconnect sets sv_wwwDlDisconnected 1 (the client leaves,
 downloads and reconnects, as most public servers ask). With --wine the client
 is a Windows one (cod2_win32.exe, which downloads through WinINet) run by the
-given wine command. The client needs a CD key in ~/.cod2/preferences: without
+given wine command. --http-404 answers 404 and --truncate cuts the transfer
+at half of its Content-Length: the client must leave HTTP and fetch the .iwd
+from the server itself, whole. The client needs a CD key in ~/.cod2/preferences: without
 one the test is skipped (exit 0). It opens a window. Only 1.3 (protocol 118)
 has redirected downloads. Exits with 0 when all of that holds.
 """
@@ -29,6 +31,22 @@ IWD = 'zz_dltest.iwd'
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     requests = []
+    fault = None        # '404' or 'truncate'
+
+    def do_GET(self):
+        if Handler.fault == '404':
+            self.send_error(404)
+        elif Handler.fault == 'truncate':
+            path = self.translate_path(self.path)
+            size = os.path.getsize(path)
+            self.send_response(200)
+            self.send_header('Content-Length', str(size))
+            self.end_headers()
+            with open(path, 'rb') as f:
+                self.wfile.write(f.read(size // 2))
+            self.close_connection = True
+        else:
+            super().do_GET()
 
     def log_message(self, fmt, *args):
         Handler.requests.append(fmt % args)
@@ -41,8 +59,11 @@ def main():
     ap.add_argument('--server')
     ap.add_argument('--wine', help='the command that runs --binary (a wine wrapper)')
     ap.add_argument('--disconnect', action='store_true', help='sv_wwwDlDisconnected 1')
+    ap.add_argument('--http-404', action='store_true', help='the HTTP server answers 404')
+    ap.add_argument('--truncate', action='store_true', help='the HTTP server cuts the file in half')
     ap.add_argument('--map', default='mp_toujane')
     args = ap.parse_args()
+    Handler.fault = '404' if args.http_404 else 'truncate' if args.truncate else None
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
@@ -92,8 +113,8 @@ def main():
                 fetched = os.path.join(cli_home, MOD, IWD)
                 got = wait_for(lambda: os.path.exists(fetched) and os.path.getsize(fetched) == os.path.getsize(served),
                                240)
-                run.check('the client fetches the .iwd over HTTP',
-                          any(f'GET /{MOD}/{IWD}' in r and '" 200' in r for r in Handler.requests),
+                run.check('the client asks HTTP for the .iwd',
+                          any(f'GET /{MOD}/{IWD}' in r for r in Handler.requests),
                           '; '.join(Handler.requests) or 'no request')
                 run.check('the .iwd is kept byte for byte',
                           bool(got) and open(fetched, 'rb').read() == open(served, 'rb').read())
@@ -110,8 +131,11 @@ def main():
                     except subprocess.TimeoutExpired:
                         p.kill()
         text = open(client_log, encoding='latin-1').read() if os.path.exists(client_log) else ''
-        run.check('no download failure', 'Failed to initialize download' not in text
-                  and 'Download failure' not in text)
+        if Handler.fault:
+            run.check('the client saw the download fail', 'Download failure' in text)
+        else:
+            run.check('no download failure', 'Failed to initialize download' not in text
+                      and 'Download failure' not in text)
         run.check('no crash report from the client', 'CRASH REPORT' not in text)
         if run.failures and text:
             print('\n--- last lines of the client log ---')

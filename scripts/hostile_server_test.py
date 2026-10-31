@@ -12,7 +12,7 @@ The client needs a CD key in ~/.cod2/preferences: without one the test is
 skipped (exit 0). It opens a window. Exits with 0 when every case holds. Set
 COD2_HOSTILE_LOG to a path to keep the last client's log.
 """
-import argparse, glob, os, re, shutil, socket, subprocess, sys, tempfile, time
+import argparse, glob, http.server, os, re, shutil, socket, subprocess, sys, tempfile, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -35,6 +35,20 @@ NO_ENTITY = 1023
 ET_PLAYER = 1
 ET_CORPSE = 2
 LONG_KEY = 'EXE_ERR_GET_NEWEST_DRIVERS'     # its English text is 441 characters
+ESCAPE = f'cod2_hostile_escape_{os.getpid()}'
+LONG_NAME = 'y' * 80        # cut at originalDownloadName's 64 bytes, it loses its .iwd
+PAYLOAD = b'#!/bin/sh\n'
+
+
+class AnyFile(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Length', str(len(PAYLOAD)))
+        self.end_headers()
+        self.wfile.write(PAYLOAD)
+
+    def log_message(self, fmt, *args):
+        pass
 
 
 def captured_configstrings(game_dir, server_bin):
@@ -203,21 +217,22 @@ class FakeServer:
 class Case:
     """stage: 'gamestate' sends strings/raw_index in the gamestate and goes no
     further than `after`; 'active' first brings the client to its first
-    snapshot, then sends `after`. expect: text the log must hold."""
+    snapshot, then sends `after`. expect: text the log must hold. absent: files
+    that must not exist, relative to the client's main folder's parent."""
 
-    def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None):
+    def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=()):
         self.name, self.stage, self.strings, self.raw_index = name, stage, strings or {}, raw_index
-        self.after, self.expect = after, expect
+        self.after, self.expect, self.absent = after, expect, absent
 
 
 def command(text):
     return lambda srv, run: run.commands(text)
 
 
-def missing_iwd(strings):
+def missing_iwd(strings, name='main/zz_hostile'):
     """The systeminfo of a server that asks the client to download one iwd."""
     info = set_info(strings[1], 'sv_referencedIwds', '12345')
-    return {1: set_info(info, 'sv_referencedIwdNames', 'main/zz_hostile')}
+    return {1: set_info(info, 'sv_referencedIwdNames', name)}
 
 
 def huffman_bomb(srv, run):
@@ -238,6 +253,27 @@ def info_response(srv, run):
     srv.raw(OOB + b'infoResponse\n' + b'\\protocol\\118\0' + b'A' * 1023 + b'\0')
 
 
+def wwwdl(url, size, flags):
+    w = MsgWriter()
+    w.byte(SVC_DOWNLOAD)
+    w.data += (0xffff).to_bytes(2, 'little')
+    w.string(url)
+    w.long(size)
+    w.long(flags)
+    w.byte(SVC_EOF)
+    return bytes(w.data)
+
+
+def http_redirect(srv, run):
+    """A redirect to an HTTP server that serves anything: the client writes it
+    under the name the server gave for the iwd."""
+    srv.send(wwwdl(f'http://127.0.0.1:{run.http_port}/x.iwd', len(PAYLOAD), 0))
+
+
+def open_file_url(srv, run):
+    srv.send(wwwdl('file:///etc/passwd', 0, 2))
+
+
 def entities(*items):
     return lambda srv, run: srv.send(snapshot(run.time(), entities=items))
 
@@ -252,6 +288,11 @@ def make_cases(strings):
         Case('playerstate_lc', after=bad_lc, expect='bad field count'),
         Case('download_negative_size', 'gamestate', strings=missing_iwd(strings), after=negative_block,
              expect='bad download block size'),
+        Case('download_traversal', 'gamestate', strings=missing_iwd(strings, '../' + ESCAPE), after=http_redirect,
+             absent=['../' + ESCAPE + '.iwd', '../' + ESCAPE + '.iwd.tmp']),
+        Case('download_long_name', 'gamestate', strings=missing_iwd(strings, 'main/' + LONG_NAME),
+             after=http_redirect, absent=['main/' + LONG_NAME[:58]]),
+        Case('open_file_url', 'gamestate', strings=missing_iwd(strings), after=open_file_url, expect='non-http'),
         Case('huffman_bomb', after=huffman_bomb),
         Case('disconnect_percent', after=command('w "%s%s%s%s%n"'), expect='%s%s%s%s%n'),
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
@@ -271,6 +312,7 @@ class ClientRun:
         self.srv, self.base = srv, strings
         self.case = case
         self.server_time = 10000
+        self.http_port = None
         self.sequence = 0
 
     def time(self):
@@ -290,6 +332,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
     """'' when the case holds, otherwise what went wrong."""
     strings = {**base, **case.strings}
     srv = FakeServer()
+    httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), AnyFile)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
     with tempfile.TemporaryDirectory(prefix='cod2_hostile_') as home:
         log_path = os.path.join(home, 'out.log')
         with open(log_path, 'wb') as log:
@@ -298,6 +342,7 @@ def run_case(case, base, binary, game_dir, timeout=120):
                          '+connect', f'127.0.0.1:{srv.port}'], log)
         text = lambda: open(log_path, encoding='latin-1').read()
         run = ClientRun(srv, strings, case)
+        run.http_port = httpd.server_address[1]
         try:
             end = time.time() + 45
             while not srv.poll():
@@ -333,8 +378,14 @@ def run_case(case, base, binary, game_dir, timeout=120):
                 return f'exit code {code}'
             if case.expect and case.expect not in log_text:
                 return f'no {case.expect!r} in the log'
+            for name in case.absent:
+                path = os.path.normpath(os.path.join(home, name))
+                if os.path.exists(path):
+                    os.remove(path)
+                    return f'a file at {name}'
             return ''
         finally:
+            httpd.shutdown()
             if os.environ.get('COD2_HOSTILE_LOG'):
                 shutil.copy(log_path, os.environ['COD2_HOSTILE_LOG'])
             if cl.poll() is None:

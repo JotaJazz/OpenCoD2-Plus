@@ -456,6 +456,8 @@ void CL_ParseWWWDownload(msg_t *msg)
 {
     char toOSPath[256];
     char *fs_homepath = Dvar_GetString("fs_homepath");
+    /* a longer name would lose its extension in originalDownloadName */
+    int nameFits = strlen(cls.downloadName) < sizeof(cls.originalDownloadName);
 
     I_strncpyz(cls.originalDownloadName, cls.downloadName, sizeof(cls.originalDownloadName));
     I_strncpyz(cls.downloadName, MSG_ReadString(msg), sizeof(cls.downloadName));
@@ -464,7 +466,7 @@ void CL_ParseWWWDownload(msg_t *msg)
 
 #    if COD2_FEATURE_NET_HARDENING && COD2_FEATURE_WWW_DOWNLOAD
 
-    if (!(cls.downloadFlags & 0x2) && !NetHardening_ValidUrl(cls.downloadName)) {
+    if (!NetHardening_ValidUrl(cls.downloadName)) {
         Com_Printf("WARNING: refusing wwwdl redirect to non-http(s) URL '%s'\n",
                    cls.downloadName);
         CL_AddReliableCommand("wwwdl fail");
@@ -472,8 +474,8 @@ void CL_ParseWWWDownload(msg_t *msg)
         cls.wwwDlInProgress = 0;
         return;
     }
-    if (cls.originalDownloadName[0] &&
-        !NetHardening_ValidDownloadName(cls.originalDownloadName, 1)) {
+    if (!nameFits || (cls.originalDownloadName[0] &&
+                      !NetHardening_ValidDownloadName(cls.originalDownloadName, 1))) {
         Com_Printf("WARNING: refusing malicious wwwdl local name '%s'\n",
                    cls.originalDownloadName);
         CL_AddReliableCommand("wwwdl fail");
@@ -529,6 +531,9 @@ void CL_WWWDownload(void)
 
     DL_DownloadLoop();
     st = DL_GetStatus();
+    /* WinINet ends a cut transfer as a finished one */
+    if (st == DL_STATUS_DONE && !DL_DLIsMotd() && cls.downloadSize > 0 && DL_BytesReceived() != cls.downloadSize)
+        st = DL_STATUS_FAILED;
     if (!DL_DLIsMotd())
         *(int *)((*download_ui_ptr) + 0x14) = DL_BytesReceived();
 
