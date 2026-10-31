@@ -469,6 +469,9 @@ const char *SEH_LocalizeTextMessage(const char *pszInputBuffer, const char *pszM
 
         if (pszScanStart < pszIn) {
             iTokenLen = pszIn - pszScanStart;
+            /* not in 1.3: a configstring can be much longer than this buffer */
+            if (iTokenLen >= (int)sizeof(szTokenBuf))
+                iTokenLen = (int)sizeof(szTokenBuf) - 1;
             I_strncpyz(szTokenBuf, pszScanStart, iTokenLen + 1);
 
             if (bLocOn) {

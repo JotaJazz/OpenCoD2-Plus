@@ -315,6 +315,7 @@ def make_cases(strings):
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
         Case('items_long', 'gamestate', strings={8: 'f' * 2000}),
         Case('weapons_many', 'gamestate', strings={7: ' a' * 500}),
+        Case('vote_long', 'gamestate', strings={16: 'f' * 8000}),
         Case('reverb_prio', after=command('r 99 generic 1 1 1')),
         Case('reverb_off_prio', after=command('D 99 1')),
         Case('channelvol_off_prio', after=command('F 99 1')),
