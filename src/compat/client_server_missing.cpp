@@ -62,46 +62,6 @@ void Com_BitClear( int array[], int bitNum )
 }
 
 // universal/com_math.cpp
-void VectorInverse( vec3_t v )
-{
-	v[0] = -v[0];
-	v[1] = -v[1];
-	v[2] = -v[2];
-}
-
-// universal/com_math.cpp
-vec_t VectorLength( const vec3_t v )
-{
-	return I_sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
-}
-
-// universal/com_math.cpp
-vec_t Vec2Length( const vec2_t v )
-{
-	return I_sqrt( v[0] * v[0] + v[1] * v[1] );
-}
-
-// universal/com_math.cpp
-vec_t Vec2LengthSq( const vec2_t v )
-{
-	return ( v[0] * v[0] + v[1] * v[1] );
-}
-
-// universal/com_math.cpp
-vec_t VectorLengthSquared( const vec3_t v )
-{
-	return ( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
-}
-
-// universal/com_math.cpp
-void Vec3Lerp(const vec3_t start, const vec3_t end, float fraction, vec3_t endpos)
-{
-	endpos[0] = (end[0] - start[0]) * fraction + start[0];
-	endpos[1] = (end[1] - start[1]) * fraction + start[1];
-	endpos[2] = (end[2] - start[2]) * fraction + start[2];
-}
-
-// universal/com_math.cpp
 void RoundFloatArray(vec3_t x, vec3_t y)
 {
 	int i;

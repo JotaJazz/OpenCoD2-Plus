@@ -12,6 +12,19 @@ resetCombat()
 	self.botStrafeUntil = 0;
 	self.botThrowing = false;
 	self.botNadeAt = 0;
+	self.botNadeUntil = 0;
+	self.botNadePos = undefined;
+}
+
+// For the fuse after a throw, a goal closer to where the grenade was thrown
+// than the bot is would walk it into its own grenade: chasing the enemy it
+// threw at did that in most of the bots' grenade suicides.
+nearOwnGrenade(goal)
+{
+	if(getTime() >= self.botNadeUntil || !isDefined(self.botNadePos))
+		return false;
+
+	return distance(goal, self.botNadePos) < distance(self.origin, self.botNadePos);
 }
 
 // One tick of fighting the target in sight.
@@ -91,6 +104,17 @@ fight(target, skill)
 	self maps\mp\bots\_bots::lookAt(vectorToAngles(aimAt - eye));
 
 	clip = self getCurrentWeaponClipAmmo();
+
+	// nothing to reload with: the other weapon, or the knife
+	if(clip == 0 && self getCurrentWeaponAmmo() == 0)
+	{
+		self fireWeapon(0);
+		self reloadWeapon(0);
+		if(!self switchToLoadedWeapon())
+			self setWalkDir("forward");
+		return;
+	}
+
 	reloading = clip == 0 || self isReloading();
 
 	if(reloading)
@@ -115,7 +139,7 @@ fight(target, skill)
 	self setWalkDir("none");
 	if(!reloading)
 	{
-		if(dist > 600)
+		if(dist > 600 && !self nearOwnGrenade(target.origin))
 			self setWalkDir("forward");
 		else if(dist < 150 && (class == "sniper" || class == "bolt"))
 			self setWalkDir("back");
@@ -132,6 +156,28 @@ fight(target, skill)
 		self.botStrafeUntil = now + 600 + randomInt(900);
 	}
 	self setWalkDir(self.botStrafeDir);
+}
+
+switchToLoadedWeapon()
+{
+	current = self getCurrentWeapon();
+	slots[0] = "primary";
+	slots[1] = "primaryb";
+
+	for(i = 0; i < slots.size; i++)
+	{
+		weapon = self getWeaponSlotWeapon(slots[i]);
+		if(weapon == "none" || weapon == current)
+			continue;
+
+		if(self getWeaponSlotAmmo(slots[i]) > 0 || self getWeaponSlotClipAmmo(slots[i]) > 0)
+		{
+			self setSpawnWeapon(weapon);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 // Throws a frag at pos (the target, or where it was just seen): 300-900
@@ -161,13 +207,23 @@ tryGrenade(pos, skill)
 	if(pitch < -45)
 		pitch = -45;
 
-	// a wall or ceiling right ahead would bounce the grenade back
+	// a wall or ceiling along the first part of the arc would bounce the
+	// grenade back; thrown at an enemy that just ducked behind cover, the
+	// cover is often a few hundred units away, past a short check
 	eye = self getEye();
-	ahead = bulletTrace(eye, eye + maps\mp\bots\_bots::scaleVector(anglesToForward((pitch, angles[1], 0)), 150), false, self);
+	reach = dist * 0.6;
+	if(reach > 400)
+		reach = 400;
+	if(reach < 150)
+		reach = 150;
+	ahead = bulletTrace(eye, eye + maps\mp\bots\_bots::scaleVector(anglesToForward((pitch, angles[1], 0)), reach), false, self);
 	if(ahead["fraction"] < 1)
 		return false;
 
 	self.botNadeAt = now + 8000;
+	// the fuse (3.5 s) and the 0.3 s the throw takes
+	self.botNadeUntil = now + 4000;
+	self.botNadePos = pos;
 	self thread throwGrenadeAt(pitch, angles[1]);
 	return true;
 }

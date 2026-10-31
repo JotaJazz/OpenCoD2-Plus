@@ -2,6 +2,8 @@
 
 #if LIBCOD_COMPILE_UTILS == 1
 
+VariableValue Scr_GetArrayIndexValue(unsigned int name);
+
 //thanks to riicchhaarrd/php
 void gsc_utils_getarraykeys()
 {
@@ -26,6 +28,10 @@ void gsc_utils_getarraykeys()
 	unsigned int index = arrIndex;
 	unsigned int name;
 
+	// pushing the result clears the parameters, and an array nothing else
+	// holds, such as what strTok returned, would be freed
+	AddRefToObject(arrIndex);
+
 	stackPushArray();
 
 	for (int i = 0; i < arraysize; i++)
@@ -33,12 +39,21 @@ void gsc_utils_getarraykeys()
 		index = FindNextSibling(index);
 		name = GetVariableName(index);
 
-		if (name < 0x10000)
+		VariableValue key = Scr_GetArrayIndexValue(name);
+
+		if (key.type == VAR_STRING)
 		{
-			stackPushString(SL_ConvertToString(name));
+			stackPushString(SL_ConvertToString(key.u.stringValue));
+			stackPushArrayLast();
+		}
+		else if (key.type == VAR_INTEGER)
+		{
+			stackPushInt(key.u.intValue);
 			stackPushArrayLast();
 		}
 	}
+
+	RemoveRefToObject(arrIndex);
 }
 
 // Appends formatted text to a COD2_MAX_STRINGLENGTH buffer, truncating instead of overflowing it
@@ -83,18 +98,8 @@ void gsc_utils_error()
 	Scr_Error(message);
 }
 
-void gsc_utils_printf()
+static void gsc_utils_format(const char *str, char *result)
 {
-	char result[COD2_MAX_STRINGLENGTH];
-	const char *str;
-
-	if (!stackGetParams("s", &str))
-	{
-		stackError("gsc_utils_printf() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
 	int param = 1; // maps to first %
 	int len = strlen(str);
 	int num = 0;
@@ -156,6 +161,21 @@ void gsc_utils_printf()
 	}
 
 	result[num] = '\0';
+}
+
+void gsc_utils_printf()
+{
+	char result[COD2_MAX_STRINGLENGTH];
+	const char *str;
+
+	if (!stackGetParams("s", &str))
+	{
+		stackError("gsc_utils_printf() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	gsc_utils_format(str, result);
 	Com_Printf("%s", result);
 	stackPushBool(qtrue);
 }
@@ -172,67 +192,7 @@ void gsc_utils_sprintf()
 		return;
 	}
 
-	int param = 1; // maps to first %
-	int len = strlen(str);
-	int num = 0;
-
-	for (int i = 0; i < len; i++)
-	{
-		if (str[i] == '%')
-		{
-			if (str[i + 1] == '%')
-			{
-				if (num < COD2_MAX_STRINGLENGTH - 1)
-					result[num++] = '%';
-				i++;
-			}
-			else
-			{
-				if(param >= Scr_GetNumParam())
-					continue;
-
-				switch (stackGetParamType(param))
-				{
-				case STACK_STRING:
-					const char *tmp_str;
-					stackGetParamString(param, &tmp_str); // no error checking, since we know it's a string
-					num = gsc_utils_append(result, num, "%s", tmp_str);
-					break;
-
-				case STACK_VECTOR:
-					float vec[3];
-					stackGetParamVector(param, vec);
-					num = gsc_utils_append(result, num, "(%.2f, %.2f, %.2f)", vec[0], vec[1], vec[2]);
-					break;
-
-				case STACK_FLOAT:
-					float tmp_float;
-					stackGetParamFloat(param, &tmp_float);
-					num = gsc_utils_append(result, num, "%.3f", tmp_float); // need a way to define precision
-					break;
-
-				case STACK_INT:
-					int tmp_int;
-					stackGetParamInt(param, &tmp_int);
-					num = gsc_utils_append(result, num, "%d", tmp_int);
-					break;
-
-				case STACK_INT64:
-					long int tmp_int64;
-					stackGetParamInt64(param, &tmp_int64);
-					num = gsc_utils_append(result, num, "%ld", tmp_int64);
-					break;
-				}
-
-				param++;
-			}
-		}
-		else
-			if (num < COD2_MAX_STRINGLENGTH - 1)
-				result[num++] = str[i];
-	}
-
-	result[num] = '\0';
+	gsc_utils_format(str, result);
 	stackPushString(result);
 }
 
@@ -913,7 +873,7 @@ void gsc_utils_sqrtInv()
 		return;
 	}
 
-	stackPushFloat(Q_rsqrt(x));
+	stackPushFloat(I_rsqrt(x));
 }
 
 void gsc_make_localized_string()

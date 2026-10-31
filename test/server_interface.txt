@@ -323,7 +323,6 @@ Netchan_TransmitNextFragment
 SEH_GetCurrentLanguage
 SEH_GetLanguageIndexForName
 SEH_GetLanguageName
-Sys_BeginStreamedFile
 Sys_EndStreamedFile
 Sys_GetClipboardData
 Sys_GetValue
@@ -333,7 +332,6 @@ Sys_Milliseconds
 Sys_QueEvent
 Sys_SetValue
 Sys_ShowIP
-Sys_StreamedRead
 Z_FreeInternal
 Z_MallocInternal
 Com_SurfaceTypeToName

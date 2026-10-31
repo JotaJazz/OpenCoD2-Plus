@@ -921,7 +921,7 @@ static void BG_Player_DoControllersInternal( DObj *obj, const entityState_t *es,
 		angles[CONTROL_ANGLES_PELVIS][PITCH] = AngleSubtract(es->fWaistPitch, es->fTorsoPitch);
 	}
 
-	for ( i = 0; i < CONTROL_ANGLES_COUNT; ++i )
+	for ( i = 0; i < CONTROL_ANGLES_COUNT; i++ )
 	{
 		VectorCopy(angles[i], info->angles[i]);
 	}
@@ -945,7 +945,7 @@ void BG_Player_DoControllers( DObj *obj, const gentity_s *ent, int *partBits, cl
 
 	maxAngleChange = frametime * 0.36000001f;
 
-	for ( i = 0; i < CONTROL_ANGLES_COUNT; ++i )
+	for ( i = 0; i < CONTROL_ANGLES_COUNT; i++ )
 	{
 		BG_LerpAngles(info.angles[i], maxAngleChange, ci->control.angles[i]);
 		DObjSetControlTagAngles(obj, partBits, *controller_names[i], ci->control.angles[i]);

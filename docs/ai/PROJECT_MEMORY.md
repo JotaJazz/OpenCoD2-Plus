@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — vendor sync 9e26dd4, a 64-bit dedicated server, an icon
+
+- CoD2rev-Plus moved 65 commits: its `netadr_t` grew with `altPort`, which the engine shares by value and inside `netchan_t`, so `altPort` now overlays `ipx[9]` and the struct stays 20 bytes. Growing the engine's was rejected: its layouts are pinned to 1.3. Its removed `Sys_BeginStreamedFile`/`Sys_StreamedRead` were an `FS_Read`; cinematics call that.
+- `cmake/lnxded64` builds the dedicated server at 64 bits from CoD2rev-Plus's sources alone. The engine's `COD2_X64` no longer compiles as C++ and stays a known gap: ADR 0010.
+- `docs/icon.svg` and `src/win32/opencod2.ico` go in both Windows executables; SDL takes the client's window icon from there. The Linux client has none.
+
 ## 2026-10-31 — the client's clock stays in step
 
 - `CL_SetCGameTime` marked `extrapolatedSnapshot` with its comparison inverted (1.3 `0x4031a5` is `>=`): every snapshot took 2 ms off the clock until it was 100 ms behind, then `CL_AdjustTimeDelta` averaged it forward, a visible jump about every 2.3 seconds, in every online game since the reconstruction. `hostile_server_test.py client_clock_steady` went from 13 jumps in 30 s to 2 at the start. The earlier online prediction gap against 1.3 may have come from this; it was not measured again.

@@ -12,7 +12,9 @@ qboolean isValidWeaponId(int id)
 	return qtrue;
 }
 
-void gsc_weapons_getweaponmaxammo()
+// The weapon named or numbered by the first argument, or NULL after a
+// script error
+static WeaponDef *gsc_weapons_getdef(const char *function)
 {
 	int id;
 	const char *name;
@@ -23,541 +25,211 @@ void gsc_weapons_getweaponmaxammo()
 		if (!id)
 			id = -1; // unknown name, not weapon "none"
 	}
-	else if ( ! stackGetParams("i", &id))
+	else if (!stackGetParams("i", &id))
 	{
-		stackError("gsc_weapons_getweaponmaxammo() argument is undefined or has a wrong type");
+		stackError("%s() argument is undefined or has a wrong type", function);
 		stackPushUndefined();
-		return;
+		return NULL;
 	}
 
 	if (!isValidWeaponId(id))
 	{
-		stackError("gsc_weapons_getweaponmaxammo() weapon index is out of bounds");
+		stackError("%s() weapon index is out of bounds", function);
 		stackPushUndefined();
-		return;
+		return NULL;
 	}
 
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->maxAmmo);
+	return BG_GetWeaponDef(id);
+}
+
+// The same, for a setter: the weapon first, then the integer value
+static WeaponDef *gsc_weapons_setdef(const char *function, int *value)
+{
+	int id;
+	const char *name;
+
+	if (stackGetParams("si", &name, value))
+	{
+		id = BG_FindWeaponIndexForName(name);
+		if (!id)
+			id = -1; // unknown name, not weapon "none"
+	}
+	else if (!stackGetParams("ii", &id, value))
+	{
+		stackError("%s() one or more arguments is undefined or has a wrong type", function);
+		stackPushUndefined();
+		return NULL;
+	}
+
+	if (!isValidWeaponId(id))
+	{
+		stackError("%s() weapon index is out of bounds", function);
+		stackPushUndefined();
+		return NULL;
+	}
+
+	return BG_GetWeaponDef(id);
+}
+
+void gsc_weapons_getweaponmaxammo()
+{
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponmaxammo");
+	if (weapon)
+		stackPushInt(weapon->maxAmmo);
 }
 
 void gsc_weapons_getweaponclipsize()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponclipsize() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponclipsize() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->clipSize);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponclipsize");
+	if (weapon)
+		stackPushInt(weapon->clipSize);
 }
 
 void gsc_weapons_getweapondamage()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweapondamage() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweapondamage() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->damage);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweapondamage");
+	if (weapon)
+		stackPushInt(weapon->damage);
 }
 
 void gsc_weapons_getweaponmeleedamage()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponmeleedamage() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponmeleedamage() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->meleeDamage);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponmeleedamage");
+	if (weapon)
+		stackPushInt(weapon->meleeDamage);
 }
 
 void gsc_weapons_getweaponfiretime()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponfiretime() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponfiretime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->fireTime);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponfiretime");
+	if (weapon)
+		stackPushInt(weapon->fireTime);
 }
 
 void gsc_weapons_getweaponmeleetime()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponmeleetime() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponmeleetime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->meleeTime);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponmeleetime");
+	if (weapon)
+		stackPushInt(weapon->meleeTime);
 }
 
 void gsc_weapons_getweaponreloadtime()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponreloadtime() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponreloadtime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->reloadTime);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponreloadtime");
+	if (weapon)
+		stackPushInt(weapon->reloadTime);
 }
 
 void gsc_weapons_getweaponreloademptytime()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponreloademptytime() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponreloademptytime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->reloadEmptyTime);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponreloademptytime");
+	if (weapon)
+		stackPushInt(weapon->reloadEmptyTime);
 }
 
 void gsc_weapons_getweaponcookable()
 {
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("i", &id))
-	{
-		stackError("gsc_weapons_getweaponcookable() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_getweaponcookable() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	stackPushInt(weapon->cookOffHold);
+	WeaponDef *weapon = gsc_weapons_getdef("gsc_weapons_getweaponcookable");
+	if (weapon)
+		stackPushInt(weapon->cookOffHold);
 }
 
 void gsc_weapons_setweapondamage()
 {
-	int id;
-	const char *name;
-	int damage;
-
-	if (stackGetParams("si", &name, &damage))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &damage))
-	{
-		stackError("gsc_weapons_setweapondamage() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweapondamage", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweapondamage() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->damage = damage;
-
+	weapon->damage = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponmaxammo()
 {
-	int id;
-	const char *name;
-	int ammo;
-
-	if (stackGetParams("si", &name, &ammo))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &ammo))
-	{
-		stackError("gsc_weapons_setweaponmaxammo() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponmaxammo", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponmaxammo() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->maxAmmo = ammo;
-
+	weapon->maxAmmo = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponclipsize()
 {
-	int id;
-	const char *name;
-	int clipSize;
-
-	if (stackGetParams("si", &name, &clipSize))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &clipSize))
-	{
-		stackError("gsc_weapons_setweaponclipsize() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponclipsize", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponclipsize() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->clipSize = clipSize;
-
+	weapon->clipSize = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponmeleedamage()
 {
-	int id;
-	const char *name;
-	int damage;
-
-	if (stackGetParams("si", &name, &damage))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &damage))
-	{
-		stackError("gsc_weapons_setweaponmeleedamage() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponmeleedamage", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponmeleedamage() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->meleeDamage = damage;
-
+	weapon->meleeDamage = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponfiretime()
 {
-	int id;
-	const char *name;
-	int iTime;
-
-	if (stackGetParams("si", &name, &iTime))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &iTime))
-	{
-		stackError("gsc_weapons_setweaponfiretime() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponfiretime", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponfiretime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->fireTime = iTime;
-
+	weapon->fireTime = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponmeleetime()
 {
-	int id;
-	const char *name;
-	int iTime;
-
-	if (stackGetParams("si", &name, &iTime))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &iTime))
-	{
-		stackError("gsc_weapons_setweaponmeleetime() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponmeleetime", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponmeleetime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->meleeTime = iTime;
-
+	weapon->meleeTime = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponreloadtime()
 {
-	int id;
-	const char *name;
-	int iTime;
-
-	if (stackGetParams("si", &name, &iTime))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &iTime))
-	{
-		stackError("gsc_weapons_setweaponreloadtime() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponreloadtime", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponreloadtime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->reloadTime = iTime;
-
+	weapon->reloadTime = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponreloademptytime()
 {
-	int id;
-	const char *name;
-	int iTime;
-
-	if (stackGetParams("si", &name, &iTime))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &iTime))
-	{
-		stackError("gsc_weapons_setweaponreloademptytime() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponreloademptytime", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponreloademptytime() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->reloadEmptyTime = iTime;
-
+	weapon->reloadEmptyTime = value;
 	stackPushBool(qtrue);
 }
 
 void gsc_weapons_setweaponcookable()
 {
-	int id;
-	const char *name;
-	int cookable;
-
-	if (stackGetParams("si", &name, &cookable))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if ( ! stackGetParams("ii", &id, &cookable))
-	{
-		stackError("gsc_weapons_setweaponcookable() one or more arguments is undefined or has a wrong type");
-		stackPushUndefined();
+	int value;
+	WeaponDef *weapon = gsc_weapons_setdef("gsc_weapons_setweaponcookable", &value);
+	if (!weapon)
 		return;
-	}
 
-	if (!isValidWeaponId(id))
-	{
-		stackError("gsc_weapons_setweaponcookable() weapon index is out of bounds");
-		stackPushUndefined();
-		return;
-	}
-
-	WeaponDef *weapon = BG_GetWeaponDef(id);
-	weapon->cookOffHold = cookable;
-
+	weapon->cookOffHold = value;
 	stackPushBool(qtrue);
 }
 
@@ -671,36 +343,6 @@ void gsc_weapons_getloadedweapons()
 }
 
 // Functions below are named and behave as in zk_libcod
-
-// The weapon named or numbered by the first argument, or NULL after a
-// script error
-static WeaponDef *gsc_weapons_getdef(const char *function)
-{
-	int id;
-	const char *name;
-
-	if (stackGetParams("s", &name))
-	{
-		id = BG_FindWeaponIndexForName(name);
-		if (!id)
-			id = -1; // unknown name, not weapon "none"
-	}
-	else if (!stackGetParams("i", &id))
-	{
-		stackError("%s() argument is undefined or has a wrong type", function);
-		stackPushUndefined();
-		return NULL;
-	}
-
-	if (!isValidWeaponId(id))
-	{
-		stackError("%s() weapon index is out of bounds", function);
-		stackPushUndefined();
-		return NULL;
-	}
-
-	return BG_GetWeaponDef(id);
-}
 
 void gsc_weapons_getweaponfusetime()
 {

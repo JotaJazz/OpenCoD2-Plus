@@ -54,26 +54,6 @@ float com_timescaleValue;
 
 /*
 ==================
-Com_HashKey
-==================
-*/
-int Com_HashKey( const char *string, int maxlen )
-{
-	int hash, i;
-
-	hash = 0;
-
-	for ( i = 0; i < maxlen && string[i] != '\0'; i++ )
-	{
-		hash += string[i] * ( 119 + i );
-	}
-
-	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
-	return hash;
-}
-
-/*
-==================
 Com_GetDecimalDelimiter
 ==================
 */
@@ -1442,7 +1422,10 @@ void Com_Init( char* commandLine )
 	jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(THREAD_VALUE_COM_ERROR);
 
 	if (setjmp(*abortframe))
+	{
+		Com_Printf("FATAL: %s\n", com_errorMessage);
 		Sys_Error("Error during Initialization:\n%s\n", com_errorMessage);
+	}
 
 	Com_Init_Try_Block_Function(commandLine);
 }
@@ -1767,7 +1750,10 @@ void Com_ErrorCleanup( void )
 	lastErrorTime = currentTime;
 
 	if ( com_errorType != ERR_SERVERDISCONNECT && com_errorType != ERR_DROP && com_errorType != ERR_DISCONNECT )
+	{
+		Com_Printf("FATAL: %s\n", com_errorMessage);
 		Sys_Error("%s", com_errorMessage);
+	}
 
 	if ( com_errorType == ERR_SERVERDISCONNECT )
 	{

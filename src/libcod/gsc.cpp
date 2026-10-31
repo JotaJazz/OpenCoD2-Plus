@@ -156,27 +156,27 @@ scr_function_t scriptFunctions[] =
 #endif
 
 #if LIBCOD_COMPILE_MYSQL == 1
-	{"mysql_init", gsc_mysql_init, 0},
-	{"mysql_real_connect", gsc_mysql_real_connect, 0},
-	{"mysql_close", gsc_mysql_close, 0},
-	{"mysql_query", gsc_mysql_query, 0},
-	{"mysql_errno", gsc_mysql_errno, 0},
-	{"mysql_error", gsc_mysql_error, 0},
-	{"mysql_affected_rows", gsc_mysql_affected_rows, 0},
-	{"mysql_store_result", gsc_mysql_store_result, 0},
-	{"mysql_num_rows", gsc_mysql_num_rows, 0},
-	{"mysql_num_fields", gsc_mysql_num_fields, 0},
-	{"mysql_field_seek", gsc_mysql_field_seek, 0},
-	{"mysql_fetch_field", gsc_mysql_fetch_field, 0},
-	{"mysql_fetch_row", gsc_mysql_fetch_row, 0},
-	{"mysql_free_result", gsc_mysql_free_result, 0},
-	{"mysql_real_escape_string", gsc_mysql_real_escape_string, 0},
-	{"mysql_async_create_query", gsc_mysql_async_create_query, 0},
-	{"mysql_async_create_query_nosave", gsc_mysql_async_create_query_nosave, 0},
-	{"mysql_async_getdone_list", gsc_mysql_async_getdone_list, 0},
-	{"mysql_async_getresult_and_free", gsc_mysql_async_getresult_and_free, 0},
-	{"mysql_async_initializer", gsc_mysql_async_initializer, 0},
-	{"mysql_reuse_connection", gsc_mysql_reuse_connection, 0},
+	{"mysql_init", gsc_unsafe<gsc_mysql_init>, 0},
+	{"mysql_real_connect", gsc_unsafe<gsc_mysql_real_connect>, 0},
+	{"mysql_close", gsc_unsafe<gsc_mysql_close>, 0},
+	{"mysql_query", gsc_unsafe<gsc_mysql_query>, 0},
+	{"mysql_errno", gsc_unsafe<gsc_mysql_errno>, 0},
+	{"mysql_error", gsc_unsafe<gsc_mysql_error>, 0},
+	{"mysql_affected_rows", gsc_unsafe<gsc_mysql_affected_rows>, 0},
+	{"mysql_store_result", gsc_unsafe<gsc_mysql_store_result>, 0},
+	{"mysql_num_rows", gsc_unsafe<gsc_mysql_num_rows>, 0},
+	{"mysql_num_fields", gsc_unsafe<gsc_mysql_num_fields>, 0},
+	{"mysql_field_seek", gsc_unsafe<gsc_mysql_field_seek>, 0},
+	{"mysql_fetch_field", gsc_unsafe<gsc_mysql_fetch_field>, 0},
+	{"mysql_fetch_row", gsc_unsafe<gsc_mysql_fetch_row>, 0},
+	{"mysql_free_result", gsc_unsafe<gsc_mysql_free_result>, 0},
+	{"mysql_real_escape_string", gsc_unsafe<gsc_mysql_real_escape_string>, 0},
+	{"mysql_async_create_query", gsc_unsafe<gsc_mysql_async_create_query>, 0},
+	{"mysql_async_create_query_nosave", gsc_unsafe<gsc_mysql_async_create_query_nosave>, 0},
+	{"mysql_async_getdone_list", gsc_unsafe<gsc_mysql_async_getdone_list>, 0},
+	{"mysql_async_getresult_and_free", gsc_unsafe<gsc_mysql_async_getresult_and_free>, 0},
+	{"mysql_async_initializer", gsc_unsafe<gsc_mysql_async_initializer>, 0},
+	{"mysql_reuse_connection", gsc_unsafe<gsc_mysql_reuse_connection>, 0},
 #endif
 
 #if LIBCOD_COMPILE_PLAYER == 1
@@ -673,7 +673,7 @@ int stackGetParams(const char *params, ...)
 			int *tmp = va_arg(args, int *);
 			if ( ! stackGetParamInt(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not an int\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not an int\n", (int)i);
 				errors++;
 			}
 			break;
@@ -684,7 +684,7 @@ int stackGetParams(const char *params, ...)
 			long int *tmp = va_arg(args, long int *);
 			if ( ! stackGetParamInt64(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not an int64\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not an int64\n", (int)i);
 				errors++;
 			}
 			break;
@@ -695,7 +695,7 @@ int stackGetParams(const char *params, ...)
 			float *tmp = va_arg(args, float *);
 			if ( ! stackGetParamVector(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a vector\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not a vector\n", (int)i);
 				errors++;
 			}
 			break;
@@ -706,7 +706,7 @@ int stackGetParams(const char *params, ...)
 			float *tmp = va_arg(args, float *);
 			if ( ! stackGetParamFloat(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a float\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not a float\n", (int)i);
 				errors++;
 			}
 			break;
@@ -717,7 +717,7 @@ int stackGetParams(const char *params, ...)
 			const char **tmp = va_arg(args, const char **);
 			if ( ! stackGetParamString(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a string\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not a string\n", (int)i);
 				errors++;
 			}
 			break;
@@ -728,7 +728,7 @@ int stackGetParams(const char *params, ...)
 			unsigned int *tmp = va_arg(args, unsigned int *);
 			if ( ! stackGetParamConstString(i, tmp))
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a const string\n", i);
+				Com_DPrintf("\nstackGetParams() Param %i is not a const string\n", (int)i);
 				errors++;
 			}
 			break;

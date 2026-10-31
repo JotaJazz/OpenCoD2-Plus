@@ -59,8 +59,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "linux_local.h" // bk001204
 
-unsigned  sys_frame_time;
-
 uid_t saved_euid;
 qboolean stdin_active = qtrue;
 
@@ -96,48 +94,6 @@ static int hist_current = -1, hist_count = 0;
 // =======================================================================
 // General routines
 // =======================================================================
-
-// bk001207 
-#define MEM_THRESHOLD 96*1024*1024
-
-/*
-==================
-Sys_LowPhysicalMemory()
-==================
-*/
-qboolean Sys_LowPhysicalMemory() {
-  //MEMORYSTATUS stat;
-  //GlobalMemoryStatus (&stat);
-  //return (stat.dwTotalPhys <= MEM_THRESHOLD) ? qtrue : qfalse;
-  return qfalse; // bk001207 - FIXME
-}
-
-/*
-==================
-Sys_FunctionCmp
-==================
-*/
-int Sys_FunctionCmp(void *f1, void *f2) {
-  return qtrue;
-}
-
-/*
-==================
-Sys_FunctionCheckSum
-==================
-*/
-int Sys_FunctionCheckSum(void *f1) {
-  return 0;
-}
-
-/*
-==================
-Sys_MonkeyShouldBeSpanked
-==================
-*/
-int Sys_MonkeyShouldBeSpanked( void ) {
-  return 0;
-}
 
 void Sys_BeginProfiling( void ) {
 }
@@ -359,6 +315,8 @@ void Sys_Init(void)
 #if defined __linux__
 #if defined __i386__
   Dvar_RegisterString( "arch", "linux i386", DVAR_ROM );
+#elif defined __x86_64__
+  Dvar_RegisterString( "arch", "linux x64", DVAR_ROM );
 #elif defined __alpha__
   Dvar_RegisterString( "arch", "linux alpha", DVAR_ROM );
 #elif defined __sparc__
@@ -421,33 +379,14 @@ void  Sys_Error( const char *error, ...)
 #endif
 
   va_start (argptr,error);
-  vsprintf (string,error,argptr);
+  vsnprintf (string,sizeof(string),error,argptr);
   va_end (argptr);
   fprintf(stderr, "Sys_Error: %s\n", string);
 
+  // Sys_Exit ends in _exit, and the game log may be buffered
+  fflush (NULL);
+
   Sys_Exit( 1 ); // bk010104 - use single exit point.
-} 
-
-void Sys_Warn (char *warning, ...)
-{ 
-  va_list     argptr;
-  char        string[1024];
-
-  va_start (argptr,warning);
-  vsprintf (string,warning,argptr);
-  va_end (argptr);
-
-  if (ttycon_on)
-  {
-    tty_Hide();
-  }
-
-  fprintf(stderr, "Warning: %s", string);
-
-  if (ttycon_on)
-  {
-    tty_Show();
-  }
 } 
 
 /*
@@ -465,11 +404,6 @@ int Sys_FileTime (char *path)
     return -1;
 
   return buf.st_mtime;
-}
-
-void floating_point_exception_handler(int whatever)
-{
-  signal(SIGFPE, floating_point_exception_handler);
 }
 
 static char sys_crashLogPath[MAX_OSPATH] = "crash.log";
@@ -529,6 +463,9 @@ static void Sys_CrashHandler( int sig, siginfo_t *info, void *context )
 #if defined __i386__
     snprintf( text, sizeof( text ), "eip %p, fault address %p\n",
               (void *)( (const ucontext_t *)context )->uc_mcontext.gregs[REG_EIP], info->si_addr );
+#elif defined __x86_64__
+    snprintf( text, sizeof( text ), "rip %p, fault address %p\n",
+              (void *)( (const ucontext_t *)context )->uc_mcontext.gregs[REG_RIP], info->si_addr );
 #else
     snprintf( text, sizeof( text ), "fault address %p\n", info->si_addr );
 #endif
@@ -1018,203 +955,18 @@ BACKGROUND FILE STREAMING
 ========================================================================
 */
 
-#if 1
-
 void Sys_InitStreamThread( void ) {
 }
 
 void Sys_ShutdownStreamThread( void ) {
 }
 
-void Sys_BeginStreamedFile( fileHandle_t f, int readAhead ) {
-}
-
 void Sys_EndStreamedFile( fileHandle_t f ) {
 }
 
-int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f ) {
-  return FS_Read( buffer, size * count, f );
-}
-
 void Sys_StreamSeek( fileHandle_t f, int offset, int origin ) {
   FS_Seek( f, offset, origin );
 }
-
-#else
-
-typedef struct
-{
-  fileHandle_t file;
-  byte  *buffer;
-  qboolean  eof;
-  int   bufferSize;
-  int   streamPosition; // next byte to be returned by Sys_StreamRead
-  int   threadPosition; // next byte to be read from file
-} streamState_t;
-
-streamState_t stream;
-
-/*
-===============
-Sys_StreamThread
-
-A thread will be sitting in this loop forever
-================
-*/
-void Sys_StreamThread( void ) 
-{
-  int   buffer;
-  int   count;
-  int   readCount;
-  int   bufferPoint;
-  int   r;
-
-  // if there is any space left in the buffer, fill it up
-  if ( !stream.eof )
-  {
-    count = stream.bufferSize - (stream.threadPosition - stream.streamPosition);
-    if ( count )
-    {
-      bufferPoint = stream.threadPosition % stream.bufferSize;
-      buffer = stream.bufferSize - bufferPoint;
-      readCount = buffer < count ? buffer : count;
-      r = FS_Read ( stream.buffer + bufferPoint, readCount, stream.file );
-      stream.threadPosition += r;
-
-      if ( r != readCount )
-        stream.eof = qtrue;
-    }
-  }
-}
-
-/*
-===============
-Sys_InitStreamThread
-
-================
-*/
-void Sys_InitStreamThread( void ) 
-{
-}
-
-/*
-===============
-Sys_ShutdownStreamThread
-
-================
-*/
-void Sys_ShutdownStreamThread( void ) 
-{
-}
-
-
-/*
-===============
-Sys_BeginStreamedFile
-
-================
-*/
-void Sys_BeginStreamedFile( fileHandle_t f, int readAhead ) 
-{
-  if ( stream.file )
-  {
-    Com_Error( ERR_FATAL, "Sys_BeginStreamedFile: unclosed stream");
-  }
-
-  stream.file = f;
-  stream.buffer = Z_Malloc( readAhead );
-  stream.bufferSize = readAhead;
-  stream.streamPosition = 0;
-  stream.threadPosition = 0;
-  stream.eof = qfalse;
-}
-
-/*
-===============
-Sys_EndStreamedFile
-
-================
-*/
-void Sys_EndStreamedFile( fileHandle_t f ) 
-{
-  if ( f != stream.file )
-  {
-    Com_Error( ERR_FATAL, "Sys_EndStreamedFile: wrong file");
-  }
-
-  stream.file = 0;
-  Z_Free( stream.buffer );
-}
-
-
-/*
-===============
-Sys_StreamedRead
-
-================
-*/
-int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f ) 
-{
-  int   available;
-  int   remaining;
-  int   sleepCount;
-  int   copy;
-  int   bufferCount;
-  int   bufferPoint;
-  byte  *dest;
-
-  dest = (byte *)buffer;
-  remaining = size * count;
-
-  if ( remaining <= 0 )
-  {
-    Com_Error( ERR_FATAL, "Streamed read with non-positive size" );
-  }
-
-  sleepCount = 0;
-  while ( remaining > 0 )
-  {
-    available = stream.threadPosition - stream.streamPosition;
-    if ( !available )
-    {
-      if (stream.eof)
-        break;
-      Sys_StreamThread();
-      continue;
-    }
-
-    bufferPoint = stream.streamPosition % stream.bufferSize;
-    bufferCount = stream.bufferSize - bufferPoint;
-
-    copy = available < bufferCount ? available : bufferCount;
-    if ( copy > remaining )
-    {
-      copy = remaining;
-    }
-    memcpy( dest, stream.buffer + bufferPoint, copy );
-    stream.streamPosition += copy;
-    dest += copy;
-    remaining -= copy;
-  }
-
-  return(count * size - remaining) / size;
-}
-
-/*
-===============
-Sys_StreamSeek
-
-================
-*/
-void Sys_StreamSeek( fileHandle_t f, int offset, int origin ) {
-  // clear to that point
-  FS_Seek( f, offset, origin );
-  stream.streamPosition = 0;
-  stream.threadPosition = 0;
-  stream.eof = qfalse;
-}
-
-#endif
 
 /*
 ========================================================================
@@ -1349,14 +1101,6 @@ sysEvent_t Sys_GetEvent( void ) {
 }
 
 /*****************************************************************************/
-
-qboolean Sys_CheckCD( void ) {
-  return qtrue;
-}
-
-void Sys_AppActivate (void)
-{
-}
 
 char *Sys_GetClipboardData(void)
 {

@@ -9,7 +9,8 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|---|
 | MSVC build unchecked | may not build or may diverge | not covered by `build_check.py`; compiles C with the reconstructed VM and server |
 | Engine's server/game/collision still used by MSVC, web, x64 | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
-| x64 port | compiles, does not run | `COD2_X64` |
+| x64 client | does not compile as C++, does not run | `COD2_X64`: about 100 pointer casts to `int`, 32-bit data blobs, the bridge's 4-byte slots, and `mss32.dll` on Windows ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)); the 64-bit dedicated server does not depend on it |
+| Miles mixer crash with `snd_khz 22` | `mss32.dll` overflows an unsigned division (0xc0000095) on a negative volume delta at 2x rate | not known whether 1.3 does it too; `jugar.bat` sets `snd_khz 44`, not a code fix |
 | Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |

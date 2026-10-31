@@ -32,6 +32,9 @@
 
 #include "yyjson/yyjson.h"
 
+#include <string>
+#include <unordered_set>
+
 extern scrVarGlob_t scrVarGlob;
 
 /*
@@ -76,6 +79,7 @@ extern scrVarGlob_t scrVarGlob;
 #include <unistd.h>
 #ifdef _WIN32
 #include <direct.h>
+#include <windows.h>
 #endif
 
 // Module cap, not an engine constant: kept well under yyjson's reader
@@ -103,6 +107,10 @@ extern scrVarGlob_t scrVarGlob;
 // Guard every string we push to the VM (parsed values and the stringify
 // result) under the 64 KB ceiling. File writes (json_save) are unaffected.
 #define JSON_MAX_STRING 65000
+
+// The engine's string pool is about 512 KB, shared with the game's own
+// strings, and running out of it ends the map. Identical strings cost it once.
+#define JSON_MAX_STRING_BYTES (256 * 1024)
 
 // Engine MAX_QPATH = 64:
 // https://github.com/voron00/CoD2rev_Server/blob/master/src/universal/q_shared.h#L168
@@ -212,6 +220,50 @@ public:
 // Each call leaves exactly one value on the stack, so recursion composes the
 // same way gsc_utils_getarraykeys() builds its result.
 // ===========================================================================
+
+static void json_collect_strings(yyjson_val *node, int depth, std::unordered_set<std::string> &seen, size_t *bytes)
+{
+	if ( depth >= JSON_MAX_DEPTH )
+		return;
+
+	if ( yyjson_is_str(node) )
+	{
+		if ( seen.insert(std::string(yyjson_get_str(node), yyjson_get_len(node))).second )
+			*bytes += yyjson_get_len(node);
+	}
+	else if ( yyjson_is_arr(node) )
+	{
+		size_t idx, max;
+		yyjson_val *val;
+
+		yyjson_arr_foreach(node, idx, max, val)
+			json_collect_strings(val, depth + 1, seen, bytes);
+	}
+	else if ( yyjson_is_obj(node) )
+	{
+		size_t idx, max;
+		yyjson_val *key, *val;
+
+		yyjson_obj_foreach(node, idx, max, key, val)
+		{
+			json_collect_strings(key, depth, seen, bytes);
+			json_collect_strings(val, depth + 1, seen, bytes);
+		}
+	}
+}
+
+static size_t json_distinct_string_bytes(yyjson_doc *doc)
+{
+	std::unordered_set<std::string> seen;
+	size_t bytes = 0;
+
+	// a document this small can't reach the limit
+	if ( yyjson_doc_get_read_size(doc) < JSON_MAX_STRING_BYTES )
+		return 0;
+
+	json_collect_strings(yyjson_doc_get_root(doc), 0, seen, &bytes);
+	return bytes;
+}
 
 static void json_to_gsc_push(yyjson_val *node, int depth)
 {
@@ -692,6 +744,14 @@ void gsc_json_parse()
 		return;
 	}
 
+	if ( json_distinct_string_bytes(doc) > JSON_MAX_STRING_BYTES )
+	{
+		yyjson_doc_free(doc);
+		stackError("gsc_json_parse() input has too much text, max is %d bytes (script string pool)", JSON_MAX_STRING_BYTES);
+		stackPushUndefined();
+		return;
+	}
+
 	yyjson_val *root = yyjson_doc_get_root(doc);
 	json_to_gsc_push(root, 0);
 	yyjson_doc_free(doc);
@@ -835,6 +895,14 @@ void gsc_json_load()
 		unsigned count = (unsigned)yyjson_doc_get_val_count(doc);
 		yyjson_doc_free(doc);
 		stackError("gsc_json_load() '%s' has %u values, max is %d (script variable pool)", path, count, JSON_MAX_VALUES);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( json_distinct_string_bytes(doc) > JSON_MAX_STRING_BYTES )
+	{
+		yyjson_doc_free(doc);
+		stackError("gsc_json_load() '%s' has too much text, max is %d bytes (script string pool)", path, JSON_MAX_STRING_BYTES);
 		stackPushUndefined();
 		return;
 	}
@@ -1110,6 +1178,14 @@ static void * json_async_load_worker(void *arg)
 		parsed = NULL;
 	}
 
+	if ( parsed != NULL && json_distinct_string_bytes(parsed) > JSON_MAX_STRING_BYTES )
+	{
+		Com_Printf("[JSON] WARN: async load '%s' has too much text, max is %d bytes - job failed\n", job->abspath, JSON_MAX_STRING_BYTES);
+		yyjson_doc_free(parsed);
+		parsed = NULL;
+	}
+
+
 	pthread_mutex_lock(&json_async_mutex);
 	if ( parsed == NULL )
 	{
@@ -1140,8 +1216,19 @@ static int json_mkdir(const char *path)
 #endif
 }
 
+// rename(), which on Windows refuses a target that exists
+static int json_replace_file(const char *from, const char *to)
+{
+#ifdef _WIN32
+	return MoveFileExA(from, to, MOVEFILE_REPLACE_EXISTING) ? 0 : -1;
+#else
+	return rename(from, to);
+#endif
+}
+
 static bool json_is_separator(char c)
 {
+
 	return c == '/' || c == '\\';
 }
 
@@ -1230,8 +1317,9 @@ static void * json_async_save_worker(void *arg)
 	free(text);
 
 	int ok = (written == want) ? 1 : 0;
-	if ( ok && rename(tmpPath, job->abspath) != 0 )
+	if ( ok && json_replace_file(tmpPath, job->abspath) != 0 )
 		ok = 0;
+
 	if ( !ok )
 		unlink(tmpPath);
 

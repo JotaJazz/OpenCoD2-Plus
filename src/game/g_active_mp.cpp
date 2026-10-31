@@ -277,7 +277,7 @@ qboolean StuckInClient( gentity_t *self )
 	else
 		selfSpeed = 0;
 
-	if ( hitSpeed < 0.000099999997 && selfSpeed < 0.000099999997 )
+	if ( hitSpeed < SIZE_EPSILON && selfSpeed < SIZE_EPSILON )
 	{
 		hitSpeed = (float)hit->client->ps.speed;
 		selfSpeed = (float)self->client->ps.speed;
@@ -898,9 +898,9 @@ void ClientEvents( gentity_t *ent, int oldEventSequence )
 			}
 
 			if ( eventParm >= 100 )
-				damage = 1.1;
+				damage = 1.1f;
 			else
-				damage = eventParm * 0.0099999998;
+				damage = eventParm * 0.01f;
 
 			if ( damage )
 			{
@@ -1079,7 +1079,7 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 	vs.v_dmg_pitch = client->v_dmg_pitch;
 	vs.v_dmg_roll = client->v_dmg_roll;
 	vs.xyspeed = BG_GetSpeed(&client->ps, level.time);
-	vs.frametime = msec * 0.001;
+	vs.frametime = msec * 0.001f;
 	vs.fLastIdleFactor = client->fLastIdleFactor;
 	vs.weapIdleTime = &client->weapIdleTime;
 
@@ -1092,7 +1092,7 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 	// save weapon state
 	ws.ps = vs.ps;
 	ws.xyspeed = vs.xyspeed;
-	ws.frametime = msec * 0.001;
+	ws.frametime = msec * 0.001f;
 	VectorCopy(client->vLastMoveAng, ws.vLastMoveAng);
 	ws.fLastIdleFactor = client->fLastIdleFactor;
 	ws.time = vs.time;

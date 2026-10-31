@@ -15,7 +15,7 @@ import argparse, base64, hashlib, http.server, os, re, secrets, shutil, socket, 
     subprocess, sys, tempfile, threading, time
 
 from install_bots import read_game_script
-from smoke_test import free_port, query, rcon
+from smoke_test import free_port, log_lines, query, rcon
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOD = 'httptest'
@@ -720,12 +720,6 @@ def tls_context(folder, name, max_version=None):
 def start(server):
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server.server_address[1]
-
-
-def log_lines(path):
-    if not os.path.exists(path):
-        return []
-    return [re.sub(r'^\s*\d+:\d+ ', '', l) for l in open(path, encoding='latin-1').read().splitlines()]
 
 
 def wait_line(path, pattern, seconds):

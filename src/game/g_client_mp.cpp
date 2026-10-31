@@ -569,6 +569,17 @@ const char *ClientConnect( int clientNum, unsigned short scriptPersId )
 #if LIBCOD_COMPILE_PLAYER == 1 // proxy support
 	extern void proxy_setRealIP(int clientNum, const char *ip);
 	proxy_setRealIP(clientNum, Info_ValueForKey(userinfo, "ip"));
+
+	// SV_DirectConnect could only check iplist.txt against the proxy's address
+	extern char proxy_realip[MAX_CLIENTS][16];
+	netadr_t realIP;
+
+	if ( proxy_realip[clientNum][0] && NET_StringToAdr(proxy_realip[clientNum], &realIP) && SV_IsBannedIp(realIP) )
+	{
+		Com_Printf("rejected connection from permanently banned IP %s\n", proxy_realip[clientNum]);
+		G_FreeEntity(ent);
+		return "\x15You are permanently banned from this server";
+	}
 #endif
 
 	if ( SV_GetClientIP(clientNum, ip) && G_FilterPacket(ip) )

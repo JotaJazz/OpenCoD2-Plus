@@ -550,16 +550,16 @@ static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponAngles: parameter
 extern "C" decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) cod2x_BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) __asm__(COD2_SYM("BG_CalculateWeaponAngles"));
 decltype(BG_CalculateWeaponAngles(std::declval<weaponState_t*>(), std::declval<float*>())) cod2x_BG_CalculateWeaponAngles(weaponState_t* a0, float* a1) { return BG_CalculateWeaponAngles(a0, a1); }
 
-static_assert(cod2_bridge_returns_scalar<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>::value, "BG_CalculateWeaponPosition_Sway returns a struct");
-static_assert(cod2_abi_class<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>() == 'v', "BG_CalculateWeaponPosition_Sway: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<playerState_s const*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_bridge_returns_scalar<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>::value, "BG_CalculateWeaponPosition_Sway returns a struct");
+static_assert(cod2_abi_class<decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>()))>() == 'v', "BG_CalculateWeaponPosition_Sway: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_slot<playerState_s*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 0 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 1 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 2 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<float*>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 3 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<float>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 4 differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<int>() == 4, "BG_CalculateWeaponPosition_Sway: parameter 5 differs from src/PC/server_mp");
-extern "C" decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) __asm__(COD2_SYM("BG_CalculateWeaponPosition_Sway"));
-decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s const* a0, float* a1, float* a2, float* a3, float a4, int a5) { return BG_CalculateWeaponPosition_Sway(a0, a1, a2, a3, a4, a5); }
+extern "C" decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s* a0, float* a1, float* a2, float* a3, float a4, int a5) __asm__(COD2_SYM("BG_CalculateWeaponPosition_Sway"));
+decltype(BG_CalculateWeaponPosition_Sway(std::declval<playerState_s*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float>(), std::declval<int>())) cod2x_BG_CalculateWeaponPosition_Sway(playerState_s* a0, float* a1, float* a2, float* a3, float a4, int a5) { return BG_CalculateWeaponPosition_Sway(a0, a1, a2, a3, a4, a5); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>::value, "BG_CanItemBeGrabbed returns a struct");
 static_assert(cod2_abi_class<decltype(BG_CanItemBeGrabbed(std::declval<entityState_s const*>(), std::declval<playerState_s const*>(), std::declval<int>()))>() == 'i', "BG_CanItemBeGrabbed: return class differs from src/PC/server_mp");
@@ -2220,13 +2220,6 @@ static_assert(cod2_abi_slot<int>() == 4, "SEH_GetLanguageName: parameter 0 diffe
 extern "C" cod2_abi_int<decltype(SEH_GetLanguageName(std::declval<int>())), 4> cod2x_SEH_GetLanguageName(int a0) __asm__(COD2_SYM("SEH_GetLanguageName"));
 cod2_abi_int<decltype(SEH_GetLanguageName(std::declval<int>())), 4> cod2x_SEH_GetLanguageName(int a0) { return (cod2_abi_int<decltype(SEH_GetLanguageName(std::declval<int>())), 4>)SEH_GetLanguageName(a0); }
 
-static_assert(cod2_bridge_returns_scalar<decltype(Sys_BeginStreamedFile(std::declval<int>(), std::declval<int>()))>::value, "Sys_BeginStreamedFile returns a struct");
-static_assert(cod2_abi_class<decltype(Sys_BeginStreamedFile(std::declval<int>(), std::declval<int>()))>() == 'v', "Sys_BeginStreamedFile: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "Sys_BeginStreamedFile: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "Sys_BeginStreamedFile: parameter 1 differs from src/PC/server_mp");
-extern "C" decltype(Sys_BeginStreamedFile(std::declval<int>(), std::declval<int>())) cod2x_Sys_BeginStreamedFile(int a0, int a1) __asm__(COD2_SYM("Sys_BeginStreamedFile"));
-decltype(Sys_BeginStreamedFile(std::declval<int>(), std::declval<int>())) cod2x_Sys_BeginStreamedFile(int a0, int a1) { return Sys_BeginStreamedFile(a0, a1); }
-
 static_assert(cod2_bridge_returns_scalar<decltype(Sys_EndStreamedFile(std::declval<int>()))>::value, "Sys_EndStreamedFile returns a struct");
 static_assert(cod2_abi_class<decltype(Sys_EndStreamedFile(std::declval<int>()))>() == 'v', "Sys_EndStreamedFile: return class differs from src/PC/server_mp");
 static_assert(cod2_abi_slot<int>() == 4, "Sys_EndStreamedFile: parameter 0 differs from src/PC/server_mp");
@@ -2282,15 +2275,6 @@ static_assert(cod2_bridge_returns_scalar<decltype(Sys_ShowIP())>::value, "Sys_Sh
 static_assert(cod2_abi_class<decltype(Sys_ShowIP())>() == 'v', "Sys_ShowIP: return class differs from src/PC/server_mp");
 extern "C" decltype(Sys_ShowIP()) cod2x_Sys_ShowIP() __asm__(COD2_SYM("Sys_ShowIP"));
 decltype(Sys_ShowIP()) cod2x_Sys_ShowIP() { return Sys_ShowIP(); }
-
-static_assert(cod2_bridge_returns_scalar<decltype(Sys_StreamedRead(std::declval<void*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>::value, "Sys_StreamedRead returns a struct");
-static_assert(cod2_abi_class<decltype(Sys_StreamedRead(std::declval<void*>(), std::declval<int>(), std::declval<int>(), std::declval<int>()))>() == 'i', "Sys_StreamedRead: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<void*>() == 4, "Sys_StreamedRead: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "Sys_StreamedRead: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "Sys_StreamedRead: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "Sys_StreamedRead: parameter 3 differs from src/PC/server_mp");
-extern "C" cod2_abi_int<decltype(Sys_StreamedRead(std::declval<void*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_Sys_StreamedRead(void* a0, int a1, int a2, int a3) __asm__(COD2_SYM("Sys_StreamedRead"));
-cod2_abi_int<decltype(Sys_StreamedRead(std::declval<void*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4> cod2x_Sys_StreamedRead(void* a0, int a1, int a2, int a3) { return (cod2_abi_int<decltype(Sys_StreamedRead(std::declval<void*>(), std::declval<int>(), std::declval<int>(), std::declval<int>())), 4>)Sys_StreamedRead(a0, a1, a2, a3); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(Z_FreeInternal(std::declval<void*>()))>::value, "Z_FreeInternal returns a struct");
 static_assert(cod2_abi_class<decltype(Z_FreeInternal(std::declval<void*>()))>() == 'v', "Z_FreeInternal: return class differs from src/PC/server_mp");

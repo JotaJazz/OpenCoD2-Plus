@@ -147,226 +147,6 @@ void gsc_bots_set_stance(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_bots_thrownade(scr_entref_t id)
-{
-	int grenade;
-
-	if ( ! stackGetParams("i", &grenade))
-	{
-		stackError("gsc_bots_thrownade() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_thrownade() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_thrownade() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_buttons[MAX_CLIENTS];
-
-	if (!grenade)
-		bot_buttons[id.entnum] &= ~BUTTON_FRAG;
-	else
-		bot_buttons[id.entnum] |= BUTTON_FRAG;
-
-	stackPushBool(qtrue);
-}
-
-void gsc_bots_fireweapon(scr_entref_t id)
-{
-	int shoot;
-
-	if ( ! stackGetParams("i", &shoot))
-	{
-		stackError("gsc_bots_fireweapon() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_fireweapon() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_fireweapon() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_buttons[MAX_CLIENTS];
-
-	if (!shoot)
-		bot_buttons[id.entnum] &= ~BUTTON_ATTACK;
-	else
-		bot_buttons[id.entnum] |= BUTTON_ATTACK;
-
-	stackPushBool(qtrue);
-}
-
-void gsc_bots_meleeweapon(scr_entref_t id)
-{
-	int melee;
-
-	if ( ! stackGetParams("i", &melee))
-	{
-		stackError("gsc_bots_meleeweapon() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_meleeweapon() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_meleeweapon() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_buttons[MAX_CLIENTS];
-
-	if (!melee)
-		bot_buttons[id.entnum] &= ~BUTTON_MELEE;
-	else
-		bot_buttons[id.entnum] |= BUTTON_MELEE;
-
-	stackPushBool(qtrue);
-}
-
-void gsc_bots_reloadweapon(scr_entref_t id)
-{
-	int reload;
-
-	if ( ! stackGetParams("i", &reload))
-	{
-		stackError("gsc_bots_reloadweapon() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_reloadweapon() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_reloadweapon() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_buttons[MAX_CLIENTS];
-
-	if (!reload)
-		bot_buttons[id.entnum] &= ~BUTTON_RELOAD;
-	else
-		bot_buttons[id.entnum] |= BUTTON_RELOAD;
-
-	stackPushBool(qtrue);
-}
-
-void gsc_bots_adsaim(scr_entref_t id)
-{
-	int ads;
-
-	if ( ! stackGetParams("i", &ads))
-	{
-		stackError("gsc_bots_adsaim() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_adsaim() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_adsaim() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_buttons[MAX_CLIENTS];
-
-	if (!ads)
-		bot_buttons[id.entnum] &= ~BUTTON_ADS;
-	else
-		bot_buttons[id.entnum] |= BUTTON_ADS;
-
-	stackPushBool(qtrue);
-}
-
-void gsc_bots_switchtoweaponid(scr_entref_t id)
-{
-	int weaponid;
-
-	if ( ! stackGetParams("i", &weaponid))
-	{
-		stackError("gsc_bots_switchtoweaponid() argument is undefined or has a wrong type");
-		stackPushUndefined();
-		return;
-	}
-
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_bots_switchtoweaponid() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-
-	if (client->netchan.remoteAddress.type != NA_BOT)
-	{
-		stackError("gsc_bots_switchtoweaponid() player %i is not a bot", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	extern int bot_weapon[MAX_CLIENTS];
-
-	bot_weapon[id.entnum] = weaponid;
-
-	stackPushBool(qtrue);
-}
-
-
 // Presses (1) or releases (0) one button of a bot, for the methods below
 static void gsc_bots_set_button(scr_entref_t id, const char *name, int button)
 {
@@ -401,6 +181,65 @@ static void gsc_bots_set_button(scr_entref_t id, const char *name, int button)
 		bot_buttons[id.entnum] &= ~button;
 	else
 		bot_buttons[id.entnum] |= button;
+
+	stackPushBool(qtrue);
+}
+
+void gsc_bots_thrownade(scr_entref_t id)
+{
+	gsc_bots_set_button(id, "gsc_bots_thrownade", BUTTON_FRAG);
+}
+
+void gsc_bots_fireweapon(scr_entref_t id)
+{
+	gsc_bots_set_button(id, "gsc_bots_fireweapon", BUTTON_ATTACK);
+}
+
+void gsc_bots_meleeweapon(scr_entref_t id)
+{
+	gsc_bots_set_button(id, "gsc_bots_meleeweapon", BUTTON_MELEE);
+}
+
+void gsc_bots_reloadweapon(scr_entref_t id)
+{
+	gsc_bots_set_button(id, "gsc_bots_reloadweapon", BUTTON_RELOAD);
+}
+
+void gsc_bots_adsaim(scr_entref_t id)
+{
+	gsc_bots_set_button(id, "gsc_bots_adsaim", BUTTON_ADS);
+}
+
+void gsc_bots_switchtoweaponid(scr_entref_t id)
+{
+	int weaponid;
+
+	if ( ! stackGetParams("i", &weaponid))
+	{
+		stackError("gsc_bots_switchtoweaponid() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
+	{
+		stackError("gsc_bots_switchtoweaponid() entity %i is not a player", id.entnum);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id.entnum];
+
+	if (client->netchan.remoteAddress.type != NA_BOT)
+	{
+		stackError("gsc_bots_switchtoweaponid() player %i is not a bot", id.entnum);
+		stackPushUndefined();
+		return;
+	}
+
+	extern int bot_weapon[MAX_CLIENTS];
+
+	bot_weapon[id.entnum] = weaponid;
 
 	stackPushBool(qtrue);
 }

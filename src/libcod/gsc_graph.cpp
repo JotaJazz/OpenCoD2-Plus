@@ -2349,12 +2349,95 @@ static unsigned long long graphPairKey(int a, int b)
 }
 
 /*
+ * Breadth-first flood from the queued nodes: a walkable grid neighbour gets a node,
+ * and every pair of neighbours gets typed links. Returns the nodes added.
+ */
+static int graphFlood(AStarGraph *graph, std::unordered_map<unsigned long long, int> &cellToNode, std::vector<unsigned int> &queue, int maxNodes, float step, vec3_t playerMins, vec3_t playerMaxs)
+{
+	vec3_t ground;
+	std::unordered_set<unsigned long long> linked;
+	size_t head;
+	int added = 0;
+	unsigned long long cellKey;
+
+	head = 0;
+	while ( head < queue.size() )
+	{
+		unsigned int cur = queue[head++];
+		vec3_t curOrigin;
+		int dx;
+		int dy;
+
+		VectorCopy(graph->nodes[cur].origin, curOrigin);
+
+		for ( dy = -1; dy <= 1; dy++ )
+		{
+			for ( dx = -1; dx <= 1; dx++ )
+			{
+				float nx;
+				float ny;
+				std::unordered_map<unsigned long long, int>::iterator it;
+
+				if ( dx == 0 && dy == 0 )
+					continue;
+
+				nx = curOrigin[0] + dx * step;
+				ny = curOrigin[1] + dy * step;
+				cellKey = graphCellKey(nx, ny, step);
+
+				it = cellToNode.find(cellKey);
+				if ( it != cellToNode.end() )
+				{
+					int other = it->second;
+
+					// Both nodes of a pair see each other as neighbours; the
+					// link is the same from either side, so trace it once
+					if ( other != (int)cur && linked.insert(graphPairKey((int)cur, other)).second )
+						graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
+					continue;
+				}
+
+				if ( (int)graph->nodes.size() >= maxNodes )
+					continue;
+
+				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
+					continue;
+				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
+					continue;
+				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
+					continue;
+
+				{
+					GraphNode node;
+					int nid;
+
+					VectorCopy(ground, node.origin);
+					node.type = 0;
+					node.removed = false;
+					graph->nodes.push_back(node);
+					nid = (int)graph->nodes.size() - 1;
+					cellToNode[cellKey] = nid;
+
+					linked.insert(graphPairKey((int)cur, nid));
+					graphLinkNodesTyped(graph, (int)cur, nid, playerMins, playerMaxs);
+
+					queue.push_back((unsigned int)nid);
+					added++;
+				}
+			}
+		}
+	}
+
+	return added;
+}
+
+/*
  * graphAutodiscover(<graph id>, <seed origin>, [grid step], [max nodes]) ->
  * nodes added. Grid flood-fill from the seed: snap the seed to the floor, then
  * BFS outward on a grid, adding a node wherever a player fits on walkable ground
- * and can travel there from its neighbour, linking walkable grid-neighbours both
- * ways. Every added node is reachable from the seed by construction (one
- * connected component). Runs on the main thread - meant for one-time generation
+ * and can travel there from its neighbour. Links are typed and directional, as in
+ * graphAutodiscoverEx, so a node above a drop can be left but not reached from
+ * below. Runs on the main thread - meant for one-time generation
  * (then graphSave it). Nodes append with sequential ids (id==index preserved).
  */
 void gsc_graph_autodiscover()
@@ -2370,7 +2453,6 @@ void gsc_graph_autodiscover()
 	vec3_t ground;
 	std::unordered_map<unsigned long long, int> cellToNode;
 	std::vector<unsigned int> queue;
-	size_t head;
 	int added = 0;
 	unsigned int started;
 	unsigned long long cellKey;
@@ -2447,97 +2529,7 @@ void gsc_graph_autodiscover()
 		added = 1;
 	}
 
-	head = 0;
-	while ( head < queue.size() )
-	{
-		unsigned int cur = queue[head++];
-		vec3_t curOrigin;
-		int dx;
-		int dy;
-
-		VectorCopy(graph->nodes[cur].origin, curOrigin);
-
-		for ( dy = -1; dy <= 1; dy++ )
-		{
-			for ( dx = -1; dx <= 1; dx++ )
-			{
-				float nx;
-				float ny;
-				std::unordered_map<unsigned long long, int>::iterator it;
-
-				if ( dx == 0 && dy == 0 )
-					continue;
-
-				nx = curOrigin[0] + dx * step;
-				ny = curOrigin[1] + dy * step;
-				cellKey = graphCellKey(nx, ny, step);
-
-				it = cellToNode.find(cellKey);
-				if ( it != cellToNode.end() )
-				{
-					int other = it->second;
-
-					// Existing node in that cell: add the cross-link if walkable
-					if ( other != (int)cur && graphFindEdgeIndex(graph, (int)cur, other) < 0 && graphWalkable(curOrigin, graph->nodes[other].origin, playerMins, playerMaxs) )
-					{
-						GraphEdge e1;
-						GraphEdge e2;
-						float c = edgeDistance(curOrigin, graph->nodes[other].origin);
-
-						e1.to = (unsigned int)other;
-						e1.type = 0;
-						e1.cost = c;
-						e2.to = cur;
-						e2.type = 0;
-						e2.cost = c;
-						graph->nodes[cur].edges.push_back(e1);
-						graph->nodes[other].edges.push_back(e2);
-						graph->edgeCount += 2;
-					}
-					continue;
-				}
-
-				if ( (int)graph->nodes.size() >= maxNodes )
-					continue;
-
-				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
-					continue;
-				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
-					continue;
-				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
-					continue;
-
-				{
-					GraphNode node;
-					GraphEdge e1;
-					GraphEdge e2;
-					int nid;
-					float c;
-
-					VectorCopy(ground, node.origin);
-					node.type = 0;
-					node.removed = false;
-					graph->nodes.push_back(node);
-					nid = (int)graph->nodes.size() - 1;
-					cellToNode[cellKey] = nid;
-
-					c = edgeDistance(curOrigin, ground);
-					e1.to = (unsigned int)nid;
-					e1.type = 0;
-					e1.cost = c;
-					e2.to = cur;
-					e2.type = 0;
-					e2.cost = c;
-					graph->nodes[cur].edges.push_back(e1);
-					graph->nodes[nid].edges.push_back(e2);
-					graph->edgeCount += 2;
-
-					queue.push_back((unsigned int)nid);
-					added++;
-				}
-			}
-		}
-	}
+	added += graphFlood(graph, cellToNode, queue, maxNodes, step, playerMins, playerMaxs);
 
 	graphInvalidatePrecompute(graph);
 
@@ -2577,8 +2569,6 @@ void gsc_graph_autodiscover_ex()
 	vec3_t ground;
 	std::unordered_map<unsigned long long, int> cellToNode;
 	std::vector<unsigned int> queue;
-	std::unordered_set<unsigned long long> linked;
-	size_t head;
 	int added = 0;
 	unsigned int started;
 	unsigned long long cellKey;
@@ -2720,73 +2710,7 @@ void gsc_graph_autodiscover_ex()
 		}
 	}
 
-	head = 0;
-	while ( head < queue.size() )
-	{
-		unsigned int cur = queue[head++];
-		vec3_t curOrigin;
-		int dx;
-		int dy;
-
-		VectorCopy(graph->nodes[cur].origin, curOrigin);
-
-		for ( dy = -1; dy <= 1; dy++ )
-		{
-			for ( dx = -1; dx <= 1; dx++ )
-			{
-				float nx;
-				float ny;
-				std::unordered_map<unsigned long long, int>::iterator it;
-
-				if ( dx == 0 && dy == 0 )
-					continue;
-
-				nx = curOrigin[0] + dx * step;
-				ny = curOrigin[1] + dy * step;
-				cellKey = graphCellKey(nx, ny, step);
-
-				it = cellToNode.find(cellKey);
-				if ( it != cellToNode.end() )
-				{
-					int other = it->second;
-
-					// Both nodes of a pair see each other as neighbours; the
-					// link is the same from either side, so trace it once
-					if ( other != (int)cur && linked.insert(graphPairKey((int)cur, other)).second )
-						graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
-					continue;
-				}
-
-				if ( (int)graph->nodes.size() >= maxNodes )
-					continue;
-
-				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
-					continue;
-				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
-					continue;
-				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
-					continue;
-
-				{
-					GraphNode node;
-					int nid;
-
-					VectorCopy(ground, node.origin);
-					node.type = 0;
-					node.removed = false;
-					graph->nodes.push_back(node);
-					nid = (int)graph->nodes.size() - 1;
-					cellToNode[cellKey] = nid;
-
-					linked.insert(graphPairKey((int)cur, nid));
-					graphLinkNodesTyped(graph, (int)cur, nid, playerMins, playerMaxs);
-
-					queue.push_back((unsigned int)nid);
-					added++;
-				}
-			}
-		}
-	}
+	added += graphFlood(graph, cellToNode, queue, maxNodes, step, playerMins, playerMaxs);
 
 	graphInvalidatePrecompute(graph);
 

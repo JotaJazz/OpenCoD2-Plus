@@ -37,66 +37,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/netchan.h"
 #include "../universal/universal_public.h"
 
-#define	CD_BASEDIR	"quake3"
-#define	CD_EXE		"quake3.exe"
-#define	CD_BASEDIR_LINUX	"bin\\x86\\glibc-2.1"
-#define	CD_EXE_LINUX "quake3"
-#define MEM_THRESHOLD 96*1024*1024
 
 static char		sys_cmdline[MAX_STRING_CHARS];
-
-// define this to use alternate spanking method
-// I found out that the regular way doesn't work on my box for some reason
-// see the associated spank.sh script
-#define ALT_SPANK
-#ifdef ALT_SPANK
-#include <stdio.h>
-#include <sys/stat.h>
-
-int fh = 0;
-
-void Spk_Open(char *name)
-{
-  fh = open( name, O_TRUNC | O_CREAT | O_WRONLY, S_IREAD | S_IWRITE );
-};
-
-void Spk_Close()
-{
-  if (!fh)
-    return;
-
-  close( fh );
-  fh = 0;
-}
-
-void Spk_Printf (const char *text, ...)
-{
-  va_list argptr;
-  char buf[32768];
-
-  if (!fh)
-    return;
-
-  va_start (argptr,text);
-  vsprintf (buf, text, argptr);
-  write(fh, buf, strlen(buf));
-  _commit(fh);
-  va_end (argptr);
-
-};
-#endif
-
-/*
-==================
-Sys_LowPhysicalMemory()
-==================
-*/
-
-qboolean Sys_LowPhysicalMemory() {
-	MEMORYSTATUS stat;
-  GlobalMemoryStatus (&stat);
-	return (stat.dwTotalPhys <= MEM_THRESHOLD) ? qtrue : qfalse;
-}
 
 /*
 ==================
@@ -121,7 +63,7 @@ void Sys_Error( const char *error, ... ) {
     MSG        msg;
 
 	va_start (argptr, error);
-	vsprintf (text, error, argptr);
+	vsnprintf (text, sizeof( text ), error, argptr);
 	va_end (argptr);
 
 	Conbuf_AppendText( text );
@@ -414,71 +356,6 @@ void	Sys_FreeFileList( char **list ) {
 
 /*
 ================
-Sys_ScanForCD
-
-Search all the drives to see if there is a valid CD to grab
-the cddir from
-================
-*/
-qboolean Sys_ScanForCD( void ) {
-	static char	cddir[MAX_OSPATH];
-	char		drive[4];
-	FILE		*f;
-	char		test[MAX_OSPATH];
-#if 0
-	// don't override a cdpath on the command line
-	if ( strstr( sys_cmdline, "cdpath" ) ) {
-		return;
-	}
-#endif
-
-	drive[0] = 'c';
-	drive[1] = ':';
-	drive[2] = '\\';
-	drive[3] = 0;
-
-	// scan the drives
-	for ( drive[0] = 'c' ; drive[0] <= 'z' ; drive[0]++ ) {
-		if ( GetDriveType (drive) != DRIVE_CDROM ) {
-			continue;
-		}
-
-		sprintf (cddir, "%s%s", drive, CD_BASEDIR);
-		sprintf (test, "%s\\%s", cddir, CD_EXE);
-		f = fopen( test, "r" );
-		if ( f ) {
-			fclose (f);
-			return qtrue;
-    } else {
-      sprintf(cddir, "%s%s", drive, CD_BASEDIR_LINUX);
-      sprintf(test, "%s\\%s", cddir, CD_EXE_LINUX);
-  		f = fopen( test, "r" );
-	  	if ( f ) {
-		  	fclose (f);
-			  return qtrue;
-      }
-    }
-	}
-
-	return qfalse;
-}
-
-/*
-================
-Sys_CheckCD
-
-Return true if the proper CD is in the drive
-================
-*/
-qboolean	Sys_CheckCD( void ) {
-  // FIXME: mission pack
-  return qtrue;
-	//return Sys_ScanForCD();
-}
-
-
-/*
-================
 Sys_GetClipboardData
 
 ================
@@ -512,260 +389,18 @@ BACKGROUND FILE STREAMING
 ========================================================================
 */
 
-#if 1
-
 void Sys_InitStreamThread( void ) {
 }
 
 void Sys_ShutdownStreamThread( void ) {
 }
 
-void Sys_BeginStreamedFile( fileHandle_t f, int readAhead ) {
-}
-
 void Sys_EndStreamedFile( fileHandle_t f ) {
-}
-
-int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f ) {
-   return FS_Read( buffer, size * count, f );
 }
 
 void Sys_StreamSeek( fileHandle_t f, int offset, int origin ) {
    FS_Seek( f, offset, origin );
 }
-
-
-#else
-
-typedef struct {
-	fileHandle_t	file;
-	byte	*buffer;
-	qboolean	eof;
-	qboolean	active;
-	int		bufferSize;
-	int		streamPosition;	// next byte to be returned by Sys_StreamRead
-	int		threadPosition;	// next byte to be read from file
-} streamsIO_t;
-
-typedef struct {
-	HANDLE				threadHandle;
-	int					threadId;
-	CRITICAL_SECTION	crit;
-	streamsIO_t			sIO[MAX_FILE_HANDLES];
-} streamState_t;
-
-streamState_t	stream;
-
-/*
-===============
-Sys_StreamThread
-
-A thread will be sitting in this loop forever
-================
-*/
-void Sys_StreamThread( void ) {
-	int		buffer;
-	int		count;
-	int		readCount;
-	int		bufferPoint;
-	int		r, i;
-
-	while (1) {
-		Sleep( 10 );
-//		EnterCriticalSection (&stream.crit);
-
-		for (i=1;i<MAX_FILE_HANDLES;i++) {
-			// if there is any space left in the buffer, fill it up
-			if ( stream.sIO[i].active  && !stream.sIO[i].eof ) {
-				count = stream.sIO[i].bufferSize - (stream.sIO[i].threadPosition - stream.sIO[i].streamPosition);
-				if ( !count ) {
-					continue;
-				}
-
-				bufferPoint = stream.sIO[i].threadPosition % stream.sIO[i].bufferSize;
-				buffer = stream.sIO[i].bufferSize - bufferPoint;
-				readCount = buffer < count ? buffer : count;
-
-				r = FS_Read( stream.sIO[i].buffer + bufferPoint, readCount, stream.sIO[i].file );
-				stream.sIO[i].threadPosition += r;
-
-				if ( r != readCount ) {
-					stream.sIO[i].eof = qtrue;
-				}
-			}
-		}
-//		LeaveCriticalSection (&stream.crit);
-	}
-}
-
-/*
-===============
-Sys_InitStreamThread
-
-================
-*/
-void Sys_InitStreamThread( void ) {
-	int i;
-
-	InitializeCriticalSection ( &stream.crit );
-
-	// don't leave the critical section until there is a
-	// valid file to stream, which will cause the StreamThread
-	// to sleep without any overhead
-//	EnterCriticalSection( &stream.crit );
-
-	stream.threadHandle = CreateThread(
-	   NULL,	// LPSECURITY_ATTRIBUTES lpsa,
-	   0,		// DWORD cbStack,
-	   (LPTHREAD_START_ROUTINE)Sys_StreamThread,	// LPTHREAD_START_ROUTINE lpStartAddr,
-	   0,			// LPVOID lpvThreadParm,
-	   0,			//   DWORD fdwCreate,
-	   &stream.threadId);
-	for(i=0;i<MAX_FILE_HANDLES;i++) {
-		stream.sIO[i].active = qfalse;
-	}
-}
-
-/*
-===============
-Sys_ShutdownStreamThread
-
-================
-*/
-void Sys_ShutdownStreamThread( void ) {
-}
-
-
-/*
-===============
-Sys_BeginStreamedFile
-
-================
-*/
-void Sys_BeginStreamedFile( fileHandle_t f, int readAhead ) {
-	if ( stream.sIO[f].file ) {
-		Sys_EndStreamedFile( stream.sIO[f].file );
-	}
-
-	stream.sIO[f].file = f;
-	stream.sIO[f].buffer = Z_Malloc( readAhead );
-	stream.sIO[f].bufferSize = readAhead;
-	stream.sIO[f].streamPosition = 0;
-	stream.sIO[f].threadPosition = 0;
-	stream.sIO[f].eof = qfalse;
-	stream.sIO[f].active = qtrue;
-
-	// let the thread start running
-//	LeaveCriticalSection( &stream.crit );
-}
-
-/*
-===============
-Sys_EndStreamedFile
-
-================
-*/
-void Sys_EndStreamedFile( fileHandle_t f ) {
-	if ( f != stream.sIO[f].file ) {
-		Com_Error( ERR_FATAL, "Sys_EndStreamedFile: wrong file");
-	}
-	// don't leave critical section until another stream is started
-	EnterCriticalSection( &stream.crit );
-
-	stream.sIO[f].file = 0;
-	stream.sIO[f].active = qfalse;
-
-	Z_Free( stream.sIO[f].buffer );
-
-	LeaveCriticalSection( &stream.crit );
-}
-
-
-/*
-===============
-Sys_StreamedRead
-
-================
-*/
-int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f ) {
-	int		available;
-	int		remaining;
-	int		sleepCount;
-	int		copy;
-	int		bufferCount;
-	int		bufferPoint;
-	byte	*dest;
-
-	if (stream.sIO[f].active == qfalse) {
-		Com_Error( ERR_FATAL, "Streamed read with non-streaming file" );
-	}
-
-	dest = (byte *)buffer;
-	remaining = size * count;
-
-	if ( remaining <= 0 ) {
-		Com_Error( ERR_FATAL, "Streamed read with non-positive size" );
-	}
-
-	sleepCount = 0;
-	while ( remaining > 0 ) {
-		available = stream.sIO[f].threadPosition - stream.sIO[f].streamPosition;
-		if ( !available ) {
-			if ( stream.sIO[f].eof ) {
-				break;
-			}
-			if ( sleepCount == 1 ) {
-				Com_DPrintf( "Sys_StreamedRead: waiting\n" );
-			}
-			if ( ++sleepCount > 100 ) {
-				Com_Error( ERR_FATAL, "Sys_StreamedRead: thread has died");
-			}
-			Sleep( 10 );
-			continue;
-		}
-
-		EnterCriticalSection( &stream.crit );
-
-		bufferPoint = stream.sIO[f].streamPosition % stream.sIO[f].bufferSize;
-		bufferCount = stream.sIO[f].bufferSize - bufferPoint;
-
-		copy = available < bufferCount ? available : bufferCount;
-		if ( copy > remaining ) {
-			copy = remaining;
-		}
-		memcpy( dest, stream.sIO[f].buffer + bufferPoint, copy );
-		stream.sIO[f].streamPosition += copy;
-		dest += copy;
-		remaining -= copy;
-
-		LeaveCriticalSection( &stream.crit );
-	}
-
-	return (count * size - remaining) / size;
-}
-
-/*
-===============
-Sys_StreamSeek
-
-================
-*/
-void Sys_StreamSeek( fileHandle_t f, int offset, int origin ) {
-
-	// halt the thread
-	EnterCriticalSection( &stream.crit );
-
-	// clear to that point
-	FS_Seek( f, offset, origin );
-	stream.sIO[f].streamPosition = 0;
-	stream.sIO[f].threadPosition = 0;
-	stream.sIO[f].eof = qfalse;
-
-	// let the thread start running at the new position
-	LeaveCriticalSection( &stream.crit );
-}
-
-#endif
 
 /*
 ========================================================================

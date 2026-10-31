@@ -131,11 +131,18 @@ bool SV_IsTempBannedGuid( int guid )
 /*
 =================
 SV_FX_GetVisibility
+
+How much the smoke between two points lets through. The 1.3 dedicated server
+(0x8090afa) calls FX_GetServerVisibility (0x8133c18), which multiplies the
+visibility of each blocker in an array (0x8a53d00, 20 bytes each: origin,
+radius squared, visibility) that crosses the segment, and returns 1 for an
+empty array or a segment shorter than fx_visMinTraceDist. Only the client adds
+blockers, while it draws the smoke particles; a dedicated server never runs
+the effects, so the array stays empty and the answer is always 1, as here.
 =================
 */
 float SV_FX_GetVisibility( const vec3_t start, const vec3_t end )
 {
-	UNIMPLEMENTED(__FUNCTION__);
 	return 1.0;
 }
 
@@ -362,6 +369,37 @@ void SV_UserinfoChanged( client_t *cl )
 	cl->wwwOk = atoi(val) > 0;
 }
 
+#if LIBCOD_COMPILE_RATELIMITER == 1
+/*
+=================
+SV_ChallengeIsRetry
+
+Records an address that asks for a challenge and tells if it asked in the last
+10 seconds. A real client asks again every 3 seconds, a flood of made-up
+addresses almost never repeats one.
+=================
+*/
+static bool SV_ChallengeIsRetry( netadr_t from )
+{
+	static struct
+	{
+		unsigned int ip;
+		int time;
+	} recent[1 << 16];
+	unsigned int ip;
+
+	memcpy( &ip, from.ip, sizeof( ip ) );
+
+	auto *entry = &recent[( ip * 2654435761u ) >> 16];
+	bool retry = entry->ip == ip && svs.time - entry->time < 10000;
+
+	entry->ip = ip;
+	entry->time = svs.time;
+
+	return retry;
+}
+#endif
+
 /*
 =================
 SV_GetChallenge
@@ -385,7 +423,8 @@ void SV_GetChallenge( netadr_t from )
 	challenge_t *challenge;
 
 #if LIBCOD_COMPILE_RATELIMITER == 1
-	extern leakyBucket_t outboundLeakyBucket;
+	static leakyBucket_t bucket;
+	static leakyBucket_t retryBucket;
 	// Prevent using getchallenge as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
@@ -394,9 +433,14 @@ void SV_GetChallenge( netadr_t from )
 		return;
 	}
 
-	// Allow getchallenge to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	// Not the 10 a second getinfo and getstatus share: a flood of those
+	// must not keep players out, and this reply is a few bytes. Each one that
+	// passes can take a slot of the table, which must outlast a join, so the
+	// limit stays; those asking again have 20 a second of their own, or a
+	// flood of made-up addresses would keep every player out
+	bool retry = SV_ChallengeIsRetry( from );
+
+	if ( SVC_RateLimit( &bucket, 100, 10 ) && ( !retry || SVC_RateLimit( &retryBucket, 20, 50 ) ) )
 	{
 		Com_DPrintf( "SV_GetChallenge: rate limit exceeded, dropping request\n" );
 		return;
@@ -651,6 +695,43 @@ SV_DirectConnect
 A "connect" OOB command has been received
 ==================
 */
+/*
+==================
+SV_ConnectBanMessage
+
+The text to refuse a client with, or NULL if it isn't banned
+==================
+*/
+static const char *SV_ConnectBanMessage( netadr_t adr, int guid )
+{
+#ifdef LIBCOD
+	if ( SV_IsBannedIp(adr) )
+	{
+		Com_Printf("rejected connection from permanently banned IP %s\n", NET_AdrToStringNoPort(adr));
+		return "\x15You are permanently banned from this server";
+	}
+#endif
+
+	if ( SV_IsBannedGuid(guid) )
+	{
+		Com_Printf("rejected connection from permanently banned GUID %i\n", guid);
+		return "\x15You are permanently banned from this server";
+	}
+
+	if ( SV_IsTempBannedGuid(guid) )
+	{
+		Com_Printf("rejected connection from temporarily banned GUID %i\n", guid);
+		return "\x15You are temporarily banned from this server";
+	}
+
+	return NULL;
+}
+
+#if LIBCOD_COMPILE_RATELIMITER == 1
+static leakyBucket_t gamestateBuckets[MAX_CLIENTS];
+static bool gamestatePending[MAX_CLIENTS];
+#endif
+
 void SV_DirectConnect( netadr_t from )
 {
 	char userinfo[MAX_INFO_STRING];
@@ -673,7 +754,21 @@ void SV_DirectConnect( netadr_t from )
 #endif
 
 	Com_DPrintf("SV_DirectConnect()\n");
+
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	// Every attempt clears a client_t and can run the game's ClientConnect.
+	// Bots come here too, and every player of a local proxy is 127.0.0.1,
+	// which can't be spoofed; LAN addresses have no reason to send more
+	if ( from.type == NA_IP && !( from.ip[0] == 127 && from.ip[1] == 0 && from.ip[2] == 0 && from.ip[3] == 1 ) && SVC_RateLimitAddress( from, 10, 1000, true ) )
+	{
+		if ( !Libcod_SpamCallback( "CONNECT:ADDRESS", from ) )
+			Com_DPrintf( "SV_DirectConnect: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		return;
+	}
+#endif
+
 	Q_strncpyz( userinfo, Cmd_Argv( 1 ), sizeof( userinfo ) );
+
 
 	// DHM - Nerve :: Update Server allows any protocol to connect
 	// NOTE TTimo: but we might need to store the protocol around for potential non http/ftp clients
@@ -735,6 +830,20 @@ void SV_DirectConnect( netadr_t from )
 			NET_OutOfBandPrint( NS_SERVER, from, "error\nEXE_BAD_CHALLENGE" );
 			return;
 		}
+
+		// the authorize reply isn't always there to check this: a kicked
+		// client can resend its old challenge, and LAN addresses and
+		// sv_noAuthorize never get one
+		const char *banMessage = SV_ConnectBanMessage( from, guid );
+
+		if ( banMessage )
+		{
+			NET_OutOfBandPrint( NS_SERVER, from, va( "error\n%s", banMessage ) );
+			// clear the challenge record so it won't timeout and let them through
+			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
+			return;
+		}
+
 
 		if ( svs.challenges[i].firstPing == 0 )
 		{
@@ -892,6 +1001,10 @@ gotnewcl:
 	newcl->nextSnapshotTime = svs.time;
 	newcl->lastPacketTime = svs.time;
 	newcl->lastConnectTime = svs.time;
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	memset( &gamestateBuckets[clientNum], 0, sizeof( gamestateBuckets[clientNum] ) );
+	gamestatePending[clientNum] = false;
+#endif
 
 	SV_UserinfoChanged( newcl );
 
@@ -1021,33 +1134,12 @@ void SV_AuthorizeIpPacket( netadr_t from )
 	{
 		svs.challenges[i].guid = atoi(SV_Cmd_Argv( 4 ));
 
-#ifdef LIBCOD
-		if ( SV_IsBannedIp(svs.challenges[i].adr) )
-		{
-			Com_Printf("rejected connection from permanently banned IP %s\n", NET_AdrToStringNoPort(svs.challenges[i].adr));
-			// they are a demo client trying to connect to a real server
-			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr, "error\n\x15You are permanently banned from this server" );
-			// clear the challenge record so it won't timeout and let them through
-			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
-			return;
-		}
-#endif
+		const char *banMessage = SV_ConnectBanMessage( svs.challenges[i].adr, svs.challenges[i].guid );
 
-		if ( SV_IsBannedGuid(svs.challenges[i].guid) )
+		if ( banMessage )
 		{
-			Com_Printf("rejected connection from permanently banned GUID %i\n", svs.challenges[i].guid);
 			// they are a demo client trying to connect to a real server
-			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr, "error\n\x15You are permanently banned from this server" );
-			// clear the challenge record so it won't timeout and let them through
-			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
-			return;
-		}
-
-		if ( SV_IsTempBannedGuid(svs.challenges[i].guid) )
-		{
-			Com_Printf("rejected connection from temporarily banned GUID %i\n", svs.challenges[i].guid);
-			// they are a demo client trying to connect to a real server
-			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr, "error\n\x15You are temporarily banned from this server" );
+			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr, va( "error\n%s", banMessage ) );
 			// clear the challenge record so it won't timeout and let them through
 			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
 			return;
@@ -1616,7 +1708,7 @@ void SV_BotUserMove( client_t *cl )
 		if ( randomf() < 0.5 )
 			ucmd.buttons |= (BUTTON_USE | BUTTON_USERELOAD);
 
-		if ( randomf() < 0.33000001 )
+		if ( randomf() < 0.33f )
 		{
 			ucmd.forwardmove = BUTTON_FORWARD;
 		}
@@ -1626,7 +1718,7 @@ void SV_BotUserMove( client_t *cl )
 				ucmd.forwardmove = BUTTON_BACK;
 		}
 
-		if ( randomf() < 0.33000001 )
+		if ( randomf() < 0.33f )
 		{
 			ucmd.rightmove = BUTTON_FORWARD;
 		}
@@ -1636,13 +1728,13 @@ void SV_BotUserMove( client_t *cl )
 				ucmd.rightmove = BUTTON_BACK;
 		}
 
-		if ( randomf() < 0.33000001 )
+		if ( randomf() < 0.33f )
 			ucmd.angles[0] = (int)(crandom() * 360.0);
 
-		if ( randomf() < 0.33000001 )
+		if ( randomf() < 0.33f )
 			ucmd.angles[1] = (int)(crandom() * 360.0);
 
-		if ( randomf() < 0.33000001 )
+		if ( randomf() < 0.33f )
 			ucmd.angles[2] = (int)(crandom() * 360.0);
 	}
 
@@ -1818,6 +1910,33 @@ void SV_SendClientGameState( client_t *client )
 #endif
 	// deliver this to the client
 	SV_SendMessageToClient( &msg, client );
+}
+
+/*
+==================
+SV_SendRequestedGameState
+
+A gamestate a client asked for. Each one is the whole map state compressed and
+sent at once, so the requests a client can make are limited. A refused one is
+sent from a later packet of the client: donedl and wwwdl are not asked again,
+and the client would wait for it until it times out.
+==================
+*/
+static bool SV_SendRequestedGameState( client_t *cl )
+{
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	if ( SVC_RateLimit( &gamestateBuckets[cl - svs.clients], 5, 1000 ) )
+	{
+		Com_DPrintf( "SV_SendRequestedGameState: rate limit from %s exceeded\n", cl->name );
+		gamestatePending[cl - svs.clients] = true;
+		return false;
+	}
+
+	gamestatePending[cl - svs.clients] = false;
+#endif
+
+	SV_SendClientGameState( cl );
+	return true;
 }
 
 /*
@@ -2163,7 +2282,7 @@ static void SV_DoneDownload_f( client_t *cl )
 
 	Com_DPrintf( "clientDownload: %s Done\n", cl->name );
 	// resend the game state to update any clients that entered during the download
-	SV_SendClientGameState( cl );
+	SV_SendRequestedGameState( cl );
 }
 
 /*
@@ -2235,7 +2354,7 @@ static void SV_WWWDownload_f( client_t *cl )
 		SV_CloseDownload(cl);
 		cl->clientDownloadingWWW = 0;
 		cl->wwwFallback = 1;
-		SV_SendClientGameState(cl);
+		SV_SendRequestedGameState(cl);
 		return;
 	}
 
@@ -2246,7 +2365,7 @@ static void SV_WWWDownload_f( client_t *cl )
 		SV_CloseDownload(cl);
 		cl->clientDownloadingWWW = 0;
 		cl->wwwFallback = 1;
-		SV_SendClientGameState(cl);
+		SV_SendRequestedGameState(cl);
 		return;
 	}
 
@@ -2456,14 +2575,19 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg )
 		if ( cl->messageAcknowledge > cl->gamestateMessageNum )
 		{
 			Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
-			SV_SendClientGameState( cl );
 
-			if ( net_lanauthorize->current.boolean || !Sys_IsLANAddress(cl->netchan.remoteAddress) )
+			if ( SV_SendRequestedGameState( cl ) && ( net_lanauthorize->current.boolean || !Sys_IsLANAddress(cl->netchan.remoteAddress) ) )
 				SV_AuthorizeRequest(cl->netchan.remoteAddress, cl->challenge);
+
 		}
 
 		return;
 	}
+
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	if ( gamestatePending[cl - svs.clients] && cl->state != CS_ACTIVE )
+		SV_SendRequestedGameState( cl );
+#endif
 
 	// read optional clientCommand strings
 	do
