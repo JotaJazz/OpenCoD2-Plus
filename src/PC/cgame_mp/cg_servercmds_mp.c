@@ -16,6 +16,7 @@ extern const char *CL_GetConfigString(int index);
 extern char *Info_ValueForKey(const char *s, const char *key);
 extern void Dvar_SetStringByName(const char *dvarName, const char *value);
 extern void Dvar_SetFromStringByName(const char *dvarName, const char *value);
+extern int NetHardening_ServerMaySetCvar(const char *key);
 extern const char *GetBspExtension(void);
 extern int Com_sprintf(char *dest, int size, const char *fmt, ...);
 extern void Com_Printf(const char *fmt, ...);
@@ -152,6 +153,10 @@ void CG_ParseCodinfo(void)
         key = CL_GetConfigString(i);
         if (*key == '\0') {
             break;
+        }
+        if (!NetHardening_ServerMaySetCvar(key)) {
+            Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", key);
+            continue;
         }
         Dvar_SetFromStringByName(key, CL_GetConfigString(i + 0x60));
     }
@@ -483,8 +488,10 @@ static void __attribute_regparm__(2) CG_SetClientDvarFromServer(const char *dvar
         cg->drawHud = hud;
     } else if (stricmp(dvarname, (const char *)"g_scriptMainMenu") == 0) {
         I_strncpyz(cg->scriptMainMenu, value, sizeof(cg->scriptMainMenu));
-    } else {
+    } else if (NetHardening_ServerMaySetCvar(dvarname)) {
         Dvar_SetFromStringByName(dvarname, value);
+    } else {
+        Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", dvarname);
     }
 }
 

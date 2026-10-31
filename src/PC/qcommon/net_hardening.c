@@ -9,13 +9,13 @@ extern void Com_Printf(const char *fmt, ...);
 extern void Com_DPrintf(const char *fmt, ...);
 
 extern const dvar_t *Dvar_FindVar(const char *dvarName);
+extern int I_stricmp(const char *s1, const char *s2);
+extern int I_strnicmp(const char *s1, const char *s2, size_t n);
 
-#    define NH_DVAR_FLAG_SAVED 0x01
-#    define NH_DVAR_FLAG_LATCH 0x20
+#    define NH_DVAR_FLAG_SYSTEMINFO 0x08
 #    define NH_DVAR_FLAG_READONLY 0x40
 #    define NH_DVAR_FLAG_WRITEPROTECTED 0x10
 #    define NH_DVAR_FLAG_CHEAT 0x80
-#    define NH_DVAR_FLAG_EXTERNAL 0x4000
 
 static int NetHardening_HasBadSubstring(const char *name)
 {
@@ -82,42 +82,36 @@ int NetHardening_ValidUrl(const char *url)
     return 0;
 }
 
-static int NetHardening_NameHasPrefix(const char *name, const char *prefix)
-{
-    size_t n = strlen(prefix);
-    return strncmp(name, prefix, n) == 0;
-}
-
+/* Not in 1.3, which lets a server set any dvar: these run a command or decide
+ * what the client trusts. */
 int NetHardening_ServerMaySetCvar(const char *key)
 {
+    static const char *const names[] = {"activeAction", "nextdemo", "cl_allowDownload", "cl_wwwDownload"};
+    static const char *const prefixes[] = {"fs_", "sv_", "net_", "rcon", "in_"};
     const dvar_t *dvar;
+    unsigned int flags;
+    size_t i;
 
     if (!key || key[0] == '\0')
         return 0;
 
-    if (NetHardening_NameHasPrefix(key, "fs_"))
-        return 0;
-    if (NetHardening_NameHasPrefix(key, "sv_"))
-        return 0;
-    if (NetHardening_NameHasPrefix(key, "net_"))
-        return 0;
-    if (NetHardening_NameHasPrefix(key, "rcon"))
-        return 0;
-    if (NetHardening_NameHasPrefix(key, "in_"))
-        return 0;
-    if (strcmp(key, "cl_allowDownload") == 0)
-        return 0;
-
     dvar = Dvar_FindVar(key);
-    if (dvar) {
-        unsigned int flags = (unsigned int)dvar->flags;
-        if (flags & (NH_DVAR_FLAG_READONLY |
-                     NH_DVAR_FLAG_WRITEPROTECTED |
-                     NH_DVAR_FLAG_CHEAT))
+    flags = dvar ? (unsigned int)dvar->flags : 0;
+
+    /* what a server sends every client: fs_game, sv_pure, sv_serverid... */
+    if (flags & NH_DVAR_FLAG_SYSTEMINFO)
+        return 1;
+
+    for (i = 0; i < sizeof(names) / sizeof(names[0]); ++i) {
+        if (I_stricmp(key, names[i]) == 0)
+            return 0;
+    }
+    for (i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
+        if (I_strnicmp(key, prefixes[i], strlen(prefixes[i])) == 0)
             return 0;
     }
 
-    return 1;
+    return !(flags & (NH_DVAR_FLAG_READONLY | NH_DVAR_FLAG_WRITEPROTECTED | NH_DVAR_FLAG_CHEAT));
 }
 
 typedef struct {
