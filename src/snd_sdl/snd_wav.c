@@ -12,7 +12,8 @@ static long adpcm_frames(long len, long block, long ch)
     return n;
 }
 
-long SndWav_Info(const void *data, long fileLen, SndMixInfo *info)
+/* stream: data holds only the start of the file, so the data chunk may reach past fileLen. */
+static long parse(const void *data, long fileLen, SndMixInfo *info, int stream)
 {
     const unsigned char *p = data;
     long pos = 12, tag = 0, ch = 0, bits = 0, block = 0, haveFmt = 0;
@@ -30,7 +31,8 @@ long SndWav_Info(const void *data, long fileLen, SndMixInfo *info)
             haveFmt = 1;
         } else if (!memcmp(p + pos, "data", 4)) {
             long frames;
-            if (!haveFmt || (long long)size > left) return 0;
+            if (!haveFmt || (!stream && (long long)size > left)) return 0;
+            if (size > 0x3fffffffUL) size = 0x3fffffffUL;   /* only a stream's can be; < 2 ADPCM frames a byte fit a long */
             if (ch < 1 || ch > 2 || !rate || rate > 1000000 || !block) return 0;
             if (tag == 1 && (bits == 8 || bits == 16) && block == ch * bits / 8) frames = size / block;
             else if (tag == 0x11 && bits == 4 && block >= 4 * ch && (block - 4 * ch) % (4 * ch) == 0)
@@ -46,6 +48,9 @@ long SndWav_Info(const void *data, long fileLen, SndMixInfo *info)
     }
     return 0;
 }
+
+long SndWav_Info(const void *data, long fileLen, SndMixInfo *info) { return parse(data, fileLen, info, 0); }
+long SndWav_Header(const void *data, long have, SndMixInfo *info) { return parse(data, have, info, 1); }
 
 /* PCM sources only: ADPCM is decoded by the caller first. Returns frames out, or 0. */
 static long out_frames(unsigned rate, unsigned format, const SndMixInfo *s, long *outBytes)
