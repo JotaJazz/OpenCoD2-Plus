@@ -1569,6 +1569,9 @@ static BM_NOINLINE void Con_DrawInput(void)
     if (!matchCount)
         return;
 
+    /* the hints start a line below the input box: 1.3 0x4065fe */
+    ConDrawInput_NextLine();
+
     if (matchCount > 24) {
         const char *tooMany = va("%i matches (too many to show)", matchCount);
         ConDrawInput_DrawHintBox(1, 0.0f);
