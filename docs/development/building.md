@@ -20,7 +20,8 @@ top of it.
 | x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 
 The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
-`src/stubs`) links only into `cod2_linux` and `cod2_linux_vk`. MP3 comes from
+`src/stubs`) links into `cod2_linux`, `cod2_linux_vk` and `cod2_win32`, where
+those files alone are `-O2`, as a mixer has a deadline. MP3 comes from
 `src/snd_sdl/minimp3.h`, one unchanged header of `lieff/minimp3` `ea99364` (CC0).
 
 ## build_check.py
@@ -119,4 +120,5 @@ The client's ABI is read from a client built with
 `scripts/portable_wine.sh DIR` downloads a 32-bit Wine and its i386
 dependencies with `apt-get download` (no root) into `DIR` and writes
 `DIR/wine.sh`. `COD2_CONSOLE_STDOUT=1` copies the engine's console to stdout.
-Wine cannot load the game's real `mss32.dll`, so sound is not testable there.
+Wine cannot load the game's real `mss32.dll`: only `snd_backend sdl` has sound
+there.

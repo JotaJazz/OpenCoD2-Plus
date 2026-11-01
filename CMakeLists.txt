@@ -537,6 +537,14 @@ elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
+if(COD2_WIN32_CLIENT)
+  # snd_backend sdl: C as on Linux, and optimized, as this client's other code
+  # is not and a mixer has a deadline. SDL's threads enter with a 4-byte stack.
+  file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
+  set_source_files_properties(${COD2_SND_SDL_C} PROPERTIES COMPILE_OPTIONS
+    "-O2;-fno-strict-aliasing;-fwrapv;-mincoming-stack-boundary=2")
+  list(APPEND WIN_C ${COD2_SND_SDL_C})
+endif()
 enable_language(RC)
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS}
   ${COD2_SRC_DIR}/win32/opencod2.rc)

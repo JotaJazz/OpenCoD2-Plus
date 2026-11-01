@@ -9,9 +9,14 @@
 #include <string.h>
 #include "snd_sdl.h"
 
-/* Task 8: Sdl_##name and __stdcall on Windows, where mss32_dll.c keeps the AIL_* names */
+/* On Windows mss32_dll.c keeps the AIL_* names and calls these through SndSdl_Find, as Miles' */
+#ifdef COD2_MSS32_DLL
+#define SA_NAME(name) Sdl_##name
+#define SA_API __stdcall
+#else
 #define SA_NAME(name) name
 #define SA_API
+#endif
 
 extern void Com_Printf(const char *fmt, ...);
 extern void Cmd_AddCommand(const char *cmdName, void (*function)(void));
@@ -60,8 +65,19 @@ static struct {
     Uint32 lastRender;             /* SDL_GetTicks */
 } dig;
 static SndFileCallbacks files;
+static struct {                    /* the game's, in Miles' calling convention */
+    unsigned long (SA_API *open)(const char *, unsigned long *);
+    void (SA_API *close)(unsigned long);
+    long (SA_API *seek)(unsigned long, long, unsigned long);
+    unsigned long (SA_API *read)(unsigned long, void *, unsigned long);
+} gameFiles;
 static float rolloff, distFactor;
 static char lastError[256];
+
+static unsigned long FileOpen(const char *name, unsigned long *handle) { return gameFiles.open(name, handle); }
+static void FileClose(unsigned long handle) { gameFiles.close(handle); }
+static long FileSeek(unsigned long handle, long offset, unsigned long type) { return gameFiles.seek(handle, offset, type); }
+static unsigned long FileRead(unsigned long handle, void *buf, unsigned long bytes) { return gameFiles.read(handle, buf, bytes); }
 
 static void Lock(void) { if (dig.dev) SDL_LockAudioDevice(dig.dev); }
 static void Unlock(void) { if (dig.dev) SDL_UnlockAudioDevice(dig.dev); }
@@ -306,17 +322,21 @@ static void DerivedVolumePan(const Sample *s, float *volume, float *pan)
 
 /* Setup */
 
-int SA_API SA_NAME(AIL_startup)(int flags) { (void)flags; return 1; }
+int SA_API SA_NAME(AIL_startup)(void) { return 1; }   /* _AIL_startup@0: mss32_dll.c drops the driver's flags */
 void SA_API SA_NAME(AIL_set_redist_directory)(const char *dir) { (void)dir; }
 int SA_API SA_NAME(AIL_set_preference)(int pref, int value) { (void)pref; (void)value; return 0; }
 const char *SA_API SA_NAME(AIL_last_error)(void) { return lastError; }
 
 void SA_API SA_NAME(AIL_set_file_callbacks)(void *open_cb, void *close_cb, void *seek_cb, void *read_cb)
 {
-    files.open = (unsigned long (*)(const char *, unsigned long *))open_cb;
-    files.close = (void (*)(unsigned long))close_cb;
-    files.seek = (long (*)(unsigned long, long, unsigned long))seek_cb;
-    files.read = (unsigned long (*)(unsigned long, void *, unsigned long))read_cb;
+    gameFiles.open = (unsigned long (SA_API *)(const char *, unsigned long *))open_cb;
+    gameFiles.close = (void (SA_API *)(unsigned long))close_cb;
+    gameFiles.seek = (long (SA_API *)(unsigned long, long, unsigned long))seek_cb;
+    gameFiles.read = (unsigned long (SA_API *)(unsigned long, void *, unsigned long))read_cb;
+    files.open = open_cb ? FileOpen : NULL;   /* AIL_open_stream's test for callbacks */
+    files.close = FileClose;
+    files.seek = FileSeek;
+    files.read = FileRead;
 }
 
 /* bits comes as bytes from snd_driver.c:1671 and matters not: samples are converted at load, the
@@ -911,6 +931,98 @@ void SA_API SA_NAME(AIL_set_stream_volume_levels)(void *S, float left, float rig
 void SA_API SA_NAME(AIL_stream_volume_levels)(void *S, float *left, float *right) { SA_NAME(AIL_sample_volume_levels)(S, left, right); }
 void SA_API SA_NAME(AIL_stream_volume_pan)(void *S, float *volume, float *pan) { SA_NAME(AIL_sample_volume_pan)(S, volume, pan); }
 
-/* Not Miles exports: mss32_dll.c:192,393 */
-int SA_API SA_NAME(AIL_is_3D_stream)(void *S) { (void)S; return 0; }
-void SA_API SA_NAME(AIL_set_3D_stream_position)(void *S, float x, float y, float z) { (void)S; (void)x; (void)y; (void)z; }
+#ifdef COD2_MSS32_DLL
+/* The names mss32_dll.c asks mss32.dll for. Its size is the stack the callee pops, so it has to be
+   the function's own: test_snd_sdl.py reads it from the object file. */
+static const struct { const char *name; void *fn; } table[] = {
+    { "_AIL_3D_position@16", Sdl_AIL_3D_position },
+    { "_AIL_3D_provider_attribute@12", Sdl_AIL_3D_provider_attribute },
+    { "_AIL_3D_sample_length@4", Sdl_AIL_3D_sample_length },
+    { "_AIL_3D_sample_offset@4", Sdl_AIL_3D_sample_offset },
+    { "_AIL_3D_sample_playback_rate@4", Sdl_AIL_3D_sample_playback_rate },
+    { "_AIL_3D_sample_status@4", Sdl_AIL_3D_sample_status },
+    { "_AIL_3D_sample_volume@4", Sdl_AIL_3D_sample_volume },
+    { "_AIL_WAV_info@8", Sdl_AIL_WAV_info },
+    { "_AIL_allocate_3D_sample_handle@4", Sdl_AIL_allocate_3D_sample_handle },
+    { "_AIL_allocate_sample_handle@4", Sdl_AIL_allocate_sample_handle },
+    { "_AIL_close_3D_provider@4", Sdl_AIL_close_3D_provider },
+    { "_AIL_close_stream@4", Sdl_AIL_close_stream },
+    { "_AIL_digital_CPU_percent@4", Sdl_AIL_digital_CPU_percent },
+    { "_AIL_end_3D_sample@4", Sdl_AIL_end_3D_sample },
+    { "_AIL_end_sample@4", Sdl_AIL_end_sample },
+    { "_AIL_enumerate_3D_providers@12", Sdl_AIL_enumerate_3D_providers },
+    { "_AIL_init_sample@4", Sdl_AIL_init_sample },
+    { "_AIL_last_error@0", Sdl_AIL_last_error },
+    { "_AIL_load_sample_buffer@16", Sdl_AIL_load_sample_buffer },
+    { "_AIL_minimum_sample_buffer_size@12", Sdl_AIL_minimum_sample_buffer_size },
+    { "_AIL_open_3D_provider@4", Sdl_AIL_open_3D_provider },
+    { "_AIL_open_digital_driver@16", Sdl_AIL_open_digital_driver },
+    { "_AIL_open_stream@12", Sdl_AIL_open_stream },
+    { "_AIL_pause_stream@8", Sdl_AIL_pause_stream },
+    { "_AIL_process_digital_audio@24", Sdl_AIL_process_digital_audio },
+    { "_AIL_release_sample_handle@4", Sdl_AIL_release_sample_handle },
+    { "_AIL_resume_3D_sample@4", Sdl_AIL_resume_3D_sample },
+    { "_AIL_resume_sample@4", Sdl_AIL_resume_sample },
+    { "_AIL_sample_buffer_ready@4", Sdl_AIL_sample_buffer_ready },
+    { "_AIL_sample_ms_position@12", Sdl_AIL_sample_ms_position },
+    { "_AIL_sample_playback_rate@4", Sdl_AIL_sample_playback_rate },
+    { "_AIL_sample_position@4", Sdl_AIL_sample_position },
+    { "_AIL_sample_status@4", Sdl_AIL_sample_status },
+    { "_AIL_sample_volume_levels@12", Sdl_AIL_sample_volume_levels },
+    { "_AIL_sample_volume_pan@12", Sdl_AIL_sample_volume_pan },
+    { "_AIL_set_3D_distance_factor@8", Sdl_AIL_set_3D_distance_factor },
+    { "_AIL_set_3D_position@16", Sdl_AIL_set_3D_position },
+    { "_AIL_set_3D_rolloff_factor@8", Sdl_AIL_set_3D_rolloff_factor },
+    { "_AIL_set_3D_room_type@8", Sdl_AIL_set_3D_room_type },
+    { "_AIL_set_3D_sample_distances@12", Sdl_AIL_set_3D_sample_distances },
+    { "_AIL_set_3D_sample_effects_level@8", Sdl_AIL_set_3D_sample_effects_level },
+    { "_AIL_set_3D_sample_info@8", Sdl_AIL_set_3D_sample_info },
+    { "_AIL_set_3D_sample_loop_count@8", Sdl_AIL_set_3D_sample_loop_count },
+    { "_AIL_set_3D_sample_offset@8", Sdl_AIL_set_3D_sample_offset },
+    { "_AIL_set_3D_sample_playback_rate@8", Sdl_AIL_set_3D_sample_playback_rate },
+    { "_AIL_set_3D_sample_volume@8", Sdl_AIL_set_3D_sample_volume },
+    { "_AIL_set_digital_master_reverb_levels@12", Sdl_AIL_set_digital_master_reverb_levels },
+    { "_AIL_set_digital_master_room_type@8", Sdl_AIL_set_digital_master_room_type },
+    { "_AIL_set_file_callbacks@16", Sdl_AIL_set_file_callbacks },
+    { "_AIL_set_preference@8", Sdl_AIL_set_preference },
+    { "_AIL_set_redist_directory@4", Sdl_AIL_set_redist_directory },
+    { "_AIL_set_sample_address@12", Sdl_AIL_set_sample_address },
+    { "_AIL_set_sample_adpcm_block_size@8", Sdl_AIL_set_sample_adpcm_block_size },
+    { "_AIL_set_sample_loop_count@8", Sdl_AIL_set_sample_loop_count },
+    { "_AIL_set_sample_ms_position@8", Sdl_AIL_set_sample_ms_position },
+    { "_AIL_set_sample_playback_rate@8", Sdl_AIL_set_sample_playback_rate },
+    { "_AIL_set_sample_reverb_levels@12", Sdl_AIL_set_sample_reverb_levels },
+    { "_AIL_set_sample_type@12", Sdl_AIL_set_sample_type },
+    { "_AIL_set_sample_volume_levels@12", Sdl_AIL_set_sample_volume_levels },
+    { "_AIL_set_stream_loop_count@8", Sdl_AIL_set_stream_loop_count },
+    { "_AIL_set_stream_ms_position@8", Sdl_AIL_set_stream_ms_position },
+    { "_AIL_set_stream_playback_rate@8", Sdl_AIL_set_stream_playback_rate },
+    { "_AIL_set_stream_reverb_levels@12", Sdl_AIL_set_stream_reverb_levels },
+    { "_AIL_set_stream_volume_levels@12", Sdl_AIL_set_stream_volume_levels },
+    { "_AIL_shutdown@0", Sdl_AIL_shutdown },
+    { "_AIL_size_processed_digital_audio@16", Sdl_AIL_size_processed_digital_audio },
+    { "_AIL_startup@0", Sdl_AIL_startup },
+    { "_AIL_stop_3D_sample@4", Sdl_AIL_stop_3D_sample },
+    { "_AIL_stop_sample@4", Sdl_AIL_stop_sample },
+    { "_AIL_stream_info@20", Sdl_AIL_stream_info },
+    { "_AIL_stream_ms_position@12", Sdl_AIL_stream_ms_position },
+    { "_AIL_stream_playback_rate@4", Sdl_AIL_stream_playback_rate },
+    { "_AIL_stream_status@4", Sdl_AIL_stream_status },
+    { "_AIL_stream_volume_levels@12", Sdl_AIL_stream_volume_levels },
+    { "_AIL_stream_volume_pan@12", Sdl_AIL_stream_volume_pan },
+};
+
+/* NULL for what has no equivalent here, which the caller skips: AIL_set_DirectSound_HWND. */
+void *SndSdl_Find(const char *decorated)
+{
+    size_t i;
+
+    for (i = 0; i < sizeof table / sizeof table[0]; i++)
+        if (!strcmp(table[i].name, decorated)) return table[i].fn;
+    return NULL;
+}
+#else
+/* Not Miles exports: mss32_dll.c answers them itself */
+int AIL_is_3D_stream(void *S) { (void)S; return 0; }
+void AIL_set_3D_stream_position(void *S, float x, float y, float z) { (void)S; (void)x; (void)y; (void)z; }
+#endif

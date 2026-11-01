@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — Windows sound: Miles or SDL2
+
+- `snd_backend sdl` runs the Windows client on `src/snd_sdl/`, without loading `mss32.dll`; `miles` stays the default until the user has compared them in real games. It gives this client sound under Wine for the first time: every `sound_test.py` case passes there.
+- The calls cross `__stdcall`, so a wrong size wrecks the caller's stack silently: `AIL_startup` is `@0` although the driver passes it flags. The test reads the sizes from a MinGW object rather than trusting the table.
+- `snd_backend` is registered before the first `AIL_*` call, not beside `mss_3d_provider`, and read once. It is archived, so a launcher that does not set it inherits the last one.
+
 ## 2026-11-01 — sound on Linux through SDL2
 
 - The Linux client's `AIL_*` calls land in our own engine, `src/snd_sdl/` ([ADR 0012](../architecture/adr/0012-sound-engine-behind-the-ail-calls.md)); `scripts/sound_test.py` reads what reaches SDL's disk driver.

@@ -30,7 +30,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
-| `scripts/sound_test.py` | what the client sends to the device, through SDL's disk driver: the menu's MP3 stream, `playLocalSound`, left and right of a `script_origin`, `map_restart`, `vid_restart`, `disconnect` and `quit` with sounds playing, no device, `snd_khz 22`, the callback's cost with bots fighting; `--cases a,b` | yes |
+| `scripts/sound_test.py` | what the client sends to the device, through SDL's disk driver: the menu's MP3 stream, `playLocalSound`, left and right of a `script_origin`, `map_restart`, `vid_restart`, `disconnect` and `quit` with sounds playing, no device, `snd_khz 22`, the callback's cost with bots fighting; `--cases a,b`; `--wine CMD --binary cod2_win32.exe` runs the Windows client on `snd_backend sdl` | yes |
 
 `P` is 118 (1.3, `build/check-linux`) or 115 (1.0, `build/check-linux-10`);
 the scripts pick the binary from `--protocol` (`--binary` overrides it).

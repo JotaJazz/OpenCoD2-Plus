@@ -1615,6 +1615,10 @@ Bool SND_InitDriver(void)
     int sndKhzVal, sndBitsVal;
     unsigned int maxRate;
 
+#ifdef COD2_MSS32_DLL
+    /* before the first AIL call: mss32_dll.c reads it there, and a change needs a new game */
+    Dvar_RegisterString((const char *)"snd_backend", (const char *)"miles", 0x1021);
+#endif
     mss_q3fs = Dvar_RegisterBool((const char *)"mss_q3fs", 1, 0x1020);
     if (mss_q3fs->current.enabled != 0) {
         AIL_set_file_callbacks((void *)MSS_FileOpenCallback, (void *)MSS_FileCloseCallback, (void *)MSS_FileSeekCallback, (void *)MSS_FileReadCallback);

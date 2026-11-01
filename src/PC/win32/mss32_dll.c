@@ -14,6 +14,9 @@
  * volume and pan). And the Windows binary gives Miles the game's window for
  * DirectSound (AIL_set_DirectSound_HWND, from its window procedure), which
  * AIL_open_digital_driver does here.
+ *
+ * snd_backend sdl answers every call from src/snd_sdl instead, and mss32.dll is
+ * not loaded at all.
  */
 #if defined(_WIN32) && defined(COD2_MSS32_DLL)
 #include "common_types.h"
@@ -26,6 +29,7 @@ extern void *__stdcall GetProcAddress(void *module, const char *name);
 extern const char *Dvar_GetString(const char *dvarName);
 extern void Com_Printf(const char *fmt, ...);
 extern void *Sys_GetGameWindow(void);
+extern void *SndSdl_Find(const char *decorated);
 
 static void *mss_module;
 static int mss_loadTried;
@@ -50,10 +54,24 @@ static void *MSS_Load(void)
     return mss_module;
 }
 
+/* Once: a handle of one backend must never reach the other, and MSS_FN keeps what it resolved. */
+static int MSS_UseSdl(void)
+{
+    static int sdl = -1;
+
+    if (sdl < 0)
+        sdl = !strcmp(Dvar_GetString("snd_backend"), "sdl");
+    return sdl;
+}
+
 static void *MSS_Get(const char *decorated)
 {
-    void *module = MSS_Load();
-    void *fn = module ? GetProcAddress(module, decorated) : NULL;
+    void *module, *fn;
+
+    if (MSS_UseSdl())
+        return SndSdl_Find(decorated);
+    module = MSS_Load();
+    fn = module ? GetProcAddress(module, decorated) : NULL;
     if (module && !fn)
         Com_Printf("Miles: mss32.dll has no %s\n", decorated);
     return fn;

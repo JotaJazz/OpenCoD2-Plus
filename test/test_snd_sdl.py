@@ -1,4 +1,4 @@
-import glob, os, subprocess, tempfile, unittest
+import glob, os, re, shutil, subprocess, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMES = ['mix_silence', 'mix_pcm16_unity', 'mix_pcm8_unsigned', 'mix_stereo_source', 'mix_stereo_source_r',
@@ -20,6 +20,10 @@ AIL_NAMES = ['ail_provider', 'ail_wav_length', 'ail_no_device', 'ail_status', 'a
              'ail_reverb_2d', 'ail_reverb_3d', 'ail_reverb_stream', 'ail_reverb_generic']
 SDL32 = glob.glob('/usr/lib/i386-linux-gnu/libSDL2.so')
 SDL64 = glob.glob('/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0')
+SND_SDL = os.path.join(ROOT, 'src', 'snd_sdl')
+MINGW_GCC = shutil.which('i686-w64-mingw32-gcc')
+# NULL from SndSdl_Find: the window is DirectSound's
+NOT_IN_TABLE = {('AIL_set_DirectSound_HWND', '8')}
 
 
 class SndSdl(unittest.TestCase):
@@ -68,6 +72,32 @@ class SndSdl(unittest.TestCase):
     def test_thread_sanitizer(self):
         # setarch -R: TSan's memory layout does not fit this kernel's randomized one
         self.run_test(['-fsanitize=thread'], SDL64, ['setarch', '-R'], {'TSAN_OPTIONS': 'halt_on_error=1'})
+
+
+class SndBackend(unittest.TestCase):
+    """The Windows selector: mss32_dll.c's calls have to find an engine function with their stack size."""
+
+    def miles_calls(self):
+        with open(os.path.join(ROOT, 'src', 'PC', 'win32', 'mss32_dll.c')) as f:
+            return set(re.findall(r'MSS_FN\((\w+), (\d+)\)', f.read())) - NOT_IN_TABLE
+
+    def test_table_has_every_miles_call(self):
+        with open(os.path.join(SND_SDL, 'snd_ail.c')) as f:
+            table = set(re.findall(r'\{ "_(\w+)@(\d+)", Sdl_\1 \}', f.read()))
+        self.assertGreater(len(self.miles_calls()), 60)
+        self.assertEqual(self.miles_calls() - table, set())
+
+    @unittest.skipUnless(MINGW_GCC, 'no MinGW')
+    def test_stdcall_sizes(self):
+        """A __stdcall callee pops its arguments, so a wrong size wrecks the caller's stack: nm shows the real one."""
+        with tempfile.TemporaryDirectory() as tmp:
+            obj = os.path.join(tmp, 'snd_ail.o')
+            subprocess.run([MINGW_GCC, '-c', '-DCOD2_MSS32_DLL=1', '-I', SND_SDL, '-I',
+                            os.path.join(ROOT, 'src', 'win32', 'sdl2', 'include'),
+                            os.path.join(SND_SDL, 'snd_ail.c'), '-o', obj], check=True)
+            symbols = subprocess.run(['i686-w64-mingw32-nm', obj], capture_output=True, text=True, check=True).stdout
+        have = set(re.findall(r' T _Sdl_(\w+)@(\d+)$', symbols, re.M))
+        self.assertEqual(self.miles_calls() - have, set())
 
 
 if __name__ == '__main__':

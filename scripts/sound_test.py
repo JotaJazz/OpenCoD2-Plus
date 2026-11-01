@@ -14,7 +14,8 @@ SDL_AUDIODRIVER=nonexistent reaches the menu with the failure in its log and no
 crash. snd_khz_22: the menu's music at 22 kHz. callback_cost: bots fighting on a
 local game (scripts/install_bots.py), the worst callback snd_stats prints is
 below half the buffer. Exits with 0 when every case passes. --wine runs a
-Windows client (cod2_win32.exe) with that command. --keep copies each case's
+Windows client (cod2_win32.exe, given with --binary) with that command and
+snd_backend sdl, as Miles does not load under Wine. --keep copies each case's
 log and audio to DIR. The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
@@ -151,16 +152,16 @@ class Run:
                 game_args = setup(home) + list(game_args)
             audio, log_path = os.path.join(home, 'out.raw'), os.path.join(home, 'out.log')
             base, homepath = self.game, home
-            command = [self.binary]
+            command, audio_path = [self.binary], audio
             if self.args.wine:
-                base, homepath = wine_path(self.game), wine_path(home)
-                command.insert(0, self.args.wine)
+                base, homepath, audio_path = wine_path(self.game), wine_path(home), wine_path(audio)
+                command = [self.args.wine, self.binary, '+set', 'snd_backend', 'sdl']
             with open(log_path, 'wb') as log:
                 client = subprocess.Popen(
                     command + ['+set', 'fs_basepath', base, '+set', 'fs_homepath', homepath, '+set', 'com_maxfps', str(FPS),
                                *game_args, '+exec', 'test.cfg'],
                     cwd=home, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                    env=dict(os.environ, SDL_AUDIODRIVER=driver, SDL_DISKAUDIOFILE=audio, COD2_CONSOLE_STDOUT='1',
+                    env=dict(os.environ, SDL_AUDIODRIVER=driver, SDL_DISKAUDIOFILE=audio_path, COD2_CONSOLE_STDOUT='1',
                              COD2_CRASH_NOPOPUP='1', **(env or {})))
                 try:
                     client.wait(timeout=seconds)
