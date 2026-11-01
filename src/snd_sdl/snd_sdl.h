@@ -15,7 +15,7 @@ typedef struct SndVoice {
     int status;
 } SndVoice;
 
-/* Adds every SND_SMP_PLAYING voice into out (interleaved PCM16, saturated).
+/* Writes the mix of every SND_SMP_PLAYING voice to out (interleaved PCM16, saturated).
    wetOut may be NULL; it receives the mono mix sent to the reverb. */
 void SndMix_Render(SndVoice *voices, int count, int outRate, int outChannels,
                    short *out, float *wetOut, int frames);

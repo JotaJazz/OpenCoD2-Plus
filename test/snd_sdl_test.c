@@ -70,7 +70,7 @@ int main(void)
     /* 0.1 s at 1 kHz = 100 cycles = 200 crossings */
     CHECK("mix_rate_22_to_44", n >= 198 && n <= 202);
 
-    for (i = 0; i < 10; i++) pcm[i] = 1000;
+    for (i = 0; i < 10; i++) pcm[i] = (short)(i * 100 + 100);
     v = voice(pcm, 20, 16, 1, 44100);
     v.loopCount = 0;
     SndMix_Render(&v, 1, 44100, 1, out, NULL, 100);
@@ -79,12 +79,16 @@ int main(void)
     w.loopCount = 2;
     SndMix_Render(&w, 1, 44100, 1, out, NULL, 19);
     n = n && w.status == SND_SMP_PLAYING;
-    SndMix_Render(&w, 1, 44100, 1, out, NULL, 1);
+    SndMix_Render(&w, 1, 44100, 1, out + 19, NULL, 1);
+    for (i = 0; i < 20; i++) n = n && out[i] == pcm[i % 10];
     CHECK("mix_loop_wraps", n && w.status == SND_SMP_DONE);
 
     for (i = 0; i < 53; i++) many[i] = voice(big, 2, 16, 1, 44100);
-    SndMix_Render(many, 53, 44100, 2, out, NULL, 1);
-    CHECK("mix_saturates", out[0] == 32767 && out[1] == 32767);
+    big[0] = 32767;
+    for (i = 0; i < 53; i++) many[i].loopCount = 0;
+    SndMix_Render(many, 53, 44100, 2, out, NULL, 600);
+    for (n = 1, i = 0; i < 1200; i++) n = n && out[i] == 32767;
+    CHECK("mix_saturates", n);
 
     v = voice(pcm, 20, 16, 1, 0);
     SndMix_Render(&v, 1, 44100, 1, out, NULL, 10);
