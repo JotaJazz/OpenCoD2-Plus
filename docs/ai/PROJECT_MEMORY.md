@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — d3d12 is black on the screen, not in the back buffer
+
+- A black menu screenshot first pointed at rendering. A readback through a temporary tracing client showed otherwise on an RTX 5080: no refused call, a real frame at frame 30, a clear and a triangle at 150. Frame 120 reads black on Wine too, so one sample proves little: read several.
+- Replacing the device's vtable with a 119-entry copy crashes inside `d3d9.dll`; patch the table in place. `d3d12` stays experimental, `vulkan` covers the same machines.
+
 ## 2026-10-31 — r_gfxApi: Vulkan and Direct3D 12 behind Direct3D 9
 
 - The renderer talks only to `IDirect3DDevice9`, so the Windows client picks what stands behind it: `d3d9`, `vulkan` (DXVK) or `d3d12` (D3D9On12), falling back to `d3d9`. A native backend per API was rejected: the renderer is 38,000 lines.

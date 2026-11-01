@@ -13,7 +13,8 @@ The Windows client takes the API from `r_gfxApi`, once per process: `d3d9`, `vul
 
 ## Consequences
 
-- The renderer does not change, and the picture matches the Direct3D 9 path.
+- The renderer does not change, and on Vulkan the picture matches the Direct3D 9 path.
+- `d3d12` is experimental: it shows a black screen ([debt](../../roadmap/debt.md)).
 - These are translation layers: they cost some speed and open no new effects.
 - The executable is large address aware, since DXVK maps its memory into the 32-bit process.
 - `r_gfxApi` is not a Linux setting: `cod2_linux_vk` is always on Vulkan.
