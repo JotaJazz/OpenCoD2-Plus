@@ -13,7 +13,7 @@ STREAM_NAMES = ['stream_wav_plays', 'stream_mp3_plays', 'stream_loop', 'stream_s
                 'stream_close_while_reading', 'stream_garbage', 'stream_open_fails']
 AIL_NAMES = ['ail_provider', 'ail_wav_length', 'ail_no_device', 'ail_status', 'ail_hunk_freed', 'ail_positions', 'ail_adpcm',
              'ail_3d', 'ail_device_gone', 'ail_raw', 'ail_pitch_sample', 'ail_pitch_stream_2x', 'ail_pitch_stream_11k',
-             'ail_gain_cap', 'ail_53_voices', 'ail_stream_life']
+             'ail_gain_cap', 'ail_53_voices', 'ail_stream_retry', 'ail_stream_life']
 SDL32 = glob.glob('/usr/lib/i386-linux-gnu/libSDL2.so')
 SDL64 = glob.glob('/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0')
 

@@ -933,6 +933,22 @@ static void ail_tests(void)
     }
     CHECK("ail_53_voices", ok && k > 1000);
 
+    /* A corrupt stream in an iwd: snd_driver.c:1357 retries with FS_ShortOSFilePath, NULL for a file in a pack */
+    dig = device_open("dummy", 44100);
+    memset(wav, 0x55, 4096);
+    closes = 0;
+    ok = ail_stream(dig, 0, wav, 4096) == NULL && closes == 1 && AIL_last_error()[0];
+    AIL_set_file_callbacks(NULL, NULL, NULL, NULL);
+    ok = ok && !AIL_open_stream(dig, "0", 0);            /* no callbacks: mss_q3fs 0 */
+    set_callbacks();
+    ok = ok && !AIL_open_stream(dig, NULL, 0) && AIL_last_error()[0] && closes == 1;
+    n = mkwav(wav, 1, 1, 44100, 16, 2, tone, 8, 0);
+    s = ail_stream(dig, 0, wav, n);                      /* and it goes on */
+    ok = ok && s != NULL;
+    AIL_close_stream(s);
+    AIL_shutdown();
+    CHECK("ail_stream_retry", ok);
+
     /* A stream's life, with the voice's tail mixed before it reads done */
     dig = device_open("dummy", 44100);
     closes = 0;

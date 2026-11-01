@@ -763,6 +763,11 @@ void *SA_API SA_NAME(AIL_open_stream)(void *d, const char *filename, int flags)
 
     (void)d;
     (void)flags;
+    /* FS_ShortOSFilePath gives NULL for a file in a pack, when snd_driver.c:1357 retries a corrupt one */
+    if (!filename) {
+        snprintf(lastError, sizeof lastError, "no file name");
+        return NULL;
+    }
     if (!files.open) {   /* shortcut: no fopen fallback for mss_q3fs 0, as iwds would stay out of reach anyway */
         snprintf(lastError, sizeof lastError, "no file callbacks");
         return NULL;
