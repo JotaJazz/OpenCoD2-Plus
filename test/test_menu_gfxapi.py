@@ -42,6 +42,11 @@ class MenuGfxApi(unittest.TestCase):
         text = 'dvar "ui_r_rendererpreference"\ndvarStrList { "a", "b" }\n'
         self.assertEqual(self.patched(text), text)
 
+    def test_the_next_items_list_stays(self):
+        text = ('dvar "ui_r_rendererpreference"\ndvarFloatList { "a" 0 }\n}\nitemDef\n{\n'
+                'dvarStrList { "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }\n')
+        self.assertEqual(self.patched(text), text)
+
     def test_another_menu_stays(self):
         text = 'dvar "ui_r_mode"\ndvarStrList { "a", "b" }\n'
         self.assertEqual(self.patched(text), text)

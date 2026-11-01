@@ -1579,7 +1579,7 @@ static BM_NOINLINE void Con_DrawInput(void)
         return;
     }
 
-    if (matchCount == 1 || conDrawInputGlob.hasExactMatch) {
+    if (matchCount == 1 || (conDrawInputGlob.hasExactMatch && Con_AnySpaceAfterCommand())) {
         Dvar_ForEach(ConDrawInput_DetailedDvarMatch);
         Cmd_ForEach(ConDrawInput_DetailedCmdMatch);
         return;

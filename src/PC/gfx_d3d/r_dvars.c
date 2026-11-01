@@ -553,7 +553,7 @@ void R_RegisterDvars(void)
 
     R_EnumDisplayModes();
     r_mode = ri.Dvar_RegisterEnum("r_mode", s_displayModeNames, 0, 0x2021);
-    /* taken once, when the process makes its first device */
+    /* taken when a device is made: at the start and at vid_restart */
     r_gfxApi = ri.Dvar_RegisterEnum("r_gfxApi", gfxApiNames, 0, 0x2021);
 
     r_displayRefresh = ri.Dvar_RegisterEnum("r_displayRefresh", s_displayRefreshNames, 0, 0x2021);

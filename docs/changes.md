@@ -4,6 +4,8 @@ What this fork changed on top of the reconstruction it was forked from
 ([opencod2/opencod2](https://github.com/opencod2/opencod2)), by area. The
 per-stage history is in [ai/PROJECT_MEMORY.md](ai/PROJECT_MEMORY.md).
 
+- **Graphics APIs on Windows:** the client runs on Direct3D 9 or on Vulkan through DXVK (`r_gfxApi`, in Options > Graphics), and on Direct3D 12 through D3D9On12 as an experiment, with a black screen for now.
+- **The console as 1.3:** the key left of 1 opens the input line on any keyboard layout, and Shift with it the full console.
 - **Builds that work again:** the Linux and MinGW builds, broken since the original was built only with MSVC, build again; `scripts/build_check.py` builds Linux and MinGW (the dedicated server and, with SDL2, the client), as 1.3 and as 1.0, in one go.
 - **Compiled as C++:** on Linux and MinGW the whole engine compiles as C++ (gnu++17), with the shared headers made valid C++, without changing what it does; checks guard the C names the data blobs rely on and the structure layouts of the original binary.
 - **CoD2rev-Plus's script VM:** the GSC virtual machine is CoD2rev-Plus's, copied unchanged into `src/script`, with a generated C/C++ bridge. The server now holds two players, disconnects, reconnects and `clientkick`, where the reconstructed VM crashed as soon as the second player joined.

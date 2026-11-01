@@ -16,8 +16,10 @@ static inline void Script_PatchGraphicsMenu(char *buffer)
     char *dvar = strstr(buffer, oldDvar);
     char *start = dvar ? strstr(dvar, list) : NULL;
     char *end = start ? strchr(start, '}') : NULL;
+    char *next = dvar ? strstr(dvar, "itemDef") : NULL;
 
-    if (!end || (size_t)(end + 1 - start) < sizeof(newList) - 1)
+    /* the list must be this item's */
+    if (!end || (next && next < start) || (size_t)(end + 1 - start) < sizeof(newList) - 1)
         return;
     memset(dvar, ' ', sizeof(oldDvar) - 1);
     memcpy(dvar, newDvar, sizeof(newDvar) - 1);

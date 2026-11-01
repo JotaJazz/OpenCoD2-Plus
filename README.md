@@ -97,6 +97,8 @@ cmake --build build-win32 -j
 # -> build-win32/cod2_win32_ded.exe   (dedicated server)
 ```
 
+`scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE` adds DXVK next to the client, and Options > Graphics > Rendering Method Preference (`r_gfxApi`) then switches it to Vulkan. A device without Vulkan 1.3 stays on Direct3D 9.
+
 Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
 <details>

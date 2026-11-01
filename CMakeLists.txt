@@ -418,7 +418,6 @@ include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/hea
 
 # PE link: same seam aliases as Linux, but every C symbol carries PE's leading '_'.
 set(COD2_WIN_LINK
-  -Wl,--large-address-aware  # DXVK maps its staging memory into the process
   -static -static-libgcc -static-libstdc++
   -Wl,--allow-multiple-definition -Wl,--wrap,R_Error
   -Wl,--defsym,___mh_execute_header=0x1000
@@ -441,6 +440,7 @@ set(COD2_WIN_LINK
 set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
 
 if(COD2_WIN32_CLIENT)
+  list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
   add_compile_definitions(W32_CLIENT)
   include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
   list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)

@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — final review of plus before main
+
+- `r_gfxApi vulkan` died at every start on a device without Vulkan 1.3, since DXVK throws out of `Direct3DCreate9` and the menu saves the choice. The client now asks Vulkan first, and falls back when the layer cannot make a device.
+- `R_RecoverLostDevice` handed a real device the fake device's layout: a bad window and flags on any lost device. It now resets with what the device was made with.
+- A module named `d3d9.dll` stays loaded, so going back from DXVK reached DXVK again: after DXVK the system's is loaded by its path. `r_gfxApi` applies at `vid_restart`, not once per process as first recorded.
+
 ## 2026-10-31 — the console, the lagometer and cg_drawFPS against 1.3
 
 - The console opened full because the key code read `keys['`'].binding`, always set; 1.3 (`0x40bc6e`) tests `keys[K_SHIFT].down`: only Shift gives the full console.

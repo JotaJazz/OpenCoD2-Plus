@@ -87,7 +87,7 @@ extern void Linux_ResetMouseDelta(void);
 #define K_KP_EQUALS  0xc7
 #define K_MOUSE1     0xc8
 
-/* the text the console key types on this layout (a Spanish one's º or |) */
+/* the text the console key types on this layout (a Spanish layout's masculine ordinal or bar) */
 static int s_skipConsoleChar;
 
 static int sdl_to_keynum(SDL_Keycode sym);
@@ -238,8 +238,8 @@ int SDL_PumpInputEvents(void)
         }
         case SDL_KEYDOWN: {
             int k = sdl_key(&ev.key.keysym);
-            if (ev.key.keysym.scancode == SDL_SCANCODE_GRAVE)
-                s_skipConsoleChar = 1;
+            /* any other key too: this one may have typed nothing */
+            s_skipConsoleChar = ev.key.keysym.scancode == SDL_SCANCODE_GRAVE;
             if (k) {
                 Sys_QueEvent(0, SE_KEY, k, 1, 0, 0);
                 ++inputEventCount;
