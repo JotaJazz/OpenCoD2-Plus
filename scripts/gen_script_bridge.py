@@ -46,8 +46,9 @@ RENAMED = {
 }
 
 # Functions the VM needs that this engine does not have; they are written by
-# hand in src/compat/script_missing.cpp.
-PROVIDED = {'Hunk_AllocXAnimTreePrecache', 'Q_rint', 'Q_vsnprintf', 'Sys_UnimplementedFunctionInternal',
+# hand in src/compat/script_missing.cpp, but for Dvar_FindVar, which the
+# server's bridge defines.
+PROVIDED = {'Dvar_FindVar', 'Hunk_AllocXAnimTreePrecache', 'Q_rint', 'Q_vsnprintf', 'Sys_UnimplementedFunctionInternal',
             'VectorCompare'}
 
 # Exports the engine calls with the client binary's script system id first
