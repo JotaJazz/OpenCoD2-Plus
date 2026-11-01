@@ -9,7 +9,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 - CoD2rev-Plus moved 65 commits: its `netadr_t` grew with `altPort`, which the engine shares by value and inside `netchan_t`, so `altPort` now overlays `ipx[9]` and the struct stays 20 bytes. Growing the engine's was rejected: its layouts are pinned to 1.3. Its removed `Sys_BeginStreamedFile`/`Sys_StreamedRead` were an `FS_Read`; cinematics call that.
 - `cmake/lnxded64` builds the dedicated server at 64 bits from CoD2rev-Plus's sources alone. The engine's `COD2_X64` no longer compiles as C++ and stays a known gap: ADR 0010.
-- `docs/icon.svg` and `src/win32/opencod2.ico` go in both Windows executables; SDL takes the client's window icon from there. The Linux client has none.
+- `docs/icon.svg` and `src/win32/opencod2.ico` go in both MinGW executables; SDL takes the client's window icon from there. The Linux client has none.
 
 ## 2026-10-31 — the client's clock stays in step
 

@@ -13,6 +13,8 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Miles mixer crash with `snd_khz 22` | `mss32.dll` overflows an unsigned division (0xc0000095) on a negative volume delta at 2x rate | not known whether 1.3 does it too; `jugar.bat` sets `snd_khz 44`, not a code fix |
 | Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
+| `src/qcommon/qcommon.h` differs from CoD2rev-Plus 9e26dd4 | `vendor_check.py` fails on that file until the change is upstream | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; a Windows dedicated server on IPX would lose that byte |
+| Client and server movement differ by 1 ULP on some frames | none measurable | CoD2rev-Plus's `bgame` moved literals to float (`0.001f`, `0.4f`, `0.65f`), `src/PC/bgame` keeps doubles; far below `prediction_test.py`'s 0.1 miss |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |
 
 ## Accepted debt

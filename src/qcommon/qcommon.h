@@ -146,7 +146,7 @@ typedef struct
 		struct
 		{
 			byte ipxHead[9];
-			byte altPort;   // through net_altPort: replies leave by that socket; IP only, so it may share ipx[9]
+			byte altPort;   // through net_altPort: replies leave by that socket; shares ipx[9] so that netadr_t stays 20 bytes
 		};
 	};
 } netadr_t;

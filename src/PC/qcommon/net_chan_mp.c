@@ -617,6 +617,7 @@ qboolean NET_CompareBaseAdr(netadr_t a, netadr_t b)
 
 qboolean NET_GetLoopPacket(netsrc_t sock, netadr_t *net_from, msg_t *net_message)
 {
+    memset(net_from, 0, sizeof(*net_from)); /* altPort, as Sys_GetPacket */
 
     loopback_t *loop = &loopbacks[(int)sock];
     int send = loop->send;

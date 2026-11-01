@@ -9,7 +9,7 @@ CoD2rev-Plus builds 64-bit by default on Linux; a host needs no multilib and its
 
 ## Decision
 
-`cmake/lnxded64` is a separate CMake project that builds `cod2_lnxded` from CoD2rev-Plus's sources alone, with its Makefile's flags. `build_check.py` builds it for 1.3 and 1.0. The 32-bit builds and their `CMakeLists.txt` do not change.
+`cmake/lnxded64` is a separate CMake project that builds `cod2_lnxded` from CoD2rev-Plus's sources alone, with its Makefile's flags (plus `glibc_compat.h`, for the same glibc floor as the 32-bit builds). `build_check.py` builds it for 1.3 and 1.0. The 32-bit builds do not change.
 
 ## Consequences
 

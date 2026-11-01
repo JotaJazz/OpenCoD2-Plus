@@ -118,7 +118,7 @@ void Com_Error(errorParm_t code, const char *fmt, ...)
     # Formatted straight into dest, as CoD2rev-Plus's does: through the
     # 4096-byte buffer of the other variadic imports, a statusResponse or an
     # rcon reply longer than that (both up to 8192 there) was cut.
-    'Com_sprintf': '''int Com_sprintf(char *dest, size_t size, const char *format, ...)
+    'Com_sprintf': '''int Com_sprintf(char *dest, int size, const char *format, ...)
 {
     int result;
     va_list ap;
@@ -379,7 +379,7 @@ MODULES = {
 # the engine's other core and xanim: their imports come back, and the functions that core lacks are
 # written by hand in src/compat/client_server_missing.cpp. The VM's core thunks
 # (cod2_plus_script_core) already define the engine functions both call.
-CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet',
+CLIENT_SERVER_PROVIDED = {'BigShort', 'Cmd_ReplaceControlChars', 'Com_BitCheck', 'Com_BitClear', 'Com_BitSet', 'Com_sprintf',
                           'DObjSetControlRotTransIndex', 'DObjSetRotTransIndex', 'FS_HomeFileLength',
                           'FS_RotateHomeFile', 'FS_VerifyIwd', 'I_strcmpConstantTime', 'MSG_ReadString',
                           'MSG_ReadStringLine', 'RoundFloatArray', 'SetConfigString', 'SetConfigString2',

@@ -47,7 +47,7 @@ decltype(Com_Printf(std::declval<char const*>())) Com_Printf(char const* a0, ...
     return cod2c_Com_Printf("%s", buf);
 }
 
-int Com_sprintf(char *dest, size_t size, const char *format, ...)
+int Com_sprintf(char *dest, int size, const char *format, ...)
 {
     int result;
     va_list ap;

@@ -359,17 +359,6 @@ static_assert(cod2_abi_slot<char const*>() == 4, "Com_ValidXModelName: parameter
 extern "C" cod2_abi_int<decltype(Com_ValidXModelName(std::declval<char const*>())), 4> cod2c_Com_ValidXModelName(char const* a0) __asm__(COD2_SYM("Com_ValidXModelName"));
 decltype(Com_ValidXModelName(std::declval<char const*>())) Com_ValidXModelName(char const* a0) { return (decltype(Com_ValidXModelName(std::declval<char const*>())))cod2c_Com_ValidXModelName(a0); }
 
-extern "C" decltype(Com_sprintf(std::declval<char*>(), std::declval<int>(), std::declval<char const*>())) cod2c_Com_sprintf(char* a0, int a1, char const* a2, ...) __asm__(COD2_SYM("Com_sprintf"));
-decltype(Com_sprintf(std::declval<char*>(), std::declval<int>(), std::declval<char const*>())) Com_sprintf(char* a0, int a1, char const* a2, ...)
-{
-    char buf[4096];
-    va_list ap;
-    va_start(ap, a2);
-    vsnprintf(buf, sizeof(buf), a2, ap);
-    va_end(ap);
-    return cod2c_Com_sprintf(a0, a1, "%s", buf);
-}
-
 static_assert(cod2_abi_class<decltype(ConvertQuatToMat(std::declval<DObjAnimMat const*>(), std::declval<float (*) [3]>()))>() == 'v', "ConvertQuatToMat: return class differs from the engine");
 static_assert(cod2_abi_slot<DObjAnimMat const*>() == 4, "ConvertQuatToMat: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<float (*) [3]>() == 4, "ConvertQuatToMat: parameter 1 differs from the engine");
