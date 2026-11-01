@@ -429,9 +429,10 @@ void SA_API SA_NAME(AIL_3D_provider_attribute)(void *provider, const char *name,
 void SA_API SA_NAME(AIL_set_3D_distance_factor)(void *provider, float factor) { (void)provider; distFactor = factor; }
 void SA_API SA_NAME(AIL_set_3D_rolloff_factor)(void *provider, float factor) { (void)provider; rolloff = factor; }
 
-/* Each of the two sets the room and the room's wet level (0x21115930). The provider's, 0x22401300, is
-   the first again, and SND_SetRoomtype calls it after its own levels: the room's level is what stays,
-   so generic stays off, and the game's wet reaches the voices alone. */
+/* Each of the two sets the room and the room's wet level (0x21115930). The provider's, 0x22401300,
+   calls _AIL_set_digital_master_room_type@8 (import 0x2240d0d8); the hop to it from mss32's
+   AIL_set_3D_room_type is not traced, but taken. SND_SetRoomtype calls it after its own levels: the
+   room's level is what stays, so generic stays off, and the game's wet reaches the voices alone. */
 void SA_API SA_NAME(AIL_set_digital_master_room_type)(void *d, int room_type)
 {
     (void)d;

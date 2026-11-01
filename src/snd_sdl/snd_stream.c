@@ -187,8 +187,9 @@ static void fill(SndStream *s)
     store(&s->head, head + n);
 }
 
-/* shortcut: an MP3's seek is proportional to bytes and its length comes from the first frame, which
-   is right for CBR and off for VBR; a Xing header would fix the length, if a game file ever needs it. */
+/* shortcut: an MP3's seek is proportional to bytes and its length comes from the first frame's
+   bitrate, which is right for CBR and off for VBR: stock 073.mp3 by up to 51%. Miles estimates from a
+   bitrate too (0x211118dd, taken once at open, 0x21110815). A Xing header would fix the length. */
 static long long seek_to(SndStream *s, long ms)
 {
     long long frame = (long long)ms * s->rate / 1000, pos;
@@ -418,7 +419,8 @@ void SndStream_Info(SndStream *s, long *rate, long *channels, long *totalMs, lon
     if (s->seekMs >= 0) {
         frame = (long long)s->seekMs * s->rate / 1000;
     } else {
-        frame = s->baseFrame + (load(&s->dropped) ? 0 : load(&s->tail) - load(&s->drop));
+        int played = load(&s->dropped) ? 0 : (int)(load(&s->tail) - load(&s->drop));
+        frame = s->baseFrame + (played > 0 ? played : 0);
     }
     if (s->totalFrames && frame >= s->totalFrames) frame = s->loops == 1 ? s->totalFrames : frame % s->totalFrames;
     SDL_UnlockMutex(lock);
