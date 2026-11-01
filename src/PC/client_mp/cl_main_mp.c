@@ -344,6 +344,9 @@ void CL_AddDebugLine(const vec_t *start, const vec_t *end, const vec_t *color, q
 void CL_AddDebugString(const vec_t *xyz, const vec_t *color, float scale, const char *text, qboolean fromServer);
 void CL_RequestAuthorization(void);
 void CL_CheckForResend(void);
+
+/* CoD2rev-Plus's PLUS_VERSION: docs/architecture/plus-protocol.md, on its plus branch */
+#define COD2_PLUS_VERSION 121
 void CL_LocalServers_f(void);
 void CL_PlayLogo_f(void);
 qboolean CL_UpdateDirtyPings_f(int source);
@@ -1915,6 +1918,10 @@ void CL_CheckForResend(void)
     Info_SetValueForKey(info, (const char *)"protocol", va((const char *)"%i", COD2_PROTOCOL_VERSION));
     Info_SetValueForKey(info, (const char *)"challenge", va((const char *)"%i", conn->challenge));
     Info_SetValueForKey(info, (const char *)"qport", va((const char *)"%i", conn->qport));
+#if COD2_IS_PATCH_13
+    /* in this packet only: stock servers do not read it */
+    Info_SetValueForKey(info, (const char *)"plus", va((const char *)"%i", COD2_PLUS_VERSION));
+#endif
 
     infoLen = strlen(info);
     data[0] = 'c';
@@ -2247,6 +2254,11 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
             goto finish;
         }
 
+#if COD2_IS_PATCH_13
+        /* a stock server answers without a version; the format does not depend on it yet */
+        if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
+            Com_Printf((const char *)"CoD2 Plus server, version %i\n", COD2_PLUS_VERSION);
+#endif
         Netchan_Setup(NS_CLIENT1, &conn->netchan, from, *(int *)imp_g_qport);
         conn->state = CA_CONNECTED;
         conn->lastPacketSentTime = cls.realtime;

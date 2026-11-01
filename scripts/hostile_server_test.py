@@ -189,6 +189,8 @@ class FakeServer:
         self.addr = None
         self.sequence = 0
         self.connected = False
+        self.connect_reply = b'connectResponse'
+        self.userinfo = b''
 
     def close(self):
         self.sock.close()
@@ -203,7 +205,8 @@ class FakeServer:
         if data.startswith(OOB + b'getchallenge'):
             self.sock.sendto(OOB + b'challengeResponse %d' % CHALLENGE, addr)
         elif data.startswith(OOB + b'connect'):
-            self.sock.sendto(OOB + b'connectResponse', addr)
+            self.userinfo = data
+            self.sock.sendto(OOB + self.connect_reply, addr)
             self.connected = True
         return self.connected
 
@@ -238,13 +241,14 @@ class Case:
     that must not exist, relative to the client's main folder's parent. forbid:
     text the log must not hold. args: the client's. hold: seconds to watch it
     after that. silent: no more snapshots after that. limit: (text, the most times
-    the log may hold it)."""
+    the log may hold it). connect_reply: the server's answer to connect."""
 
     def __init__(self, name, stage='active', strings=None, raw_index=None, after=None, expect=None, absent=(),
-                 forbid=None, args=(), hold=12, silent=False, limit=None):
+                 forbid=None, args=(), hold=12, silent=False, limit=None, connect_reply=None):
         self.name, self.stage, self.strings, self.raw_index = name, stage, strings or {}, raw_index
         self.after, self.expect, self.absent, self.forbid = after, expect, absent, forbid
         self.args, self.hold, self.silent, self.limit = list(args), hold, silent, limit
+        self.connect_reply = connect_reply
 
 
 def command(text):
@@ -324,6 +328,9 @@ def make_cases(strings):
         # not hostile: a mod's physics, which prediction needs
         Case('codinfo_dvars_apply', strings={0x8e: 'jump_height', 0xee: '60'},
              forbid='protected cvar'),
+        # not hostile: a Plus server's answer, and one claiming another version
+        Case('plus_server', connect_reply=b'connectResponse 121', expect='CoD2 Plus server'),
+        Case('plus_other_version', connect_reply=b'connectResponse 999', forbid='CoD2 Plus server'),
         Case('huffman_bomb', after=huffman_bomb),
         Case('disconnect_percent', after=command('w "%s%s%s%s%n"')),
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),
@@ -369,6 +376,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
     """'' when the case holds, otherwise what went wrong."""
     strings = {**base, **case.strings}
     srv = FakeServer()
+    if case.connect_reply:
+        srv.connect_reply = case.connect_reply
     httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), AnyFile)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     with tempfile.TemporaryDirectory(prefix='cod2_hostile_') as home:
@@ -385,6 +394,8 @@ def run_case(case, base, binary, game_dir, timeout=120):
             while not srv.poll():
                 if time.time() > end or cl.poll() is not None:
                     return f'no connection (exit code {cl.poll()})'
+            if b'\\plus\\121' not in srv.userinfo:
+                return f'no Plus version in the connect packet: {srv.userinfo[:80]!r}'
             srv.send(gamestate(strings, raw_index=case.raw_index))
             if case.stage == 'active':
                 end = time.time() + timeout

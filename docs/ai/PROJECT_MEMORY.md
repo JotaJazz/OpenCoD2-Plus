@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — the client speaks the Plus handshake
+
+- CoD2rev-Plus's `plus` branch refuses a 1.3 client without the Plus version, so the connect packet carries `plus 121`, in that packet only, and a `connectResponse 121` is recognised. A bare answer stays a stock server; the format does not depend on it yet, so nothing is stored. Joined CoD2rev-Plus `0cf6e01` at 20 and 40 Hz.
+- The vendored code stays on `642bc91`: the handshake is client code, and the `plus` branch was still moving. A client's local game does not pass through the check.
+- At 40 Hz the client needs no change: `g_forceSnaps` and `g_forceRate` act on the server, 0 misses against 11 at 20 Hz, and its clock settles tighter.
+
 ## 2026-11-01 — final review of plus before main
 
 - `r_gfxApi vulkan` died at every start on a device without Vulkan 1.3, since DXVK throws out of `Direct3DCreate9` and the menu saves the choice. The client now asks Vulkan first, and falls back when the layer cannot make a device.
