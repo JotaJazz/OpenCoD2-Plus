@@ -48,4 +48,12 @@ long SndWav_Convert(void *dest, long size, unsigned rate, unsigned format, const
 /* IMA ADPCM to interleaved PCM16; returns the frames written (at most maxFrames). */
 int SndAdpcm_Decode(const unsigned char *src, int srcLen, int block, int channels, short *dst, int maxFrames);
 
+/* pos is in listener space (X right, Y up, Z ahead; the listener never moves or turns). Gains for
+   SndVoice left/right. distFactor is unused: in Miles it only scales Doppler. */
+void SndSpatial_Levels(const float pos[3], float minDist, float maxDist,
+                       float rolloff, float distFactor,
+                       float volume, float *left, float *right);
+/* AIL_set_sample_volume_pan: pan 0 = left, 1 = right. */
+void SndSpatial_VolumePan(float volume, float pan, float *left, float *right);
+
 #endif

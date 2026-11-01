@@ -16,6 +16,23 @@ static SndVoice voice(const void *data, unsigned len, int bits, int ch, int rate
     return v;
 }
 
+#define NEAR(a, b) (fabs((a) - (b)) < 2e-6)
+
+static int levels(float x, float y, float z, float minD, float maxD, float rolloff, float volume, float wantL, float wantR)
+{
+    float pos[3], l = -1, r = -1;
+    pos[0] = x; pos[1] = y; pos[2] = z;
+    SndSpatial_Levels(pos, minD, maxD, rolloff, 0.0254f, volume, &l, &r);
+    return NEAR(l, wantL) && NEAR(r, wantR);
+}
+
+static int vol_pan(float volume, float pan, float wantL, float wantR)
+{
+    float l = -1, r = -1;
+    SndSpatial_VolumePan(volume, pan, &l, &r);
+    return NEAR(l, wantL) && NEAR(r, wantR);
+}
+
 static void put16(unsigned char *p, unsigned v) { p[0] = v & 255; p[1] = v >> 8 & 255; }
 static void put32(unsigned char *p, unsigned long v) { put16(p, v & 65535); put16(p + 2, v >> 16); }
 
@@ -198,5 +215,28 @@ int main(void)
         CHECK("wav_mp3_rejected", n && SndWav_Info(f, 14, &mi) == 0);
         (void)mo;
     }
+    /* Expected values worked out by hand from msssoft.m3d 0x22401000 and mss32.dll 0x2112a930:
+       gain = volume^(5/3), pan = acos(x/dist)/pi, left = pan*gain, right = (1-pan)*gain. */
+    CHECK("spatial_center", levels(0, 0, 10, 1, 100, 0, 1, .5f, .5f)
+          && levels(0, 0, 10, 1, 100, 0, .5f, .15749013f, .15749013f));   /* .5^(5/3) = .31498026 */
+    CHECK("spatial_full_left", levels(-10, 0, 0, 1, 100, 0, 1, 1, 0)
+          && levels(10, 0, 0, 1, 100, 0, 1, 0, 1)
+          && levels(-10, 0, 10, 1, 100, 0, 1, .75f, .25f)                 /* 135 degrees from +X */
+          && levels(0, 10, 0, 1, 100, 0, 1, .5f, .5f));                   /* above: X = 0 */
+    CHECK("spatial_behind", levels(0, 0, -10, 1, 100, 0, 1, .375f, .375f)  /* * .75 */
+          && levels(-10, 0, -10, 1, 100, 0, 1, .5625f, .1875f));
+    CHECK("spatial_inside_min", levels(0, 0, 5, 10, 100, 1, 1, .5f, .5f));
+    CHECK("spatial_beyond_max", levels(0, 0, 100.5f, 1, 100, 0, 1, 0, 0)
+          && levels(0, 0, 100, 1, 100, 0, 1, .5f, .5f)                    /* at max it still sounds */
+          && levels(0, 0, 50, 100, 1, 0, 1, .5f, .5f));                   /* min > max are swapped */
+    CHECK("spatial_rolloff", levels(0, 0, 40, 10, 100, 1, 1, .125f, .125f)     /* 10/(10+1*30) */
+          && levels(0, 0, 40, 10, 100, .5f, 1, .2f, .2f)                       /* 10/(10+.5*30) */
+          && levels(0, 0, 40, 10, 100, 0, 1, .5f, .5f)                         /* the game's rolloff */
+          && levels(0, 0, 1, 0, 100, 1, 1, .00005f, .00005f));                 /* min clamps to 1e-4 */
+    CHECK("spatial_zero_distance", levels(0, 0, 0, 0, 0, 1, 1, .5f, .5f)
+          && levels(0, 0, -.00001f, 1, 100, 0, 1, .375f, .375f));         /* centered, yet still behind */
+    CHECK("volume_pan_extremes", vol_pan(1, 0, 1, 0) && vol_pan(1, 1, 0, 1) && vol_pan(0, .5f, 0, 0)
+          && vol_pan(1, .5f, .8122524f, .8122524f)                        /* .5^.3 */
+          && vol_pan(.5f, 0, .31498026f, 0));
     return failed;
 }
