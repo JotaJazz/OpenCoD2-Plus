@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — Plus snapshots from the client's own server
+
+- A local game with moving players died on `Illegible server message 3`: the client announces `plus 122` to its own server, which marks the snapshot as Plus, but it writes through `src/PC/qcommon/msg_mp.c`, which had only the reader. The engine's writer now has the offsets too, which also covers a remote Plus client on a listen server.
+- The reader now clears `msg_plusSnapshotTime` after each snapshot: client and local server share it, and a stale value would have written a gamestate with offsets. `sound_test.py`'s `callback_cost` found this, as the only local case with moving bots.
+- The VM's `sv_fps` reads `Dvar_FindVar` from the server's bridge, so the script module takes it as provided.
+
 ## 2026-11-01 — reverb: a bus of our own, and 1.3's conditions
 
 - `src/snd_sdl/snd_reverb.c` is a Freeverb-style bus with the public EAX presets, the one thing that only resembles Miles. Its input is at half of one over the combs, as the tail ran about 8 dB hot; underwater is doubled to keep `shock/default.shock`, the only stock multiplayer case, at the level it had. No value of Miles' table is copied but generic's zero. Tuning by ear stays open.

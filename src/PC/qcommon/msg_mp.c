@@ -1606,6 +1606,22 @@ static void __attribute_regparm__(3)
     }
 
     MSG_WriteBit1_core(msg);
+
+    /* The client's own server writes through here, not through CoD2rev-Plus's
+     * msg_mp.cpp, and a Plus client reads this bit: the local client, or a
+     * remote one on a listen server. */
+    if (msg_plusSnapshotTime && field == entityStateFields) {
+        unsigned offset = Plus_TimeOffset(msg_plusSnapshotTime, *toF);
+
+        if (offset < PLUS_TIME_OFFSET_LIMIT) {
+            MSG_WriteBit1_core(msg);
+            MSG_WriteBits(msg, offset, PLUS_TIME_OFFSET_BITS);
+            return;
+        }
+
+        MSG_WriteBit0_core(msg); /* too far: as stock */
+    }
+
     bits = field->bits;
 
     if (bits == 0) {
