@@ -670,6 +670,11 @@ file(GLOB_RECURSE COD2_MAC_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "$
 file(GLOB_RECURSE COD2_STUBS_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.c")
 file(GLOB         COD2_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(ALL_C ${COD2_PC_C} ${COD2_MAC_C} ${COD2_STUBS_C} ${COD2_ROOT_C})
+# Sound: the clients have the SDL engine, and the dedicated server the Mac port's stubs of Miles.
+# src/stubs/audio_stubs.c stays in both: the voice code (groupvoice, mac_record_dsound.c) links to it.
+file(GLOB COD2_SND_DED_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/Mac/Tools/MacMSS*.c")
+list(REMOVE_ITEM ALL_C ${COD2_SND_DED_C})
+file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
 file(GLOB_RECURSE COD2_PC_ASM    CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/PC/*.S")
 file(GLOB_RECURSE COD2_STUBS_ASM CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.S")
 file(GLOB         COD2_ROOT_ASM  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.S")
@@ -719,7 +724,10 @@ if(COD2_PLUS_SCRIPT)
 endif()
 cod2_cxx_sources(ALL_C ${ALL_C})
 cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
+cod2_cxx_sources(COD2_SND_DED_C ${COD2_SND_DED_C})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
+add_library(cod2_snd_ded OBJECT ${COD2_SND_DED_C})
+add_library(cod2_snd_sdl OBJECT ${COD2_SND_SDL_C})
 set(COD2_CLIENT_SERVER_OBJS "")
 set(COD2_DED_SERVER_OBJS "")
 if(COD2_PLUS_SCRIPT)
@@ -757,11 +765,11 @@ endif()
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 
-add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_CLIENT_SERVER_OBJS} ${COD2_DED_GUARDED})
+add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> $<TARGET_OBJECTS:cod2_snd_sdl> ${COD2_SCRIPT_OBJS} ${COD2_CLIENT_SERVER_OBJS} ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> $<TARGET_OBJECTS:cod2_snd_ded> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
 target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
   $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)

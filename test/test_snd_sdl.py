@@ -11,6 +11,9 @@ NAMES = ['mix_silence', 'mix_pcm16_unity', 'mix_pcm8_unsigned', 'mix_stereo_sour
          'spatial_rolloff', 'spatial_zero_distance', 'volume_pan_extremes']
 STREAM_NAMES = ['stream_wav_plays', 'stream_mp3_plays', 'stream_loop', 'stream_seek_ms', 'stream_underrun_silence',
                 'stream_close_while_reading', 'stream_garbage', 'stream_open_fails']
+AIL_NAMES = ['ail_provider', 'ail_wav_length', 'ail_no_device', 'ail_status', 'ail_hunk_freed', 'ail_positions', 'ail_adpcm',
+             'ail_3d', 'ail_device_gone', 'ail_raw', 'ail_pitch_sample', 'ail_pitch_stream_2x', 'ail_pitch_stream_11k',
+             'ail_gain_cap', 'ail_53_voices', 'ail_stream_life']
 SDL32 = glob.glob('/usr/lib/i386-linux-gnu/libSDL2.so')
 SDL64 = glob.glob('/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0')
 
@@ -24,9 +27,10 @@ class SndSdl(unittest.TestCase):
         names, stream = NAMES, []
         with tempfile.TemporaryDirectory() as tmp:
             if sdl:
-                names = NAMES + STREAM_NAMES
-                stream = ['-DSND_TEST_STREAMS', '-I', os.path.join(ROOT, 'test'), '-I', tmp,
-                          os.path.join(ROOT, 'src', 'snd_sdl', 'snd_stream.c'), *sdl]
+                names = NAMES + STREAM_NAMES + AIL_NAMES
+                stream = ['-DSND_TEST_STREAMS', '-DSND_TEST_AIL', '-I', os.path.join(ROOT, 'test'), '-I', tmp,
+                          os.path.join(ROOT, 'src', 'snd_sdl', 'snd_stream.c'),
+                          os.path.join(ROOT, 'src', 'snd_sdl', 'snd_ail.c'), *sdl]
                 # Debian's 64-bit SDL_config.h comes with the 64-bit dev package; only the 32-bit one may be here
                 if not os.path.exists('/usr/include/x86_64-linux-gnu/SDL2') and '-m32' not in flags:
                     os.mkdir(os.path.join(tmp, 'SDL2'))
@@ -39,10 +43,10 @@ class SndSdl(unittest.TestCase):
                             os.path.join(ROOT, 'src', 'snd_sdl', 'snd_mix.c'), os.path.join(ROOT, 'src', 'snd_sdl', 'snd_wav.c'),
                             os.path.join(ROOT, 'src', 'snd_sdl', 'snd_spatial.c'), *stream, '-o', exe, '-lm'], check=True)
             proc = subprocess.run([*prefix, exe], capture_output=True, text=True, timeout=300,
-                                  env={**os.environ, **(env or {})})
+                                  env={**os.environ, 'SND_TEST_DIR': tmp, **(env or {})})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertEqual(proc.stderr, '')
-        lines = dict(l.split() for l in proc.stdout.splitlines())
+        lines = dict(l.split() for l in proc.stdout.splitlines() if not l.startswith('#'))
         for name in names:
             self.assertEqual(lines.get(name), 'PASS', name)
 

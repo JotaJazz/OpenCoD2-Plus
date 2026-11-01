@@ -19,6 +19,10 @@ top of it.
 | Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
 | x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 
+The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
+`src/stubs`) links only into `cod2_linux` and `cod2_linux_vk`. MP3 comes from
+`src/snd_sdl/minimp3.h`, one unchanged header of `lieff/minimp3` `ea99364` (CC0).
+
 ## build_check.py
 
 `python3 scripts/build_check.py [variant ...|all]` configures and builds each

@@ -165,6 +165,30 @@ reaches their fields by name, never by the binary's raw offsets (corpse info,
 media, `fxs`, `bgs.clientinfo` were all found reading 0x1000–0x1c180 bytes
 short).
 
+## Sound
+
+`snd_driver.c` is 1.3's driver and talks to Miles' `AIL_*` interface. On Linux
+those calls land in `src/snd_sdl/` ([ADR 0012](adr/0012-sound-engine-behind-the-ail-calls.md));
+on Windows, in the game's `mss32.dll`.
+
+| File | Does |
+|---|---|
+| `snd_ail.c` | the `AIL_*` functions, the SDL device, the callback, `snd_stats` |
+| `snd_mix.c` | 54 voices to PCM16: resampling, saturation |
+| `snd_wav.c` | WAV and IMA ADPCM, downsampling at load |
+| `snd_spatial.c` | the volume, pan and distance law of `msssoft.m3d` |
+| `snd_stream.c` | WAV and MP3 streams, one reader thread, a second of ring each |
+
+Voices: 8 2D, 32 3D, 13 streams and raw, the handles being pointers into a
+table of `snd_ail.c`. A stream or raw voice is fed in blocks of 256 frames into
+a small window the mixer treats as a sample. `AIL_end_sample` leaves the voice
+with no pointer, so the hunk can go. Streams must be closed by
+`SND_StopSounds(8)`: `FS_Shutdown` then closes their files under the reader,
+which is why `snd_driver.c` closes a stream it does not start. `snd_stats`
+prints the worst and last callback and the underruns.
+`SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE=out.raw` writes what the device would
+get, which is what `scripts/sound_test.py` measures.
+
 ## Windows client
 
 Draws with real Direct3D 9 by default ([renderer.md](renderer.md)); on Windows

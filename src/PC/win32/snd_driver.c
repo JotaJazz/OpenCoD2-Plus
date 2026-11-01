@@ -123,6 +123,7 @@ extern int stricmp(const char *a, const char *b);
 
 extern const dvar_t *mss_3d_provider;
 extern const dvar_t *mss_q3fs;
+long sndWavFileLen;     /* snd_ail.c: FS_ReadFile's length, which AIL_WAV_info's signature does not carry */
 static struct MssLocal milesGlob;
 
 /* The 2D channels are chaninfo 45-52; their Miles samples are
@@ -992,7 +993,8 @@ void SND_LoadSoundFile(SoundFile *soundFile)
     }
 
     snprintf(realname, sizeof(realname), "sound/%s", soundFile->soundName);
-    if (FS_ReadFile(realname, &buffer) < 0) {
+    sndWavFileLen = FS_ReadFile(realname, &buffer);
+    if (sndWavFileLen < 0) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' not found\n", realname);
         soundFile->fileMem = NULL;
         return;
@@ -1402,6 +1404,9 @@ got_handle:
         if (total_msec == 0) {
             Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
         }
+        /* no channel owns it, so nothing would close it before FS_Shutdown closes its file under the reader */
+        AIL_close_stream(handle);
+        milesGlob.handle_stream[streamIdx] = NULL;
         return 0;
     }
 

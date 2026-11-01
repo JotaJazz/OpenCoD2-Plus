@@ -19,6 +19,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0009](0009-linux-client-on-dxvk.md) | Linux client on DXVK native | Accepted | 2026-10-22 |
 | [0011](0011-graphics-apis-behind-direct3d-9.md) | Graphics APIs behind Direct3D 9 | Accepted | 2026-10-31 |
 | [0010](0010-64-bit-dedicated-server-without-the-engine.md) | 64-bit dedicated server without the engine | Accepted | 2026-10-31 |
+| [0012](0012-sound-engine-behind-the-ail-calls.md) | Sound engine behind the AIL calls | Accepted | 2026-11-01 |
 
 ## Template
 

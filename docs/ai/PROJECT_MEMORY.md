@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — sound on Linux through SDL2
+
+- The Linux client's `AIL_*` calls land in our own engine, `src/snd_sdl/` ([ADR 0012](../architecture/adr/0012-sound-engine-behind-the-ail-calls.md)); `scripts/sound_test.py` reads what reaches SDL's disk driver.
+- `snd_driver.c` changed in two places: it hands over the file's length, and it closes a stream it does not start, which would have outlived `FS_Shutdown`. Miles' MP3 length is an estimate from the bitrate too, so ours stays.
+- The provider refuses stereo and ADPCM on 3D channels, as read from `msssoft.m3d`; reverb is silent until its bus exists.
+
 ## 2026-11-01 — Plus snapshots, version 122
 
 - CoD2rev-Plus sends `pos.trTime` as an offset from the snapshot's time, in a message of its own, `svc_snapshotPlus` (8), so the client reads it with no state from the handshake: demos carry the format, and neither stock servers nor the local game, which has its own server code, change. The version is 122.

@@ -33,7 +33,7 @@ typedef struct SndSoundInfo {
 
 typedef struct SndMixInfo {
     SndSoundInfo Info;
-    unsigned long adpcm[8];        /* ADPCMDATA, unused here */
+    unsigned long adpcm[10];       /* ADPCMDATA, unused here */
     unsigned short moresamples[16];
     unsigned long src_fract;
     long left_val, right_val;

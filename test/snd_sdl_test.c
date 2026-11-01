@@ -441,6 +441,539 @@ static void stream_tests(void)
 }
 #endif
 
+#ifdef SND_TEST_AIL
+#include <stdarg.h>
+/* snd_ail.c's calls, with snd_driver.c's prototypes, and what it needs from the engine */
+int AIL_startup(int flags);
+void AIL_shutdown(void);
+const char *AIL_last_error(void);
+void *AIL_open_digital_driver(int freq, int bits, int channels, int flags);
+int AIL_enumerate_3D_providers(void *next, void **handle, const char **name);
+int AIL_open_3D_provider(void *handle);
+void AIL_3D_provider_attribute(void *provider, const char *name, void *val);
+void AIL_set_3D_rolloff_factor(void *provider, float factor);
+void AIL_set_file_callbacks(void *open_cb, void *close_cb, void *seek_cb, void *read_cb);
+int AIL_WAV_info(void *data, void *info);
+void *AIL_allocate_sample_handle(void *dig);
+void AIL_release_sample_handle(void *S);
+void AIL_init_sample(void *S);
+void AIL_set_sample_type(void *S, int format, int flags);
+void AIL_set_sample_address(void *S, void *ptr, int len);
+void AIL_set_sample_adpcm_block_size(void *S, int blocksize);
+void AIL_set_sample_loop_count(void *S, int count);
+void AIL_set_sample_playback_rate(void *S, int rate);
+int AIL_sample_playback_rate(void *S);
+void AIL_set_sample_volume_levels(void *S, float left, float right);
+void AIL_sample_volume_levels(void *S, float *left, float *right);
+void AIL_sample_volume_pan(void *S, float *volume, float *pan);
+void AIL_resume_sample(void *S);
+void AIL_stop_sample(void *S);
+void AIL_end_sample(void *S);
+unsigned long AIL_sample_status(void *S);
+void AIL_sample_ms_position(void *S, long *total, long *current);
+void AIL_set_sample_ms_position(void *S, int ms);
+unsigned long AIL_sample_position(void *S);
+int AIL_minimum_sample_buffer_size(void *dig, int rate, int format);
+int AIL_sample_buffer_ready(void *S);
+void AIL_load_sample_buffer(void *S, int buf_num, void *buffer, int size);
+void *AIL_allocate_3D_sample_handle(void *provider);
+void AIL_set_3D_sample_info(void *S, void *info);
+void AIL_set_3D_sample_volume(void *S, float volume);
+void AIL_set_3D_sample_distances(void *S, float max_dist, float min_dist);
+void AIL_set_3D_position(void *S, float x, float y, float z);
+void AIL_set_3D_sample_loop_count(void *S, int count);
+void AIL_set_3D_sample_offset(void *S, int offset);
+unsigned long AIL_3D_sample_offset(void *S);
+int AIL_3D_sample_length(void *S);
+void AIL_resume_3D_sample(void *S);
+void AIL_end_3D_sample(void *S);
+unsigned long AIL_3D_sample_status(void *S);
+void *AIL_open_stream(void *dig, const char *filename, int flags);
+void AIL_close_stream(void *S);
+void AIL_pause_stream(void *S, long onoff);
+long AIL_stream_status(void *S);
+void AIL_set_stream_loop_count(void *S, int count);
+void AIL_set_stream_ms_position(void *S, int ms);
+void AIL_stream_ms_position(void *S, long *total, long *current);
+void AIL_stream_info(void *S, int *datarate, int *sndtype, int *length, int *memory);
+int AIL_stream_playback_rate(void *S);
+void AIL_set_stream_playback_rate(void *S, int rate);
+void AIL_set_stream_volume_levels(void *S, float left, float right);
+int AIL_is_3D_stream(void *S);
+
+long sndWavFileLen;
+static void (*statsCmd)(void);
+static char printed[256];
+void Com_Printf(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(printed, sizeof printed, fmt, ap);
+    va_end(ap);
+}
+void Cmd_AddCommand(const char *name, void (*f)(void)) { if (!strcmp(name, "snd_stats")) statsCmd = f; }
+void Cmd_RemoveCommand(const char *name) { if (!strcmp(name, "snd_stats")) statsCmd = NULL; }
+
+static char rawPath[512];
+
+/* dummy is a device with no output; disk writes it to rawPath, quicker than real time */
+static void *device_open(const char *driver, int rate)
+{
+    setenv("SDL_AUDIODRIVER", driver, 1);
+    setenv("SDL_DISKAUDIOFILE", rawPath, 1);
+    setenv("SDL_DISKAUDIODELAY", "1", 1);
+    return AIL_open_digital_driver(rate, 2, 2, 0);
+}
+
+static long raw_read(short *out, long maxFrames)
+{
+    FILE *f = fopen(rawPath, "rb");
+    long n = f ? (long)fread(out, 4, (size_t)maxFrames, f) : 0;
+    if (f) fclose(f);
+    return n;
+}
+
+/* Frames per cycle of a tone on the left channel, over the part that sounds. */
+static double period(const short *p, long frames)
+{
+    long i, first = -1, last = -1, n = 0;
+    for (i = 1; i < frames; i++)
+        if ((p[(i - 1) * 2] < 0) != (p[i * 2] < 0) && (abs(p[i * 2]) > 0 || abs(p[(i - 1) * 2]) > 0)) {
+            if (first < 0) first = i;
+            last = i;
+            n++;
+        }
+    return n > 1 ? 2.0 * (double)(last - first) / (double)(n - 1) : 0;
+}
+
+static int status_reaches(void *S, unsigned long want, int ms)
+{
+    Uint32 start = SDL_GetTicks();
+    while (SDL_GetTicks() - start < (Uint32)ms) {
+        if (AIL_sample_status(S) == want) return 1;
+        SDL_Delay(1);
+    }
+    return 0;
+}
+
+static int stream_reaches(void *S, long want, int ms)
+{
+    Uint32 start = SDL_GetTicks();
+    while (SDL_GetTicks() - start < (Uint32)ms) {
+        if (AIL_stream_status(S) == want) return 1;
+        SDL_Delay(1);
+    }
+    return 0;
+}
+
+static void *mono16(void *dig, void *data, int bytes, int rate)
+{
+    void *s = AIL_allocate_sample_handle(dig);
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_address(s, data, bytes);
+    AIL_set_sample_playback_rate(s, rate);
+    return s;
+}
+
+static void *ail_stream(void *dig, int index, const void *data, long len)
+{
+    char name[8];
+    files[index].data = data; files[index].len = len; files[index].pos = 0;
+    sprintf(name, "%d", index);
+    return AIL_open_stream(dig, name, 0);
+}
+
+static void silent(void *user, int category, SDL_LogPriority priority, const char *text) { (void)user; (void)category; (void)priority; (void)text; }
+static void set_callbacks(void) { AIL_set_file_callbacks((void *)mem_open, (void *)mem_close, (void *)mem_seek, (void *)mem_read); }
+
+static void ail_tests(void)
+{
+    static short tone[44100], dc[4096], out[1 << 20], ramp[24576];
+    static unsigned char wav[200000];
+    static unsigned char ima[256];
+    void *dig, *provider = NULL, *handle = NULL, *s, *t;
+    void *handles[53];
+    const char *name = NULL;
+    SndMixInfo mi;
+    SndSoundInfo info;
+    float a, b;
+    long total, cur, len, n;
+    int i, k, ok, value;
+
+    if (getenv("SND_TEST_DIR")) snprintf(rawPath, sizeof rawPath, "%s/out.raw", getenv("SND_TEST_DIR"));
+    for (i = 0; i < 44100; i++) tone[i] = (short)(16000 * sin(2 * 3.14159265358979 * 1000 * i / 44100));
+    for (i = 0; i < 4096; i++) dc[i] = 32767;
+    set_callbacks();
+    SDL_LogSetOutputFunction(silent, NULL);   /* the disk driver's warning */
+
+    ok = AIL_startup(0x75) == 1;
+    ok = ok && AIL_enumerate_3D_providers(&provider, &handle, &name) == 1 && handle && AIL_open_3D_provider(handle) == 0;
+    ok = ok && !strcmp(name, "Miles Fast 2D Positional Audio");
+    ok = ok && AIL_enumerate_3D_providers(&provider, &handle, &name) == 0;
+    value = 0;
+    AIL_3D_provider_attribute(handle, "Maximum supported samples", &value);
+    CHECK("ail_provider", ok && value == 32 && AIL_is_3D_stream(handle) == 0);
+
+    n = mkwav(wav, 1, 1, 22050, 16, 2, tone, 8, 0);
+    sndWavFileLen = n;
+    ok = AIL_WAV_info(wav, &mi) == 1 && mi.Info.samples == 4;
+    sndWavFileLen = n - 1;   /* the length that counts is the file's, not what the header says */
+    CHECK("ail_wav_length", ok && AIL_WAV_info(wav, &mi) == 0);
+
+    AIL_shutdown();          /* snd_driver.c does this after a failed start too */
+    dig = device_open("nonexistent", 44100);
+    ok = !dig && AIL_last_error()[0] && !SDL_WasInit(SDL_INIT_AUDIO);
+    AIL_shutdown();
+    CHECK("ail_no_device", ok);
+
+    /* Nothing here may crash: a stream channel keeps calling on a closed handle */
+    AIL_close_stream(NULL); AIL_end_sample(NULL); AIL_resume_sample(NULL); AIL_set_stream_volume_levels(NULL, 1, 1);
+    AIL_set_sample_volume_levels(NULL, 1, 1); AIL_pause_stream(NULL, 1); AIL_stream_ms_position(NULL, &total, NULL);
+    AIL_set_3D_position(NULL, 0, 0, 0); AIL_load_sample_buffer(NULL, 0, NULL, 0); AIL_release_sample_handle(NULL);
+
+    dig = device_open("dummy", 44100);
+    ok = dig != NULL && statsCmd != NULL;
+    s = mono16(dig, tone, 2000, 44100);
+    ok = ok && AIL_sample_status(s) == SND_SMP_DONE;
+    AIL_resume_sample(s);
+    ok = ok && status_reaches(s, SND_SMP_DONE, 1000);    /* 1000 frames, once */
+    AIL_init_sample(s);
+    AIL_resume_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_DONE;     /* no address: 0x2112b77c */
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_address(s, tone, 2000);
+    AIL_set_sample_loop_count(s, 0);
+    AIL_resume_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_PLAYING;
+    AIL_stop_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_STOPPED;
+    AIL_resume_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_PLAYING;
+    AIL_end_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_DONE;
+    AIL_resume_sample(s);
+    ok = ok && AIL_sample_status(s) == SND_SMP_DONE;     /* ended is ended: its memory may be gone */
+    CHECK("ail_status", ok);
+
+    /* A hunk freed right after the end: ASan reads over the callback's shoulder */
+    {
+        short *hunk = malloc(sizeof tone);
+        void *raw;
+        memcpy(hunk, tone, sizeof tone);
+        AIL_init_sample(s);
+        AIL_set_sample_type(s, 1, 0);
+        AIL_set_sample_address(s, hunk, sizeof tone);
+        AIL_set_sample_loop_count(s, 0);
+        AIL_resume_sample(s);
+        t = AIL_allocate_3D_sample_handle(handle);
+        memset(&info, 0, sizeof info);
+        info.format = 1; info.data_ptr = hunk; info.data_len = sizeof tone; info.rate = 44100; info.bits = 16; info.channels = 1;
+        AIL_set_3D_sample_info(t, &info);
+        AIL_set_3D_sample_loop_count(t, 0);
+        AIL_resume_3D_sample(t);
+        AIL_load_sample_buffer(raw = AIL_allocate_sample_handle(dig), 0, hunk, sizeof tone);
+        AIL_set_sample_playback_rate(raw, 100);
+        SDL_Delay(60);
+        ok = AIL_sample_status(s) == SND_SMP_PLAYING && AIL_3D_sample_status(t) == SND_SMP_PLAYING;
+        AIL_end_sample(s);
+        AIL_end_3D_sample(t);
+        AIL_end_sample(raw);
+        AIL_release_sample_handle(raw);
+        free(hunk);
+        SDL_Delay(60);
+        CHECK("ail_hunk_freed", ok);
+    }
+
+    AIL_init_sample(s);
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_address(s, tone, 44100 * 2);
+    AIL_set_sample_playback_rate(s, 22050);
+    AIL_sample_ms_position(s, &total, &cur);
+    ok = total == 2000 && cur == 0;
+    AIL_set_sample_playback_rate(s, 44100);
+    AIL_sample_ms_position(s, &total, NULL);
+    ok = ok && total == 1000;
+    AIL_set_sample_ms_position(s, 500);
+    AIL_sample_ms_position(s, NULL, &cur);
+    ok = ok && cur == 500 && AIL_sample_position(s) == 22050 * 2;
+    AIL_set_sample_ms_position(s, -7);                   /* the mixer casts pos to unsigned */
+    AIL_sample_ms_position(s, NULL, &cur);
+    ok = ok && cur == 0;
+    AIL_set_sample_ms_position(s, 0x7fffffff);
+    AIL_sample_ms_position(s, NULL, &cur);
+    ok = ok && cur == 1000;
+    AIL_set_sample_loop_count(s, -3);
+    AIL_resume_sample(s);
+    SDL_Delay(30);
+    AIL_end_sample(s);
+    AIL_init_sample(s);
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_address(s, tone, 2000);
+    AIL_set_sample_playback_rate(s, 0);                  /* no division by it */
+    AIL_sample_ms_position(s, &total, &cur);
+    ok = ok && total == 0 && cur == 0;
+    AIL_set_sample_ms_position(s, 100);
+    AIL_set_sample_playback_rate(s, 0x7fffffff);         /* one step eats it all */
+    AIL_resume_sample(s);
+    CHECK("ail_positions", ok && status_reaches(s, SND_SMP_DONE, 1000));
+
+    /* ADPCM: the address comes before the block size, and its PCM is ours to free */
+    memset(ima, 0, sizeof ima);
+    AIL_init_sample(s);
+    AIL_set_sample_type(s, 5, 0);
+    AIL_set_sample_address(s, ima, 256);
+    AIL_set_sample_adpcm_block_size(s, 256);
+    AIL_set_sample_playback_rate(s, 505);                /* one block: 505 frames */
+    AIL_sample_ms_position(s, &total, NULL);
+    ok = total == 1000;
+    AIL_set_sample_adpcm_block_size(s, 0);               /* from a hostile file */
+    AIL_sample_ms_position(s, &total, NULL);
+    AIL_resume_sample(s);
+    ok = ok && total == 0 && AIL_sample_status(s) == SND_SMP_DONE;
+    AIL_set_sample_adpcm_block_size(s, 6);               /* below 2 headers it is no block */
+    AIL_set_sample_type(s, 7, 0);
+    AIL_set_sample_adpcm_block_size(s, 6);
+    AIL_sample_ms_position(s, &total, NULL);
+    ok = ok && total == 0;
+    AIL_set_sample_adpcm_block_size(s, 12);              /* not a whole number of groups */
+    AIL_resume_sample(s);
+    CHECK("ail_adpcm", ok && AIL_sample_status(s) == SND_SMP_DONE);
+
+    /* 3D as the provider: mono PCM only; left is -X; levels above 1 stay as set, and are capped when mixed */
+    AIL_set_3D_rolloff_factor(handle, 0);
+    t = AIL_allocate_3D_sample_handle(handle);
+    memset(&info, 0, sizeof info);
+    info.format = 1; info.data_ptr = tone; info.data_len = 2000; info.rate = 44100; info.bits = 16; info.channels = 2;
+    AIL_set_3D_sample_info(t, &info);
+    AIL_resume_3D_sample(t);
+    ok = AIL_3D_sample_status(t) == SND_SMP_DONE;
+    info.channels = 1; info.format = 0x11;
+    AIL_set_3D_sample_info(t, &info);
+    AIL_resume_3D_sample(t);
+    ok = ok && AIL_3D_sample_status(t) == SND_SMP_DONE;
+    info.format = 1;
+    AIL_set_3D_sample_info(t, &info);
+    ok = ok && AIL_3D_sample_length(t) == 2000;
+    AIL_set_3D_sample_offset(t, 400);
+    ok = ok && AIL_3D_sample_offset(t) == 400;
+    AIL_set_3D_sample_offset(t, 0x7fffffff);
+    ok = ok && AIL_3D_sample_offset(t) == 2000;
+    AIL_set_3D_sample_offset(t, -5);
+    ok = ok && AIL_3D_sample_offset(t) == 0;
+    AIL_set_3D_sample_volume(t, 1);
+    AIL_set_3D_sample_distances(t, 100, 1);
+    AIL_set_3D_position(t, -10, 0, 0);
+    AIL_sample_volume_levels(t, &a, &b);
+    ok = ok && NEAR(a, 1) && NEAR(b, 0);
+    AIL_set_3D_position(t, 1000, 0, 0);                  /* past max: muted (0x22401058) */
+    AIL_sample_volume_levels(t, &a, &b);
+    ok = ok && a == 0 && b == 0;
+    AIL_set_sample_volume_levels(s, 3, .5f);
+    AIL_sample_volume_levels(s, &a, &b);
+    ok = ok && a == 3 && b == .5f;
+    AIL_set_sample_volume_levels(s, 1, 1);
+    AIL_sample_volume_pan(s, &a, &b);                    /* 0x2112a838, 0x21115447: (.5^-.3)^.6 */
+    CHECK("ail_3d", ok && NEAR(a, 1.1328839f) && NEAR(b, .5f));
+    AIL_shutdown();
+    ok = statsCmd == NULL;
+
+    /* Device gone: nothing calls back, yet the voices end on time and raw takes more */
+    dig = device_open("dummy", 44100);
+    s = mono16(dig, tone, 8820, 44100);                  /* 100 ms */
+    t = ail_stream(dig, 0, wav, mkwav(wav, 1, 1, 44100, 16, 2, tone, 8820, 0));
+    ok = ok && t != NULL;
+    AIL_pause_stream(t, 0);
+    SDL_Delay(20);
+    for (i = 1; i < 8; i++) SDL_PauseAudioDevice((SDL_AudioDeviceID)i, 1);
+    AIL_resume_sample(s);
+    {
+        Uint32 start = SDL_GetTicks();
+        ok = ok && status_reaches(s, SND_SMP_DONE, 2000) && stream_reaches(t, SND_SMP_DONE, 2000);
+        ok = ok && SDL_GetTicks() - start >= 70;         /* the clock's, not at once */
+    }
+    AIL_close_stream(t);
+    AIL_release_sample_handle(s);
+    s = AIL_allocate_sample_handle(dig);
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_playback_rate(s, 44100);
+    ok = ok && AIL_sample_buffer_ready(s) == 0;
+    AIL_load_sample_buffer(s, 0, tone, 882);
+    ok = ok && AIL_sample_buffer_ready(s) == 1;
+    AIL_load_sample_buffer(s, 1, tone, 882);
+    k = -1;
+    for (i = 0; i < 1000 && k < 0; i++) { SDL_Delay(1); k = AIL_sample_buffer_ready(s); }
+    CHECK("ail_device_gone", ok && k == 0);
+    AIL_end_sample(s);
+    AIL_release_sample_handle(s);
+    AIL_shutdown();
+
+    /* Raw: two buffers play seamlessly, and each is given back as the other starts */
+    for (i = 0; i < 24576; i++) ramp[i] = (short)(i + 1);
+    remove(rawPath);
+    dig = device_open("disk", 44100);
+    s = AIL_allocate_sample_handle(dig);
+    ok = AIL_minimum_sample_buffer_size(dig, 22050, 3) == 2048;
+    AIL_set_sample_type(s, 1, 0);
+    AIL_set_sample_playback_rate(s, 44100);
+    AIL_set_sample_volume_levels(s, 1, 1);
+    ok = ok && AIL_sample_buffer_ready(s) == 0;
+    AIL_load_sample_buffer(s, 0, ramp, 16384);
+    ok = ok && AIL_sample_status(s) == SND_SMP_PLAYING && AIL_sample_buffer_ready(s) == 1;
+    AIL_load_sample_buffer(s, 1, ramp + 8192, 16384);
+    k = -1;
+    {
+        Uint32 start = SDL_GetTicks();
+        while (k < 0 && SDL_GetTicks() - start < 2000) k = AIL_sample_buffer_ready(s);
+    }
+    ok = ok && k == 0;
+    AIL_load_sample_buffer(s, 0, ramp + 16384, 16384);
+    ok = ok && status_reaches(s, SND_SMP_DONE, 2000);
+    AIL_end_sample(s);
+    AIL_release_sample_handle(s);
+    AIL_shutdown();
+    len = raw_read(out, 1 << 19);
+    for (i = 0; i < len && !out[i * 2]; i++) {}
+    n = i;
+    for (i = 0; i < 24576 && i + n < len; i++) ok = ok && out[(i + n) * 2] == (short)(i + 1);
+    CHECK("ail_raw", ok && i == 24576);
+
+    /* Pitch: what comes out of a device at another rate */
+    for (k = 0; k < 3; k++) {
+        static const int device[3] = { 22050, 44100, 11025 };
+        static const double want[3] = { 22.05, 44.1, 5.5125 };
+        remove(rawPath);
+        dig = device_open("disk", device[k]);
+        if (k == 0) {                                    /* a sample at 44.1, 1 kHz */
+            s = mono16(dig, tone, 8820, 44100);
+            AIL_set_sample_volume_levels(s, 1, 1);
+            AIL_resume_sample(s);
+            ok = status_reaches(s, SND_SMP_DONE, 5000);
+        } else {                                         /* a stream at 2x: tone's 44.1 frames a cycle go by in half */
+            int fileRate = k == 1 ? 22050 : 44100, rate = fileRate * 2;
+            long wl = mkwav(wav, 1, 1, fileRate, 16, 2, tone, 44100, 0);
+            s = ail_stream(dig, 0, wav, wl);
+            AIL_set_stream_playback_rate(s, rate);
+            AIL_set_stream_volume_levels(s, 1, 1);
+            AIL_set_stream_ms_position(s, 0);
+            AIL_pause_stream(s, 0);
+            ok = stream_reaches(s, SND_SMP_DONE, 5000);
+            AIL_close_stream(s);
+        }
+        AIL_shutdown();
+        len = raw_read(out, 1 << 19);
+        printf("# period %d: %g want %g, %ld frames\n", k, period(out, len), want[k], len);
+        CHECK(k == 0 ? "ail_pitch_sample" : k == 1 ? "ail_pitch_stream_2x" : "ail_pitch_stream_11k",
+              ok && fabs(period(out, len) - want[k]) < want[k] * 0.01);
+    }
+
+    /* Miles caps each gain at 1 (0x2112be21), the mixer does not */
+    for (i = 0; i < 2000; i++) ramp[i] = 10000;
+    remove(rawPath);
+    dig = device_open("disk", 44100);
+    s = mono16(dig, ramp, 4000, 44100);
+    AIL_set_sample_volume_levels(s, 3, 3);
+    AIL_resume_sample(s);
+    ok = status_reaches(s, SND_SMP_DONE, 2000);
+    AIL_shutdown();
+    len = raw_read(out, 1 << 19);
+    k = 0;
+    for (i = 0; i < len; i++) if (out[i * 2] > k) k = out[i * 2];
+    CHECK("ail_gain_cap", ok && k == 10000);
+
+    /* All 53 at once, at full scale: 8 2D, 32 3D (left), 13 streams */
+    remove(rawPath);
+    dig = device_open("disk", 44100);
+    for (i = 0; i < 8; i++) {
+        handles[i] = mono16(dig, dc, sizeof dc, 44100);
+        AIL_set_sample_loop_count(handles[i], 0);
+        AIL_set_sample_volume_levels(handles[i], 1, 1);
+    }
+    memset(&info, 0, sizeof info);
+    info.format = 1; info.data_ptr = dc; info.data_len = sizeof dc; info.rate = 44100; info.bits = 16; info.channels = 1;
+    for (; i < 40; i++) {
+        handles[i] = AIL_allocate_3D_sample_handle(handle);
+        AIL_set_3D_sample_info(handles[i], &info);
+        AIL_set_3D_sample_loop_count(handles[i], 0);
+        AIL_set_3D_sample_volume(handles[i], 1);
+        AIL_set_3D_position(handles[i], -10, 0, 0);
+    }
+    n = mkwav(wav, 1, 2, 44100, 16, 4, dc, sizeof dc, 0);
+    ok = 1;
+    for (; i < 53; i++) {
+        handles[i] = ail_stream(dig, i - 40, wav, n);
+        ok = ok && handles[i];
+        if (!handles[i]) continue;
+        AIL_set_stream_loop_count(handles[i], 0);
+        AIL_set_stream_volume_levels(handles[i], 1, 1);
+        AIL_pause_stream(handles[i], 0);
+    }
+    /* the rate that would ask a stream for the most: bounded, ASan would see it */
+    AIL_set_stream_playback_rate(handles[52], 0x7fffffff);
+    ok = ok && !AIL_open_stream(dig, "0", 0);            /* past the game's 13 */
+    for (i = 0; i < 8; i++) AIL_resume_sample(handles[i]);
+    for (; i < 40; i++) AIL_resume_3D_sample(handles[i]);
+    SDL_Delay(200);
+    statsCmd();
+    {
+        double worst = 0, buffer = 0;
+        sscanf(printed, "snd_stats: worst callback %lf ms, last %*f ms, buffer %lf ms", &worst, &buffer);
+#if !defined(__SANITIZE_ADDRESS__) && !defined(__SANITIZE_THREAD__)
+        ok = ok && worst < buffer / 2;
+#endif
+        printf("# worst callback %g of %g ms\n", worst, buffer);
+        ok = ok && buffer > 23 && buffer < 24;
+    }
+    AIL_shutdown();                                      /* with all of it running */
+    ok = ok && closes;
+    len = raw_read(out, 1 << 19);
+    k = 0;
+    for (i = 0; i < len * 2; i++) {
+        if (out[i] < 0) ok = 0;                          /* saturated, not wrapped */
+        if (out[i] == 32767) k++;
+    }
+    CHECK("ail_53_voices", ok && k > 1000);
+
+    /* A stream's life, with the voice's tail mixed before it reads done */
+    dig = device_open("dummy", 44100);
+    closes = 0;
+    n = mkwav(wav, 1, 2, 44100, 16, 4, tone, 8820, 0);
+    s = ail_stream(dig, 0, wav, n);
+    ok = s != NULL && AIL_stream_status(s) == SND_SMP_STOPPED;
+    AIL_stream_info(s, &i, &k, NULL, NULL);
+    ok = ok && i == 44100 && k == 3 && AIL_stream_playback_rate(s) == 44100;
+    AIL_stream_ms_position(s, &total, NULL);
+    ok = ok && total == 50;
+    AIL_set_stream_loop_count(s, -1);                    /* forever */
+    AIL_set_stream_ms_position(s, -3);
+    AIL_pause_stream(s, 0);
+    ok = ok && stream_reaches(s, SND_SMP_PLAYING, 1000);
+    SDL_Delay(120);
+    ok = ok && AIL_stream_status(s) == SND_SMP_PLAYING;
+    AIL_pause_stream(s, 1);
+    ok = ok && AIL_stream_status(s) == SND_SMP_STOPPED;
+    AIL_pause_stream(s, 0);
+    AIL_set_stream_loop_count(s, 1);
+    AIL_set_stream_ms_position(s, 0);
+    ok = ok && stream_reaches(s, SND_SMP_DONE, 2000);
+    AIL_close_stream(s);
+    ok = ok && closes == 1;
+    t = ail_stream(dig, 1, wav, n);                      /* a slot freed by the close, a stream left open */
+    ok = ok && t != NULL;
+    AIL_pause_stream(t, 0);
+    ok = ok && !AIL_open_stream(dig, "missing", 0) && AIL_last_error()[0];
+    AIL_shutdown();
+    ok = ok && closes == 2;
+    dig = device_open("dummy", 44100);                   /* a second life after shutdown */
+    s = mono16(dig, tone, 2000, 44100);
+    AIL_resume_sample(s);
+    ok = ok && status_reaches(s, SND_SMP_DONE, 1000);
+    AIL_shutdown();
+    AIL_shutdown();
+    CHECK("ail_stream_life", ok);
+    remove(rawPath);
+}
+#endif
+
 int main(void)
 {
     static short pcm[4410], out[8820];
@@ -632,6 +1165,9 @@ int main(void)
           && vol_pan(.5f, 0, .31498026f, 0));
 #ifdef SND_TEST_STREAMS
     stream_tests();
+#endif
+#ifdef SND_TEST_AIL
+    ail_tests();
 #endif
     return failed;
 }

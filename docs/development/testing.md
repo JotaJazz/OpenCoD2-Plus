@@ -30,6 +30,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
+| `scripts/sound_test.py` | what the client sends to the device, through SDL's disk driver: the menu's MP3 stream, `playLocalSound`, left and right of a `script_origin`, `map_restart`, `vid_restart`, `disconnect` and `quit` with sounds playing, no device, `snd_khz 22`, the callback's cost with bots fighting; `--cases a,b` | yes |
 
 `P` is 118 (1.3, `build/check-linux`) or 115 (1.0, `build/check-linux-10`);
 the scripts pick the binary from `--protocol` (`--binary` overrides it).
@@ -70,7 +71,7 @@ plus:
 3. For P in 118 and 115: `opencod2_smoke.py`, `two_players`, `map_reload`,
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
-   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`.
+   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`, `sound`.
    `hostile_server_test.py` (118 only: a fake server sends malformed messages).
    `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py` and `http_test.py` with `--binary build/check-linux/cod2_lnxded`.
