@@ -172,6 +172,7 @@ class Run:
                         client.wait(timeout=15)
                     except subprocess.TimeoutExpired:
                         client.kill()
+                self.check(f'{name}: exits 0', client.returncode == 0, f'{client.returncode}')
             text = open(log_path, encoding='latin-1').read()
             crashes = glob.glob(os.path.join(home, 'cod2_crash_*'))
             self.check(f'{name}: no crash report', 'CRASH REPORT' not in text and not crashes)
@@ -249,6 +250,8 @@ def main():
     ap.add_argument('--cases', help='comma separated, by default all: ' + ','.join(CASES))
     ap.add_argument('--keep', help="copy each case's log and audio here")
     args = ap.parse_args()
+    if args.wine and not args.binary:
+        ap.error('--wine needs --binary, the .exe')
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
