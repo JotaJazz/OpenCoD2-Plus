@@ -19,6 +19,7 @@ src/{script,server,game,bgame,qcommon,universal,xanim,libcod,...}/
                      code plus this fork's stubs and SDL2 libs)
 src/blobs/           original binaries' data
 src/headers/         shared headers, layout pins
+src/snd_sdl/         our sound engine on SDL2, behind the AIL_* calls
 src/Mac/, src/stubs/ GL device and platform glue
 test/                interface/ABI lists, allowlists, expected failures, unit tests
 third_party/         SDL2 for MSVC (user supplied)
