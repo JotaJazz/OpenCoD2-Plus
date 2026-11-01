@@ -8,12 +8,16 @@ NAMES = ['mix_silence', 'mix_pcm16_unity', 'mix_pcm8_unsigned', 'mix_stereo_sour
          'wav_adpcm_bad', 'convert_downsample', 'convert_stereo_to_mono', 'convert_identity_stereo16',
          'wav_truncated', 'wav_data_len_lies', 'wav_block_zero', 'wav_mp3_rejected',
          'spatial_center', 'spatial_full_left', 'spatial_behind', 'spatial_inside_min', 'spatial_beyond_max',
-         'spatial_rolloff', 'spatial_zero_distance', 'volume_pan_extremes']
+         'spatial_rolloff', 'spatial_zero_distance', 'volume_pan_extremes',
+         'reverb_generic_off', 'reverb_impulse_tail', 'reverb_room_differs', 'reverb_decays',
+         'reverb_no_alloc_in_callback', 'reverb_rate_change', 'reverb_room_fade', 'reverb_sleeps',
+         'reverb_mixes', 'reverb_bad_input']
 STREAM_NAMES = ['stream_wav_plays', 'stream_mp3_plays', 'stream_loop', 'stream_seek_ms', 'stream_underrun_silence',
                 'stream_close_while_reading', 'stream_garbage', 'stream_open_fails']
 AIL_NAMES = ['ail_provider', 'ail_wav_length', 'ail_no_device', 'ail_status', 'ail_hunk_freed', 'ail_positions', 'ail_adpcm',
              'ail_3d', 'ail_device_gone', 'ail_raw', 'ail_pitch_sample', 'ail_pitch_stream_2x', 'ail_pitch_stream_11k',
-             'ail_gain_cap', 'ail_53_voices', 'ail_stream_retry', 'ail_stream_life']
+             'ail_gain_cap', 'ail_53_voices', 'ail_stream_retry', 'ail_stream_life',
+             'ail_reverb_2d', 'ail_reverb_3d', 'ail_reverb_stream', 'ail_reverb_generic']
 SDL32 = glob.glob('/usr/lib/i386-linux-gnu/libSDL2.so')
 SDL64 = glob.glob('/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0')
 
@@ -41,7 +45,8 @@ class SndSdl(unittest.TestCase):
             subprocess.run(['gcc', '-Wall', '-Werror', '-g', *flags, '-I', os.path.join(ROOT, 'src', 'snd_sdl'),
                             os.path.join(ROOT, 'test', 'snd_sdl_test.c'),
                             os.path.join(ROOT, 'src', 'snd_sdl', 'snd_mix.c'), os.path.join(ROOT, 'src', 'snd_sdl', 'snd_wav.c'),
-                            os.path.join(ROOT, 'src', 'snd_sdl', 'snd_spatial.c'), *stream, '-o', exe, '-lm'], check=True)
+                            os.path.join(ROOT, 'src', 'snd_sdl', 'snd_spatial.c'), os.path.join(ROOT, 'src', 'snd_sdl', 'snd_reverb.c'),
+                            *stream, '-Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc', '-o', exe, '-lm'], check=True)
             proc = subprocess.run([*prefix, exe], capture_output=True, text=True, timeout=300,
                                   env={**os.environ, 'SND_TEST_DIR': tmp, **(env or {})})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)

@@ -2,10 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "snd_sdl.h"
 
 static int failed;
 #define CHECK(name, cond) do { int ok_ = (cond); printf("%s %s\n", name, ok_ ? "PASS" : "FAIL"); if (!ok_) failed = 1; } while (0)
+
+/* test_snd_sdl.py links with --wrap: only our objects land here, not libSDL's or libc's own calls */
+static int allocs;
+void *__real_malloc(size_t n);
+void *__real_calloc(size_t n, size_t size);
+void *__real_realloc(void *p, size_t n);
+void *__wrap_malloc(size_t n) { __atomic_add_fetch(&allocs, 1, __ATOMIC_RELAXED); return __real_malloc(n); }
+void *__wrap_calloc(size_t n, size_t size) { __atomic_add_fetch(&allocs, 1, __ATOMIC_RELAXED); return __real_calloc(n, size); }
+void *__wrap_realloc(void *p, size_t n) { __atomic_add_fetch(&allocs, 1, __ATOMIC_RELAXED); return __real_realloc(p, n); }
 
 static SndVoice voice(const void *data, unsigned len, int bits, int ch, int rate)
 {
@@ -477,6 +487,12 @@ int AIL_minimum_sample_buffer_size(void *dig, int rate, int format);
 int AIL_sample_buffer_ready(void *S);
 void AIL_load_sample_buffer(void *S, int buf_num, void *buffer, int size);
 void *AIL_allocate_3D_sample_handle(void *provider);
+void AIL_set_digital_master_room_type(void *d, int room_type);
+void AIL_set_digital_master_reverb_levels(void *d, float dry, float wet);
+void AIL_set_3D_room_type(void *provider, int room_type);
+void AIL_set_sample_reverb_levels(void *S, float dry, float wet);
+void AIL_set_3D_sample_effects_level(void *S, float level);
+void AIL_set_stream_reverb_levels(void *S, float dry, float wet);
 void AIL_set_3D_sample_info(void *S, void *info);
 void AIL_set_3D_sample_volume(void *S, float volume);
 void AIL_set_3D_sample_distances(void *S, float max_dist, float min_dist);
@@ -910,6 +926,10 @@ static void ail_tests(void)
     /* the rate that would ask a stream for the most: bounded, ASan would see it */
     AIL_set_stream_playback_rate(handles[52], 0x7fffffff);
     ok = ok && !AIL_open_stream(dig, "0", 0);            /* past the game's 13 */
+    AIL_set_digital_master_room_type(dig, 10);           /* with the reverb working */
+    for (i = 0; i < 8; i++) AIL_set_sample_reverb_levels(handles[i], 1, 1);
+    for (; i < 40; i++) AIL_set_3D_sample_effects_level(handles[i], 1);
+    for (; i < 53; i++) AIL_set_stream_reverb_levels(handles[i], 1, 1);
     for (i = 0; i < 8; i++) AIL_resume_sample(handles[i]);
     for (; i < 40; i++) AIL_resume_3D_sample(handles[i]);
     SDL_Delay(200);
@@ -928,7 +948,7 @@ static void ail_tests(void)
     len = raw_read(out, 1 << 19);
     k = 0;
     for (i = 0; i < len * 2; i++) {
-        if (out[i] < 0) ok = 0;                          /* saturated, not wrapped */
+        if (i > 1 && abs(out[i] - out[i - 2]) > 60000) ok = 0;   /* saturated, not wrapped; the tail may swing */
         if (out[i] == 32767) k++;
     }
     CHECK("ail_53_voices", ok && k > 1000);
@@ -986,9 +1006,218 @@ static void ail_tests(void)
     AIL_shutdown();
     AIL_shutdown();
     CHECK("ail_stream_life", ok);
+
+    /* The driver's calls in SND_SetRoomtype's order, on each kind of voice: what rings after it ends */
+    for (k = 0; k < 4; k++) {
+        int room = k == 3 ? 0 : 3;                       /* generic: the 3D call leaves it off */
+        long tail = 0;
+        remove(rawPath);
+        dig = device_open("disk", 44100);
+        AIL_set_digital_master_room_type(dig, room);
+        AIL_set_digital_master_reverb_levels(dig, 1, .5f);
+        AIL_set_3D_room_type(handle, room);
+        if (k == 1) {
+            memset(&info, 0, sizeof info);
+            info.format = 1; info.data_ptr = tone; info.data_len = 8820; info.rate = 44100; info.bits = 16; info.channels = 1;
+            s = AIL_allocate_3D_sample_handle(handle);
+            AIL_set_3D_sample_info(s, &info);
+            AIL_set_3D_sample_volume(s, 1);
+            AIL_set_3D_sample_effects_level(s, 1);
+            AIL_resume_3D_sample(s);
+        } else if (k == 2) {
+            s = ail_stream(dig, 0, wav, mkwav(wav, 1, 1, 44100, 16, 2, tone, 8820, 0));
+            AIL_set_stream_volume_levels(s, 1, 1);
+            AIL_set_stream_reverb_levels(s, 1, 1);
+            AIL_pause_stream(s, 0);
+        } else {
+            s = mono16(dig, tone, 8820, 44100);
+            AIL_set_sample_volume_levels(s, 1, 1);
+            AIL_set_sample_reverb_levels(s, 1, 1);
+            AIL_resume_sample(s);
+        }
+        SDL_Delay(600);
+        if (k == 2) AIL_close_stream(s);
+        AIL_shutdown();
+        len = raw_read(out, 1 << 19);
+        for (i = 0; i < len && !out[i * 2]; i++) {}
+        for (i += 4500 + 50; i < len; i++) if (out[i * 2]) tail++;
+        printf("# reverb kind %d: %ld of %ld frames ring after the sound\n", k, tail, len);
+        ok = len > 4410 + 11025 && (k == 3 ? tail == 0 : tail > 2000);
+        CHECK(k == 0 ? "ail_reverb_2d" : k == 1 ? "ail_reverb_3d" : k == 2 ? "ail_reverb_stream" : "ail_reverb_generic", ok);
+    }
     remove(rawPath);
 }
 #endif
+
+/* Peak of each 50 ms after an impulse, on both channels: when the tail last was within 60 dB of its
+   start, in seconds. *grew: a later window passed the first 600 ms, which hold any predelay. */
+static void reverb_fresh(int room, float wet)
+{
+    SndReverb_Process(NULL, NULL, 0, 2, 0);
+    SndReverb_SetRoom(room);
+    SndReverb_SetLevels(1, wet);
+}
+
+static double reverb_tail(int room, int rate, int *grew)
+{
+    static float in[256];
+    static short out[512];
+    long done = 0, last = 0, window = rate / 20 / 256 * 256;
+    int top = 0, peak = 0, i;
+
+    reverb_fresh(room, 1);
+    in[0] = 32767;
+    if (window < 256) window = 256;
+    while (done < rate * 40L && (done < rate || done < last + rate)) {
+        memset(out, 0, sizeof out);
+        SndReverb_Process(in, out, 256, 2, rate);
+        in[0] = 0;
+        for (i = 0; i < 512; i++) if (abs(out[i]) > peak) peak = abs(out[i]);
+        done += 256;
+        if (done % window) continue;
+        if (done <= rate * 3 / 5) { if (peak > top) top = peak; }
+        else if (peak * 2 > top * 3 && grew) *grew = 1;   /* echoes of a slow room can line up: a bit above is no growth */
+        if (peak * 1000 >= top) last = done;
+        peak = 0;
+    }
+    return (double)last / rate;
+}
+
+static void reverb_tests(void)
+{
+    static const int rates[5] = { 11025, 22050, 44100, 48000, 96000 };
+    static float in[4410];
+    static short out[8820];
+    double t0, t1, slow = 0;
+    int room, r, i, n, ok, grew = 0, before;
+    long sum;
+    clock_t start, idle, busy;
+
+    /* Miles' generic has a tail of 1.493 s and a wet of 0 (0x21155838), which is what the 3D call leaves */
+    reverb_fresh(0, 0);
+    SndReverb_SetRoom(0);
+    in[0] = 32767;
+    memset(out, 0, sizeof out);
+    SndReverb_Process(in, out, 4410, 2, 44100);
+    for (sum = 0, i = 0; i < 8820; i++) sum += abs(out[i]);
+    in[0] = 0;
+    CHECK("reverb_generic_off", sum == 0);
+
+    t0 = reverb_tail(3, 44100, NULL);
+    printf("# bathroom %g s\n", t0);
+    /* SetRoom alone gives the room's own level, as Miles' does */
+    reverb_fresh(3, 0);
+    SndReverb_SetRoom(3);
+    in[0] = 32767;
+    memset(out, 0, sizeof out);
+    SndReverb_Process(in, out, 4410, 2, 44100);
+    in[0] = 0;
+    for (sum = 0, i = 0; i < 8820; i++) sum += abs(out[i]);
+    CHECK("reverb_impulse_tail", sum > 0 && t0 > .2 && t0 < 3);
+
+    t1 = reverb_tail(10, 44100, NULL);
+    printf("# hangar %g s\n", t1);
+    CHECK("reverb_room_differs", t1 > t0 * 3);
+
+    /* every room, at every rate the device may open */
+    for (ok = 1, r = 0; r < 5; r++)
+        for (room = 0; room < 26; room++) {
+            double t = reverb_tail(room, rates[r], &grew);
+            if (t > slow) slow = t;
+            ok = ok && t > 0 && t < 30;
+        }
+    printf("# slowest room %g s\n", slow);
+    CHECK("reverb_decays", ok && !grew);
+
+    before = __atomic_load_n(&allocs, __ATOMIC_RELAXED);
+    reverb_fresh(5, 1);
+    in[0] = 32767;
+    for (i = 0; i < 100; i++) {
+        memset(out, 0, sizeof out);
+        SndReverb_Process(in, out, 256, 2, i < 50 ? 44100 : 22050);
+        SndReverb_SetRoom(i % 26);
+    }
+    in[0] = 0;
+    CHECK("reverb_no_alloc_in_callback", __atomic_load_n(&allocs, __ATOMIC_RELAXED) == before);
+
+    t0 = reverb_tail(3, 11025, NULL);
+    t1 = reverb_tail(3, 44100, NULL);
+    ok = fabs(t0 - t1) < t1 * .25;
+    t0 = reverb_tail(10, 11025, NULL);
+    t1 = reverb_tail(10, 44100, NULL);
+    printf("# hangar 11 kHz %g s, 44 kHz %g s\n", t0, t1);
+    CHECK("reverb_rate_change", ok && t1 < 20 && fabs(t0 - t1) < t1 * .25);
+
+    /* A room's predelay is another read point: no jump in what goes to the tail */
+    reverb_fresh(12, 1);
+    {
+        int steps[3] = { 0, 0, 0 }, k;
+        for (n = 0, k = 0; k < 30; k++) {
+            for (i = 0; i < 2205; i++, n++) in[i] = (float)(20000 * sin(2 * 3.14159265358979 * 200 * n / 44100));
+            memset(out, 0, sizeof out);
+            SndReverb_Process(in, out, 2205, 2, 44100);
+            for (i = 2; k >= 10 && i < 4410; i++)
+                if (abs(out[i] - out[i - 2]) > steps[(k > 20) + (k > 22)]) steps[(k > 20) + (k > 22)] = abs(out[i] - out[i - 2]);
+            if (k == 20) {
+                SndReverb_SetRoom(17);
+                SndReverb_SetLevels(1, 1);
+            }
+        }
+        printf("# steps before %d, at the change %d, after %d\n", steps[0], steps[1], steps[2]);
+        CHECK("reverb_room_fade", steps[1] > 0 && steps[1] * 10 < (steps[0] > steps[2] ? steps[0] : steps[2]) * 11);
+    }
+    memset(in, 0, sizeof in);
+
+    /* A dead tail costs nothing: it sleeps long before its floats go denormal */
+    reverb_fresh(1, 1);
+    in[0] = 32767;
+    memset(out, 0, sizeof out);
+    SndReverb_Process(in, out, 4410, 2, 44100);
+    in[0] = 0;
+    for (i = 0; i < 40; i++) SndReverb_Process(in, out, 4410, 2, 44100);
+    start = clock();
+    for (i = 0; i < 2000; i++) SndReverb_Process(in, out, 256, 2, 44100);
+    idle = clock() - start;
+    in[0] = 32767;
+    start = clock();
+    for (i = 0; i < 2000; i++) SndReverb_Process(in, out, 256, 2, 44100);
+    busy = clock() - start;
+    in[0] = 0;
+    printf("# idle %ld, busy %ld ticks\n", (long)idle, (long)busy);
+    CHECK("reverb_sleeps", idle * 5 < busy);
+
+    /* Added to what is there, saturating; dry scales it; mono is one channel */
+    reverb_fresh(3, 1);
+    SndReverb_SetLevels(.5f, 1);
+    memset(in, 0, sizeof in);
+    for (i = 0; i < 256; i++) out[i] = 1000;
+    SndReverb_Process(in, out, 128, 2, 44100);
+    ok = out[0] == 500 && out[255] == 500;
+    reverb_fresh(3, 1);
+    for (i = 0; i < 2205; i++) in[i] = 32767 * 8.0f;
+    for (i = 0; i < 4410; i++) out[i] = 32767;
+    SndReverb_Process(in, out, 2205, 2, 44100);
+    for (i = 0; i < 4410; i++) ok = ok && out[i] > 0;
+    reverb_fresh(3, 1);
+    for (i = 0; i < 2205; i++) out[i] = 0;
+    out[2205] = 77;
+    SndReverb_Process(in, out, 2205, 1, 44100);
+    memset(in, 0, sizeof in);
+    CHECK("reverb_mixes", ok && out[2205] == 77);
+
+    /* Out of the table, and rates no device gives: ASan reads along */
+    for (i = 0; i < 4; i++) {
+        static const int rooms[4] = { -1, 26, 1000, 0x7fffffff }, odd[4] = { 1, 8000, 192000, 0x7fffffff };
+        reverb_fresh(rooms[i], 1);
+        in[0] = 32767;
+        SndReverb_Process(in, out, 4410, 2, odd[i]);
+        SndReverb_SetLevels(-1, 1e30f);
+        SndReverb_Process(in, out, 4410, 2, odd[i]);
+    }
+    in[0] = 0;
+    reverb_fresh(0, 0);
+    CHECK("reverb_bad_input", 1);
+}
 
 int main(void)
 {
@@ -1078,7 +1307,12 @@ int main(void)
         v = voice(big, 2, 16, 1, 44100);
         v.wet = 0.5f;
         SndMix_Render(&v, 1, 44100, 1, out, wet, 1);
-        CHECK("mix_wet", wet[0] == 16383.5f);
+        n = wet[0] == 16383.5f;
+        v = voice(big, 2, 16, 1, 44100);                 /* past max distance it feeds no room */
+        v.wet = 1;
+        v.left = v.right = 0;
+        SndMix_Render(&v, 1, 44100, 1, out, wet, 1);
+        CHECK("mix_wet", n && wet[0] == 0);
     }
 
     {
@@ -1179,6 +1413,7 @@ int main(void)
     CHECK("volume_pan_extremes", vol_pan(1, 0, 1, 0) && vol_pan(1, 1, 0, 1) && vol_pan(0, .5f, 0, 0)
           && vol_pan(1, .5f, .8122524f, .8122524f)                        /* .5^.3 */
           && vol_pan(.5f, 0, .31498026f, 0));
+    reverb_tests();
 #ifdef SND_TEST_STREAMS
     stream_tests();
 #endif

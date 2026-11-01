@@ -180,10 +180,12 @@ static void Render(short *out, int frames)
 {
     while (frames > 0) {
         int n = frames < BLOCK ? frames : BLOCK, i;
+        float wet[BLOCK];
 
         for (i = 0; i < MAX_SAMPLES; i++)
             if (samples[i].stream || samples[i].raw) Feed(&samples[i], n);
-        SndMix_Render(voices, MAX_SAMPLES, dig.rate, dig.channels, out, NULL, n);
+        SndMix_Render(voices, MAX_SAMPLES, dig.rate, dig.channels, out, wet, n);
+        SndReverb_Process(wet, out, n, dig.channels, dig.rate);
         out += n * dig.channels;
         frames -= n;
     }
@@ -374,6 +376,9 @@ void SA_API SA_NAME(AIL_shutdown)(void)
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
         Cmd_RemoveCommand("snd_stats");
     }
+    SndReverb_SetRoom(0);
+    SndReverb_SetLevels(1, 0);
+    SndReverb_Process(NULL, NULL, 0, 0, 0);
     for (i = 0; i < MAX_SAMPLES; i++) free(samples[i].decoded);
     memset(samples, 0, sizeof samples);
     memset(voices, 0, sizeof voices);
@@ -404,13 +409,41 @@ void SA_API SA_NAME(AIL_3D_provider_attribute)(void *provider, const char *name,
 void SA_API SA_NAME(AIL_set_3D_distance_factor)(void *provider, float factor) { (void)provider; distFactor = factor; }
 void SA_API SA_NAME(AIL_set_3D_rolloff_factor)(void *provider, float factor) { (void)provider; rolloff = factor; }
 
-/* Task 7 */
-void SA_API SA_NAME(AIL_set_3D_room_type)(void *provider, int room_type) { (void)provider; (void)room_type; }
-void SA_API SA_NAME(AIL_set_digital_master_room_type)(void *d, int room_type) { (void)d; (void)room_type; }
-void SA_API SA_NAME(AIL_set_digital_master_reverb_levels)(void *d, float dry, float wet) { (void)d; (void)dry; (void)wet; }
-void SA_API SA_NAME(AIL_set_sample_reverb_levels)(void *S, float dry, float wet) { (void)S; (void)dry; (void)wet; }
-void SA_API SA_NAME(AIL_set_3D_sample_effects_level)(void *S, float level) { (void)S; (void)level; }
-void SA_API SA_NAME(AIL_set_stream_reverb_levels)(void *S, float dry, float wet) { (void)S; (void)dry; (void)wet; }
+/* Each of the two sets the room and the room's wet level (0x21115930). The provider's, 0x22401300, is
+   the first again, and SND_SetRoomtype calls it after its own levels: the room's level is what stays,
+   so generic stays off, and the game's wet reaches the voices alone. */
+void SA_API SA_NAME(AIL_set_digital_master_room_type)(void *d, int room_type)
+{
+    (void)d;
+    Lock();
+    SndReverb_SetRoom(room_type);
+    Unlock();
+}
+
+void SA_API SA_NAME(AIL_set_3D_room_type)(void *provider, int room_type) { (void)provider; SA_NAME(AIL_set_digital_master_room_type)(NULL, room_type); }
+
+void SA_API SA_NAME(AIL_set_digital_master_reverb_levels)(void *d, float dry, float wet)
+{
+    (void)d;
+    Lock();
+    SndReverb_SetLevels(dry, wet);
+    Unlock();
+}
+
+/* shortcut: a voice's dry is dropped, as the driver only sends 1. Honour it if that changes. */
+void SA_API SA_NAME(AIL_set_sample_reverb_levels)(void *S, float dry, float wet)
+{
+    Sample *s = S;
+
+    (void)dry;
+    if (!s) return;
+    Lock();
+    s->v->wet = Cap(wet);
+    Unlock();
+}
+
+void SA_API SA_NAME(AIL_set_3D_sample_effects_level)(void *S, float level) { SA_NAME(AIL_set_sample_reverb_levels)(S, 1, level); }
+void SA_API SA_NAME(AIL_set_stream_reverb_levels)(void *S, float dry, float wet) { SA_NAME(AIL_set_sample_reverb_levels)(S, dry, wet); }
 
 /* Loaded sounds */
 

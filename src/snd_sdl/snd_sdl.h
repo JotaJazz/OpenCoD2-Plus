@@ -58,6 +58,14 @@ void SndSpatial_Levels(const float pos[3], float minDist, float maxDist,
 /* AIL_set_sample_volume_pan: pan 0 = left, 1 = right. */
 void SndSpatial_VolumePan(float volume, float pan, float *left, float *right);
 
+/* The reverb bus, ours rather than Miles' (ADR 0012). room: an index of snd_roomStrings. SetRoom also
+   sets the wet level to the room's own, as Miles' does; SetLevels overrides it. Their caller holds the
+   device lock. Process takes the mono send, adds the tail to out at the device's rate and channels, and
+   scales out by dry; it neither allocates nor waits. A rate of 0 forgets the tail. */
+void SndReverb_SetRoom(int room);
+void SndReverb_SetLevels(float dry, float wet);
+void SndReverb_Process(const float *wetIn, short *out, int frames, int outChannels, int outRate);
+
 /* Streams: one reader thread serves them all; it reads and seeks through the callbacks, and each
    stream keeps about a second of PCM, so a slow disk is heard as silence, never as a wait.
    seek type: 0 begin, 1 current, 2 end; it returns the new position. read returns the bytes read:

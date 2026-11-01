@@ -51,7 +51,7 @@ static void Chunk(SndVoice *voices, int count, int outRate, int outChannels,
             acc[f * 2] += l * v->left;
             acc[f * 2 + 1] += r * v->right;
             if (wetOut)
-                wetOut[f] += (l + r) * 0.5f * v->wet;
+                wetOut[f] += (l * v->left + r * v->right) * 0.5f * v->wet;
 
             v->pos += step;
             if (v->pos >= total) {

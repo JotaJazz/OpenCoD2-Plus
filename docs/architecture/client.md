@@ -174,10 +174,11 @@ on Windows, in the game's `mss32.dll`.
 | File | Does |
 |---|---|
 | `snd_ail.c` | the `AIL_*` functions, the SDL device, the callback, `snd_stats` |
-| `snd_mix.c` | 54 voices to PCM16: resampling, saturation |
+| `snd_mix.c` | 54 voices to PCM16 and the reverb send: resampling, saturation |
 | `snd_wav.c` | WAV and IMA ADPCM, downsampling at load |
 | `snd_spatial.c` | the volume, pan and distance law of `msssoft.m3d` |
 | `snd_stream.c` | WAV and MP3 streams, one reader thread, a second of ring each |
+| `snd_reverb.c` | the reverb bus and its table of 26 rooms |
 
 Voices: 8 2D, 32 3D, 13 streams and raw, the handles being pointers into a
 table of `snd_ail.c`. A stream or raw voice is fed in blocks of 256 frames into
@@ -188,6 +189,15 @@ which is why `snd_driver.c` closes a stream it does not start. `snd_stats`
 prints the worst and last callback and the underruns.
 `SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE=out.raw` writes what the device would
 get, which is what `scripts/sound_test.py` measures.
+
+Reverb is the one thing that only resembles Miles: a Freeverb-style bus (8 combs
+and 4 allpasses a channel) with the public EAX presets, one row per name of
+`snd_roomStrings`. Each voice sends its mix times its wet, which is what
+`SND_Update*ChannelReverb` sets and where `snd_enableReverb` acts. The bus's own
+level is the room's: in Miles setting a room sets that level too, and
+`SND_SetRoomtype`'s last call, `AIL_set_3D_room_type`, does so after the driver
+set its levels. So generic is off, at any wet. The bus sleeps once a tail falls
+below PCM16 for 0.6 s, which also keeps it from reaching denormals.
 
 ## Windows client
 

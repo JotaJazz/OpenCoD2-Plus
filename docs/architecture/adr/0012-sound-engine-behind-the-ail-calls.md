@@ -17,7 +17,7 @@ Everything Miles decides comes from `mss32.dll`, `miles/msssoft.m3d` and 1.3, wi
 
 | Where | Miles | Here | Why |
 |---|---|---|---|
-| Reverb | its own room filter | our own bus (later task) | the only intended difference in sound |
+| Reverb | its own room filter and table | our own Freeverb-style bus, from the public EAX presets | the only intended difference in sound; no data of Miles' but generic's zero level |
 | MP3 | `mssmp3.asi` | `minimp3` | a decoder is a decoder; the length is estimated from the bitrate in both |
 | `AIL_sample_buffer_ready` | counts the flips of the current buffer | looks at which buffer is played out | two flips between calls would stall `SND_RawSamples` forever |
 | `mss_q3fs 0` | opens files itself | the stream fails with an error | iwds would stay out of reach anyway |
