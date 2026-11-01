@@ -11,6 +11,7 @@ extern void Com_Printf(const char *fmt, ...);
 extern void FreeMemory(void *ptr);
 extern void *GetMemory(unsigned long size);
 extern void *GetClearedMemory(unsigned long size);
+#include "l_menu_gfxapi.h"
 extern int FS_FOpenFileRead(const char *filename, fileHandle_t *file, qboolean uniqueFILE);
 extern int FS_Read(void *buffer, int len, fileHandle_t f);
 extern void FS_FCloseFile(fileHandle_t f);
@@ -509,6 +510,10 @@ script_t * LoadScriptFile(const char *filename)
     FS_Read(script->buffer, length, fp);
     FS_FCloseFile(fp);
 
+#if defined(_WIN32) && defined(GFX_REAL_D3D9)
+    if (!strcmp(filename, "ui/options_graphics.menu"))
+        Script_PatchGraphicsMenu(script->buffer);
+#endif
     script->length = Com_Compress(script->buffer);
     script->end_p = script->buffer + script->length;
     Script_SanitizeBuffer(script);

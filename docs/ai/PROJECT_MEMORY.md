@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — the console key, r_swapInterval and the API in the menu
+
+- SDL gives a key by what it types, so a Spanish layout never sent `` ` `` and the console could not open: that key now goes by position, as 1.3's scancode table.
+- The real device always asked for the default present interval, which waits for the display: `r_swapInterval` did nothing and `com_maxfps` stopped at the refresh rate.
+- The menu's rendering method item picks `r_gfxApi`, patched when the file loads: a pure server refuses a menu in an iwd of ours. `d3d12` is not offered: a black screen cannot be left from the menu.
+
 ## 2026-10-31 — d3d12 is black on the screen, not in the back buffer
 
 - A black menu screenshot first pointed at rendering. A readback through a temporary tracing client showed otherwise on an RTX 5080: no refused call, a real frame at frame 30, a clear and a triangle at 150. Frame 120 reads black on Wine too, so one sample proves little: read several.

@@ -9,7 +9,7 @@ The goal is to run on Vulkan, Direct3D 12 and modern OpenGL. The renderer is 38,
 
 ## Decision
 
-The Windows client takes the API from `r_gfxApi`, once per process: `d3d9`, `vulkan` loads DXVK from `dxvk/d3d9.dll` next to the executable, and `d3d12` asks the system's `d3d9.dll` for D3D9On12. An API that cannot run falls back to `d3d9` and says so. Direct3D 11 gets no path of its own: 12 covers the same machines through the system.
+The Windows client takes the API from `r_gfxApi`, once per process: `d3d9`, `vulkan` loads DXVK from `dxvk/d3d9.dll` next to the executable, and `d3d12` asks the system's `d3d9.dll` for D3D9On12. An API that cannot run falls back to `d3d9` and says so. Options > Graphics offers `d3d9` and `vulkan` in the game's rendering method item, patched in memory when the menu loads, and the choice applies at the next start. Direct3D 11 gets no path of its own: 12 covers the same machines through the system.
 
 ## Consequences
 

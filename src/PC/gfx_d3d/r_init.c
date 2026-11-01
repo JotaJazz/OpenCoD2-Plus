@@ -763,7 +763,8 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             extern const dvar_t *r_fullscreen;
             int fullscreen = r_fullscreen->current.enabled;
             int shapeWidth, shapeHeight;
-            extern void RealD3D9_FillPresentParams(void *, void *, int, int);
+            extern void RealD3D9_FillPresentParams(void *, void *, int, int, int);
+            extern const dvar_t *r_swapInterval;
             extern void R_GetModeSize(int *width, int *height);
             int width, height;
             void *hwnd;
@@ -778,7 +779,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             if (!dx.d3d9)
                 R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
-            RealD3D9_FillPresentParams(pp, hwnd, width, height);
+            RealD3D9_FillPresentParams(pp, hwnd, width, height, r_swapInterval->current.enabled);
             hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
             if (hr < 0 || !dx.device)

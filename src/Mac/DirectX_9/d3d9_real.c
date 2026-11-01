@@ -203,7 +203,7 @@ void *RealD3D9_CreateGameWindow(int w, int h, int fullscreen)
     return hwnd;
 }
 
-void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h)
+void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h, int swapInterval)
 {
     unsigned char *p = (unsigned char *)ppOut;
     memset(p, 0, 56);
@@ -218,7 +218,8 @@ void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h)
     *(int *)(p + 36) = 1;
     *(unsigned int *)(p + 40) = 75;
 
-    *(unsigned int *)(p + 52) = 0;
+    /* D3DPRESENT_INTERVAL_ONE or _IMMEDIATE: the default, 0, waits for the display */
+    *(unsigned int *)(p + 52) = swapInterval ? 1 : 0x80000000u;
 }
 
 #endif
