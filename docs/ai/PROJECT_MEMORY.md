@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — the console, the lagometer and cg_drawFPS against 1.3
+
+- The console opened full because the key code read `keys['`'].binding`, always set; 1.3 (`0x40bc6e`) tests `keys[K_SHIFT].down`: only Shift gives the full console.
+- The lagometer drew every sample at `x = -7`, one column over its black background; 1.3 draws `-7 - i`, clamps the snapshot bars to 24 and colours them by the snapshot's flag.
+- `colorWhiteFaded` and its two siblings were zero, so `cg_drawFPS` and the other developer overlays drew with alpha 0: the values are in 1.3's data (`0x59e08c`, `0x59e09c`, `0x59e0ac`).
+
 ## 2026-10-31 — the console key, r_swapInterval and the API in the menu
 
 - SDL gives a key by what it types, so a Spanish layout never sent `` ` `` and the console could not open: that key now goes by position, as 1.3's scancode table.

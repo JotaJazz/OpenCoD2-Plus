@@ -1195,13 +1195,11 @@ static inline __attribute__((always_inline)) void CL_HandleConsoleToggleKey(qboo
         return;
     }
 
-    if (keys['`'].binding) {
-        if (Con_IsActive()) {
+    /* Shift opens the full console and folds it back to the input line */
+    if (keys[K_SHIFT].down) {
+        if (!(cl->keyCatchers & 1))
             Con_ToggleConsole_f();
-        } else {
-            Con_ToggleConsole_f();
-            Con_ToggleConsoleOutput();
-        }
+        Con_ToggleConsoleOutput();
     } else {
         Con_ToggleConsole_f();
     }

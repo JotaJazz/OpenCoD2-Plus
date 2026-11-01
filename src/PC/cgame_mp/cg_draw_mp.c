@@ -64,9 +64,9 @@ static int previous;
 static struct trStatistics_t rendererStats;
 static int fps_previousTimes[32];
 static int fps_index;
-static vec4_t colorWhiteFaded;
-static vec4_t colorGreenFaded;
-static vec4_t colorRedFaded;
+static vec4_t colorWhiteFaded = { 1.0f, 1.0f, 1.0f, 0.75f };
+static vec4_t colorGreenFaded = { 0.0f, 1.0f, 0.0f, 0.75f };
+static vec4_t colorRedFaded = { 0.75f, 0.25f, 0.0f, 0.75f };
 
 extern const vec_t colorWhite[4];
 extern void UI_DrawHandlePic(float x, float y, float w, float h, int horzAlign, int vertAlign, const vec_t *color, MaterialHandle material);
@@ -1769,59 +1769,46 @@ unsigned int CG_Draw2D(void)
     }
 
     if (cg_drawLagometer->current.enabled && !cgs->localServer) {
-        float prev;
         int i;
 
         UI_DrawHandlePic(-55.0f, -140.0f, 48.0f, 48.0f, 3, 3, 0, cgs->media.lagometerMaterial);
 
-        prev = 0.0f;
+        /* newest sample on the right, one column each: 1.3 0x4c7cd5 */
         for (i = 0; i < 48; ++i) {
             int idx = (~i + lagometer.frameCount) & 0x7f;
             float v = (float)lagometer.frameSamples[idx] * 0.0533333346f;
-            float y;
-            float h;
-            const vec_t *col;
-            if (v > prev) {
-                if (v <= 16.0f) {
-                    y = -124.0f - v;
-                    h = v;
-                } else {
-                    y = -140.0f;
-                    h = 16.0f;
-                }
-                col = colorYellow;
-                CL_DrawStretchPic(-7.0f, y, 1.0f, h, 3, 3, 0, 0, 0, 0, col, cgs->media.whiteMaterial);
-                prev = 0.0f;
-            } else if (v < 0.0f) {
-                float n = -v;
-                if (n > 16.0f)
-                    n = 16.0f;
-                CL_DrawStretchPic(-7.0f, -124.0f, 1.0f, n, 3, 3, 0, 0, 0, 0, colorBlue,
+            float x = -7.0f - (float)i;
+
+            if (v > 0.0f) {
+                float h = v > 16.0f ? 16.0f : v;
+
+                CL_DrawStretchPic(x, -124.0f - h, 1.0f, h, 3, 3, 0, 0, 0, 0, colorYellow,
                                   cgs->media.whiteMaterial);
-                prev = 0.0f;
-            } else {
-                prev = 0.0f;
+            } else if (v < 0.0f) {
+                float h = -v > 16.0f ? 16.0f : -v;
+
+                CL_DrawStretchPic(x, -124.0f, 1.0f, h, 3, 3, 0, 0, 0, 0, colorBlue,
+                                  cgs->media.whiteMaterial);
             }
         }
 
-        prev = 0.0f;
         for (i = 0; i < 48; ++i) {
             int idx = (~i + lagometer.snapshotCount) & 0x7f;
             float v = (float)lagometer.snapshotSamples[idx];
-            if (v > prev) {
+            float x = -7.0f - (float)i;
+
+            if (v > 0.0f) {
                 float h = v * 0.0266666673f;
-                float y;
-                if (lagometer.snapshotFlags[idx] & 0x1)
-                    y = h <= 24.0f ? -92.0f - h : -116.0f;
-                else
-                    y = h > 24.0f ? -116.0f : -92.0f - h;
-                CL_DrawStretchPic(-7.0f, y, 1.0f, h, 3, 3, 0, 0, 0, 0, colorGreen,
+
+                if (h > 24.0f)
+                    h = 24.0f;
+                CL_DrawStretchPic(x, -92.0f - h, 1.0f, h, 3, 3, 0, 0, 0, 0,
+                                  (lagometer.snapshotFlags[idx] & 1) ? colorYellow : colorGreen,
                                   cgs->media.whiteMaterial);
             } else if (v < 0.0f) {
-                CL_DrawStretchPic(-7.0f, -116.0f, 1.0f, 24.0f, 3, 3, 0, 0, 0, 0, colorRed,
+                CL_DrawStretchPic(x, -116.0f, 1.0f, 24.0f, 3, 3, 0, 0, 0, 0, colorRed,
                                   cgs->media.whiteMaterial);
             }
-            prev = 0.0f;
         }
 
         if (cg_nopredict->current.enabled ||
