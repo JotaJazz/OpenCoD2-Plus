@@ -189,6 +189,26 @@ void Scr_StackClear( void )
 
 /*
 ==============
+Scr_FramesPerSecond
+
+Script time takes one step per server frame, and a frame lasts whole
+milliseconds, so sv_fps 60 runs at 62.5
+==============
+*/
+static float Scr_FramesPerSecond()
+{
+	static const dvar_t *fps;
+
+	if ( !fps )
+	{
+		fps = Dvar_FindVar("sv_fps");
+	}
+
+	return fps ? 1000.0f / ( 1000 / fps->current.integer ) : 20.0f;
+}
+
+/*
+==============
 Scr_DecTime
 ==============
 */
@@ -4021,7 +4041,6 @@ post_builtin:
 			continue;
 
 		case OP_wait:
-#define WAIT_FRAME_TIME 20 // ideally should use sv_fps value instead
 			assert(Scr_IsInScriptMemory( pos ));
 			switch ( top->type )
 			{
@@ -4032,7 +4051,7 @@ post_builtin:
 					goto error;
 				}
 
-				waitTime = Q_rint(top->u.floatValue * WAIT_FRAME_TIME);
+				waitTime = Q_rint(top->u.floatValue * Scr_FramesPerSecond());
 
 				if ( !waitTime )
 				{
@@ -4047,7 +4066,7 @@ post_builtin:
 					goto error;
 				}
 
-				waitTime = top->u.intValue * WAIT_FRAME_TIME;
+				waitTime = Q_rint(top->u.intValue * Scr_FramesPerSecond());
 				break;
 
 			default:

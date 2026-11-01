@@ -346,7 +346,7 @@ void CL_RequestAuthorization(void);
 void CL_CheckForResend(void);
 
 /* CoD2rev-Plus's PLUS_VERSION: docs/architecture/plus-protocol.md, on its plus branch */
-#define COD2_PLUS_VERSION 121
+#define COD2_PLUS_VERSION 122
 void CL_LocalServers_f(void);
 void CL_PlayLogo_f(void);
 qboolean CL_UpdateDirtyPings_f(int source);
@@ -2255,7 +2255,7 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
         }
 
 #if COD2_IS_PATCH_13
-        /* a stock server answers without a version; the format does not depend on it yet */
+        /* a stock server answers without a version; each snapshot says its own format */
         if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
             Com_Printf((const char *)"CoD2 Plus server, version %i\n", COD2_PLUS_VERSION);
 #endif

@@ -48,7 +48,8 @@ char *svc_strings[256] = {
     "svc_download",
     "svc_snapshot",
     "svc_EOF",
-    /* [8 .. 255] implicitly NULL */
+    "svc_snapshotPlus",
+    /* [9 .. 255] implicitly NULL */
 };
 
 extern void *cl;
@@ -65,7 +66,7 @@ extern const dvar_t *cl_shownuments;
 void CL_SystemInfoChanged(void);
 void CL_ParseGamestate(msg_t *msg);
 void CL_ParseDownload(msg_t *msg);
-void CL_ParseSnapshot(msg_t *msg);
+void CL_ParseSnapshot(msg_t *msg, int plus);
 void CL_ParseServerMessage(msg_t *msg);
 
 extern void LargeLocal_LargeLocal(const LargeLocal *_this, int size);
@@ -102,6 +103,7 @@ extern char *MSG_ReadString(msg_t *msg);
 extern char *MSG_ReadBigString(msg_t *msg);
 extern void MSG_ReadData(msg_t *msg, void *data, int len);
 extern void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to);
+extern int msg_plusSnapshotTime;
 extern qboolean MSG_ReadDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int number);
 extern qboolean MSG_ReadDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, int number);
 extern void MSG_Init(msg_t *buf, byte *data, int length);
@@ -619,7 +621,7 @@ static byte *CL_SnapSlot(byte *base, int messageNum)
     return base + 0x495e0 + idx * 0x26d8;
 }
 
-void CL_ParseSnapshot(msg_t *msg)
+void CL_ParseSnapshot(msg_t *msg, int plus)
 {
     LargeLocal newSnap_large_local;
     clSnapshot_t *newSnap;
@@ -646,6 +648,8 @@ void CL_ParseSnapshot(msg_t *msg)
     newSnap->serverCommandNum = clc->serverCommandSequence;
 
     newSnap->serverTime = MSG_ReadLong(msg);
+    if (plus)
+        msg_plusSnapshotTime = newSnap->serverTime;
 
     newSnap->messageNum = clc->serverMessageSequence;
 
@@ -1057,6 +1061,8 @@ void CL_ParseServerMessage(msg_t *msg)
     }
 #endif
 
+    msg_plusSnapshotTime = 0; /* an error may have left a snapshot unfinished */
+
     while (!msgCompressed.overflowed) {
 
         cmd = MSG_ReadByte(&msgCompressed);
@@ -1105,8 +1111,13 @@ void CL_ParseServerMessage(msg_t *msg)
             break;
         case 6:
 
-            CL_ParseSnapshot(&msgCompressed);
+            CL_ParseSnapshot(&msgCompressed, 0);
             break;
+#if COD2_IS_PATCH_13
+        case 8: /* the message says its format, so demos need nothing more */
+            CL_ParseSnapshot(&msgCompressed, 1);
+            break;
+#endif
         default:
 
             Com_Error(1, "\x15"

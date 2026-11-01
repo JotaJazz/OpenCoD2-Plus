@@ -153,6 +153,7 @@ typedef struct
 
 // What net_altPort announces, as the 1.0 build also plays with 1.3 clients
 #define ALT_PORT_PROTOCOL 118
+#define PLUS_VERSION 122 // docs/architecture/plus-protocol.md
 #define ALT_PORT_VERSION "1.3"
 
 void NET_Init( void );
@@ -199,7 +200,8 @@ enum svc_ops_e
 	svc_serverCommand,
 	svc_download,
 	svc_snapshot,
-	svc_EOF
+	svc_EOF,
+	svc_snapshotPlus // after svc_EOF, so that the stock numbers stay
 };
 
 enum clc_ops_e
@@ -438,6 +440,7 @@ void MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to
 void MSG_WriteDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *field );
 void MSG_WriteDeltaStruct( msg_t *msg, byte *from, byte *to, qboolean force, int numFields, int indexBits, const netField_t *stateFields, qboolean bChangeBit );
 void MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force);
+extern int msg_plusSnapshotTime; // not 0: this snapshot writes entity times as offsets from it
 void MSG_WriteDeltaArchivedEntity(msg_t *msg, archivedEntity_t *from, archivedEntity_t *to, int flags);
 void MSG_WriteDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, qboolean force);
 void MSG_ReadDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *field, qboolean print );

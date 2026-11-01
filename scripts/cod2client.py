@@ -192,8 +192,9 @@ class Client:
                 if line.startswith(reply) or line.startswith('error'):
                     return line
 
-    def connect(self, protocol, name):
-        """Returns None once connected, otherwise the server's reply."""
+    def connect(self, protocol, name, plus=122):
+        """Returns None once connected, otherwise the server's reply. plus is the
+        CoD2 Plus version to send, or None for a stock client."""
         self.protocol = protocol
         line = self._oob('getchallenge', 'challengeResponse')
         if not line.startswith('challengeResponse'):
@@ -201,7 +202,10 @@ class Client:
         self.challenge = int(line.split()[1])
         userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\%s\\rate\\25000\\snaps\\20\\cl_voice\\1'
                     % (protocol, self.challenge, self.qport, name))
+        if plus is not None:
+            userinfo += '\\plus\\%d' % plus
         line = self._oob('connect "%s"' % userinfo, 'connectResponse')
+        self.connect_reply = line
         return None if line.startswith('connectResponse') else line
 
     # netchan

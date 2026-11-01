@@ -695,6 +695,8 @@ SV_DirectConnect
 A "connect" OOB command has been received
 ==================
 */
+#define PLUS_NOTICE "This server needs the current CoD2 Plus client: github.com/JotaJazz/OpenCoD2-Plus/releases"
+
 /*
 ==================
 SV_ConnectBanMessage
@@ -843,6 +845,18 @@ void SV_DirectConnect( netadr_t from )
 			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
 			return;
 		}
+
+#if PROTOCOL_VERSION == 118
+		// after the challenge, so that a spoofed address gets no reply
+		if ( atoi( Info_ValueForKey( userinfo, "plus" ) ) != PLUS_VERSION )
+		{
+			const char *notice = sv_plusNotice->current.string;
+
+			NET_OutOfBandPrint( NS_SERVER, from, va( "error\n\x15%s", *notice ? notice : PLUS_NOTICE ) );
+			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
+			return;
+		}
+#endif
 
 
 		if ( svs.challenges[i].firstPing == 0 )
@@ -1012,6 +1026,12 @@ gotnewcl:
 	svs.challenges[i].firstPing = 0;
 
 	// send the connect packet to the client
+#if PROTOCOL_VERSION == 118
+	newcl->plusVersion = atoi( Info_ValueForKey( userinfo, "plus" ) );
+	if ( newcl->plusVersion == PLUS_VERSION )
+		NET_OutOfBandPrint( NS_SERVER, from, va( "connectResponse %i", PLUS_VERSION ) );
+	else // bots and local clients, which skip the check above
+#endif
 	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse" );
 
 	// when we receive the first packet from the client, we will

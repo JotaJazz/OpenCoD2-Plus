@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — Plus snapshots, version 122
+
+- CoD2rev-Plus sends `pos.trTime` as an offset from the snapshot's time, in a message of its own, `svc_snapshotPlus` (8), so the client reads it with no state from the handshake: demos carry the format, and neither stock servers nor the local game, which has its own server code, change. The version is 122.
+- Vendored `fa4da34` with `src/qcommon/plus_format.h`. Against it: 10 prediction misses and 1 animation miss, as before, the view test passes, and the client joins at 40 Hz and a 1.3 server of `master`.
+- Left open: a real match at 40 Hz, and the original 1.3 executable as a server with this build (the handshake build joined it).
+
 ## 2026-11-01 — the client speaks the Plus handshake
 
 - CoD2rev-Plus's `plus` branch refuses a 1.3 client without the Plus version, so the connect packet carries `plus 121`, in that packet only, and a `connectResponse 121` is recognised. A bare answer stays a stock server; the format does not depend on it yet, so nothing is stored. Joined CoD2rev-Plus `0cf6e01` at 20 and 40 Hz.

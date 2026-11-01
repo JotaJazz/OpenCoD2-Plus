@@ -2,6 +2,7 @@
 #include "common_types.h"
 #include "imports.h"
 #include <string.h>
+#include "../../qcommon/plus_format.h"
 #if defined(_MSC_VER)
 #define MSG_FORCEINLINE __forceinline
 #else
@@ -989,6 +990,10 @@ static inline __attribute__((always_inline)) void MSG_WriteValue(msg_t *msg, int
     }
 }
 
+/* Not 0 while CL_ParseSnapshot reads the entities of a Plus snapshot: their
+ * pos.trTime can be an offset from this time. */
+int msg_plusSnapshotTime;
+
 void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field, qboolean print)
 {
     int *fromF;
@@ -1002,6 +1007,11 @@ void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field,
 
     if (!MSG_ReadBit_core(msg)) {
         *toF = *fromF;
+        return;
+    }
+
+    if (msg_plusSnapshotTime && field == entityStateFields && MSG_ReadBit_core(msg)) {
+        *toF = Plus_TimeFromOffset(msg_plusSnapshotTime, MSG_ReadBits(msg, PLUS_TIME_OFFSET_BITS));
         return;
     }
 
