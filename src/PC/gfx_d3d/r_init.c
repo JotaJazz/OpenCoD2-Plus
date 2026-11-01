@@ -756,7 +756,8 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
 #ifdef GFX_REAL_D3D9
 
         {
-            extern void *RealD3D9_Direct3DCreate9(void);
+            extern void *RealD3D9_Direct3DCreate9(int api);
+            extern const dvar_t *r_gfxApi;
             extern void *RealD3D9_CreateGameWindow(int, int, int);
             extern void Sys_GetDesktopSize(int *width, int *height);
             extern const dvar_t *r_fullscreen;
@@ -773,7 +774,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             /* the mode r_mode names, as the fake device's path */
             R_GetModeSize(&width, &height);
             if (!dx.d3d9)
-                dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9();
+                dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9(r_gfxApi->current.integer);
             if (!dx.d3d9)
                 R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);

@@ -15,6 +15,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | A Windows dedicated server on IPX loses a byte of its address | replies to the wrong node | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; `win_net.cpp` writes it for every protocol |
 | Client and server movement differ by 1 ULP on some frames | none measurable | CoD2rev-Plus's `bgame` moved literals to float (`0.001f`, `0.4f`, `0.65f`), `src/PC/bgame` keeps doubles; far below `prediction_test.py`'s 0.1 miss |
+| `r_gfxApi d3d12` never run on Direct3D 12 | may not start or may draw differently | Wine has no D3D9On12, so only its fallback to Direct3D 9 is tested |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |
 
 ## Accepted debt

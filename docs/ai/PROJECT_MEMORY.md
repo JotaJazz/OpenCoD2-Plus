@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-10-31 — r_gfxApi: Vulkan and Direct3D 12 behind Direct3D 9
+
+- The renderer talks only to `IDirect3DDevice9`, so the Windows client picks what stands behind it: `d3d9`, `vulkan` (DXVK) or `d3d12` (D3D9On12), falling back to `d3d9`. A native backend per API was rejected: the renderer is 38,000 lines.
+- Wine loads its builtin `d3d9` even from a full path: testing DXVK there needs `WINEDLLOVERRIDES=d3d9=n`. A log line saying "Vulkan" proved nothing until then.
+- DXVK ran the 32-bit process out of its 2 GB on lavapipe, so the executable is large address aware.
+
 ## 2026-10-31 — vendor sync 9e26dd4, a 64-bit dedicated server, an icon
 
 - CoD2rev-Plus moved 65 commits: its `netadr_t` grew with `altPort`, which the engine shares by value and inside `netchan_t`, so `altPort` now overlays `ipx[9]` and the struct stays 20 bytes. Growing the engine's was rejected: its layouts are pinned to 1.3. Its removed `Sys_BeginStreamedFile`/`Sys_StreamedRead` were an `FS_Read`; cinematics call that.

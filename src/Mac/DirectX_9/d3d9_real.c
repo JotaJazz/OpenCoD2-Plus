@@ -8,26 +8,89 @@
 
 typedef void *(__stdcall *PFN_Direct3DCreate9)(UINT SDKVersion);
 
-void *RealD3D9_Direct3DCreate9(void)
-{
-    static HMODULE d3d9mod;
-    static PFN_Direct3DCreate9 pCreate;
-    void *iface;
+/* Direct3D 9 on Direct3D 12, in d3d9.dll since Windows 10 (d3d9on12.h) */
+typedef struct {
+    BOOL Enable9On12;
+    void *pD3D12Device;
+    void *ppD3D12Queues[2];
+    UINT NumQueues;
+    UINT NodeMask;
+} D3D9ON12_ARGS;
+typedef void *(__stdcall *PFN_Direct3DCreate9On12)(UINT SDKVersion, D3D9ON12_ARGS *pOverrideList, UINT NumOverrideEntries);
 
-    if (!pCreate) {
-        d3d9mod = LoadLibraryA("d3d9.dll");
-        if (!d3d9mod) {
-            fprintf(stderr, "[real-d3d9] LoadLibrary(d3d9.dll) failed\n");
-            return NULL;
-        }
-        pCreate = (PFN_Direct3DCreate9)GetProcAddress(d3d9mod, "Direct3DCreate9");
-        if (!pCreate) {
-            fprintf(stderr, "[real-d3d9] GetProcAddress(Direct3DCreate9) failed\n");
-            return NULL;
-        }
+/* r_gfxApi's values */
+enum { GFX_API_D3D9, GFX_API_VULKAN, GFX_API_D3D12 };
+
+/* an interface with an adapter, or NULL: the layers fail softly when their API
+ * is missing, and DXVK with an interface that has no adapters */
+static void *RealD3D9_Usable(void *iface)
+{
+    /* IUnknown's three and RegisterSoftwareDevice, then GetAdapterCount */
+    void **vtbl = iface ? *(void ***)iface : NULL;
+
+    if (iface && !((UINT(__stdcall *)(void *))vtbl[4])(iface)) {
+        ((ULONG(__stdcall *)(void *))vtbl[2])(iface);
+        return NULL;
     }
-    iface = pCreate(32 );
-    fprintf(stderr, "[real-d3d9] Direct3DCreate9 -> %p\n", iface);
+    return iface;
+}
+
+static void *RealD3D9_CreateFrom(HMODULE d3d9mod)
+{
+    PFN_Direct3DCreate9 pCreate = d3d9mod ? (PFN_Direct3DCreate9)GetProcAddress(d3d9mod, "Direct3DCreate9") : NULL;
+
+    return pCreate ? RealD3D9_Usable(pCreate(32)) : NULL;
+}
+
+/* DXVK's d3d9.dll, in dxvk/ next to the executable: Direct3D 9 over Vulkan */
+static void *RealD3D9_CreateVulkan(void)
+{
+    char path[MAX_PATH];
+    char *slash;
+
+    if (!LoadLibraryA("vulkan-1.dll"))
+        return NULL;
+    if (!GetModuleFileNameA(NULL, path, sizeof(path)) || !(slash = strrchr(path, '\\'))
+        || (size_t)(slash - path) + sizeof("\\dxvk\\d3d9.dll") > sizeof(path))
+        return NULL;
+    strcpy(slash, "\\dxvk\\d3d9.dll");
+    return RealD3D9_CreateFrom(LoadLibraryA(path));
+}
+
+static void *RealD3D9_CreateD3D12(void)
+{
+    D3D9ON12_ARGS args;
+    HMODULE d3d9mod = LoadLibraryA("d3d9.dll");
+    PFN_Direct3DCreate9On12 pCreate;
+
+    pCreate = d3d9mod ? (PFN_Direct3DCreate9On12)GetProcAddress(d3d9mod, "Direct3DCreate9On12") : NULL;
+    if (!pCreate)
+        return NULL;
+    memset(&args, 0, sizeof(args));
+    args.Enable9On12 = TRUE;
+    return RealD3D9_Usable(pCreate(32, &args, 1));
+}
+
+/* the API r_gfxApi asks for, or plain Direct3D 9 if that cannot run here */
+void *RealD3D9_Direct3DCreate9(int api)
+{
+    extern void Com_Printf(const char *, ...);
+    static const char *const names[] = { "Direct3D 9", "Vulkan (DXVK)", "Direct3D 12 (D3D9On12)" };
+    void *iface = NULL;
+
+    if (api == GFX_API_VULKAN)
+        iface = RealD3D9_CreateVulkan();
+    else if (api == GFX_API_D3D12)
+        iface = RealD3D9_CreateD3D12();
+    if (iface) {
+        Com_Printf("Graphics API: %s\n", names[api]);
+        return iface;
+    }
+    if (api != GFX_API_D3D9)
+        Com_Printf("^3%s is not available here, using Direct3D 9\n", names[api]);
+    iface = RealD3D9_CreateFrom(LoadLibraryA("d3d9.dll"));
+    if (iface)
+        Com_Printf("Graphics API: %s\n", names[GFX_API_D3D9]);
     return iface;
 }
 
@@ -77,7 +140,7 @@ static int RealD3D9_DxvkHasAdapter(PFN_Direct3DCreate9 pCreate)
     return 0;
 }
 
-void *RealD3D9_Direct3DCreate9(void)
+void *RealD3D9_Direct3DCreate9(int api)
 {
     extern void *Sys_LoadLibraryNextToExe(const char *name);
     static PFN_Direct3DCreate9 pCreate;
