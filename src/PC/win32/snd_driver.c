@@ -117,6 +117,8 @@ extern int SND_FindFree3DChannel(int entnum, int channel);
 extern void SND_SetChannelInfo(int index, int entnum, const void *pAlias0, const void *pAlias1, float lerp, const float *org, float volume, float pitch, int channels, int rate, int total_msec, int start_msec, int startDelay, int master, int system);
 extern const dvar_t *Dvar_RegisterBool(const char *name, int value, int flags);
 extern const dvar_t *Dvar_RegisterString(const char *name, const char *value, int flags);
+extern void Dvar_SetFromStringByName(const char *dvarName, const char *string);
+extern void Com_StartupVariable(const char *match);
 extern void Dvar_SetString(const dvar_t *dvar, const char *value);
 extern int Dvar_GetInt(const char *name);
 extern int stricmp(const char *a, const char *b);
@@ -1616,8 +1618,12 @@ Bool SND_InitDriver(void)
     unsigned int maxRate;
 
 #ifdef COD2_MSS32_DLL
-    /* before the first AIL call: mss32_dll.c reads it there, and a change needs a new game */
-    Dvar_RegisterString((const char *)"snd_backend", (const char *)"miles", 0x1021);
+    /* before the first AIL call: mss32_dll.c reads it there, and a change needs a new game. Only
+       the command line picks it, so a Miles launcher never inherits SDL from a seta in the config,
+       which also left the archive bit on. Set first: once latched the dvar would ignore these. */
+    Dvar_SetFromStringByName((const char *)"snd_backend", (const char *)"miles");
+    Com_StartupVariable((const char *)"snd_backend");
+    ((dvar_t *)Dvar_RegisterString((const char *)"snd_backend", (const char *)"miles", 0x1020))->flags &= ~1;
 #endif
     mss_q3fs = Dvar_RegisterBool((const char *)"mss_q3fs", 1, 0x1020);
     if (mss_q3fs->current.enabled != 0) {

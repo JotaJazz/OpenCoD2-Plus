@@ -171,11 +171,12 @@ short).
 those calls land in `src/snd_sdl/` ([ADR 0012](adr/0012-sound-engine-behind-the-ail-calls.md));
 on Windows, by default, in the game's `mss32.dll`.
 
-`snd_backend` picks the Windows backend: `miles`, the default, or `sdl`. It is
-read once, before the first `AIL_*` call, so a change needs a new game: each
-function keeps what it resolved, and a handle of one backend must not reach the
-other. It is archived, so the last value stays in `config_mp.cfg`: to compare the
-two, set it on each command line. With `sdl`, `src/PC/win32/mss32_dll.c` keeps its `AIL_*` names and gets
+`snd_backend` picks the Windows backend: `miles`, the default, or `sdl`, any
+other value being Miles; the log says which, with the value. Only the command
+line sets it: it is not archived, and a `seta` left in `config_mp.cfg` is
+ignored, so a launcher without it gets Miles. It is read once, before the first
+`AIL_*` call, so a change needs a new game: each function keeps what it
+resolved, and a handle of one backend must not reach the other. With `sdl`, `src/PC/win32/mss32_dll.c` keeps its `AIL_*` names and gets
 each function from `SndSdl_Find` (a table in `snd_ail.c`) by the decorated name
 it would ask `mss32.dll` for, and the DLL is never loaded. Those functions are
 `Sdl_AIL_*` and `__stdcall`, and the file callbacks are wrapped into the plain

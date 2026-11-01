@@ -30,6 +30,7 @@ extern const char *Dvar_GetString(const char *dvarName);
 extern void Com_Printf(const char *fmt, ...);
 extern void *Sys_GetGameWindow(void);
 extern void *SndSdl_Find(const char *decorated);
+extern int I_stricmp(const char *s1, const char *s2);
 
 static void *mss_module;
 static int mss_loadTried;
@@ -59,8 +60,11 @@ static int MSS_UseSdl(void)
 {
     static int sdl = -1;
 
-    if (sdl < 0)
-        sdl = !strcmp(Dvar_GetString("snd_backend"), "sdl");
+    if (sdl < 0) {
+        const char *name = Dvar_GetString("snd_backend");
+        sdl = !I_stricmp(name, "sdl");
+        Com_Printf("snd_backend %s: %s\n", name, sdl ? "the SDL2 mixer" : "Miles");
+    }
     return sdl;
 }
 

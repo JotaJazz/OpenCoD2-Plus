@@ -9,7 +9,7 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
 - `snd_backend sdl` runs the Windows client on `src/snd_sdl/`, without loading `mss32.dll`; `miles` stays the default until the user has compared them in real games. It gives this client sound under Wine for the first time: every `sound_test.py` case passes there.
 - The calls cross `__stdcall`, so a wrong size wrecks the caller's stack silently: `AIL_startup` is `@0` although the driver passes it flags. The test reads the sizes from a MinGW object rather than trusting the table.
-- `snd_backend` is registered before the first `AIL_*` call, not beside `mss_3d_provider`, and read once. It is archived, so a launcher that does not set it inherits the last one.
+- `snd_backend` is registered before the first `AIL_*` call, not beside `mss_3d_provider`, and read once. Only the command line sets it, against the archived flags first written, as a launcher without it silently inherited SDL from the config.
 
 ## 2026-11-01 — sound on Linux through SDL2
 
