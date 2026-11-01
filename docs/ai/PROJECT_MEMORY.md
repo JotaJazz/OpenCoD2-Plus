@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — reverb: a bus of our own, and 1.3's conditions
+
+- `src/snd_sdl/snd_reverb.c` is a Freeverb-style bus with the public EAX presets, the one thing that only resembles Miles. Its input is at half of one over the combs, as the tail ran about 8 dB hot; underwater is doubled to keep `shock/default.shock`, the only stock multiplayer case, at the level it had. No value of Miles' table is copied but generic's zero. Tuning by ear stays open.
+- The sound channels' reverb conditions in `snd_driver.c` are now 1.3's. That file is shared, so this changes the sound of the default Miles client too, not only of ours.
+
 ## 2026-11-01 — Windows sound: Miles or SDL2
 
 - `snd_backend sdl` runs the Windows client on `src/snd_sdl/`, without loading `mss32.dll`; `miles` stays the default until the user has compared them in real games. It gives this client sound under Wine for the first time: every `sound_test.py` case passes there.

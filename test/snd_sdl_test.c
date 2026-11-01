@@ -1194,7 +1194,7 @@ static void reverb_tests(void)
     SndReverb_Process(in, out, 128, 2, 44100);
     ok = out[0] == 500 && out[255] == 500;
     reverb_fresh(3, 1);
-    for (i = 0; i < 2205; i++) in[i] = 32767 * 8.0f;
+    for (i = 0; i < 2205; i++) in[i] = 32767 * 16.0f;
     for (i = 0; i < 4410; i++) out[i] = 32767;
     SndReverb_Process(in, out, 2205, 2, 44100);
     for (i = 0; i < 4410; i++) ok = ok && out[i] > 0;

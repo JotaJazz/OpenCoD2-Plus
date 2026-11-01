@@ -17,7 +17,7 @@ enum {
     FADE_MS = 10
 };
 
-#define INPUT_GAIN 0.125f          /* one over COMBS */
+#define INPUT_GAIN 0.0625f         /* half of one over COMBS: a tail at that level ran about 8 dB hot */
 #define ALLPASS_FEEDBACK 0.5f
 #define SILENT_IN 1e-3f            /* PCM16 units: below it a send is no send */
 #define SILENT_OUT 0.5f
@@ -51,7 +51,7 @@ static const struct { float decay, hfRatio, predelay, level; } rooms[ROOMS] = {
     { 1.49f, 0.50f, 0.279f, 0.011f },   /* plain */
     { 1.65f, 1.50f, 0.020f, 0.084f },   /* parkinglot */
     { 2.81f, 0.14f, 0.035f, 0.577f },   /* sewerpipe */
-    { 1.49f, 0.10f, 0.018f, 0.224f },   /* underwater */
+    { 1.49f, 0.10f, 0.018f, 0.45f },    /* underwater: doubled, so INPUT_GAIN leaves shock/default.shock's level as it was */
     { 8.39f, 1.39f, 0.032f, 0.983f },   /* drugged */
     { 17.23f, 0.56f, 0.050f, 0.124f },  /* dizzy */
     { 7.56f, 0.91f, 0.050f, 0.707f }    /* psychotic */
