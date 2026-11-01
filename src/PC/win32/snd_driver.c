@@ -701,7 +701,7 @@ void SND_Update2DChannelReverb(int index)
     const snd_alias_t *pAlias = chaninfo->pAlias0;
     float reverbLevel;
 
-    /* 1.3: 0x4b7900 (2D), 0x4b7970 (3D) */
+    /* 1.3 0x4b7900 */
     if (pAlias == NULL || ((*(dvar_t **)imp_snd_enableReverb)->current.enabled != 0 && !(pAlias->flags & 0x10))) {
         reverbLevel = sndGlob->effect->wetlevel;
     } else {
@@ -717,7 +717,7 @@ void SND_Update3DChannelReverb(int index)
     const snd_alias_t *pAlias = chaninfo->pAlias0;
     float reverbLevel;
 
-    /* 1.3: 0x4b7900 (2D), 0x4b7970 (3D) */
+    /* 1.3 0x4b7970 */
     if (pAlias == NULL || ((*(dvar_t **)imp_snd_enableReverb)->current.enabled != 0 && !(pAlias->flags & 0x10))) {
         reverbLevel = sndGlob->effect->wetlevel;
     } else {

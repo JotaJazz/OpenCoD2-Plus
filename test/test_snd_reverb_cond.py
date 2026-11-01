@@ -1,6 +1,6 @@
 import os, re, unittest
 
-SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'PC', 'win32', 'snd_driver.c')
+SRC = os.environ.get('SND_DRIVER_SRC') or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'PC', 'win32', 'snd_driver.c')
 
 
 class ReverbCond(unittest.TestCase):
@@ -9,13 +9,17 @@ class ReverbCond(unittest.TestCase):
 
     def level(self, fn, alias, enabled, flags):
         text = open(SRC).read()
-        body = text[text.index('void %s(int index)\n{' % fn):]
-        m = re.search(r'if \((.*)\) \{\n\s+reverbLevel = (\S+);\n\s+\} else \{\n\s+reverbLevel = (\S+);', body)
-        cond = m.group(1).replace('pAlias == NULL', 'alias is None').replace('pAlias != NULL', 'alias is not None')
+        start = text.index('void %s(int index)\n{' % fn)
+        body = text[start:text.index('\n}\n', start)]  # only this function
+        m = re.search(r'if \((.*?)\) \{\s+reverbLevel = (\S+);\s+\} else \{\s+reverbLevel = (\S+);', body, re.S)
+        self.assertIsNotNone(m, fn)
+        cond0 = m.group(1)
+        cond = ' '.join(cond0.split()).replace('pAlias == NULL', 'alias is None').replace('pAlias != NULL', 'alias is not None')
         cond = re.sub(r'\(\*\(const dvar_t \*\*\)imp_snd_enableReverb\)->current\.enabled|\(\*\(dvar_t \*\*\)imp_snd_enableReverb\)->current\.enabled',
                       'enabled', cond).replace('pAlias->flags', 'flags').replace('&&', ' and ').replace('||', ' or ').replace('!', ' not ')
         cond = cond.replace(' not =', '!=')
-        return ('wet' if m.group(2) != '0' else 0) if eval(cond) else ('wet' if m.group(3) != '0' else 0)
+        z = lambda v: 0 if v in ('0', '0.0f') else 'wet'
+        return z(m.group(2)) if eval(cond) else z(m.group(3))
 
     def test_truth_table(self):
         for fn in ('SND_Update2DChannelReverb', 'SND_Update3DChannelReverb', 'SND_UpdateStreamChannelReverb'):
