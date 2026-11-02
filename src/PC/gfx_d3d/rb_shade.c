@@ -18,6 +18,20 @@ extern struct DxState dxState;
 #include "imports.h"
 
 extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
+extern GfxImage r_sceneDepthImage;
+
+/* r_water reads the scene's depth through floatZ: a water material must not write it at the same time */
+static int RB_WaterReadsDepth(const Material *material)
+{
+    int i;
+    if (!r_sceneDepthImage.texture.basemap || !material)
+        return 0;
+    for (i = 0; i < material->textureCount; i++) {
+        if (material->textures[i].semantic == 5)
+            return 1;
+    }
+    return 0;
+}
 extern refimport_t ri;
 extern int alwaysfails;
 #include "bytematch.h"
@@ -610,7 +624,8 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
     }
 
     case 21:
-        *image = NULL;
+        /* 1.3 binds nothing here on PC; with r_water, the scene's INTZ depth (r_rendertarget.c) */
+        *image = r_sceneDepthImage.texture.basemap ? (void *)&r_sceneDepthImage : NULL;
         *samplerState = 0x31;
         return;
 
@@ -1288,6 +1303,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);
@@ -1507,6 +1524,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);

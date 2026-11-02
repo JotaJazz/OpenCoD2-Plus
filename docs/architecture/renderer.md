@@ -69,6 +69,16 @@ keeps only its alpha as reflectivity), and a sharper sun highlight. A map
 without a sky gives that sampler `$watercolor` instead of 1.3's error.
 Same inputs, material arguments and pixel shader 2.0 budget.
 
+With `r_water` on the real Direct3D 9 path, no antialiasing and a card
+that takes it, the frame buffer's depth is an INTZ texture
+(`r_rendertarget.c`), which `floatZ` binds (1.3 binds nothing there on PC).
+The water's shader reads the scene's depth behind each pixel: under 1.3's
+infinite far plane a depth `d` is `1 - near / z`, so each water pixel finds
+`near` from its own depth and turns the scene's into a distance. Shallow water
+fades (alpha, where the material blends) and foams at the shore; water
+materials draw without writing depth while they read it. Without INTZ
+`floatZ` reads 0, which the shader takes as deep water.
+
 The sky's surfaces are the ones whose material has bit 8 in `gameFlags`
 (1.3 `0x10002cb0`); until 2026-11-02 the loader read `surfaceFlags`, found
 none, so `sampler.sky` had no image and the visibility pass never added the

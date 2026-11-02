@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — water knows how deep it is
+
+- With `r_water`, no antialiasing and INTZ, the frame buffer's depth is an INTZ texture bound to `floatZ` (`NULL` in 1.3 on PC). The water's shader turns it into the distance behind each pixel without the projection matrix: with the infinite far plane `d = 1 - near / z`, so `near` comes from the water's own depth. Shallow water fades and foams; water stops writing depth while it reads it.
+- The first FOURCC was `INZT`, which every card refuses; a debug colour of the shader's values (`sceneD > 0`, `near`) showed it, and that `near` matched `r_znear` 4.
+- Refraction is next on this base; the fade only shows where the material blends (`water_duhoc`, sort 27), not on 1.3's opaque water such as `mp_harbor`'s.
+
 ## 2026-11-02 — water reflects the map's sky
 
 - The map loader marked the sky by the material's `surfaceFlags` where 1.3 reads `gameFlags` (`gfx_d3d_mp_x86_s.dll` `0x10002cb0`): no map had sky surfaces, `world->skyImage` stayed empty and the visibility pass never added the sky past the far plane. Fixed; `client_view_test.py` and `shader_compile_test.py` still pass.

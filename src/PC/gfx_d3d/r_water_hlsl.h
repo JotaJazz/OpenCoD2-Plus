@@ -6,7 +6,10 @@
    and takes the reflection by the cube map's alpha alone. This one moves two layers of the same map
    with gameTime (code constant: sin, cos, fraction, seconds), mixes the water's color with the
    reflection of the map's own sky (skySampler; the material's cube keeps its alpha as reflectivity)
-   by Schlick's fresnel and sharpens the sun's highlight. Same inputs, same pixel shader 2.0
+   by Schlick's fresnel and sharpens the sun's highlight. Where the scene's depth is there
+   (floatZSampler, an INTZ texture of ours), the water thins out and foams at the shore: with
+   1.3's infinite far plane a depth d is 1 - near / z, so each water pixel finds near from its own
+   depth and turns the scene's behind it into a distance. Without it floatZ reads 0 and that is off. Same inputs, same pixel shader 2.0
    budget, same material arguments (waterColor, cubeMapSampler, normalMapSampler). */
 static const char r_waterShaderText[] =
     "#include \"globals.hlsl\"\n"
@@ -18,6 +21,7 @@ static const char r_waterShaderText[] =
     "struct PixelInput {\n"
     "  float4 position : POSITION; float4 color : COLOR0; float2 texCoords : TEXCOORD0;\n"
     "  float3 eyeVector : TEXCOORD1;\n"
+    "  float4 clipPos : TEXCOORD2;\n"
     "#if USE_FOG\n"
     "  float fog : FOG_SEMANTIC;\n"
     "#endif\n"
@@ -31,6 +35,7 @@ static const char r_waterShaderText[] =
     "{\n"
     "  PixelInput pixel = (PixelInput) 0;\n"
     "  pixel.position = Transform_ObjectToClip( vertex.position );\n"
+    "  pixel.clipPos = pixel.position;\n"
     "  pixel.color = vertex.color;\n"
     "  pixel.texCoords = vertex.texCoords;\n"
     "  pixel.eyeVector = Transform_ObjectToWorld( vertex.position ) - eyePosition;\n"
@@ -60,7 +65,13 @@ static const char r_waterShaderText[] =
     "  float fresnel = 0.04 + 0.96 * pow( 1 - saturate( -dot( eyeDir, normal ) ), 5 );\n"
     "  fragment.color.rgb = lerp( waterColor.rgb * ( 0.7 + 0.3 * normal.z ), env.rgb, saturate( fresnel + 0.3 * env.a ) )\n"
     "                       + sun * 1.5 * lightColor0.rgb;\n"
-    "  fragment.color.a = pixel.color.a;\n"
+    "  float2 screenUV = pixel.clipPos.xy / pixel.clipPos.w * float2( 0.5, -0.5 ) + 0.5;\n"
+    "  float sceneD = tex2D( floatZSampler, screenUV ).r;\n"
+    "  float nearZ = pixel.clipPos.w * ( 1 - pixel.clipPos.z / pixel.clipPos.w );\n"
+    "  float depth = sceneD > 0 ? nearZ / max( 1 - sceneD, 0.00001 ) - pixel.clipPos.w : 10000;\n"
+    "  float foam = saturate( 1 - depth / 10 ) * saturate( ( h - 0.45 ) * 2.5 );\n"
+    "  fragment.color.rgb = lerp( fragment.color.rgb, float3( 0.85, 0.9, 0.95 ) * ( 0.4 + 0.6 * lightColor0.rgb ), foam * 0.85 );\n"
+    "  fragment.color.a = pixel.color.a * lerp( 0.25, 1, saturate( depth / 24 ) );\n"
     "  Fog_PixelCalc( pixel, fragment );\n"
     "  return fragment;\n"
     "}\n";
