@@ -185,7 +185,7 @@ EffectTemplate *FX_ParseEffect(GenericParser2 *parser, const char *name)
             goto next_group;
         }
 
-        prim = (PrimitiveTemplate *)Hunk_AllocAlignInternal(0x2a4, 4);
+        prim = (PrimitiveTemplate *)Hunk_AllocAlignInternal(COD2_SIZEOF_1_3(PrimitiveTemplate, 0x2a4), 4);
         PrimitiveTemplate_Init(prim);
         prim->mType = (PrimType)type;
         prim->mParentPrimIndex = currentPrimitiveIndex;

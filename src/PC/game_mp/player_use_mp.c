@@ -420,7 +420,7 @@ void Player_UpdateCursorHints(gentity_t *ent)
 
             weaponIndex = (((gentity_t *)(traceEnt))->item.index);
 
-            itemEntry = (gitem_t *)(bg_itemlist_ptr + weaponIndex * 44);
+            itemEntry = (gitem_t *)bg_itemlist_ptr + weaponIndex;
 
             if (itemEntry->giType != 1)
                 continue;

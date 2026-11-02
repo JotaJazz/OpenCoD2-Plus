@@ -380,7 +380,7 @@ const gitem_t *G_FindItem(const char *pickupName)
     base = (char *)imp_bg_itemlist;
 
     for (iIndex = 0x81; iIndex < count; iIndex++) {
-        char *it = base + iIndex * 44;
+        char *it = (char *)((gitem_t *)base + iIndex);   /* 44 bytes on 32 bits, 72 on x64 */
         if (I_stricmp(((gitem_t *)it)->pickup_name, pickupName) == 0) {
             return (const gitem_t *)it;
         }
@@ -393,7 +393,7 @@ const gitem_t *G_FindItem(const char *pickupName)
     if (weaponIndex == 0) {
         return NULL;
     }
-    return (const gitem_t *)(base + weaponIndex * 44);
+    return (const gitem_t *)base + weaponIndex;
 }
 
 void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps)

@@ -824,8 +824,8 @@ Scr_CalcLocalVarsSwitchStatement(sval_t stmtlist, scr_block_t *block)
 
     oldBreakChildBlocks = SCRCG->breakChildBlocks;
     oldBreakChildCount = SCRCG->breakChildCount;
-    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-    caseBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+    caseBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     breakChildCount = 0;
     caseBlockCount = 0;
     currentBlock = NULL;
@@ -982,8 +982,8 @@ static unsigned int __attribute_regparm__(2)
         oldContinueChildBlocks = SCRCG->continueChildBlocks;
         oldContinueChildCount = SCRCG->continueChildCount;
 
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildBlocks = breakChildBlocks;
         SCRCG->breakChildCount = &breakChildCount;
         SCRCG->continueChildBlocks = continueChildBlocks;
@@ -1030,8 +1030,8 @@ static unsigned int __attribute_regparm__(2)
         oldContinueChildBlocks = SCRCG->continueChildBlocks;
         oldContinueChildCount = SCRCG->continueChildCount;
 
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildBlocks = breakChildBlocks;
         SCRCG->breakChildCount = &breakChildCount;
         SCRCG->continueChildBlocks = continueChildBlocks;
@@ -4514,7 +4514,7 @@ static unsigned int __attribute_regparm__(3)
     SCRCG->breakBlock = whileBlock;
 
     if (constConditional) {
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildCount = &breakChildCount;
         pos2 = NULL;
         nextPos2 = NULL;
@@ -4676,13 +4676,13 @@ static unsigned int __attribute_regparm__(3)
 
     breakChildCount = 0;
     continueChildCount = 0;
-    continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     SCRCG->continueChildBlocks = continueChildBlocks;
     SCRCG->continueChildCount = &continueChildCount;
     SCRCG->breakBlock = forBlock;
 
     if (constConditional) {
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildCount = &breakChildCount;
         pos2 = NULL;
         nextPos2 = NULL;
@@ -4828,7 +4828,7 @@ static unsigned int __attribute_regparm__(3)
     oldBreakChildCount = SCRCG->breakChildCount;
     oldBreakBlock = SCRCG->breakBlock;
     breakChildCount = 0;
-    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     SCRCG->breakChildBlocks = breakChildBlocks;
     SCRCG->breakChildCount = &breakChildCount;
     SCRCG->breakBlock = NULL;
