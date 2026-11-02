@@ -56,19 +56,8 @@ static struct {
     Uint32 lastRender;             /* SDL_GetTicks */
 } dig;
 static SndFileCallbacks files;
-static struct {                    /* the game's, in Miles' calling convention */
-    unsigned long (*open)(const char *, unsigned long *);
-    void (*close)(unsigned long);
-    long (*seek)(unsigned long, long, unsigned long);
-    unsigned long (*read)(unsigned long, void *, unsigned long);
-} gameFiles;
 static float rolloff, distFactor;
 static char lastError[256];
-
-static unsigned long FileOpen(const char *name, unsigned long *handle) { return gameFiles.open(name, handle); }
-static void FileClose(unsigned long handle) { gameFiles.close(handle); }
-static long FileSeek(unsigned long handle, long offset, unsigned long type) { return gameFiles.seek(handle, offset, type); }
-static unsigned long FileRead(unsigned long handle, void *buf, unsigned long bytes) { return gameFiles.read(handle, buf, bytes); }
 
 static void Lock(void) { if (dig.dev) SDL_LockAudioDevice(dig.dev); }
 static void Unlock(void) { if (dig.dev) SDL_UnlockAudioDevice(dig.dev); }
@@ -313,21 +302,17 @@ static void DerivedVolumePan(const Sample *s, float *volume, float *pan)
 
 /* Setup */
 
-int AIL_startup(void) { return 1; }
+int AIL_startup(int flags) { (void)flags; return 1; }
 void AIL_set_redist_directory(const char *dir) { (void)dir; }
 int AIL_set_preference(int pref, int value) { (void)pref; (void)value; return 0; }
 const char *AIL_last_error(void) { return lastError; }
 
 void AIL_set_file_callbacks(void *open_cb, void *close_cb, void *seek_cb, void *read_cb)
 {
-    gameFiles.open = (unsigned long (*)(const char *, unsigned long *))open_cb;
-    gameFiles.close = (void (*)(unsigned long))close_cb;
-    gameFiles.seek = (long (*)(unsigned long, long, unsigned long))seek_cb;
-    gameFiles.read = (unsigned long (*)(unsigned long, void *, unsigned long))read_cb;
-    files.open = open_cb ? FileOpen : NULL;   /* AIL_open_stream's test for callbacks */
-    files.close = FileClose;
-    files.seek = FileSeek;
-    files.read = FileRead;
+    files.open = (unsigned long (*)(const char *, unsigned long *))open_cb;   /* AIL_open_stream's test for callbacks */
+    files.close = (void (*)(unsigned long))close_cb;
+    files.seek = (long (*)(unsigned long, long, unsigned long))seek_cb;
+    files.read = (unsigned long (*)(unsigned long, void *, unsigned long))read_cb;
 }
 
 /* bits comes as bytes from snd_driver.c:1671 and matters not: samples are converted at load, the

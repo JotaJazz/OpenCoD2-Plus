@@ -454,7 +454,7 @@ static void stream_tests(void)
 #ifdef SND_TEST_AIL
 #include <stdarg.h>
 /* snd_ail.c's calls, with snd_driver.c's prototypes, and what it needs from the engine */
-int AIL_startup(void);
+int AIL_startup(int flags);
 void AIL_shutdown(void);
 const char *AIL_last_error(void);
 void *AIL_open_digital_driver(int freq, int bits, int channels, int flags);
@@ -622,7 +622,7 @@ static void ail_tests(void)
     set_callbacks();
     SDL_LogSetOutputFunction(silent, NULL);   /* the disk driver's warning */
 
-    ok = AIL_startup() == 1;
+    ok = AIL_startup(0x75) == 1;
     ok = ok && AIL_enumerate_3D_providers(&provider, &handle, &name) == 1 && handle && AIL_open_3D_provider(handle) == 0;
     ok = ok && !strcmp(name, "Miles Fast 2D Positional Audio");
     ok = ok && AIL_enumerate_3D_providers(&provider, &handle, &name) == 0;
