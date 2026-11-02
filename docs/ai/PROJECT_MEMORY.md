@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — water compiles as ps_2_a
+
+- On the user's RTX 5080 Microsoft's `d3dx9_43` refused the refracting water: 91 arithmetic slots, past `ps_2_0`'s 64, so `water_duhoc` loaded without a shader and the seabed's grass showed instead. `r_water`'s water pixel shaders now compile as `ps_2_a` (512 slots).
+- The same `d3dx9_43.dll` and `d3dcompiler_43.dll`, copied from Windows and run under Wine, compiled it as `ps_2_0` without an error: that check does not prove the budget. Open why.
+
 ## 2026-11-02 — water refracts
 
 - With `r_water` and INTZ, `RB_EndSurface` copies the scene drawn so far into `resolvedScene` (`renderTargets[2]`; 1.3 fills it only in `RB_ApplyLatePostEffectsCmd`) before the first water surface of each draw list, and the shader samples it as `sceneColorSampler`: the bottom shows under the water, bent by the waves, clear at the shore and the water's color 160 units down. The water is then opaque; the alpha fade stays for cards without INTZ, which get no copy.

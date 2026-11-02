@@ -12,6 +12,7 @@ static struct DxGlobals * const dx_g = &dx;
 
 extern unsigned char mtlLoadGlob[];
 extern dvar_t *r_rendererInUse;
+extern const dvar_t *r_water;
 
 #if defined(__x86_64__) || defined(_M_X64)
 #    define MTLGLOB_COUNT (*(int *)mtlLoadGlob)
@@ -1557,6 +1558,12 @@ static MaterialShader *MATERIAL_REGPARM2_ABI COD2_FORCE_ALIGN_ARG_POINTER Materi
         } else {
             Com_sprintf(target, 16, "ps_%i_%i", compileVer / 10, compileVer % 10);
             entryPoint = "ps_main";
+#ifdef GFX_REAL_D3D9
+            /* not 1.3's: r_water's text for lib/water.hlsl (r_water_hlsl.h) passes ps_2_0's 64
+               arithmetic slots (Microsoft's compiler counts 91): ps_2_a has 512 */
+            if (r_water && r_water->current.enabled && !strncmp(filename, "water", 5))
+                Com_sprintf(target, 16, "ps_2_a");
+#endif
         }
     }
 

@@ -10,8 +10,9 @@
    (floatZSampler, an INTZ texture of ours), the water thins out and foams at the shore: with
    1.3's infinite far plane a depth d is 1 - near / z, so each water pixel finds near from its own
    depth and turns the scene's behind it into a distance, and shows the scene under it (sceneColorSampler,
-   copied before the water, rb_shade.c) bent by the waves. Without it floatZ reads 0 and that is off. Same inputs, same pixel shader 2.0
-   budget, same material arguments (waterColor, cubeMapSampler, normalMapSampler). */
+   copied before the water, rb_shade.c) bent by the waves. Without it floatZ reads 0 and that is off. Same inputs and material
+   arguments (waterColor, cubeMapSampler, normalMapSampler); compiled as ps_2_a, past ps_2_0's 64
+   arithmetic slots (r_material_load_obj.c). */
 static const char r_waterShaderText[] =
     "#include \"globals.hlsl\"\n"
     "#define FOGVAR fog\n"

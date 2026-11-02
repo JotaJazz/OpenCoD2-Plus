@@ -67,7 +67,8 @@ the water's color and the reflection of the map's own sky (`skySampler`, a
 default code sampler of ours on `sampler.sky`; the material's generic cube
 keeps only its alpha as reflectivity), and a sharper sun highlight. A map
 without a sky gives that sampler `$watercolor` instead of 1.3's error.
-Same inputs, material arguments and pixel shader 2.0 budget.
+Same inputs and material arguments; its pixel shader compiles as `ps_2_a`
+(512 slots): Microsoft's compiler counts 91 arithmetic slots, past `ps_2_0`'s 64.
 
 With `r_water` on the real Direct3D 9 path, no antialiasing and a card
 that takes it, the frame buffer's depth is an INTZ texture
