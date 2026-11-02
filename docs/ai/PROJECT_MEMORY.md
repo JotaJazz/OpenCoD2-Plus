@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — 4096 dvars and a freeze report
+
+- The client's dvar pool goes from 1280 to 4096, as CoD2x's does; the dedicated server keeps CoD2rev-Plus's limit. The command buffer goes from 64 KB to 512 KB: `exec` has to hold a whole file, and past 64 KB `config_mp.cfg` was dropped, then rewritten from defaults, which more dvars reach. The review of this change found that.
+- `com_freezeWatch` is ours, in the crash handler, for Windows only: a thread that sees no frame for that many seconds writes `cod2_freeze_<pid>.txt`. It copies the main thread's context and lets it go before writing anything, as a thread suspended on the heap's lock would turn a pause into a hang.
+- With many iwds the server's systeminfo drops one list of a pair, and the client ended the session with a count mismatch, a local game over Titan's iwds included. It now warns and takes the shorter list. CoD2rev-Plus's own `iwd sum/name mismatch` is untouched.
+
 ## 2026-11-02 — the compass shows objectives
 
 - `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it, and takes the owner draw's `rect`, so the compass offsets hold. Found by the review of CoD2x's options, confirmed by the user in Search and Destroy.

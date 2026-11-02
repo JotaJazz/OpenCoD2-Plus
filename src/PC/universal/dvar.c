@@ -8,7 +8,6 @@ extern int dvar_modifiedFlags;
 extern dvar_t *sortedDvars;
 extern int dvarCount;
 static const dvar_t *dvar_cheats;
-static dvar_t dvarPool[1280];
 static dvar_t *dvarHashTable[256];
 static float dvarVectorPool[12];
 static int dvarVectorIndex;
@@ -31,10 +30,11 @@ enum {
     DVAR_FLAG_READONLY = 0x40,
     DVAR_FLAG_CHEAT = 0x80,
     DVAR_FLAG_EXTERNAL = 0x4000,
-    DVAR_MAX_COUNT = 0x500,
+    DVAR_MAX_COUNT = 4096,
     CON_CHANNEL_LOGFILEONLY = 4,
     DVAR_INVALID_ENUM_INDEX = -1337
 };
+static dvar_t dvarPool[DVAR_MAX_COUNT];   /* 1.3: 1280, which big mods reach */
 static const char dvarDigitStrings[10][2] = {
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
 };
@@ -2400,7 +2400,8 @@ const dvar_t *Dvar_SetFromStringByNameFromSource(const char *dvarName, const cha
         return dvar;
     }
 
-    return Dvar_RegisterString_inl(dvarName, string, 0x4000);
+    /* set and a server's dvars: a full pool must not be fatal, as it is for the game's own */
+    return Dvar_CanCreate(dvarName) ? Dvar_RegisterString_inl(dvarName, string, 0x4000) : NULL;
 }
 
 void Dvar_SetCommand(const char *dvarName, const char *string)

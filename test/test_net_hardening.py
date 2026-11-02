@@ -69,7 +69,7 @@ class NetHardening(unittest.TestCase):
         self.assertEqual({n: self.ask('cvar', n) for n in names}, {n: expected for n in names})
 
     def test_commands_blocked(self):
-        self.assert_cvars(['activeAction', 'ACTIVEACTION', 'nextdemo', 'com_writeConfig'], '0')
+        self.assert_cvars(['activeAction', 'ACTIVEACTION', 'nextdemo', 'com_writeConfig', 'com_freezeWatch'], '0')
 
     def test_protected_blocked(self):
         self.assert_cvars(['fs_basepath', 'FS_BASEPATH', 'rcon_password', 'RCON_PASSWORD', 'cl_allowDownload',

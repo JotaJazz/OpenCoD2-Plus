@@ -147,6 +147,10 @@ static void Com_GetConfigureDvarValues(int dvarCount, const char **text, char *d
 static void Com_SetConfigureDvars(int dvarCount, const char *dvarNames, const char *dvarValues);
 static void Com_WriteConfigToFile(const char *filename);
 static const dvar_t *com_writeConfig;
+static const dvar_t *com_freezeWatch;
+#ifdef _WIN32
+extern void Sys_FreezeWatchFrame(int seconds);
+#endif
 void Com_WriteConfig_f(void);
 float Com_GetTimescaleForSnd(void);
 void Com_Close(void);
@@ -1773,6 +1777,9 @@ void Com_Frame(void)
     if (!setjmp(*abortframe)) {
         Com_Frame_Try_Block_Function();
         com_frameNumber++;
+#ifdef _WIN32
+        Sys_FreezeWatchFrame(com_freezeWatch->current.integer);
+#endif
     }
 
     if (com_errorEntered) {
@@ -2026,6 +2033,7 @@ void Com_Init_Try_Block_Function(char *commandLine)
     }
 
     com_maxfps = Dvar_RegisterInt("com_maxfps", 85, 0, 1000, 0x1001);
+    com_freezeWatch = Dvar_RegisterInt("com_freezeWatch", 30, 0, 3600, 0x1001);   /* not 1.3's: seconds, 0 is off */
     com_writeConfig = Dvar_RegisterBool("com_writeConfig", 1, 0x1000);   /* not 1.3's: a config kept as it is */
     com_developer = Dvar_RegisterInt("developer", 0, 0, 2, 0x1000);
     com_developer_script = Dvar_RegisterBool("developer_script", 0, 0x1000);

@@ -176,9 +176,10 @@ it has no license, and it patches the running 1.3 binary.
 | `cg_drawCompass` | 0 hides the compass, its owner draws in `CG_OwnerDraw` |
 | `cg_hudCompassOffsetX`, `cg_hudCompassOffsetY` | move the compass, in 640x480 units |
 | `cg_drawSpectatedPlayerName` | 0 hides "following" and the name when spectating |
+| `com_freezeWatch` | seconds without a frame before the Windows client writes `cod2_freeze_<pid>.txt` with the main thread's stack, once per freeze; 0 is off. It only reports: a slow map load leaves one too |
 | `com_writeConfig` | 0 stops the automatic write of `config_mp.cfg`; the `writeconfig` command still works. Not archived, as nothing would save it: it goes in the config as `set com_writeConfig 0`, or on the command line. A server cannot set it |
 
-`cl_maxpackets` goes up to 125, one packet per frame at `com_maxfps 125`. `snaps`
+The client holds 4096 dvars, against 1.3's 1280, which big mods reach, and a command buffer of 512 KB, against 64 KB, as `exec` needs the whole `config_mp.cfg` to fit. `cl_maxpackets` goes up to 125, one packet per frame at `com_maxfps 125`. `snaps`
 stays at 30: the server caps it there, and at 40 Hz `g_forceSnaps` decides. There
 is no raw mouse option: SDL's relative mode already reads Raw Input on Windows.
 

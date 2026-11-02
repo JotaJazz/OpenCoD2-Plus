@@ -27,6 +27,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/www_download_test.py GAME` | a client joins a 1.3 server whose mod it lacks: it fetches the mod's `.iwd` over HTTP (`sv_wwwBaseURL`, a local HTTP server), keeps it byte for byte and joins; `--disconnect` (`sv_wwwDlDisconnected 1`: leave, download, reconnect); `--wine WINE --binary EXE` runs the Windows client (WinINet) | yes |
 | `scripts/hud_align_test.py` | hud elements land where their `horzAlign`/`vertAlign` and `alignX`/`alignY` put them: three colored boxes (center_safearea/top centered, right/bottom, left/middle) found in a screenshot | yes |
 | `scripts/hud_options_test.py` | `cg_drawCompass 0` takes the compass away, `cg_hudCompassOffsetX`/`Y` move it, found by comparing screenshots; `com_writeConfig 0` leaves no `config_mp.cfg`; an objective appears on its side of the compass, with its own icon | yes |
+| `scripts/stability_test.py` | a client archives 3000 dvars and reads them back from a config over 64 KB, and past the pool's end `set` only prints; with `--wine CMD --binary cod2_win32.exe`, `com_freezeWatch` reports the `freeze` command's stall, the client goes on, and 0 turns it off | yes |
 | `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |

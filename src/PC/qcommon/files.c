@@ -646,6 +646,15 @@ const char *FS_ReferencedIwdPureChecksums(void)
     return info6;
 }
 
+/* Past the 1024 of an info string the server drops one list of a pair, and 1.3 ends the session. A
+   client does without the rest: what it loses is a download or a pure check, which fail on their own. */
+static int FS_IwdListsAgree(int sums, int names)
+{
+    if (sums != names)
+        Com_Printf("WARNING: the server's iwd lists differ: %i sums, %i names\n", sums, names);
+    return sums < names ? sums : names;
+}
+
 void FS_PureServerSetLoadedIwds(const char *iwdSums, const char *iwdNames)
 {
     int serverIwds[1024];
@@ -673,14 +682,12 @@ void FS_PureServerSetLoadedIwds(const char *iwdSums, const char *iwdNames)
         d = 0x400;
     }
 
+    c = d = FS_IwdListsAgree(c, d);
+
     if (d > 0) {
         for (i = 0; i < d; i++) {
             serverIwdNames[i] = CopyStringInternal(Cmd_Argv(i));
         }
-    }
-
-    if (c != d) {
-        Com_Error(1, "FS_PureServerSetLoadedIwds: count mismatch");
     }
 
     {
@@ -785,11 +792,7 @@ void FS_PureServerSetReferencedIwds(const char *iwdSums, const char *iwdNames)
 
     if (iwdNames == NULL || iwdNames[0] == '\0') {
 
-        if (c != 0) {
-            Com_Error(1, "FS_PureServerSetReferencedIwds: count mismatch");
-        }
-
-        *(int *)imp_fs_numServerReferencedIwds = c;
+        *(int *)imp_fs_numServerReferencedIwds = FS_IwdListsAgree(c, 0);
         return;
     }
 
@@ -799,9 +802,7 @@ void FS_PureServerSetReferencedIwds(const char *iwdSums, const char *iwdNames)
         d = 0x400;
     }
 
-    if (c != d) {
-        Com_Error(1, "FS_PureServerSetReferencedIwds: count mismatch");
-    }
+    c = d = FS_IwdListsAgree(c, d);
 
     if (d > 0) {
         fs_serverReferencedIwdNames = (char **)imp_fs_serverReferencedIwdNames;
