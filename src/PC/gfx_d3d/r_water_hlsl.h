@@ -69,9 +69,9 @@ static const char r_waterShaderText[] =
     "  float sceneD = tex2D( floatZSampler, screenUV ).r;\n"
     "  float nearZ = pixel.clipPos.w * ( 1 - pixel.clipPos.z / pixel.clipPos.w );\n"
     "  float depth = sceneD > 0 ? nearZ / max( 1 - sceneD, 0.00001 ) - pixel.clipPos.w : 10000;\n"
-    "  float foam = saturate( 1 - depth / 10 ) * saturate( ( h - 0.45 ) * 2.5 );\n"
-    "  fragment.color.rgb = lerp( fragment.color.rgb, float3( 0.85, 0.9, 0.95 ) * ( 0.4 + 0.6 * lightColor0.rgb ), foam * 0.85 );\n"
-    "  fragment.color.a = pixel.color.a * lerp( 0.25, 1, saturate( depth / 24 ) );\n"
+    "  float foam = max( saturate( 1 - depth / 20 ) * ( 0.6 + 0.4 * saturate( h ) ), saturate( 1 - depth / 60 ) * saturate( ( h - 0.3 ) * 3 ) );\n"
+    "  fragment.color.rgb = lerp( fragment.color.rgb, float3( 0.95, 0.97, 1.0 ) * ( 0.5 + 0.5 * lightColor0.rgb ), foam );\n"
+    "  fragment.color.a = pixel.color.a * max( lerp( 0.25, 1, saturate( depth / 24 ) ), foam );\n"
     "  Fog_PixelCalc( pixel, fragment );\n"
     "  return fragment;\n"
     "}\n";
