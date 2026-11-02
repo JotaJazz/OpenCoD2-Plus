@@ -11495,7 +11495,7 @@ struct cplane_s {
 
 struct cspField_t {
     const char *szName;
-    int iOffset;
+    ptrdiff_t iOffset;   /* CoD2rev-Plus's: 8 bytes on x64 */
     int iFieldType;
 };
 
@@ -14072,8 +14072,14 @@ struct scrVmPub_t {
 };
 
 struct scr_anim_s {
-    short unsigned int index;
-    short unsigned int tree;
+    /* CoD2rev-Plus's: while it links an anim, the VM keeps a code position here (8 bytes on x64) */
+    union {
+        struct {
+            short unsigned int index;
+            short unsigned int tree;
+        };
+        const char *linkPointer;
+    };
 };
 
 struct loadAnim_t {
@@ -15399,20 +15405,20 @@ struct gentity_s {
     qboolean unlinkAfterEvent;
     int clipmask;
     int processedFrame;
-    int parent;
+    struct gentity_s *parent;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     int nextthink;
     int health;
     int maxHealth;
     int damage;
     int count;
-    int chain;
+    struct gentity_s *chain;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     union { struct item_ent_t item; struct trigger_ent_t trigger; struct mover_ent_t mover; struct corpse_ent_t corpse; struct grenade_ent_t grenade; };
-    int tagInfo;
-    int tagChildren;
+    struct tagInfo_s *tagInfo;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
+    struct gentity_s *tagChildren;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     byte attachModelNames[7];
     scr_string_t attachTagNames[7];
     int useCount;
-    int nextFree;
+    struct gentity_s *nextFree;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
 };
 
 int COD2_GEntityHandle(const gentity_t *ent);
