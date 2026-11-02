@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,7 +59,7 @@ int CDirect3DSurface_GetGLBlitInfo(const void *surf, unsigned int *texId, unsign
 
     if (!s || !s->owner)
         return 0;
-    id = *(const unsigned int *)((const byte *)s->owner + 5 * sizeof(void *) + 64);
+    id = ((const D3DTextureHead *)s->owner)->texIDStorage;
     if (!id)
         return 0;
     if (texId)

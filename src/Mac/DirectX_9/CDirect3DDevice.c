@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -602,10 +603,8 @@ static unsigned int CDirect3DDevice_GetTextureGLId(IDirect3DBaseTexture9 *textur
 {
     if (!CDirect3DDevice_IsRealTexture(texture))
         return 0;
-    /* CDirect3DTexture.texIDStorage: 3 ptrs (2 vtbl + mpTexID) + 16 int fields(64B) +
-       2 ptrs (surfaces,pixelData) => 5*sizeof(void*)+64. x86=0x54, x64=0x68.
-       CDirect3DCubeTexture has the same layout up to this field. */
-    return *(unsigned int *)((byte *)texture + 5 * sizeof(void *) + 64);
+    /* CDirect3DTexture and CDirect3DCubeTexture share this head (d3d_heads.h) */
+    return ((const D3DTextureHead *)texture)->texIDStorage;
 }
 
 static GLenum CDirect3DDevice_GetTextureTarget(IDirect3DBaseTexture9 *texture)
@@ -1608,7 +1607,7 @@ HRESULT CDirect3DDevice_DrawIndexedPrimitive(const CDirect3DDevice *_this,
     if (!dev->streams[0] || !dev->indexBuffer)
         return 0;
 
-    vbData = *(byte **)((byte *)dev->streams[0] + sizeof(void *) + 8);   /* VB.data: vtable+refCount+lengthBytes (x86 was +12) */
+    vbData = ((const D3DBufferHead *)dev->streams[0])->data;
     if (!vbData)
         return 0;
     offset = dev->streamOffsets[0];
@@ -1662,7 +1661,7 @@ HRESULT CDirect3DDevice_DrawIndexedPrimitive(const CDirect3DDevice *_this,
     else
         colorByteOrder = COLOR_BYTES_BGRA;
 
-    ibData = *(byte **)((byte *)dev->indexBuffer + sizeof(void *) + 8);   /* IB.data (x86 was +12) */
+    ibData = ((const D3DBufferHead *)dev->indexBuffer)->data;
     if (!ibData)
         return 0;
 

@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 typedef void (*fnptr_t)(void);
@@ -51,6 +52,11 @@ typedef struct {
     byte *pixelData;
     GLuint texIDStorage;
 } CDirect3DCubeTextureClean;
+D3D_HEAD_CHECK(CDirect3DCubeTextureClean, D3DTextureHead, refCount);
+D3D_HEAD_CHECK(CDirect3DCubeTextureClean, D3DTextureHead, surfaces);
+D3D_HEAD_CHECK(CDirect3DCubeTextureClean, D3DTextureHead, pixelData);
+D3D_HEAD_CHECK(CDirect3DCubeTextureClean, D3DTextureHead, texIDStorage);
+
 
 ULONG CDirect3DCubeTexture_AddRef(const CDirect3DCubeTexture *_this);
 void ZN20CDirect3DCubeTextureD0Ev(void *_this);
