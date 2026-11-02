@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — review of the water branch
+
+- Without a scene copy (antialiasing, no INTZ) `sceneColorSampler` read `renderTargets[R_RENDERTARGET_NONE]`, past the 13 targets: 1.3's `techFlags & 2` skip never fires for a sampler bound by name (only explicit arguments set it, `r_material_load_obj.c`). It now gets black; checked with `r_aaSamples 4` on `cod2_linux_vk` (water drawn, no crash).
+- `floatZ` binds the INTZ depth only for water materials (the only ones that stop writing it); the copy runs only into the frame buffer and marks `resolvedScene` only when `StretchRect` succeeds.
+- Rejected from the review: that the water technique would be skipped without the copy (the flag is not set, see above).
+
 ## 2026-11-02 — water compiles as ps_2_a
 
 - On the user's RTX 5080 Microsoft's `d3dx9_43` refused the refracting water: 91 arithmetic slots, past `ps_2_0`'s 64, so `water_duhoc` loaded without a shader and the seabed's grass showed instead. `r_water`'s water pixel shaders now compile as `ps_2_a` (512 slots).

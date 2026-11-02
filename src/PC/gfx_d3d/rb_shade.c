@@ -46,17 +46,21 @@ static void RB_CopySceneForWater(const Material *material)
     IDirect3DSurface9 *dest;
     void *device = dx_g->device;
 
-    if (rb_waterSceneCopied || !dxState.renderTargetSurface || !RB_WaterReadsDepth(material))
+    HRESULT hr;
+
+    if (rb_waterSceneCopied || dxState.renderTargetId != R_RENDERTARGET_FRAME_BUFFER ||
+        !dxState.renderTargetSurface || !RB_WaterReadsDepth(material))
         return;
     rb_waterSceneCopied = 1;
     dest = Image_GetSurface((GfxImage *)dx_g->renderTargets[R_RENDERTARGET_RESOLVED_SCENE].image);
     if (!dest)
         return;
     /* IDirect3DDevice9::StretchRect, as RB_ApplyLatePostEffectsCmd does */
-    ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))(*(void ***)device)[0x88 / 4])(
+    hr = ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))(*(void ***)device)[0x88 / 4])(
         device, dxState.renderTargetSurface, NULL, dest, NULL, 2);
     ((HRESULT(D3DVTCC *)(void *))((*(void ***)dest)[2]))((void *)dest);
-    ((r_backEndGlobals_t *)imp_backEnd)->resolvedSceneTarget = R_RENDERTARGET_RESOLVED_SCENE;
+    if (hr >= 0)
+        ((r_backEndGlobals_t *)imp_backEnd)->resolvedSceneTarget = R_RENDERTARGET_RESOLVED_SCENE;
 #else
     (void)material;
 #endif
@@ -596,6 +600,13 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
 
     case 15:
         idx = backEnd->resolvedSceneTarget;
+        /* 1.3 never gets here without a resolved scene (techFlags & 2 skips the technique); r_water's
+           sceneColorSampler, bound by name, does when there was no copy: black, past the array */
+        if (idx >= R_RENDERTARGET_COUNT) {
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->blackImage);
+            *samplerState = 0x32;
+            return;
+        }
         *image = (void *)((DxGlobals *)dx)->renderTargets[idx].image;
         *samplerState = 0x32;
         return;
@@ -654,7 +665,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
 
     case 21:
         /* 1.3 binds nothing here on PC; with r_water, the scene's INTZ depth (r_rendertarget.c) */
-        *image = r_sceneDepthImage.texture.basemap ? (void *)&r_sceneDepthImage : NULL;
+        *image = RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material) ? (void *)&r_sceneDepthImage : NULL;   /* only water stops writing it */
         *samplerState = 0x31;
         return;
 

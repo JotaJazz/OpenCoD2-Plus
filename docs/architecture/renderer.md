@@ -87,7 +87,12 @@ the water, bent by the waves' normal (a bent sample that lands on something
 in front of the water takes the straight one), clear at the shore and fading
 into the water's color 160 units down; the water is then opaque, as its
 vertex alpha says. Over the void (`mp_harbor`'s open sea) it is the water's
-color, as before. Without INTZ there is no copy and water fades by alpha.
+color, as before. Without INTZ there is no copy and water fades by alpha;
+`sceneColorSampler` then gets black (1.3 never binds `resolvedScene` without a
+copy: `techFlags & 2` skips the technique, which a sampler bound by name does
+not set). `floatZ` gets the INTZ depth only for water materials, the ones that
+stop writing it. Techniques with `sampler.resolvedScene` drawn after the water
+see its copy for the rest of the frame, where 1.3 would skip them.
 
 The sky's surfaces are the ones whose material has bit 8 in `gameFlags`
 (1.3 `0x10002cb0`); until 2026-11-02 the loader read `surfaceFlags`, found
