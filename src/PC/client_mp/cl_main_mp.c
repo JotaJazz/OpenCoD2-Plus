@@ -30,7 +30,7 @@ extern const dvar_t *sv_voice;
 extern const dvar_t *Dvar_RegisterBool(const char *dvarName, unsigned char value, unsigned short flags);
 extern int CM_BoxSightTrace(int oldHitNum, const vec_t *start, const vec_t *end,
                             const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask);
-extern int I_strnicmp(const char *s0, const char *s1, size_t n);
+extern int I_strnicmp(const char *s0, const char *s1, int n);
 extern char *strupr(char *s);
 extern void *Hunk_AllocAlignInternal(int size, int alignment);
 

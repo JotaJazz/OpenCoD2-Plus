@@ -10,7 +10,7 @@ extern void Com_DPrintf(const char *fmt, ...);
 
 extern const dvar_t *Dvar_FindVar(const char *dvarName);
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 
 #    define NH_DVAR_FLAG_SYSTEMINFO 0x08
 #    define NH_DVAR_FLAG_CODINFO 0x100

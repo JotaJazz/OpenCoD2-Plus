@@ -170,7 +170,7 @@ extern int GetClientname(int index, char *name, int nameSize);
 extern void I_strncpyz(char *dest, const char *src, int len);
 extern char *I_CleanStr(char *str);
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern void I_strncat(char *dest, int len, const char *src);
 extern int FS_FOpenFileByMode(const char *name, int *f, int mode);
 extern int FS_Read(void *buf, int len, int f);

@@ -11,7 +11,7 @@ extern "C" {
 void Com_Printf(const char *fmt, ...) {}
 void Com_DPrintf(const char *fmt, ...) {}
 int I_stricmp(const char *a, const char *b) { return strcasecmp(a, b); }
-int I_strnicmp(const char *a, const char *b, size_t n) { return strncasecmp(a, b, n); }
+int I_strnicmp(const char *a, const char *b, int n) { return strncasecmp(a, b, n); }
 const dvar_t *Dvar_FindVar(const char *name)
 {
     static dvar_t d;

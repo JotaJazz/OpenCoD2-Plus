@@ -16,7 +16,7 @@ extern char *Cmd_Argv(int arg);
 extern void I_strncat(char *dest, int maxlen, const char *src);
 extern int I_stricmp(const char *s0, const char *s1);
 extern Bool I_isdigit(int c);
-extern int I_strnicmp(const char *s0, const char *s1, size_t n);
+extern int I_strnicmp(const char *s0, const char *s1, int n);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern void Com_Printf(const char *fmt, ...);
 extern void FS_Printf(fileHandle_t f, const char *fmt, ...);

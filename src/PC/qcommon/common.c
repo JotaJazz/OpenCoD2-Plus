@@ -1407,7 +1407,7 @@ void Com_ExecStartupConfigs(const char *configFile)
 static qboolean Com_RefuseOtherProtocol(netadr_t from, const msg_t *msg)
 {
     extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
-    extern int I_strnicmp(const char *s1, const char *s2, size_t count);
+    extern int I_strnicmp(const char *s1, const char *s2, int count);
     char line[1024];
     const char *protocol;
     int len;
@@ -1989,7 +1989,7 @@ void Com_Init_Try_Block_Function(char *commandLine)
     extern void Sys_HideSplashWindow(void);
     extern void Sys_LoadingKeepAlive(void);
     extern void Cbuf_AddText(const char *text);
-    extern int I_strnicmp(const char *s1, const char *s2, size_t count);
+    extern int I_strnicmp(const char *s1, const char *s2, int count);
     char *p;
     int i;
 

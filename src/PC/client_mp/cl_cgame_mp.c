@@ -36,7 +36,7 @@ extern void Cmd_TokenizeString(const char *text);
 extern void Cmd_TokenizeString2(const char *text, int flags);
 extern void Cmd_AddCommand(const char *cmd, void (*func)(void));
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern void I_strncat(char *dest, int size, const char *src);
 extern void I_strncpyz(char *dest, const char *src, int maxLen);
 extern void CM_LoadMap(const char *name, int *checksum);

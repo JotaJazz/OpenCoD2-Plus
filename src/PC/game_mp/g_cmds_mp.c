@@ -37,7 +37,7 @@ extern void SV_SetConfigstring(const int index, const char *val);
 extern int SV_Cmd_Argc(void);
 extern void SV_Cmd_ArgvBuffer(int arg, char *buffer, int bufferLength);
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern char *I_CleanStr(char *string);
 extern qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2);

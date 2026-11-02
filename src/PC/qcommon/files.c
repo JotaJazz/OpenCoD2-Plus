@@ -78,7 +78,7 @@ extern void FS_ShutdownServerIwdNames(void);
 extern void Com_Memcpy(void *dest, const void *src, int count);
 extern void SND_StopSounds(snd_stopsounds_arg_t flags);
 extern void FS_ShutdownServerReferencedIwds(void);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern int stricmp(const char *s1, const char *s2);
 extern void *Z_MallocInternal(int size);
 extern char **Sys_ListFiles(const char *directory, const char *extension, const char *filter, int *numfiles, int wantSubs);
