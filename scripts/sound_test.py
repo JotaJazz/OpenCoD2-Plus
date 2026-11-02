@@ -14,9 +14,8 @@ SDL_AUDIODRIVER=nonexistent reaches the menu with the failure in its log and no
 crash. snd_khz_22: the menu's music at 22 kHz. callback_cost: bots fighting on a
 local game (scripts/install_bots.py), the worst callback snd_stats prints is
 below half the buffer. Exits with 0 when every case passes. --wine runs a
-Windows client (cod2_win32.exe, given with --binary) with that command and
-snd_backend sdl, as Miles does not load under Wine. --keep copies each case's
-log and audio to DIR. The client opens a window and needs a CD key in
+Windows client (cod2_win32.exe, given with --binary) with that command. --keep copies each case's log and
+audio to DIR. The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
 import argparse, array, glob, math, os, re, shutil, subprocess, sys, tempfile
@@ -155,7 +154,7 @@ class Run:
             command, audio_path = [self.binary], audio
             if self.args.wine:
                 base, homepath, audio_path = wine_path(self.game), wine_path(home), wine_path(audio)
-                command = [self.args.wine, self.binary, '+set', 'snd_backend', 'sdl']
+                command = [self.args.wine, self.binary]
             with open(log_path, 'wb') as log:
                 client = subprocess.Popen(
                     command + ['+set', 'fs_basepath', base, '+set', 'fs_homepath', homepath, '+set', 'com_maxfps', str(FPS),

@@ -9,20 +9,11 @@
 #include <string.h>
 #include "snd_sdl.h"
 
-/* On Windows mss32_dll.c keeps the AIL_* names and calls these through SndSdl_Find, as Miles' */
-#ifdef COD2_MSS32_DLL
-#define SA_NAME(name) Sdl_##name
-#define SA_API __stdcall
-#else
-#define SA_NAME(name) name
-#define SA_API
-#endif
-
 extern void Com_Printf(const char *fmt, ...);
 extern void Cmd_AddCommand(const char *cmdName, void (*function)(void));
 extern void Cmd_RemoveCommand(const char *cmdName);
 extern long sndWavFileLen;         /* snd_driver.c: AIL_WAV_info's signature has no length */
-void SA_API SA_NAME(AIL_close_stream)(void *S);
+void AIL_close_stream(void *S);
 
 enum {
     MAX_SAMPLES = 54,              /* 8 2D, 32 3D, 13 streams, raw */
@@ -66,10 +57,10 @@ static struct {
 } dig;
 static SndFileCallbacks files;
 static struct {                    /* the game's, in Miles' calling convention */
-    unsigned long (SA_API *open)(const char *, unsigned long *);
-    void (SA_API *close)(unsigned long);
-    long (SA_API *seek)(unsigned long, long, unsigned long);
-    unsigned long (SA_API *read)(unsigned long, void *, unsigned long);
+    unsigned long (*open)(const char *, unsigned long *);
+    void (*close)(unsigned long);
+    long (*seek)(unsigned long, long, unsigned long);
+    unsigned long (*read)(unsigned long, void *, unsigned long);
 } gameFiles;
 static float rolloff, distFactor;
 static char lastError[256];
@@ -322,17 +313,17 @@ static void DerivedVolumePan(const Sample *s, float *volume, float *pan)
 
 /* Setup */
 
-int SA_API SA_NAME(AIL_startup)(void) { return 1; }   /* _AIL_startup@0: mss32_dll.c drops the driver's flags */
-void SA_API SA_NAME(AIL_set_redist_directory)(const char *dir) { (void)dir; }
-int SA_API SA_NAME(AIL_set_preference)(int pref, int value) { (void)pref; (void)value; return 0; }
-const char *SA_API SA_NAME(AIL_last_error)(void) { return lastError; }
+int AIL_startup(void) { return 1; }
+void AIL_set_redist_directory(const char *dir) { (void)dir; }
+int AIL_set_preference(int pref, int value) { (void)pref; (void)value; return 0; }
+const char *AIL_last_error(void) { return lastError; }
 
-void SA_API SA_NAME(AIL_set_file_callbacks)(void *open_cb, void *close_cb, void *seek_cb, void *read_cb)
+void AIL_set_file_callbacks(void *open_cb, void *close_cb, void *seek_cb, void *read_cb)
 {
-    gameFiles.open = (unsigned long (SA_API *)(const char *, unsigned long *))open_cb;
-    gameFiles.close = (void (SA_API *)(unsigned long))close_cb;
-    gameFiles.seek = (long (SA_API *)(unsigned long, long, unsigned long))seek_cb;
-    gameFiles.read = (unsigned long (SA_API *)(unsigned long, void *, unsigned long))read_cb;
+    gameFiles.open = (unsigned long (*)(const char *, unsigned long *))open_cb;
+    gameFiles.close = (void (*)(unsigned long))close_cb;
+    gameFiles.seek = (long (*)(unsigned long, long, unsigned long))seek_cb;
+    gameFiles.read = (unsigned long (*)(unsigned long, void *, unsigned long))read_cb;
     files.open = open_cb ? FileOpen : NULL;   /* AIL_open_stream's test for callbacks */
     files.close = FileClose;
     files.seek = FileSeek;
@@ -341,7 +332,7 @@ void SA_API SA_NAME(AIL_set_file_callbacks)(void *open_cb, void *close_cb, void 
 
 /* bits comes as bytes from snd_driver.c:1671 and matters not: samples are converted at load, the
    device is S16. A failure is for snd_driver.c's failure path. */
-void *SA_API SA_NAME(AIL_open_digital_driver)(int freq, int bits, int channels, int flags)
+void *AIL_open_digital_driver(int freq, int bits, int channels, int flags)
 {
     SDL_AudioSpec want, got;
 
@@ -374,7 +365,7 @@ void *SA_API SA_NAME(AIL_open_digital_driver)(int freq, int bits, int channels, 
     return &dig;
 }
 
-int SA_API SA_NAME(AIL_digital_CPU_percent)(void *d)
+int AIL_digital_CPU_percent(void *d)
 {
     int percent;
 
@@ -385,12 +376,12 @@ int SA_API SA_NAME(AIL_digital_CPU_percent)(void *d)
     return percent;
 }
 
-void SA_API SA_NAME(AIL_shutdown)(void)
+void AIL_shutdown(void)
 {
     int i;
 
     for (i = 0; i < MAX_SAMPLES; i++)
-        if (samples[i].stream) SA_NAME(AIL_close_stream)(&samples[i]);
+        if (samples[i].stream) AIL_close_stream(&samples[i]);
     if (dig.dev) {
         SDL_CloseAudioDevice(dig.dev);
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -407,7 +398,7 @@ void SA_API SA_NAME(AIL_shutdown)(void)
 
 /* The one provider: its name is what snd_driver.c and config files look for. Its handle only has to
    be something other than NULL. */
-int SA_API SA_NAME(AIL_enumerate_3D_providers)(void *next, void **handle, const char **name)
+int AIL_enumerate_3D_providers(void *next, void **handle, const char **name)
 {
     void **it = next;
 
@@ -417,23 +408,23 @@ int SA_API SA_NAME(AIL_enumerate_3D_providers)(void *next, void **handle, const 
     return 1;
 }
 
-int SA_API SA_NAME(AIL_open_3D_provider)(void *handle) { (void)handle; return 0; }
-void SA_API SA_NAME(AIL_close_3D_provider)(void *lib) { (void)lib; }
+int AIL_open_3D_provider(void *handle) { (void)handle; return 0; }
+void AIL_close_3D_provider(void *lib) { (void)lib; }
 
-void SA_API SA_NAME(AIL_3D_provider_attribute)(void *provider, const char *name, void *val)
+void AIL_3D_provider_attribute(void *provider, const char *name, void *val)
 {
     (void)provider;
     if (!strcmp(name, "Maximum supported samples")) *(int *)val = MAX_3D;
 }
 
-void SA_API SA_NAME(AIL_set_3D_distance_factor)(void *provider, float factor) { (void)provider; distFactor = factor; }
-void SA_API SA_NAME(AIL_set_3D_rolloff_factor)(void *provider, float factor) { (void)provider; rolloff = factor; }
+void AIL_set_3D_distance_factor(void *provider, float factor) { (void)provider; distFactor = factor; }
+void AIL_set_3D_rolloff_factor(void *provider, float factor) { (void)provider; rolloff = factor; }
 
 /* Each of the two sets the room and the room's wet level (0x21115930). The provider's, 0x22401300,
    calls _AIL_set_digital_master_room_type@8 (import 0x2240d0d8); the hop to it from mss32's
    AIL_set_3D_room_type is not traced, but taken. SND_SetRoomtype calls it after its own levels: the
    room's level is what stays, so generic stays off, and the game's wet reaches the voices alone. */
-void SA_API SA_NAME(AIL_set_digital_master_room_type)(void *d, int room_type)
+void AIL_set_digital_master_room_type(void *d, int room_type)
 {
     (void)d;
     Lock();
@@ -441,9 +432,9 @@ void SA_API SA_NAME(AIL_set_digital_master_room_type)(void *d, int room_type)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_3D_room_type)(void *provider, int room_type) { (void)provider; SA_NAME(AIL_set_digital_master_room_type)(NULL, room_type); }
+void AIL_set_3D_room_type(void *provider, int room_type) { (void)provider; AIL_set_digital_master_room_type(NULL, room_type); }
 
-void SA_API SA_NAME(AIL_set_digital_master_reverb_levels)(void *d, float dry, float wet)
+void AIL_set_digital_master_reverb_levels(void *d, float dry, float wet)
 {
     (void)d;
     Lock();
@@ -452,7 +443,7 @@ void SA_API SA_NAME(AIL_set_digital_master_reverb_levels)(void *d, float dry, fl
 }
 
 /* shortcut: a voice's dry is dropped, as the driver only sends 1. Honour it if that changes. */
-void SA_API SA_NAME(AIL_set_sample_reverb_levels)(void *S, float dry, float wet)
+void AIL_set_sample_reverb_levels(void *S, float dry, float wet)
 {
     Sample *s = S;
 
@@ -463,20 +454,20 @@ void SA_API SA_NAME(AIL_set_sample_reverb_levels)(void *S, float dry, float wet)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_3D_sample_effects_level)(void *S, float level) { SA_NAME(AIL_set_sample_reverb_levels)(S, 1, level); }
-void SA_API SA_NAME(AIL_set_stream_reverb_levels)(void *S, float dry, float wet) { SA_NAME(AIL_set_sample_reverb_levels)(S, dry, wet); }
+void AIL_set_3D_sample_effects_level(void *S, float level) { AIL_set_sample_reverb_levels(S, 1, level); }
+void AIL_set_stream_reverb_levels(void *S, float dry, float wet) { AIL_set_sample_reverb_levels(S, dry, wet); }
 
 /* Loaded sounds */
 
-int SA_API SA_NAME(AIL_WAV_info)(void *data, void *info) { return (int)SndWav_Info(data, sndWavFileLen, info); }
+int AIL_WAV_info(void *data, void *info) { return (int)SndWav_Info(data, sndWavFileLen, info); }
 
-int SA_API SA_NAME(AIL_size_processed_digital_audio)(int rate, int format, int num, void *info)
+int AIL_size_processed_digital_audio(int rate, int format, int num, void *info)
 {
     (void)num;
     return (int)SndWav_ConvertedSize((unsigned)rate, (unsigned)format, info);
 }
 
-long SA_API SA_NAME(AIL_process_digital_audio)(void *dest, long size, unsigned long rate, unsigned long format,
+long AIL_process_digital_audio(void *dest, long size, unsigned long rate, unsigned long format,
                                                long num, void *info)
 {
     (void)num;
@@ -485,7 +476,7 @@ long SA_API SA_NAME(AIL_process_digital_audio)(void *dest, long size, unsigned l
 
 /* Samples */
 
-void *SA_API SA_NAME(AIL_allocate_sample_handle)(void *d)
+void *AIL_allocate_sample_handle(void *d)
 {
     Sample *s;
 
@@ -496,7 +487,7 @@ void *SA_API SA_NAME(AIL_allocate_sample_handle)(void *d)
     return s;
 }
 
-void SA_API SA_NAME(AIL_release_sample_handle)(void *S)
+void AIL_release_sample_handle(void *S)
 {
     Sample *s = S;
 
@@ -508,7 +499,7 @@ void SA_API SA_NAME(AIL_release_sample_handle)(void *S)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_init_sample)(void *S)
+void AIL_init_sample(void *S)
 {
     if (!S) return;
     Lock();
@@ -516,7 +507,7 @@ void SA_API SA_NAME(AIL_init_sample)(void *S)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_sample_type)(void *S, int format, int flags)
+void AIL_set_sample_type(void *S, int format, int flags)
 {
     Sample *s = S;
 
@@ -529,7 +520,7 @@ void SA_API SA_NAME(AIL_set_sample_type)(void *S, int format, int flags)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_sample_address)(void *S, void *ptr, int len)
+void AIL_set_sample_address(void *S, void *ptr, int len)
 {
     Sample *s = S;
 
@@ -539,7 +530,7 @@ void SA_API SA_NAME(AIL_set_sample_address)(void *S, void *ptr, int len)
     SetData(s);
 }
 
-void SA_API SA_NAME(AIL_set_sample_adpcm_block_size)(void *S, int blocksize)
+void AIL_set_sample_adpcm_block_size(void *S, int blocksize)
 {
     Sample *s = S;
 
@@ -548,7 +539,7 @@ void SA_API SA_NAME(AIL_set_sample_adpcm_block_size)(void *S, int blocksize)
     if (s->format & FORMAT_ADPCM) SetData(s);
 }
 
-void SA_API SA_NAME(AIL_set_sample_loop_count)(void *S, int count)
+void AIL_set_sample_loop_count(void *S, int count)
 {
     Sample *s = S;
 
@@ -558,7 +549,7 @@ void SA_API SA_NAME(AIL_set_sample_loop_count)(void *S, int count)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_sample_playback_rate)(void *S, int rate)
+void AIL_set_sample_playback_rate(void *S, int rate)
 {
     Sample *s = S;
 
@@ -568,9 +559,9 @@ void SA_API SA_NAME(AIL_set_sample_playback_rate)(void *S, int rate)
     Unlock();
 }
 
-int SA_API SA_NAME(AIL_sample_playback_rate)(void *S) { return S ? ((Sample *)S)->rate : 0; }
+int AIL_sample_playback_rate(void *S) { return S ? ((Sample *)S)->rate : 0; }
 
-void SA_API SA_NAME(AIL_set_sample_volume_levels)(void *S, float left, float right)
+void AIL_set_sample_volume_levels(void *S, float left, float right)
 {
     Sample *s = S;
 
@@ -580,7 +571,7 @@ void SA_API SA_NAME(AIL_set_sample_volume_levels)(void *S, float left, float rig
     SetGains(s);
 }
 
-void SA_API SA_NAME(AIL_sample_volume_levels)(void *S, float *left, float *right)
+void AIL_sample_volume_levels(void *S, float *left, float *right)
 {
     const Sample *s = S;
 
@@ -589,12 +580,12 @@ void SA_API SA_NAME(AIL_sample_volume_levels)(void *S, float *left, float *right
     if (right) *right = s->right;
 }
 
-void SA_API SA_NAME(AIL_sample_volume_pan)(void *S, float *volume, float *pan)
+void AIL_sample_volume_pan(void *S, float *volume, float *pan)
 {
     if (S) DerivedVolumePan(S, volume, pan);
 }
 
-void SA_API SA_NAME(AIL_resume_sample)(void *S)   /* 0x2112b760 */
+void AIL_resume_sample(void *S)   /* 0x2112b760 */
 {
     Sample *s = S;
 
@@ -605,7 +596,7 @@ void SA_API SA_NAME(AIL_resume_sample)(void *S)   /* 0x2112b760 */
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_stop_sample)(void *S)   /* 0x21114d4f */
+void AIL_stop_sample(void *S)   /* 0x21114d4f */
 {
     Sample *s = S;
 
@@ -616,7 +607,7 @@ void SA_API SA_NAME(AIL_stop_sample)(void *S)   /* 0x21114d4f */
 }
 
 /* The hunk behind the sample may be freed from here on, so the voice keeps no pointer to it. */
-void SA_API SA_NAME(AIL_end_sample)(void *S)
+void AIL_end_sample(void *S)
 {
     if (!S) return;
     Lock();
@@ -624,7 +615,7 @@ void SA_API SA_NAME(AIL_end_sample)(void *S)
     Unlock();
 }
 
-unsigned long SA_API SA_NAME(AIL_sample_status)(void *S)
+unsigned long AIL_sample_status(void *S)
 {
     Sample *s = S;
     unsigned long status;
@@ -637,7 +628,7 @@ unsigned long SA_API SA_NAME(AIL_sample_status)(void *S)
     return status;
 }
 
-void SA_API SA_NAME(AIL_sample_ms_position)(void *S, long *total, long *current)
+void AIL_sample_ms_position(void *S, long *total, long *current)
 {
     Sample *s = S;
 
@@ -648,7 +639,7 @@ void SA_API SA_NAME(AIL_sample_ms_position)(void *S, long *total, long *current)
     Unlock();
 }
 
-void SA_API SA_NAME(AIL_set_sample_ms_position)(void *S, int ms)
+void AIL_set_sample_ms_position(void *S, int ms)
 {
     Sample *s = S;
 
@@ -658,7 +649,7 @@ void SA_API SA_NAME(AIL_set_sample_ms_position)(void *S, int ms)
     Unlock();
 }
 
-unsigned long SA_API SA_NAME(AIL_sample_position)(void *S)   /* bytes into the current buffer, 0x21116104 */
+unsigned long AIL_sample_position(void *S)   /* bytes into the current buffer, 0x21116104 */
 {
     Sample *s = S;
     unsigned long pos;
@@ -670,7 +661,7 @@ unsigned long SA_API SA_NAME(AIL_sample_position)(void *S)   /* bytes into the c
     return pos;
 }
 
-int SA_API SA_NAME(AIL_minimum_sample_buffer_size)(void *d, int rate, int format)
+int AIL_minimum_sample_buffer_size(void *d, int rate, int format)
 {
     int bytes = (format & 1 ? 2 : 1) * (format & 2 ? 2 : 1);
 
@@ -682,7 +673,7 @@ int SA_API SA_NAME(AIL_minimum_sample_buffer_size)(void *d, int rate, int format
 /* raw's double buffer. Like 0x21115cf0 it hands out both, then each as the mixer leaves it; this one
    looks at what is played rather than at the flips, as two flips between calls would stall it, and
    snd_driver.c:654 spins until a buffer comes. */
-int SA_API SA_NAME(AIL_sample_buffer_ready)(void *S)
+int AIL_sample_buffer_ready(void *S)
 {
     Sample *s = S;
     int ready = -1;
@@ -696,7 +687,7 @@ int SA_API SA_NAME(AIL_sample_buffer_ready)(void *S)
     return ready;
 }
 
-void SA_API SA_NAME(AIL_load_sample_buffer)(void *S, int buf_num, void *buffer, int size)   /* 0x2112b940 */
+void AIL_load_sample_buffer(void *S, int buf_num, void *buffer, int size)   /* 0x2112b940 */
 {
     Sample *s = S;
 
@@ -714,16 +705,16 @@ void SA_API SA_NAME(AIL_load_sample_buffer)(void *S, int buf_num, void *buffer, 
 
 /* 3D samples: the "Miles Fast 2D Positional Audio" provider on a sample */
 
-void *SA_API SA_NAME(AIL_allocate_3D_sample_handle)(void *provider)
+void *AIL_allocate_3D_sample_handle(void *provider)
 {
     (void)provider;
-    return SA_NAME(AIL_allocate_sample_handle)(NULL);
+    return AIL_allocate_sample_handle(NULL);
 }
 
 /* The provider's M3D_set_3D_sample_data, 0x22401d30: mono linear PCM only (0x22401d4c, 0x22401d62),
    with what it sets up in 0x22401da3 to 0x22401df7. Refused, a sample stays silent, as its channel
    reads free. The game ignores the answer. */
-void SA_API SA_NAME(AIL_set_3D_sample_info)(void *S, void *info)
+void AIL_set_3D_sample_info(void *S, void *info)
 {
     Sample *s = S;
     const SndSoundInfo *i = info;
@@ -738,13 +729,13 @@ void SA_API SA_NAME(AIL_set_3D_sample_info)(void *S, void *info)
     s->volume = 1.0f;
     s->maxDist = 200.0f;
     s->minDist = 1.0f;
-    SA_NAME(AIL_set_sample_type)(s, i->bits == 16, 0);
-    SA_NAME(AIL_set_sample_playback_rate)(s, (int)i->rate);
-    SA_NAME(AIL_set_sample_address)(s, (void *)i->data_ptr, (int)i->data_len);
+    AIL_set_sample_type(s, i->bits == 16, 0);
+    AIL_set_sample_playback_rate(s, (int)i->rate);
+    AIL_set_sample_address(s, (void *)i->data_ptr, (int)i->data_len);
     Spatialize(s);
 }
 
-void SA_API SA_NAME(AIL_set_3D_sample_volume)(void *S, float volume)
+void AIL_set_3D_sample_volume(void *S, float volume)
 {
     Sample *s = S;
 
@@ -753,9 +744,9 @@ void SA_API SA_NAME(AIL_set_3D_sample_volume)(void *S, float volume)
     Spatialize(s);
 }
 
-float SA_API SA_NAME(AIL_3D_sample_volume)(void *S) { return S ? ((Sample *)S)->volume : 0; }
+float AIL_3D_sample_volume(void *S) { return S ? ((Sample *)S)->volume : 0; }
 
-void SA_API SA_NAME(AIL_set_3D_sample_distances)(void *S, float max_dist, float min_dist)
+void AIL_set_3D_sample_distances(void *S, float max_dist, float min_dist)
 {
     Sample *s = S;
 
@@ -765,7 +756,7 @@ void SA_API SA_NAME(AIL_set_3D_sample_distances)(void *S, float max_dist, float 
     Spatialize(s);
 }
 
-void SA_API SA_NAME(AIL_set_3D_position)(void *S, float x, float y, float z)
+void AIL_set_3D_position(void *S, float x, float y, float z)
 {
     Sample *s = S;
 
@@ -776,7 +767,7 @@ void SA_API SA_NAME(AIL_set_3D_position)(void *S, float x, float y, float z)
     Spatialize(s);
 }
 
-void SA_API SA_NAME(AIL_3D_position)(void *S, float *x, float *y, float *z)
+void AIL_3D_position(void *S, float *x, float *y, float *z)
 {
     const Sample *s = S;
 
@@ -786,7 +777,7 @@ void SA_API SA_NAME(AIL_3D_position)(void *S, float *x, float *y, float *z)
     if (z) *z = s->pos[2];
 }
 
-void SA_API SA_NAME(AIL_set_3D_sample_offset)(void *S, int offset)
+void AIL_set_3D_sample_offset(void *S, int offset)
 {
     Sample *s = S;
 
@@ -796,20 +787,20 @@ void SA_API SA_NAME(AIL_set_3D_sample_offset)(void *S, int offset)
     Unlock();
 }
 
-unsigned long SA_API SA_NAME(AIL_3D_sample_offset)(void *S) { return SA_NAME(AIL_sample_position)(S); }
-int SA_API SA_NAME(AIL_3D_sample_length)(void *S) { return S ? (int)((Sample *)S)->srcLen : 0; }   /* bytes: S+4, 0x22401dba */
-int SA_API SA_NAME(AIL_3D_sample_playback_rate)(void *S) { return SA_NAME(AIL_sample_playback_rate)(S); }
-void SA_API SA_NAME(AIL_set_3D_sample_playback_rate)(void *S, int rate) { SA_NAME(AIL_set_sample_playback_rate)(S, rate); }
-void SA_API SA_NAME(AIL_set_3D_sample_loop_count)(void *S, int count) { SA_NAME(AIL_set_sample_loop_count)(S, count); }
-void SA_API SA_NAME(AIL_resume_3D_sample)(void *S) { SA_NAME(AIL_resume_sample)(S); }
-void SA_API SA_NAME(AIL_stop_3D_sample)(void *S) { SA_NAME(AIL_stop_sample)(S); }
-void SA_API SA_NAME(AIL_end_3D_sample)(void *S) { SA_NAME(AIL_end_sample)(S); }
-unsigned long SA_API SA_NAME(AIL_3D_sample_status)(void *S) { return SA_NAME(AIL_sample_status)(S); }
+unsigned long AIL_3D_sample_offset(void *S) { return AIL_sample_position(S); }
+int AIL_3D_sample_length(void *S) { return S ? (int)((Sample *)S)->srcLen : 0; }   /* bytes: S+4, 0x22401dba */
+int AIL_3D_sample_playback_rate(void *S) { return AIL_sample_playback_rate(S); }
+void AIL_set_3D_sample_playback_rate(void *S, int rate) { AIL_set_sample_playback_rate(S, rate); }
+void AIL_set_3D_sample_loop_count(void *S, int count) { AIL_set_sample_loop_count(S, count); }
+void AIL_resume_3D_sample(void *S) { AIL_resume_sample(S); }
+void AIL_stop_3D_sample(void *S) { AIL_stop_sample(S); }
+void AIL_end_3D_sample(void *S) { AIL_end_sample(S); }
+unsigned long AIL_3D_sample_status(void *S) { return AIL_sample_status(S); }
 
 /* Streams */
 
 /* Opened stopped: the game starts it with AIL_pause_stream(0), as 1.3 after its setup. */
-void *SA_API SA_NAME(AIL_open_stream)(void *d, const char *filename, int flags)
+void *AIL_open_stream(void *d, const char *filename, int flags)
 {
     SndStream *stream;
     Sample *s;
@@ -848,7 +839,7 @@ void *SA_API SA_NAME(AIL_open_stream)(void *d, const char *filename, int flags)
 }
 
 /* The lock only detaches: Close waits for the reader, and the callback is out of the stream by then. */
-void SA_API SA_NAME(AIL_close_stream)(void *S)
+void AIL_close_stream(void *S)
 {
     Sample *s = S;
     SndStream *stream;
@@ -864,7 +855,7 @@ void SA_API SA_NAME(AIL_close_stream)(void *S)
     SndStream_Close(stream);
 }
 
-void SA_API SA_NAME(AIL_pause_stream)(void *S, long onoff)
+void AIL_pause_stream(void *S, long onoff)
 {
     Sample *s = S;
 
@@ -875,7 +866,7 @@ void SA_API SA_NAME(AIL_pause_stream)(void *S, long onoff)
     Unlock();
 }
 
-long SA_API SA_NAME(AIL_stream_status)(void *S)
+long AIL_stream_status(void *S)
 {
     Sample *s = S;
     long status;
@@ -888,12 +879,12 @@ long SA_API SA_NAME(AIL_stream_status)(void *S)
     return status;
 }
 
-void SA_API SA_NAME(AIL_set_stream_loop_count)(void *S, int count)
+void AIL_set_stream_loop_count(void *S, int count)
 {
     if (S) SndStream_SetLoop(((Sample *)S)->stream, count > 0 ? count : 0);
 }
 
-void SA_API SA_NAME(AIL_set_stream_ms_position)(void *S, int ms)
+void AIL_set_stream_ms_position(void *S, int ms)
 {
     Sample *s = S;
 
@@ -908,13 +899,13 @@ void SA_API SA_NAME(AIL_set_stream_ms_position)(void *S, int ms)
 
 /* The length is from the bitrate, as Miles: file bytes / S+0x84 (0x211118dd), which an ASI gives once
    at open (0x21110815). */
-void SA_API SA_NAME(AIL_stream_ms_position)(void *S, long *total, long *current)
+void AIL_stream_ms_position(void *S, long *total, long *current)
 {
     if (S) SndStream_Info(((Sample *)S)->stream, NULL, NULL, total, current);
 }
 
 /* 0x2111b520. sndtype is what the voice plays: decoded, so never with Miles' ADPCM flag. */
-void SA_API SA_NAME(AIL_stream_info)(void *S, int *datarate, int *sndtype, int *length, int *memory)
+void AIL_stream_info(void *S, int *datarate, int *sndtype, int *length, int *memory)
 {
     long rate, channels, ms;
 
@@ -926,104 +917,12 @@ void SA_API SA_NAME(AIL_stream_info)(void *S, int *datarate, int *sndtype, int *
     if (memory) *memory = 0;
 }
 
-int SA_API SA_NAME(AIL_stream_playback_rate)(void *S) { return SA_NAME(AIL_sample_playback_rate)(S); }
-void SA_API SA_NAME(AIL_set_stream_playback_rate)(void *S, int rate) { SA_NAME(AIL_set_sample_playback_rate)(S, rate); }
-void SA_API SA_NAME(AIL_set_stream_volume_levels)(void *S, float left, float right) { SA_NAME(AIL_set_sample_volume_levels)(S, left, right); }
-void SA_API SA_NAME(AIL_stream_volume_levels)(void *S, float *left, float *right) { SA_NAME(AIL_sample_volume_levels)(S, left, right); }
-void SA_API SA_NAME(AIL_stream_volume_pan)(void *S, float *volume, float *pan) { SA_NAME(AIL_sample_volume_pan)(S, volume, pan); }
+int AIL_stream_playback_rate(void *S) { return AIL_sample_playback_rate(S); }
+void AIL_set_stream_playback_rate(void *S, int rate) { AIL_set_sample_playback_rate(S, rate); }
+void AIL_set_stream_volume_levels(void *S, float left, float right) { AIL_set_sample_volume_levels(S, left, right); }
+void AIL_stream_volume_levels(void *S, float *left, float *right) { AIL_sample_volume_levels(S, left, right); }
+void AIL_stream_volume_pan(void *S, float *volume, float *pan) { AIL_sample_volume_pan(S, volume, pan); }
 
-#ifdef COD2_MSS32_DLL
-/* The names mss32_dll.c asks mss32.dll for. Its size is the stack the callee pops, so it has to be
-   the function's own: test_snd_sdl.py reads it from the object file. */
-static const struct { const char *name; void *fn; } table[] = {
-    { "_AIL_3D_position@16", Sdl_AIL_3D_position },
-    { "_AIL_3D_provider_attribute@12", Sdl_AIL_3D_provider_attribute },
-    { "_AIL_3D_sample_length@4", Sdl_AIL_3D_sample_length },
-    { "_AIL_3D_sample_offset@4", Sdl_AIL_3D_sample_offset },
-    { "_AIL_3D_sample_playback_rate@4", Sdl_AIL_3D_sample_playback_rate },
-    { "_AIL_3D_sample_status@4", Sdl_AIL_3D_sample_status },
-    { "_AIL_3D_sample_volume@4", Sdl_AIL_3D_sample_volume },
-    { "_AIL_WAV_info@8", Sdl_AIL_WAV_info },
-    { "_AIL_allocate_3D_sample_handle@4", Sdl_AIL_allocate_3D_sample_handle },
-    { "_AIL_allocate_sample_handle@4", Sdl_AIL_allocate_sample_handle },
-    { "_AIL_close_3D_provider@4", Sdl_AIL_close_3D_provider },
-    { "_AIL_close_stream@4", Sdl_AIL_close_stream },
-    { "_AIL_digital_CPU_percent@4", Sdl_AIL_digital_CPU_percent },
-    { "_AIL_end_3D_sample@4", Sdl_AIL_end_3D_sample },
-    { "_AIL_end_sample@4", Sdl_AIL_end_sample },
-    { "_AIL_enumerate_3D_providers@12", Sdl_AIL_enumerate_3D_providers },
-    { "_AIL_init_sample@4", Sdl_AIL_init_sample },
-    { "_AIL_last_error@0", Sdl_AIL_last_error },
-    { "_AIL_load_sample_buffer@16", Sdl_AIL_load_sample_buffer },
-    { "_AIL_minimum_sample_buffer_size@12", Sdl_AIL_minimum_sample_buffer_size },
-    { "_AIL_open_3D_provider@4", Sdl_AIL_open_3D_provider },
-    { "_AIL_open_digital_driver@16", Sdl_AIL_open_digital_driver },
-    { "_AIL_open_stream@12", Sdl_AIL_open_stream },
-    { "_AIL_pause_stream@8", Sdl_AIL_pause_stream },
-    { "_AIL_process_digital_audio@24", Sdl_AIL_process_digital_audio },
-    { "_AIL_release_sample_handle@4", Sdl_AIL_release_sample_handle },
-    { "_AIL_resume_3D_sample@4", Sdl_AIL_resume_3D_sample },
-    { "_AIL_resume_sample@4", Sdl_AIL_resume_sample },
-    { "_AIL_sample_buffer_ready@4", Sdl_AIL_sample_buffer_ready },
-    { "_AIL_sample_ms_position@12", Sdl_AIL_sample_ms_position },
-    { "_AIL_sample_playback_rate@4", Sdl_AIL_sample_playback_rate },
-    { "_AIL_sample_position@4", Sdl_AIL_sample_position },
-    { "_AIL_sample_status@4", Sdl_AIL_sample_status },
-    { "_AIL_sample_volume_levels@12", Sdl_AIL_sample_volume_levels },
-    { "_AIL_sample_volume_pan@12", Sdl_AIL_sample_volume_pan },
-    { "_AIL_set_3D_distance_factor@8", Sdl_AIL_set_3D_distance_factor },
-    { "_AIL_set_3D_position@16", Sdl_AIL_set_3D_position },
-    { "_AIL_set_3D_rolloff_factor@8", Sdl_AIL_set_3D_rolloff_factor },
-    { "_AIL_set_3D_room_type@8", Sdl_AIL_set_3D_room_type },
-    { "_AIL_set_3D_sample_distances@12", Sdl_AIL_set_3D_sample_distances },
-    { "_AIL_set_3D_sample_effects_level@8", Sdl_AIL_set_3D_sample_effects_level },
-    { "_AIL_set_3D_sample_info@8", Sdl_AIL_set_3D_sample_info },
-    { "_AIL_set_3D_sample_loop_count@8", Sdl_AIL_set_3D_sample_loop_count },
-    { "_AIL_set_3D_sample_offset@8", Sdl_AIL_set_3D_sample_offset },
-    { "_AIL_set_3D_sample_playback_rate@8", Sdl_AIL_set_3D_sample_playback_rate },
-    { "_AIL_set_3D_sample_volume@8", Sdl_AIL_set_3D_sample_volume },
-    { "_AIL_set_digital_master_reverb_levels@12", Sdl_AIL_set_digital_master_reverb_levels },
-    { "_AIL_set_digital_master_room_type@8", Sdl_AIL_set_digital_master_room_type },
-    { "_AIL_set_file_callbacks@16", Sdl_AIL_set_file_callbacks },
-    { "_AIL_set_preference@8", Sdl_AIL_set_preference },
-    { "_AIL_set_redist_directory@4", Sdl_AIL_set_redist_directory },
-    { "_AIL_set_sample_address@12", Sdl_AIL_set_sample_address },
-    { "_AIL_set_sample_adpcm_block_size@8", Sdl_AIL_set_sample_adpcm_block_size },
-    { "_AIL_set_sample_loop_count@8", Sdl_AIL_set_sample_loop_count },
-    { "_AIL_set_sample_ms_position@8", Sdl_AIL_set_sample_ms_position },
-    { "_AIL_set_sample_playback_rate@8", Sdl_AIL_set_sample_playback_rate },
-    { "_AIL_set_sample_reverb_levels@12", Sdl_AIL_set_sample_reverb_levels },
-    { "_AIL_set_sample_type@12", Sdl_AIL_set_sample_type },
-    { "_AIL_set_sample_volume_levels@12", Sdl_AIL_set_sample_volume_levels },
-    { "_AIL_set_stream_loop_count@8", Sdl_AIL_set_stream_loop_count },
-    { "_AIL_set_stream_ms_position@8", Sdl_AIL_set_stream_ms_position },
-    { "_AIL_set_stream_playback_rate@8", Sdl_AIL_set_stream_playback_rate },
-    { "_AIL_set_stream_reverb_levels@12", Sdl_AIL_set_stream_reverb_levels },
-    { "_AIL_set_stream_volume_levels@12", Sdl_AIL_set_stream_volume_levels },
-    { "_AIL_shutdown@0", Sdl_AIL_shutdown },
-    { "_AIL_size_processed_digital_audio@16", Sdl_AIL_size_processed_digital_audio },
-    { "_AIL_startup@0", Sdl_AIL_startup },
-    { "_AIL_stop_3D_sample@4", Sdl_AIL_stop_3D_sample },
-    { "_AIL_stop_sample@4", Sdl_AIL_stop_sample },
-    { "_AIL_stream_info@20", Sdl_AIL_stream_info },
-    { "_AIL_stream_ms_position@12", Sdl_AIL_stream_ms_position },
-    { "_AIL_stream_playback_rate@4", Sdl_AIL_stream_playback_rate },
-    { "_AIL_stream_status@4", Sdl_AIL_stream_status },
-    { "_AIL_stream_volume_levels@12", Sdl_AIL_stream_volume_levels },
-    { "_AIL_stream_volume_pan@12", Sdl_AIL_stream_volume_pan },
-};
-
-/* NULL for what has no equivalent here, which the caller skips: AIL_set_DirectSound_HWND. */
-void *SndSdl_Find(const char *decorated)
-{
-    size_t i;
-
-    for (i = 0; i < sizeof table / sizeof table[0]; i++)
-        if (!strcmp(table[i].name, decorated)) return table[i].fn;
-    return NULL;
-}
-#else
-/* Not Miles exports: mss32_dll.c answers them itself */
+/* Not Miles exports: snd_driver.c's calls from the Mac port's 3D streams; 1.3 plays streams in 2D */
 int AIL_is_3D_stream(void *S) { (void)S; return 0; }
 void AIL_set_3D_stream_position(void *S, float x, float y, float z) { (void)S; (void)x; (void)y; (void)z; }
-#endif

@@ -193,7 +193,7 @@ python3 -m unittest discover -s test
 | --- | --- |
 | `src/PC` | Die rekonstruierte Engine: Client (`client_mp`, `cgame_mp`, `ui_mp`), Server (`server_mp`), Spiel (`game_mp`, `bgame`), Renderer (`gfx_d3d`), gemeinsamer Code (`qcommon`, `universal`), Animationen (`xanim`) und die rekonstruierte Skript-VM (`script`). Unter Linux und im dedizierten MinGW-Server bleiben `server_mp`, `game_mp`, `game` und der Kern, den CoD2rev-Plus ersetzt, außen vor (`test/plus_replaces.txt`); der MinGW-Client lässt `server_mp`, `game_mp`, `game` und die Kollision weg. |
 | `src/Mac` | Die Plattformschicht der Mac-Portierung, aus der die Rekonstruktion stammt: OpenGL hinter einer Direct3D-Schnittstelle und Eingabe. |
-| `src/snd_sdl` | Unsere eigene Sound-Engine auf SDL2, hinter den `AIL_*`-Aufrufen von Miles: der Sound des Linux-Clients und, mit `snd_backend sdl`, des Windows-Clients. |
+| `src/snd_sdl` | Unsere eigene Sound-Engine auf SDL2, hinter den `AIL_*`-Aufrufen von Miles: der Sound beider Clients, ohne `mss32.dll`. |
 | `src/script` | Die Skript-VM von CoD2rev-Plus, unverändert kopiert, mit den Headern, die sie braucht, in `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` und `src/libcod`. |
 | `src/server` | Der Server von CoD2rev-Plus, unverändert kopiert; der dedizierte Server verwendet ihn. |
 | `src/game`, `src/bgame` | Game und Bgame von CoD2rev-Plus, unverändert kopiert; der dedizierte Server verwendet sie. |

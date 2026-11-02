@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — Miles retired from the Windows client
+
+- `src/snd_sdl/` is now the only sound engine on Windows: `mss32_dll.c`, `snd_backend` and the `__stdcall` table are gone, and `AIL_*` are plain functions, as on Linux. The user heard no difference in real games. Going back means reverting this commit; `plus` only, `main` keeps Miles.
+- The crash with `snd_khz 22` went with `mss32.dll`. `sound_test.py --wine` runs without the DLL in the game's folder, and a client without this change is silent there.
+- `src/PC/win32/mss32shim/`, a debug interposer nothing linked, went too. Reverb by ear stays open, now with nothing left to compare against but a build of `main`.
+
 ## 2026-11-01 — Plus snapshots from the client's own server
 
 - A local game with moving players died on `Illegible server message 3`: the client announces `plus 122` to its own server, which marks the snapshot as Plus, but it writes through `src/PC/qcommon/msg_mp.c`, which had only the reader. The engine's writer now has the offsets too, which also covers a remote Plus client on a listen server.

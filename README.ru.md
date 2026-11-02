@@ -193,7 +193,7 @@ python3 -m unittest discover -s test
 | --- | --- |
 | `src/PC` | Реконструированный движок: клиент (`client_mp`, `cgame_mp`, `ui_mp`), сервер (`server_mp`), игра (`game_mp`, `bgame`), рендерер (`gfx_d3d`), общий код (`qcommon`, `universal`), анимации (`xanim`) и реконструированная виртуальная машина скриптов (`script`). В Linux и в выделенном сервере MinGW `server_mp`, `game_mp`, `game` и ядро, которое заменяет CoD2rev-Plus, не используются (`test/plus_replaces.txt`); клиент MinGW не использует `server_mp`, `game_mp`, `game` и столкновения движка. |
 | `src/Mac` | Платформенный слой порта для Mac, из которого получена реконструкция: OpenGL за интерфейсом Direct3D и ввод. |
-| `src/snd_sdl` | Наш собственный звуковой движок на SDL2 за вызовами `AIL_*` из Miles: звук клиента Linux и, с `snd_backend sdl`, клиента Windows. |
+| `src/snd_sdl` | Наш собственный звуковой движок на SDL2 за вызовами `AIL_*` из Miles: звук обоих клиентов, без `mss32.dll`. |
 | `src/script` | Виртуальная машина скриптов CoD2rev-Plus, скопированная без изменений, с нужными ей заголовками в `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` и `src/libcod`. |
 | `src/server` | Сервер CoD2rev-Plus, скопированный без изменений; его использует выделенный сервер. |
 | `src/game`, `src/bgame` | Game и bgame CoD2rev-Plus, скопированные без изменений; их использует выделенный сервер. |

@@ -481,10 +481,8 @@ list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast
 list(APPEND WIN_C src/blobs/bss.c src/unix/sysdiff_statehash.c)
 if(COD2_WIN32_CLIENT)
   list(APPEND WIN_C src/unix/linux_input.c)   # pure-SDL2 event pump, works on win32
-  # Miles: the game's own mss32.dll (src/PC/win32/mss32_dll.c) instead of the
-  # Mac port's engine
+  # src/snd_sdl instead of the Mac port's engine
   list(REMOVE_ITEM WIN_C src/Mac/Tools/MacMSS.c)
-  add_compile_definitions(COD2_MSS32_DLL=1)
 else()
   list(REMOVE_ITEM WIN_C src/win32/gl_loader.c)  # client-only (real GL loader)
 endif()
@@ -538,7 +536,7 @@ elseif(COD2_PLUS_SCRIPT)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 if(COD2_WIN32_CLIENT)
-  # snd_backend sdl: C as on Linux, and optimized, as this client's other code
+  # The sound engine: C as on Linux, and optimized, as this client's other code
   # is not and a mixer has a deadline. SDL's threads enter with a 4-byte stack.
   file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
   set_source_files_properties(${COD2_SND_SDL_C} PROPERTIES COMPILE_OPTIONS

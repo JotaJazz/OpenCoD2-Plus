@@ -9,8 +9,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|---|
 | MSVC build unchecked | may not build or may diverge | not covered by `build_check.py`; compiles C with the reconstructed VM and server |
 | Engine's server/game/collision still used by MSVC, web, x64 | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
-| x64 client | does not compile as C++, does not run | `COD2_X64`: about 100 pointer casts to `int`, 32-bit data blobs, the bridge's 4-byte slots, and `mss32.dll` on Windows ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)); the 64-bit dedicated server does not depend on it |
-| Miles mixer crash with `snd_khz 22` | `mss32.dll` overflows an unsigned division (0xc0000095) on a negative volume delta at 2x rate | not known whether 1.3 does it too; only with `snd_backend miles`, the default; the launchers set `snd_khz 44`, not a code fix |
+| x64 client | does not compile as C++, does not run | `COD2_X64`: about 100 pointer casts to `int`, 32-bit data blobs and the bridge's 4-byte slots ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)); the 64-bit dedicated server does not depend on it |
 | Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | A Windows dedicated server on IPX loses a byte of its address | replies to the wrong node | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; `win_net.cpp` writes it for every protocol |
@@ -34,7 +33,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 |---|---|---|
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
 | MSVC client has no HTTP download | `src/win32/win32_stubs.c` | its curl stubs answer 0, so a redirected download fails and the server drops the client; the MinGW client uses `win_wininet.c` |
-| Retiring Miles | `src/PC/win32/mss32_dll.c`, `snd_backend` | `miles` stays the Windows default until the SDL2 mixer has been compared in real games |
 | Reverb tuned by numbers only | `src/snd_sdl/snd_reverb.c` | public EAX presets at a measured gain; not compared by ear with Miles |
 | MP3 lengths are estimates | `src/snd_sdl/snd_stream.c` | from the first frame's bitrate: stock `073.mp3`, which is VBR, is off by up to 51%. Miles estimates from a bitrate too |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |

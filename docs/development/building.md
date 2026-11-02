@@ -120,5 +120,3 @@ The client's ABI is read from a client built with
 `scripts/portable_wine.sh DIR` downloads a 32-bit Wine and its i386
 dependencies with `apt-get download` (no root) into `DIR` and writes
 `DIR/wine.sh`. `COD2_CONSOLE_STDOUT=1` copies the engine's console to stdout.
-Wine cannot load the game's real `mss32.dll`: only `snd_backend sdl` has sound
-there.

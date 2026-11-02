@@ -117,8 +117,6 @@ extern int SND_FindFree3DChannel(int entnum, int channel);
 extern void SND_SetChannelInfo(int index, int entnum, const void *pAlias0, const void *pAlias1, float lerp, const float *org, float volume, float pitch, int channels, int rate, int total_msec, int start_msec, int startDelay, int master, int system);
 extern const dvar_t *Dvar_RegisterBool(const char *name, int value, int flags);
 extern const dvar_t *Dvar_RegisterString(const char *name, const char *value, int flags);
-extern void Dvar_SetFromStringByName(const char *dvarName, const char *string);
-extern void Com_StartupVariable(const char *match);
 extern void Dvar_SetString(const dvar_t *dvar, const char *value);
 extern int Dvar_GetInt(const char *name);
 extern int stricmp(const char *a, const char *b);
@@ -132,18 +130,10 @@ static struct MssLocal milesGlob;
  * milesGlob.handle_2D[0-7] (the original reads [index * 4 + 0x14b2c34]). */
 #define MSS_2D_HANDLE(index) (milesGlob.handle_2D[(index) - 45])
 
-/* Miles calls its file callbacks __stdcall (AILCALLBACK): the original's
- * pop their arguments (ret 8, 4, 0xc, 0xc). The Mac port's MacMSS.c calls
- * them as plain functions. */
-#ifdef COD2_MSS32_DLL
-#define MSS_CALLBACK __stdcall
-#else
-#define MSS_CALLBACK
-#endif
-static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
-static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle);
-static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
-static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
+static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
+static void MSS_FileCloseCallback(long unsigned int hFileHandle);
+static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
+static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
 void SND_ShutdownDriver(void);
 int SND_GetDriverCPUPercentage(void);
 void SND_Stop2DChannel(int index);
@@ -197,18 +187,18 @@ Bool SND_InitDriver(void);
 void SND_SetStreamChannelFromSaveInfo(int index, snd_save_stream_t *info);
 void SND_DriverPostUpdate(int frametime);
 
-static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
+static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
 {
 
     return ((unsigned int)FS_FOpenFileReadStream(pszFilename, phFileHandle, 1) >> 31) ^ 1;
 }
 
-static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle)
+static void MSS_FileCloseCallback(long unsigned int hFileHandle)
 {
     FS_FCloseFile((int)hFileHandle);
 }
 
-static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
+static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
 {
     switch (type) {
     case 0:
@@ -225,7 +215,7 @@ static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle,
     }
 }
 
-static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
+static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
 {
     return FS_Read(pBuffer, (int)bytes, (int)hFileHandle);
 }
@@ -1617,14 +1607,6 @@ Bool SND_InitDriver(void)
     int sndKhzVal, sndBitsVal;
     unsigned int maxRate;
 
-#ifdef COD2_MSS32_DLL
-    /* before the first AIL call: mss32_dll.c reads it there, and a change needs a new game. Only
-       the command line picks it, so a Miles launcher never inherits SDL from a seta in the config,
-       which also left the archive bit on. Set first: once latched the dvar would ignore these. */
-    Dvar_SetFromStringByName((const char *)"snd_backend", (const char *)"miles");
-    Com_StartupVariable((const char *)"snd_backend");
-    ((dvar_t *)Dvar_RegisterString((const char *)"snd_backend", (const char *)"miles", 0x1020))->flags &= ~1;
-#endif
     mss_q3fs = Dvar_RegisterBool((const char *)"mss_q3fs", 1, 0x1020);
     if (mss_q3fs->current.enabled != 0) {
         AIL_set_file_callbacks((void *)MSS_FileOpenCallback, (void *)MSS_FileCloseCallback, (void *)MSS_FileSeekCallback, (void *)MSS_FileReadCallback);
