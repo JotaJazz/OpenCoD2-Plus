@@ -82,11 +82,11 @@ option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on the 32-bit Linux and MinGW builds; MSVC,
-# the web build and the x64 port keep src/PC/script for now. PROTOCOL_VERSION
+# reconstruction in src/PC/script, on the Linux (32 and 64-bit) and MinGW builds; MSVC,
+# the web build and a cross-compiled x64 keep src/PC/script for now. PROTOCOL_VERSION
 # follows the game version.
 option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(COD2_WIN_MSVC OR EMSCRIPTEN OR COD2_X64)
+if(COD2_WIN_MSVC OR EMSCRIPTEN OR (COD2_X64 AND CMAKE_TOOLCHAIN_FILE))   # the Linux x64 client takes CoD2rev-Plus's, as 32 bits
   set(COD2_PLUS_SCRIPT OFF)
 endif()
 if(COD2_PLUS_SCRIPT)
@@ -194,6 +194,10 @@ function(cod2_plus_libcod)
     INCLUDE_DIRECTORIES "${dir}/speex/include;${mbedtls_dirs}")
   set_source_files_properties(${mbedtls} PROPERTIES
     COMPILE_DEFINITIONS "${mbedtls_defs}" INCLUDE_DIRECTORIES "${mbedtls_dirs}")
+  if(COD2_X64)
+    # as CoD2rev-Plus's Makefile on x64: Mbed TLS builds AES-NI only with these (it checks the CPU at run time)
+    set_source_files_properties(${mbedtls} PROPERTIES COMPILE_OPTIONS "-maes;-mpclmul")
+  endif()
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,

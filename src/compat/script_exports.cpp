@@ -175,7 +175,7 @@ unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)
 {
     scr_anim_s anim = Scr_GetAnim(index, (XAnimTree_s *)(uintptr_t)tree);
     unsigned int value;
-    static_assert(sizeof(anim) == sizeof(value), "scr_anim_s is 4 bytes");
+    static_assert(sizeof(anim) >= sizeof(value), "scr_anim_s holds index and tree in its first 4 bytes");   /* 8 on x64: the union's linkPointer */
     memcpy(&value, &anim, sizeof(value));
     return value;
 }

@@ -13,6 +13,14 @@
 template<class T> struct cod2_bridge_returns_scalar
 	: std::integral_constant<bool, std::is_scalar<T>::value || std::is_void<T>::value> {};
 
+/* A value of the engine's ABI that differs between the 32-bit builds
+   (test/<module>_abi.txt) and the 64-bit client (test/<module>_abi_x64.txt). */
+#ifdef COD2_X64
+#define COD2_ABI_PICK(x86, x64) (x64)
+#else
+#define COD2_ABI_PICK(x86, x64) (x86)
+#endif
+
 /* The ABI of one side, as scripts/engine_abi.py records the engine's: the
    return class (v void, i integer or pointer in eax, f floating in st0, s
    struct or union through a hidden pointer), its size, and the stack slot a

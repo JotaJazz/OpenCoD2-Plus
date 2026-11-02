@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Records the ABI of the engine functions a bridge module crosses.
 
-    python3 scripts/engine_abi.py --module server [--binary build/check-linux/cod2_linux] [--gdb gdb]
+    python3 scripts/engine_abi.py --module server [--binary build/check-linux/cod2_linux] [--arch x86|x64] [--gdb gdb]
 
 For each import and export of the module (scripts/gen_script_bridge.py
 --names), reads with gdb the debug information of a binary built with the
@@ -17,7 +17,9 @@ st0) or s (struct or union, through a hidden pointer); size is the return's
 sizeof; each slot is the stack size of a parameter, rounded up to 4 bytes;
 '...' marks a variadic function. A function the binary does not define is
 written as 'name missing'. gen_script_bridge.py turns each line into
-static_asserts against CoD2rev-Plus's declarations.
+static_asserts against CoD2rev-Plus's declarations. --arch x64 reads a
+64-bit client (-DCOD2_X64=ON) and writes test/<module>_abi_x64.txt, the
+values a COD2_X64 build checks.
 """
 import argparse, os, subprocess, sys, tempfile
 
@@ -32,6 +34,8 @@ BY_HAND = {
     'Hunk_ClearLow': 'v0 4',                    # Hunk_ClearToMarkLow, src/PC/universal/com_memory.c
     'MatrixTransformVector': 'v0 4,4,4',        # src/PC/universal/com_math.c
 }
+# The same on x64, where they differ (pointers take 8 bytes).
+BY_HAND_X64 = dict(BY_HAND, MatrixTransformVector='v0 8,8,8')
 
 GDB_SCRIPT = r'''
 import gdb
@@ -74,8 +78,12 @@ def parse(text):
     return abi
 
 
-def load(module):
-    path = os.path.join(ROOT, 'test', f'{module}_abi.txt')
+def abi_path(module, arch='x86'):
+    return os.path.join(ROOT, 'test', f'{module}_abi.txt' if arch == 'x86' else f'{module}_abi_{arch}.txt')
+
+
+def load(module, arch='x86'):
+    path = abi_path(module, arch)
     if not os.path.exists(path):
         return {}
     with open(path) as f:
@@ -88,6 +96,7 @@ def main():
     ap.add_argument('--module', required=True, choices=list(bridge.MODULES))
     ap.add_argument('--build', default=os.path.join(ROOT, 'build', 'check-linux'))
     ap.add_argument('--binary', help='default: cod2_linux of the build')
+    ap.add_argument('--arch', default='x86', choices=('x86', 'x64'), help='the binary\'s architecture')
     ap.add_argument('--gdb', default='gdb')
     args = ap.parse_args()
     binary = args.binary or os.path.join(args.build, 'cod2_linux')
@@ -98,7 +107,7 @@ def main():
         builds.append(mingw)
     imports, exports = bridge.crossing_names(args.module, builds)
     names = sorted(set(imports) | set(exports))
-    path = os.path.join(ROOT, 'test', f'{args.module}_abi.txt')
+    path = abi_path(args.module, args.arch)
     with tempfile.TemporaryDirectory(prefix='engine_abi_') as tmp:
         names_file = os.path.join(tmp, 'names')
         out_file = os.path.join(tmp, 'abi')
@@ -111,10 +120,12 @@ def main():
                              capture_output=True, text=True)
         if not os.path.exists(out_file):
             sys.exit('gdb wrote nothing:\n' + run.stderr[-2000:])
-        lines = ''.join(f'{l.split()[0]} {BY_HAND[l.split()[0]]}\n' if l.endswith(' missing') and l.split()[0] in BY_HAND
+        by_hand = BY_HAND if args.arch == 'x86' else BY_HAND_X64
+        lines = ''.join(f'{l.split()[0]} {by_hand[l.split()[0]]}\n' if l.endswith(' missing') and l.split()[0] in by_hand
                         else l + '\n' for l in open(out_file).read().splitlines())
     with open(path, 'w') as f:
-        f.write(f'# Written by scripts/engine_abi.py --module {args.module} from {os.path.relpath(binary, ROOT)}; '
+        arch = '' if args.arch == 'x86' else f' --arch {args.arch}'
+        f.write(f'# Written by scripts/engine_abi.py --module {args.module}{arch} from {os.path.relpath(binary, ROOT)}; '
                 'see its docstring for the format.\n' + lines)
     abi = parse(lines)
     missing = sorted(n for n, v in abi.items() if v is None)
