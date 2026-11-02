@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — shellshock sounds no longer crash
+
+- `cg_shellshock.c` declared the listener origin as an `int` and passed its value, a NULL origin, which `SND_StartAliasStreamOnChannel` reads once a shellshock sound is a stream: a client crashed online at the end of a shellshock (seen on `plus`), and `view_weapon_test.py`, whose mod shellshocks, crashed the same way. 1.3 passes `vec3_origin` (`0x59bd2c`); the sound prototypes there now match `snd.c`'s.
+
 ## 2026-11-02 — the compass shows objectives
 
 - `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it. Same port as the `plus` branch, without that branch's compass offsets.

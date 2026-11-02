@@ -705,7 +705,6 @@ char SetWindowResizeLimits[64] __attribute__((aligned(4))) = { 0 };
 char SetWRefCon[64] __attribute__((aligned(4))) = { 0 };
 char ShowControl[64] __attribute__((aligned(4))) = { 0 };
 
-char _snd_local_listener[64] __attribute__((aligned(4))) = { 0 };
 char speex_nb_mode_ptr[64] __attribute__((aligned(4))) = { 0 };
 char speex_quality_ptr[64] __attribute__((aligned(4))) = { 0 };
 char speex_uwb_mode_ptr[64] __attribute__((aligned(4))) = { 0 };
