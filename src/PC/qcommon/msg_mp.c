@@ -738,7 +738,7 @@ void MSG_SetDefaultUserCmd(playerState_t *ps, usercmd_t *cmd)
         }
 
         if (ps->fWeaponPosFrac != 0.0f) {
-            cmd->buttons |= (int)&__mh_execute_header;
+            cmd->buttons |= 0x1000;
         }
     }
 }

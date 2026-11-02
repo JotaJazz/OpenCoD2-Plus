@@ -889,7 +889,7 @@ unsigned int CG_DrawMaterial(void)
     char szContents[0x1000];
     float y;
 
-    if (!CL_PickMaterial((const vec_t *)cg->refdef.vieworg, (const vec_t *)cg->refdef.viewaxis, szName, szSurfaceFlags, szContents, (int)&__mh_execute_header)) {
+    if (!CL_PickMaterial((const vec_t *)cg->refdef.vieworg, (const vec_t *)cg->refdef.viewaxis, szName, szSurfaceFlags, szContents, 0x1000)) {
         return 0;
     }
 

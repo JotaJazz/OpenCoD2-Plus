@@ -3775,7 +3775,7 @@ void UI_RunMenuScript(const char **args)
         char *filePtr;
         extern int __mh_execute_header;
 
-        numMovies = FS_GetFileList("video", "roq", 0, addr, (int)&__mh_execute_header);
+        numMovies = FS_GetFileList("video", "roq", 0, addr, 0x1000);
         sharedUiInfo.movieCount = numMovies;
         if (numMovies == 0)
             return;
