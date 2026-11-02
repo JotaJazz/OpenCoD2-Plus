@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — water that moves
+
+- Nothing called `RB_UploadWaterTexture`, the FFT that animates a water material's height map, and it read `r_drawWater` and an upload flag through two empty stubs (`g_unknown_195f22c/230`, from the Mac port): every water surface was still and flat. It now runs where 1.3 binds the map (`gfx_d3d_mp_x86_s.dll` `0x1003a2db`); the flag, which nothing read, is gone.
+- `r_water 1`, ours, replaces the game's `lib/water.hlsl` in the include handler of the real Direct3D 9 path (`D3DXShader.c`, not `r_material_load_obj.c`'s text cache, which that path does not read): two drifting layers, fresnel, sharper sun. 1.3's own shader samples fixed coordinates and blends the reflection by the cube map's alpha.
+- Checked on `cod2_linux_vk` in `sps_island` (the user's map, `water_duhoc`): still before, waves with 1.3's shader after the fix, and ours. No automated check yet (`debt.md`): in `mp_harbor` its snow and a slightly different turn each run hide the waves' part of the motion.
+
 ## 2026-11-02 — cl_hideServerIp
 
 - CoD2x's `cl_hideServerIp`, written here: every text the renderer draws passes through `R_AddCmdDrawTextWithCursor` (the console's lines too, through `R_DrawConsoleText`), which masks the digits of IPv4 addresses on its own copy (`r_hide_address.h`, `test/test_hide_address.py`). One place covers the scoreboard, console, menus and edit fields, and the server browser keeps joining with the real string, the reason the option had been deferred.

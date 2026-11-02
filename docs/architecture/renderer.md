@@ -51,6 +51,23 @@ Vulkan device is llvmpipe (the processor): correct pictures, slow.
 | particle cloud draw counts (`RB_TessParticleCloud`) | `0x10041405` | no cloud drawn |
 | outdoor map size `{512, 512, 256}` | `0x10190398` | nothing outdoors |
 
+## Water
+
+A water material (techset `water`, texture semantic 5) carries the parameters
+of a wave simulation: `RB_UploadWaterTexture` (`r_water.c`) runs an FFT of
+them each frame into its height map, as 1.3 does when it binds the map
+(`gfx_d3d_mp_x86_s.dll` `0x1003a2db`), behind `r_drawWater`. Until 2026-11-02
+nothing called it, so every water surface stood still and flat.
+
+`r_water 1` (the default; 0 is 1.3's, after `vid_restart`) gives the real
+Direct3D 9 path our text for the game's `lib/water.hlsl`
+(`r_water_hlsl.h`, served by `RealInclude_Open` in `D3DXShader.c`): two
+layers of that height map drifting with `gameTime`, Schlick's fresnel between
+the water's color and the cube map's reflection, and a sharper sun highlight.
+Same inputs, material arguments and pixel shader 2.0 budget. The GL device
+keeps its stand-in shaders. Stock maps with this water: `mp_harbor` only;
+custom maps reuse its materials (`water_duhoc` in `sps_island`).
+
 ## Outdoor map
 
 `src/PC/gfx_d3d/r_outdoor.c`: a 512×512 height map of the world, traced from

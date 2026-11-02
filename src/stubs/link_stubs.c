@@ -594,8 +594,6 @@ void G_SpawnTriggerHurt(int numBrushModels)
 char g_sv_running_ptr[64] __attribute__((aligned(4))) = { 0 };
 
 void *g_trace_zero_ptr __attribute__((aligned(4))) = (void *)vec3_origin;
-char g_unknown_195f22c[64] __attribute__((aligned(4))) = { 0 };
-char g_unknown_195f230[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateHoldTime[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateReuseTime[64] __attribute__((aligned(4))) = { 0 };
 char g_vidConfig[64] __attribute__((aligned(4))) = { 0 };

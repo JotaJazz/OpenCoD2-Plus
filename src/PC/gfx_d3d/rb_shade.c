@@ -16,6 +16,8 @@ extern r_global_permanent_t rgp;
 extern struct DxState dxState;
 #include <math.h>
 #include "imports.h"
+
+extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
 extern refimport_t ri;
 extern int alwaysfails;
 #include "bytematch.h"
@@ -1784,6 +1786,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
                                         MaterialWaterDef *water = texDef->u.water;
                                         image = water->map->image;
+                                        /* 1.3 (gfx_d3d_mp_x86_s.dll 0x1003a2db) runs this frame's waves into the map as it binds it */
+                                        RB_UploadWaterTexture((GfxImage *)image, water->map);
                                     } else {
                                         image = texDef->u.image;
                                     }
