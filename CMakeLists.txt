@@ -605,6 +605,15 @@ if(NOT SDL2_FOUND)
   set(SDL2_INCLUDE_DIRS /usr/include/SDL2)
   set(SDL2_LIBRARIES SDL2)
 endif()
+# the 64-bit client: SDL2's amd64 headers from scripts/linux_x64_deps.sh (a host set up
+# for the 32-bit builds has only libsdl2-dev:i386), and the system's amd64 runtime
+set(COD2_LINUX_X64_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-x64)
+if(COD2_X64 AND NOT CMAKE_TOOLCHAIN_FILE AND EXISTS ${COD2_LINUX_X64_DIR}/usr/include/SDL2/SDL.h)
+  set(SDL2_INCLUDE_DIRS ${COD2_LINUX_X64_DIR}/usr/include/x86_64-linux-gnu ${COD2_LINUX_X64_DIR}/usr/include
+      ${COD2_LINUX_X64_DIR}/usr/include/x86_64-linux-gnu/SDL2 ${COD2_LINUX_X64_DIR}/usr/include/SDL2)
+  set(SDL2_CFLAGS_OTHER -D_REENTRANT)
+  set(SDL2_LIBRARIES -l:libSDL2-2.0.so.0)
+endif()
 
 if(COD2_DEBUG)
   set(COD2_OPT_FLAGS -O0)
