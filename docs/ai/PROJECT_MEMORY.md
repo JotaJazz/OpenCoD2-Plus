@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — the compass shows objectives
+
+- `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it, and takes the owner draw's `rect`, so the compass offsets hold. Found by the review of CoD2x's options, confirmed by the user in Search and Destroy.
+- The review against the binary caught two errors of this port that the first test passed: `0x15cf994` is `infoValid`, not the team, and the icons are `CS_SHADERS`, 1566. `hud_options_test.py` now plays without a team and on one, and demands the icon's white. `entNum` is bounded here, as it comes from the server.
+- Left as it is: 1.3's friendlies (`0x4dafe0`) read `cg_hudObjectiveMaxRange` and `MinAlpha` too, and our port does not.
+
 ## 2026-11-02 — CoD2x's client options, in the engine
 
 - `sensitivity_MG`, `cg_drawCompass`, the compass offsets, `cg_drawSpectatedPlayerName`, `com_writeConfig`, and `cl_maxpackets` up to 125. CoD2x's repository has no license, so nothing is copied; the names stay so that players' configs work.
