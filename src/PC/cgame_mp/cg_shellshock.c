@@ -38,7 +38,8 @@ extern byte *_dvar_shellshock_mousereducemax;
 extern byte *_dvar_shellshock_mousesensitivity;
 extern const dvar_t *cg_shock_viewKickFadeTime;
 
-extern int _snd_local_listener;
+/* 1.3 passes vec3_origin (0x59bd2c); the int this was read as made a NULL origin, which a stream's channel reads */
+static const vec3_t shellshockSoundOrigin = {0.0f, 0.0f, 0.0f};
 
 extern const vec_t Vec3Normalize(vec_t *v);
 extern void Vec3Cross(const vec_t *v1, const vec_t *v2, vec_t *out);
@@ -62,8 +63,8 @@ extern void SND_SetEnvironmentEffects(int type, const char *name, float drylevel
 extern void SND_DeactivateChannelVolumes(int type, int flags);
 extern void SND_DeactivateEnvironmentEffects(int type, int flags);
 extern snd_alias_t * CL_PickSoundAlias(const char *aliasname);
-extern void SND_PlayBlendedSoundAliases(void *alias0, void *alias1, float fade, int channel, int entity, int flags, int loop);
-extern void SND_PlaySoundAlias(void *alias, int channel, int entity, int duration, int loop);
+extern int SND_PlayBlendedSoundAliases(const snd_alias_t *pAlias0, const snd_alias_t *pAlias1, float fLerp, int entnum, const vec_t *org, int timeshift, snd_alias_system_t system);
+extern int SND_PlaySoundAlias(const snd_alias_t *pAlias, int entnum, const vec_t *org, int timeshift, snd_alias_system_t system);
 extern void CL_CapTurnRate(float min_rate, float max_rate);
 extern void CL_SetUserCmdInShellshock(int inShellshock);
 
@@ -434,8 +435,8 @@ static inline __attribute__((always_inline)) void CG_DeactivateShellShockSound(c
         cgp->shellshock.loopEndTime = 0;
 
         {
-            void *alias = CL_PickSoundAlias("shellshock_loop_end");
-            SND_PlaySoundAlias(alias, 0x3ff, _snd_local_listener, 0, 1);
+            snd_alias_t *alias = CL_PickSoundAlias("shellshock_loop_end");
+            SND_PlaySoundAlias(alias, 0x3ff, shellshockSoundOrigin, 0, SASYS_CGAME);
         }
     }
 }
@@ -483,8 +484,8 @@ void CG_UpdateShellShock(const shellshock_parms_t *parms, int start, int duratio
         if (cgp->shellshock.loopEndTime != 0) {
             cgp->shellshock.loopEndTime = 0;
             {
-                void *alias = CL_PickSoundAlias("shellshock_loop_end");
-                SND_PlaySoundAlias(alias, 0x3ff, _snd_local_listener, 0, 1);
+                snd_alias_t *alias = CL_PickSoundAlias("shellshock_loop_end");
+                SND_PlaySoundAlias(alias, 0x3ff, shellshockSoundOrigin, 0, SASYS_CGAME);
             }
         }
         goto check_mouse;
@@ -539,8 +540,8 @@ void CG_UpdateShellShock(const shellshock_parms_t *parms, int start, int duratio
 
         if (loopTimeLeft > 0) {
 
-            void *pAlias0 = CL_PickSoundAlias("shellshock_loop");
-            void *pAlias1 = CL_PickSoundAlias("shellshock_loop2");
+            snd_alias_t *pAlias0 = CL_PickSoundAlias("shellshock_loop");
+            snd_alias_t *pAlias1 = CL_PickSoundAlias("shellshock_loop2");
             int loopFadeIn = parms->sound.loopFadeTime;
 
             if (loopFadeIn == 0) {
@@ -553,7 +554,7 @@ void CG_UpdateShellShock(const shellshock_parms_t *parms, int start, int duratio
                     fade = 0.0f;
             }
 
-            SND_PlayBlendedSoundAliases(pAlias0, pAlias1, fade, 0x3ff, _snd_local_listener, 0, 1);
+            SND_PlayBlendedSoundAliases(pAlias0, pAlias1, fade, 0x3ff, shellshockSoundOrigin, 0, SASYS_CGAME);
 
             loopFadeOutVal = parms->sound.loopEndDelay;
         }
@@ -570,8 +571,8 @@ void CG_UpdateShellShock(const shellshock_parms_t *parms, int start, int duratio
                     cgp->shellshock.loopEndTime = 0;
 
                     {
-                        void *alias = CL_PickSoundAlias("shellshock_loop_end");
-                        SND_PlaySoundAlias(alias, 0x3ff, _snd_local_listener, 0, 1);
+                        snd_alias_t *alias = CL_PickSoundAlias("shellshock_loop_end");
+                        SND_PlaySoundAlias(alias, 0x3ff, shellshockSoundOrigin, 0, SASYS_CGAME);
                     }
                 }
             } else {
@@ -582,8 +583,8 @@ void CG_UpdateShellShock(const shellshock_parms_t *parms, int start, int duratio
 
                     {
                         int delayMs = cgTime - loopEndTime;
-                        void *alias = CL_PickSoundAlias("shellshock_end");
-                        SND_PlaySoundAlias(alias, 0x3ff, _snd_local_listener, delayMs, 1);
+                        snd_alias_t *alias = CL_PickSoundAlias("shellshock_end");
+                        SND_PlaySoundAlias(alias, 0x3ff, shellshockSoundOrigin, delayMs, SASYS_CGAME);
                     }
                 }
             }
