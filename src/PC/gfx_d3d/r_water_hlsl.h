@@ -5,7 +5,8 @@
    fog variants include. 1.3's samples its height map at fixed coordinates, so its water never moves,
    and takes the reflection by the cube map's alpha alone. This one moves two layers of the same map
    with gameTime (code constant: sin, cos, fraction, seconds), mixes the water's color with the
-   reflection by Schlick's fresnel and sharpens the sun's highlight. Same inputs, same pixel shader 2.0
+   reflection of the map's own sky (skySampler; the material's cube keeps its alpha as reflectivity)
+   by Schlick's fresnel and sharpens the sun's highlight. Same inputs, same pixel shader 2.0
    budget, same material arguments (waterColor, cubeMapSampler, normalMapSampler). */
 static const char r_waterShaderText[] =
     "#include \"globals.hlsl\"\n"
@@ -23,6 +24,7 @@ static const char r_waterShaderText[] =
     "};\n"
     "struct PixelOutput { float4 color : COLOR; };\n"
     "float4 waterColor;\n"
+    "sampler skySampler;\n"
     "#include \"transform.hlsl\"\n"
     "#include \"fog.hlsl\"\n"
     "PixelInput vs_main( const VertexInput vertex )\n"
@@ -54,6 +56,7 @@ static const char r_waterShaderText[] =
     "  float sun = pow( max( 0, dot( reflected, lightPosition0.xyz ) ), 128 );\n"
     "  reflected.z = abs( reflected.z );\n"
     "  half4 env = texCUBE( cubeMapSampler, reflected );\n"
+    "  env.rgb = texCUBE( skySampler, reflected ).rgb;\n"
     "  float fresnel = 0.04 + 0.96 * pow( 1 - saturate( -dot( eyeDir, normal ) ), 5 );\n"
     "  fragment.color.rgb = lerp( waterColor.rgb * ( 0.7 + 0.3 * normal.z ), env.rgb, saturate( fresnel + 0.3 * env.a ) )\n"
     "                       + sun * 1.5 * lightColor0.rgb;\n"

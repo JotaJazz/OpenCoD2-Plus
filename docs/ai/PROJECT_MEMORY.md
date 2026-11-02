@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — water reflects the map's sky
+
+- The map loader marked the sky by the material's `surfaceFlags` where 1.3 reads `gameFlags` (`gfx_d3d_mp_x86_s.dll` `0x10002cb0`): no map had sky surfaces, `world->skyImage` stayed empty and the visibility pass never added the sky past the far plane. Fixed; `client_view_test.py` and `shader_compile_test.py` still pass.
+- `r_water`'s reflection now samples that sky through `skySampler`, a default code sampler added to the table (bound by name in the HLSL, like `gameTime`), instead of the material's generic `case64blue` cube, whose alpha stays the reflectivity. `sampler.sky` without a sky now gives `$watercolor` instead of 1.3's error, which no stock material reaches.
+- Shore fade and refraction wait for a depth texture: 1.3 on PC never makes one (`floatZ` binds `NULL`), and refraction alone would show the void under maps whose water was always opaque.
+
 ## 2026-11-02 — water that moves
 
 - Nothing called `RB_UploadWaterTexture`, the FFT that animates a water material's height map, and it read `r_drawWater` and an upload flag through two empty stubs (`g_unknown_195f22c/230`, from the Mac port): every water surface was still and flat. It now runs where 1.3 binds the map (`gfx_d3d_mp_x86_s.dll` `0x1003a2db`); the flag, which nothing read, is gone.

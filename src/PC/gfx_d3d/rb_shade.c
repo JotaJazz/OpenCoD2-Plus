@@ -559,8 +559,12 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
 
     case 16: {
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage))
-            R_Error(1, "Tried to use 'sampler.sky' when it isn't valid\n");
+        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage)) {
+            /* not 1.3's error: r_water's skySampler on a map without a sky gets the water's own cube */
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->waterColorImage);
+            *samplerState = 0x32;
+            return;
+        }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         *image = (*(void **)&((GfxWorld *)drawSurfs)->skyImage);
         *samplerState = ((GfxWorld *)drawSurfs)->skySamplerState;

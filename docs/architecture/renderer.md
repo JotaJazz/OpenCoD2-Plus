@@ -63,8 +63,16 @@ nothing called it, so every water surface stood still and flat.
 Direct3D 9 path our text for the game's `lib/water.hlsl`
 (`r_water_hlsl.h`, served by `RealInclude_Open` in `D3DXShader.c`): two
 layers of that height map drifting with `gameTime`, Schlick's fresnel between
-the water's color and the cube map's reflection, and a sharper sun highlight.
-Same inputs, material arguments and pixel shader 2.0 budget. The GL device
+the water's color and the reflection of the map's own sky (`skySampler`, a
+default code sampler of ours on `sampler.sky`; the material's generic cube
+keeps only its alpha as reflectivity), and a sharper sun highlight. A map
+without a sky gives that sampler `$watercolor` instead of 1.3's error.
+Same inputs, material arguments and pixel shader 2.0 budget.
+
+The sky's surfaces are the ones whose material has bit 8 in `gameFlags`
+(1.3 `0x10002cb0`); until 2026-11-02 the loader read `surfaceFlags`, found
+none, so `sampler.sky` had no image and the visibility pass never added the
+sky past the far plane, as 1.3 does. The GL device
 keeps its stand-in shaders. Stock maps with this water: `mp_harbor` only;
 custom maps reuse its materials (`water_duhoc` in `sps_island`).
 

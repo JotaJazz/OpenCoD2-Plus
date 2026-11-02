@@ -1356,7 +1356,8 @@ void __attribute_regparm__(1) R_LoadSurfaces(GfxBspLoad *load)
         surf->sortGroup = sortGroup;
         surf->tris = tri;
 
-        if (material && (material->info.surfaceFlags & 8)) {
+        /* 1.3 (gfx_d3d_mp_x86_s.dll 0x10002cb0) tests the material's gameFlags, not its surfaceFlags */
+        if (material && (material->info.gameFlags & 8)) {
             if (skyMaterial && skyMaterial != material)
                 R_Error(1, "map has at least two different skies: %s and %s\nOnly one sky per map is supported\n",
                         skyMaterial->info.name, material->info.name);
