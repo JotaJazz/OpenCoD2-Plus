@@ -101,7 +101,7 @@ void BG_LoadWeaponStrings(void);
 
 void BG_InitWeaponStrings(void)
 {
-    memset(weaponStrings, 0, 0x400);
+    memset(weaponStrings, 0, 128 * COD2_SIZEOF_1_3(animStringItem_t, 8));
     BG_LoadWeaponStrings();
 }
 
@@ -1515,7 +1515,7 @@ static void __attribute_regparm__(3)
     g_pLoadAnims = pLoadAnims;
     g_piNumLoadAnims = piNumAnims;
 
-    memset(weaponStrings, 0, 0x400);
+    memset(weaponStrings, 0, 128 * COD2_SIZEOF_1_3(animStringItem_t, 8));
     BG_LoadWeaponStrings();
 
     memset(defineStr, 0, sizeof(defineStr));   /* was 0x480 (x86 size); x64 rows are wider */

@@ -904,7 +904,7 @@ void RB_InitSceneViewport(void);
 
 void RB_InitBackendGlobalStructs(void)
 {
-    memset(&backEnd, 0, 0x36e90);
+    memset(&backEnd, 0, COD2_SIZEOF_1_3(backEnd, 0x36e90));
     *(int *)&backEnd.worldEntity = 3;
     backEnd.resolvedPostSunTarget = (GfxRenderTargetId)(0xe);
     backEnd.resolvedSceneTarget = (GfxRenderTargetId)(0xe);

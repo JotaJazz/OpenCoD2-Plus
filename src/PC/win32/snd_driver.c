@@ -668,7 +668,7 @@ void SND_RawSamples(int samples, int rate, int width, int s_channels, const byte
 int SND_GetSoundFileSize(const void *pSoundFile)
 {
     const MssSound *sound = (const MssSound *)pSoundFile;
-    return (int)sound->info.data_len + 0x24;
+    return (int)sound->info.data_len + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24);
 }
 
 void SND_DriverPreUpdate(int frametime)
@@ -997,7 +997,7 @@ void SND_LoadSoundFile(SoundFile *soundFile)
     if (!AIL_WAV_info(buffer, &mixinfo)) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' is in an invalid or corrupted format\n", realname);
         sound = NULL;
-    } else if ((totalSize = (int)mixinfo.Info.data_len + 0x24) == 0) {
+    } else if ((totalSize = (int)mixinfo.Info.data_len + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24)) == 0) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
         sound = NULL;
     } else if (mixinfo.Info.rate <= (unsigned long int)sndGlob->playback_rate &&
@@ -1060,7 +1060,7 @@ void SND_LoadSoundFile(SoundFile *soundFile)
         }
 
         datasize = AIL_size_processed_digital_audio(rate, procFormat, 1, &mixinfo);
-        sound = (MssSound *)Hunk_AllocNoZeroInternal(datasize + 0x24);
+        sound = (MssSound *)Hunk_AllocNoZeroInternal(datasize + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24));
 
         sound->info.format = mixinfo.Info.format;
         sound->info.data_ptr = sound->data;
