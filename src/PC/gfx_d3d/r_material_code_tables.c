@@ -162,6 +162,7 @@ const CodeSamplerSource s_defaultCodeSamplers[] = {
     { "lightGridWeightSampler1", (MaterialTextureSource)6, 0, 0, 0 },
     { "smodelLightingSampler", (MaterialTextureSource)4, 0, 0, 0 },
     { "skySampler", (MaterialTextureSource)16, 0, 0, 0 },   /* not 1.3's: r_water reflects the map's sky */
+    { "sceneColorSampler", (MaterialTextureSource)15, 0, 0, 0 },   /* not 1.3's: r_water refracts the scene behind it */
     { 0, (MaterialTextureSource)0, 0, 0, 0 }
 };
 

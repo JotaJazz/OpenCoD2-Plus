@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — water refracts
+
+- With `r_water` and INTZ, `RB_EndSurface` copies the scene drawn so far into `resolvedScene` (`renderTargets[2]`; 1.3 fills it only in `RB_ApplyLatePostEffectsCmd`) before the first water surface of each draw list, and the shader samples it as `sceneColorSampler`: the bottom shows under the water, bent by the waves, clear at the shore and the water's color 160 units down. The water is then opaque; the alpha fade stays for cards without INTZ, which get no copy.
+- A bent sample that lands on something in front of the water (its depth nearer than the water's) takes the straight one, so nothing above the water is pulled below it.
+- Checked on `cod2_linux_vk` in `sps_island` from the boat's deck: a debug colour showed depth on DXVK (clear only near the coast: that sea is deeper than 160), and the shore's seabed now shows through. Under Wine's own `d3d9` there is no INTZ (no foam either), so the Windows client can only be checked on the user's card.
+
 ## 2026-11-02 — script brush models draw as brush models
 
 - `CG_ScriptMover` and `CG_EntityEffects` told a brush model by `constantLight == 0xffffff`; 1.3 tests `solid` (`centity_t` `+0x18c`, `0x4dea5b` and `0x4cc240`), where the server puts the marker. A `script_brushmodel` without a light fell into the xmodel branch and drew `gameModels[index]` at its origin: in `sps_island` the boats (`barco3`) became a huge stretched hill over the scene, on every renderer; their looping sounds played from the origin instead of the model's middle.

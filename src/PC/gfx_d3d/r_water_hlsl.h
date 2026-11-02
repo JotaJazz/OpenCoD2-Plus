@@ -9,7 +9,8 @@
    by Schlick's fresnel and sharpens the sun's highlight. Where the scene's depth is there
    (floatZSampler, an INTZ texture of ours), the water thins out and foams at the shore: with
    1.3's infinite far plane a depth d is 1 - near / z, so each water pixel finds near from its own
-   depth and turns the scene's behind it into a distance. Without it floatZ reads 0 and that is off. Same inputs, same pixel shader 2.0
+   depth and turns the scene's behind it into a distance, and shows the scene under it (sceneColorSampler,
+   copied before the water, rb_shade.c) bent by the waves. Without it floatZ reads 0 and that is off. Same inputs, same pixel shader 2.0
    budget, same material arguments (waterColor, cubeMapSampler, normalMapSampler). */
 static const char r_waterShaderText[] =
     "#include \"globals.hlsl\"\n"
@@ -29,6 +30,7 @@ static const char r_waterShaderText[] =
     "struct PixelOutput { float4 color : COLOR; };\n"
     "float4 waterColor;\n"
     "sampler skySampler;\n"
+    "sampler sceneColorSampler;\n"
     "#include \"transform.hlsl\"\n"
     "#include \"fog.hlsl\"\n"
     "PixelInput vs_main( const VertexInput vertex )\n"
@@ -62,16 +64,23 @@ static const char r_waterShaderText[] =
     "  reflected.z = abs( reflected.z );\n"
     "  half4 env = texCUBE( cubeMapSampler, reflected );\n"
     "  env.rgb = texCUBE( skySampler, reflected ).rgb;\n"
-    "  float fresnel = 0.04 + 0.96 * pow( 1 - saturate( -dot( eyeDir, normal ) ), 5 );\n"
-    "  fragment.color.rgb = lerp( waterColor.rgb * ( 0.7 + 0.3 * normal.z ), env.rgb, saturate( fresnel + 0.3 * env.a ) )\n"
-    "                       + sun * 1.5 * lightColor0.rgb;\n"
+    "  float fresnel = saturate( 0.04 + 0.96 * pow( 1 - saturate( -dot( eyeDir, normal ) ), 5 ) + 0.3 * env.a );\n"
     "  float2 screenUV = pixel.clipPos.xy / pixel.clipPos.w * float2( 0.5, -0.5 ) + 0.5;\n"
+    "  float waterD = pixel.clipPos.z / pixel.clipPos.w;\n"
     "  float sceneD = tex2D( floatZSampler, screenUV ).r;\n"
-    "  float nearZ = pixel.clipPos.w * ( 1 - pixel.clipPos.z / pixel.clipPos.w );\n"
+    "  float nearZ = pixel.clipPos.w * ( 1 - waterD );\n"
     "  float depth = sceneD > 0 ? nearZ / max( 1 - sceneD, 0.00001 ) - pixel.clipPos.w : 10000;\n"
+    /* the scene under the water, bent by the waves; where the bent sample lands on something in front
+       of the water it takes the straight one, so nothing above the water is drawn below it */
+    "  float2 refractUV = screenUV + normal.xy * 0.03 * saturate( depth / 40 );\n"
+    "  refractUV = tex2D( floatZSampler, refractUV ).r < waterD ? screenUV : refractUV;\n"
+    "  float clarity = sceneD > 0 ? 1 - saturate( depth / 160 ) : 0;\n"
+    "  float3 below = lerp( waterColor.rgb * ( 0.7 + 0.3 * normal.z ), tex2D( sceneColorSampler, refractUV ).rgb, clarity * clarity );\n"
+    "  fragment.color.rgb = lerp( below, env.rgb, fresnel ) + sun * 1.5 * lightColor0.rgb;\n"
     "  float foam = max( saturate( 1 - depth / 20 ) * ( 0.6 + 0.4 * saturate( h ) ), saturate( 1 - depth / 60 ) * saturate( ( h - 0.3 ) * 3 ) );\n"
     "  fragment.color.rgb = lerp( fragment.color.rgb, float3( 0.95, 0.97, 1.0 ) * ( 0.5 + 0.5 * lightColor0.rgb ), foam );\n"
-    "  fragment.color.a = pixel.color.a * max( lerp( 0.25, 1, saturate( depth / 24 ) ), foam );\n"
+    /* with the scene's depth the shader shows what is below itself: opaque, as the vertex color says */
+    "  fragment.color.a = sceneD > 0 ? pixel.color.a : pixel.color.a * max( lerp( 0.25, 1, saturate( depth / 24 ) ), foam );\n"
     "  Fog_PixelCalc( pixel, fragment );\n"
     "  return fragment;\n"
     "}\n";

@@ -19,6 +19,7 @@ extern struct DxState dxState;
 
 extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
 extern GfxImage r_sceneDepthImage;
+extern IDirect3DSurface9 *Image_GetSurface(GfxImage *image);
 
 /* r_water reads the scene's depth through floatZ: a water material must not write it at the same time */
 static int RB_WaterReadsDepth(const Material *material)
@@ -31,6 +32,34 @@ static int RB_WaterReadsDepth(const Material *material)
             return 1;
     }
     return 0;
+}
+
+/* not 1.3's: r_water refracts what lies under the water. Before the first water surface of a draw
+   list, the scene drawn so far is copied into resolvedScene (renderTargets[2], which 1.3 fills only
+   for its late post effects, rb_backend.c); RB_RenderDrawSurfList clears the flag. Only with the
+   scene's depth (r_water's INTZ), which the shader needs to tell what is under the water. */
+int rb_waterSceneCopied;
+
+static void RB_CopySceneForWater(const Material *material)
+{
+#ifdef GFX_REAL_D3D9
+    IDirect3DSurface9 *dest;
+    void *device = dx_g->device;
+
+    if (rb_waterSceneCopied || !dxState.renderTargetSurface || !RB_WaterReadsDepth(material))
+        return;
+    rb_waterSceneCopied = 1;
+    dest = Image_GetSurface((GfxImage *)dx_g->renderTargets[R_RENDERTARGET_RESOLVED_SCENE].image);
+    if (!dest)
+        return;
+    /* IDirect3DDevice9::StretchRect, as RB_ApplyLatePostEffectsCmd does */
+    ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))(*(void ***)device)[0x88 / 4])(
+        device, dxState.renderTargetSurface, NULL, dest, NULL, 2);
+    ((HRESULT(D3DVTCC *)(void *))((*(void ***)dest)[2]))((void *)dest);
+    ((r_backEndGlobals_t *)imp_backEnd)->resolvedSceneTarget = R_RENDERTARGET_RESOLVED_SCENE;
+#else
+    (void)material;
+#endif
 }
 extern refimport_t ri;
 extern int alwaysfails;
@@ -1993,6 +2022,7 @@ void RB_EndSurface(void)
     }
 
     backEnd = (r_backEndGlobals_t *)imp_backEnd;
+    RB_CopySceneForWater(material);
     if (backEnd->viewportIsDirty)
         RB_UpdateViewport();
 

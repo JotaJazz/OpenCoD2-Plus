@@ -177,7 +177,7 @@ it has no license, and it patches the running 1.3 binary.
 | `cg_hudCompassOffsetX`, `cg_hudCompassOffsetY` | move the compass, in 640x480 units |
 | `cg_drawSpectatedPlayerName` | 0 hides "following" and the name when spectating |
 | `com_freezeWatch` | seconds without a frame before the Windows client writes `cod2_freeze_<pid>.txt` with the main thread's stack, once per freeze; 0 is off. It only reports: a slow map load leaves one too |
-| `r_water` | 1 (default) draws water with our shader, waves that drift and a fresnel reflection of the map's sky, and with a depth texture (no antialiasing) a soft, foaming shore; 0 is 1.3's, after `vid_restart` ([renderer](renderer.md#water)) |
+| `r_water` | 1 (default) draws water with our shader, waves that drift and a fresnel reflection of the map's sky, and with a depth texture (no antialiasing) a foaming shore and a refracted bottom; 0 is 1.3's, after `vid_restart` ([renderer](renderer.md#water)) |
 | `cl_hideServerIp` | 1 masks the digits of every IPv4 address the renderer draws, and of its port, for streaming: the scoreboard's server address, the console, menus, an edit field from the address's second dot. Done on the drawn copy in `R_AddCmdDrawTextWithCursor` (`r_hide_address.h`), so the server browser still joins with the real one; host names, logs and the window's title are not masked, and a dotted version such as `1.4.4` is. A server cannot set it |
 | `com_writeConfig` | 0 stops the automatic write of `config_mp.cfg`; the `writeconfig` command still works. Not archived, as nothing would save it: it goes in the config as `set com_writeConfig 0`, or on the command line. A server cannot set it |
 

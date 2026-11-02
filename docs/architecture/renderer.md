@@ -75,9 +75,18 @@ that takes it, the frame buffer's depth is an INTZ texture
 The water's shader reads the scene's depth behind each pixel: under 1.3's
 infinite far plane a depth `d` is `1 - near / z`, so each water pixel finds
 `near` from its own depth and turns the scene's into a distance. Shallow water
-fades (alpha, where the material blends) and foams at the shore; water
-materials draw without writing depth while they read it. Without INTZ
-`floatZ` reads 0, which the shader takes as deep water.
+foams at the shore; water materials draw without writing depth while they
+read it. Without INTZ `floatZ` reads 0, which the shader takes as deep water.
+
+With that depth the water also refracts: before the first water surface of a
+draw list, `RB_EndSurface` copies the scene drawn so far into
+`resolvedScene` (`renderTargets[2]`, which 1.3 fills only for its late post
+effects), bound by name as `sceneColorSampler`. The shader shows it under
+the water, bent by the waves' normal (a bent sample that lands on something
+in front of the water takes the straight one), clear at the shore and fading
+into the water's color 160 units down; the water is then opaque, as its
+vertex alpha says. Over the void (`mp_harbor`'s open sea) it is the water's
+color, as before. Without INTZ there is no copy and water fades by alpha.
 
 The sky's surfaces are the ones whose material has bit 8 in `gameFlags`
 (1.3 `0x10002cb0`); until 2026-11-02 the loader read `surfaceFlags`, found

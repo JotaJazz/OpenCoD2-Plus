@@ -227,6 +227,7 @@ static void diag_rb_frame_start(void)
 }
 
 extern int rb_rdsl_call_count;
+extern int rb_waterSceneCopied;
 extern int g_dip_gl_draw;
 extern int g_rb_endsurface_count;
 extern int g_rb_endsurface_draw;
@@ -1619,6 +1620,7 @@ static void RB_RenderDrawSurfList(GfxDrawSurf *drawSurfs, int drawSurfCount,
     GfxEntity *entities;
 
     rb_rdsl_call_count++;
+    rb_waterSceneCopied = 0;   /* r_water copies the scene once per list, rb_shade.c */
 
     backEnd.currentEntity = &backEnd.worldEntity;
     backEnd.currentEntityLighting = NULL;
