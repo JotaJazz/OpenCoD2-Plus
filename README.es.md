@@ -30,6 +30,7 @@
 - **Crear una partida desde el cliente**, para que se unan tus amigos, con bots si quieres (libcod).
 - **Un servidor dedicado para 1.3 y 1.0**, basado en [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus): en Linux pasa la prueba de humo completa de CoD2rev-Plus.
 - **Un cliente de Linux**, y otro sobre Vulkan (DXVK) que también dibuja con los shaders del propio juego.
+- **Las mejoras de CoD2x, escritas en el motor**: `sensitivity_MG`, opciones de la brújula, `cl_maxpackets` hasta 125, `com_writeConfig`, 4096 dvars y un informe cuando el juego se congela (`com_freezeWatch`).
 - **Comprobado contra los binarios originales de 1.3**: predicción de movimiento, efectos, sonidos, retroceso, menús y muchos arreglos ([qué cambió](docs/changes.md)).
 
 > [!NOTE]
