@@ -27,7 +27,7 @@ OFFSET = (100, -100)  # 640x480 units
 MIN_PIXELS = 200
 START = 'wait 300\ncg_drawGun 0\nwait 40\nscreenshot opt_on\nwait 40\ncg_drawCompass 0\nwait 40\nscreenshot opt_off\nwait 40\n'
 MOVED = f'cg_drawCompass 1\ncg_hudCompassOffsetX {OFFSET[0]}\ncg_hudCompassOffsetY {OFFSET[1]}\nwait 40\nscreenshot opt_moved\nwait 40\nquit\n'
-NO_WRITE = 'wait 100\ncg_hudCompassOffsetX 5\nwait 60\nquit\n'
+NO_WRITE = 'wait 100\ncg_hudCompassOffsetX 5\nwait 60\nwriteconfig probe\nwait 5\nquit\n'
 
 
 def differing(path_a, path_b):
@@ -105,7 +105,7 @@ def main():
             dx, dy = round(OFFSET[0] * s), round(OFFSET[1] * s) * (-1 if up else 1)
             there = sum((x + dx, y + dy) in moved for x, y in corner)
             here = sum((x, y) in moved for x, y in corner)
-            check('the offsets move it', corner and there >= len(corner) / 2, f'{there} of {len(corner)} pixels moved')
+            check('the offsets move it', corner and there >= len(corner) * 0.9, f'{there} of {len(corner)} pixels moved')
             check('it leaves its place', corner and here <= len(corner) / 2, f'{here} of {len(corner)} pixels stayed')
         configs = glob.glob(os.path.join(home, '*', 'players', '*', 'config_mp.cfg'))
         check('a game writes its config', bool(configs))
@@ -114,6 +114,7 @@ def main():
         run(binary, args.game_dir, home, NO_WRITE, ['+set', 'com_writeConfig', '0'], logs[1])
         left = glob.glob(os.path.join(home, '*', 'players', '*', 'config_mp.cfg'))
         check('com_writeConfig 0 writes none', not left, ' '.join(left))
+        check('the second game got that far', bool(glob.glob(os.path.join(home, '*', 'probe.cfg')) + glob.glob(os.path.join(home, '*', '*', '*', 'probe.cfg'))))
         text = ''.join(open(l, encoding='latin-1').read() for l in logs)
         check('no crash report', 'CRASH REPORT' not in text and not glob.glob(os.path.join(home, 'cod2_crash_*')))
         if args.keep:

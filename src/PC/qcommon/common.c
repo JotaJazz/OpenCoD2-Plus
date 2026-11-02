@@ -1603,9 +1603,10 @@ BM_NOINLINE void Com_Frame_Try_Block_Function(void)
     int msec, rawMsec, minMsec, maxMsec;
     qboolean useTimescale;
 
-    if (com_fullyInitialized && (dvar_modifiedFlags & 1)) {
+    /* with com_writeConfig 0 the bit stays: turned back on, what changed meanwhile is written */
+    if (com_fullyInitialized && (dvar_modifiedFlags & 1) && com_writeConfig->current.enabled) {
         dvar_modifiedFlags &= ~1;
-        if (Com_HasPlayerProfile() && com_writeConfig->current.enabled) {
+        if (Com_HasPlayerProfile()) {
             char path[64];
             Com_BuildPlayerProfilePath(path, 64, "config_mp.cfg");
             Com_WriteConfigToFile(path);

@@ -36,6 +36,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | MSVC client has no HTTP download | `src/win32/win32_stubs.c` | its curl stubs answer 0, so a redirected download fails and the server drops the client; the MinGW client uses `win_wininet.c` |
 | Reverb tuned by numbers only | `src/snd_sdl/snd_reverb.c` | public EAX presets at a measured gain; not compared by ear with Miles |
 | MP3 lengths are estimates | `src/snd_sdl/snd_stream.c` | from the first frame's bitrate: stock `073.mp3`, which is VBR, is off by up to 51%. Miles estimates from a bitrate too |
+| Compass shows no objectives | `CG_OwnerDraw`, `cg_hudObjective*` | an `objective_add` changes no pixel; 1.3's owner draws call `0x4c5620` and `0x4dafe0`, which read those dvars and are not ported. Whoever ports them takes `rect`, so that the compass offsets hold |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 
 ## Deferred decisions
