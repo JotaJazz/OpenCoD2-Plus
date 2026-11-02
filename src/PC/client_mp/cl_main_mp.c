@@ -1066,7 +1066,7 @@ void CL_InitOnceForAllClients(void)
         cl_anglespeedkey = Dvar_RegisterFloat("cl_anglespeedkey", 1.5f, 0.0f, flt_max.f, 0);
     }
 
-    cl_maxpackets = Dvar_RegisterInt("cl_maxpackets", 30, 15, 100, 0x1001);
+    cl_maxpackets = Dvar_RegisterInt("cl_maxpackets", 30, 15, 125, 0x1001);   /* 1.3: 100; one per frame at com_maxfps 125 */
     cl_packetdup = Dvar_RegisterInt("cl_packetdup", 1, 0, 5, 0x1001);
     cl_sensitivity = Dvar_RegisterFloat("sensitivity", 5.0f, 0.01f, 100.0f, 0x1001);
     cl_mouseAccel = Dvar_RegisterFloat("cl_mouseAccel", 0.0f, 0.0f, 100.0f, 0x1001);

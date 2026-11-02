@@ -165,6 +165,23 @@ reaches their fields by name, never by the binary's raw offsets (corpse info,
 media, `fxs`, `bgs.clientinfo` were all found reading 0x1000–0x1c180 bytes
 short).
 
+## Options that are not 1.3's
+
+Written here, after the ones players know from CoD2x, whose code is not reused:
+it has no license, and it patches the running 1.3 binary.
+
+| Dvar | Does |
+|---|---|
+| `sensitivity_MG` | multiplies the sensitivity on a turret; 1 is 1.3 |
+| `cg_drawCompass` | 0 hides the compass, its owner draws in `CG_OwnerDraw` |
+| `cg_hudCompassOffsetX`, `cg_hudCompassOffsetY` | move the compass, in 640x480 units |
+| `cg_drawSpectatedPlayerName` | 0 hides "following" and the name when spectating |
+| `com_writeConfig` | 0 stops the automatic write of `config_mp.cfg`; the `writeconfig` command still works |
+
+`cl_maxpackets` goes up to 125, one packet per frame at `com_maxfps 125`. `snaps`
+stays at 30: the server caps it there, and at 40 Hz `g_forceSnaps` decides. There
+is no raw mouse option: SDL's relative mode already reads Raw Input on Windows.
+
 ## Sound
 
 `snd_driver.c` is 1.3's driver and talks to Miles' `AIL_*` interface. Those

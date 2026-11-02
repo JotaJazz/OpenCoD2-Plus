@@ -146,6 +146,7 @@ static int Com_GetConfigureDvarNames(const char **text, char *dvarNames);
 static void Com_GetConfigureDvarValues(int dvarCount, const char **text, char *dvarValues);
 static void Com_SetConfigureDvars(int dvarCount, const char *dvarNames, const char *dvarValues);
 static void Com_WriteConfigToFile(const char *filename);
+static const dvar_t *com_writeConfig;
 void Com_WriteConfig_f(void);
 float Com_GetTimescaleForSnd(void);
 void Com_Close(void);
@@ -1604,7 +1605,7 @@ BM_NOINLINE void Com_Frame_Try_Block_Function(void)
 
     if (com_fullyInitialized && (dvar_modifiedFlags & 1)) {
         dvar_modifiedFlags &= ~1;
-        if (Com_HasPlayerProfile()) {
+        if (Com_HasPlayerProfile() && com_writeConfig->current.enabled) {
             char path[64];
             Com_BuildPlayerProfilePath(path, 64, "config_mp.cfg");
             Com_WriteConfigToFile(path);
@@ -2024,6 +2025,7 @@ void Com_Init_Try_Block_Function(char *commandLine)
     }
 
     com_maxfps = Dvar_RegisterInt("com_maxfps", 85, 0, 1000, 0x1001);
+    com_writeConfig = Dvar_RegisterBool("com_writeConfig", 1, 0x1000);   /* not 1.3's: a config kept as it is */
     com_developer = Dvar_RegisterInt("developer", 0, 0, 2, 0x1000);
     com_developer_script = Dvar_RegisterBool("developer_script", 0, 0x1000);
     com_logfile = Dvar_RegisterInt("logfile", 0, 0, 2, 0x1000);

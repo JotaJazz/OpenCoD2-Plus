@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — CoD2x's client options, in the engine
+
+- `sensitivity_MG`, `cg_drawCompass`, the compass offsets, `cg_drawSpectatedPlayerName`, `com_writeConfig`, and `cl_maxpackets` up to 125. CoD2x's repository has no license, so nothing is copied; the names stay so that players' configs work.
+- `m_rinput` was rejected: SDL 2.30 reads Raw Input in relative mode. `snaps` 40 too: the server caps it at 30, and `g_forceSnaps` decides at 40 Hz. `cl_hideServerIp` waits: the address is printed and shown in several places, and hiding only some would promise privacy it does not give.
+- `sensitivity_MG` and the spectated name were not run: no test puts a player on a turret or in spectate.
+
 ## 2026-11-01 — Miles retired from the Windows client
 
 - `src/snd_sdl/` is now the only sound engine on Windows: `mss32_dll.c`, `snd_backend` and the `__stdcall` table are gone, and `AIL_*` are plain functions, as on Linux. The user heard no difference in real games. Going back means reverting this commit; `plus` only, `main` keeps Miles.
