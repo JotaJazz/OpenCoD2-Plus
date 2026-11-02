@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — script brush models draw as brush models
+
+- `CG_ScriptMover` and `CG_EntityEffects` told a brush model by `constantLight == 0xffffff`; 1.3 tests `solid` (`centity_t` `+0x18c`, `0x4dea5b` and `0x4cc240`), where the server puts the marker. A `script_brushmodel` without a light fell into the xmodel branch and drew `gameModels[index]` at its origin: in `sps_island` the boats (`barco3`) became a huge stretched hill over the scene, on every renderer; their looping sounds played from the origin instead of the model's middle.
+- Found under Wine on Xvfb at the user's spot: `r_drawEntities 0` and deleting `barco3` by script removed the hill, a trace showed no brush model added and an xmodel at `0 0 0`. After the fix the picture matches 1.3's (1.3 % of pixels differ, the trees' sway; 48 % before).
+- No automated check: it needs the user's map. The water work was not the cause (70f3e91 shows it too).
+
 ## 2026-11-02 — water knows how deep it is
 
 - With `r_water`, no antialiasing and INTZ, the frame buffer's depth is an INTZ texture bound to `floatZ` (`NULL` in 1.3 on PC). The water's shader turns it into the distance behind each pixel without the projection matrix: with the infinite far plane `d = 1 - near / z`, so `near` comes from the water's own depth. Shallow water fades and foams; water stops writing depth while it reads it.
