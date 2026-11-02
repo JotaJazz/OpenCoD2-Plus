@@ -43,7 +43,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Decision | Waiting on |
 |---|---|
 | Move MSVC, web and x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
-| A `cl_hideServerIp` option | hiding every place the address reaches: console prints, the connect screen, the server browser's info, which joins with that same string |
 | An OpenGL 4.5 Core device | a new device behind `IDirect3DDevice9`: the Mac port's is legacy GL. vkd3d-shader turned all 194 shader compilations of a `mp_toujane` load into SPIR-V, which needs `GL_ARB_gl_spirv`; its GLSL target is experimental and off by default |
 | Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 

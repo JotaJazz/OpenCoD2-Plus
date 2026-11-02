@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — cl_hideServerIp
+
+- CoD2x's `cl_hideServerIp`, written here: every text the renderer draws passes through `R_AddCmdDrawTextWithCursor` (the console's lines too, through `R_DrawConsoleText`), which masks the digits of IPv4 addresses on its own copy (`r_hide_address.h`, `test/test_hide_address.py`). One place covers the scoreboard, console, menus and edit fields, and the server browser keeps joining with the real string, the reason the option had been deferred.
+- Not done: CoD2x's server-side `sv_hideServerIp`, which would force it on clients (CoD2rev-Plus's), and masking host names. CoD2x's shotgun pattern, HWID and match system stay out: they are server-side, in CoD2rev-Plus; HWID is a hardware fingerprint a client can forge, and CoD2rev-Plus already bans by the CD key's GUID.
+- Checked in a game on a local server: the scoreboard's footer drew `***.*.*.*:*****` for `127.0.0.1:28930`, fps and the clock untouched. `TEXTCMD_DBG` now picks texts by what was asked and prints what is drawn. The review found an address after a dot (`Connecting...`, a scrolled edit field) or a color code left visible; fixed.
+
 ## 2026-11-02 — prediction measured against 1.3's own client
 
 - `prediction_test.py --wine` runs 1.3's `CoD2MP_s.exe` on the same moves, map and server (`main`'s dedicated: `plus`'s refuses stock clients). Misses, ours against 1.3: 5–11 against 10–11 at 20 fps (two runs gave the same 10 misses, 13.1 in total); 18, 18 against 18, 20 with 40 ms of ping (largest 4.1 in both); 0, 0 against 1, 0 at 60 fps. Prediction is 1.3's: the earlier online gap (53 against 26 on Titan) came from two different sessions; one session each on one server and map gave 1.3 8 misses (largest 13.8), ours 5 (largest 6.5).

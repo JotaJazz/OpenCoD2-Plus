@@ -16,6 +16,7 @@ extern const dvar_t *r_fullbright;
 extern const dvar_t *r_debugShader;
 extern const dvar_t *r_debugEntCounts;
 extern const dvar_t *r_optimize;
+const dvar_t *r_hideServerIp;
 extern const dvar_t *r_optimizeLightmaps;
 extern const dvar_t *r_optimizeXModels;
 extern const dvar_t *r_gpuSync;
@@ -298,6 +299,9 @@ void R_RegisterDvars(void)
     r_debugEntCounts = ri.Dvar_RegisterInt("r_debugEntCounts", 0, 0, 0x7fe, 0x2000);
 
     r_optimize = ri.Dvar_RegisterBool("r_optimize", 1, 0x2020);
+
+    /* not 1.3's, CoD2x's name: every drawn IPv4 address masked, for streaming (r_hide_address.h) */
+    r_hideServerIp = ri.Dvar_RegisterBool("cl_hideServerIp", 0, 0x1001);
 
     r_optimizeLightmaps = ri.Dvar_RegisterBool("r_optimizeLightmaps", 1, 0x2020);
 

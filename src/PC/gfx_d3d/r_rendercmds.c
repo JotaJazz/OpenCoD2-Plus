@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include "imports.h"
 #include <stdio.h>
+#include "r_hide_address.h"
 /* dvar globals */
 extern const dvar_t *r_forceLod;
+extern const dvar_t *r_hideServerIp;
 extern const dvar_t *r_gpuSync;
 extern const dvar_t *r_highLodDist;
 extern const dvar_t *r_lightTweakAmbient;
@@ -761,8 +763,11 @@ void R_AddCmdDrawTextWithCursor(const char *text, int maxChars, FontHandle font,
     cmdText = cmd->text;
     memcpy(cmdText, text, len);
     cmdText[len] = '\0';
+    /* the drawn copy only: the server browser joins with the string it was given */
+    if (r_hideServerIp && r_hideServerIp->current.enabled)
+        R_HideAddresses(cmdText);
 
-    if (R_ShouldTraceTextCmd(cmdText)) {
+    if (R_ShouldTraceTextCmd(text)) {   /* picked by what was asked, prints what is drawn */
         printf("[textcmd-front] used=%d bytes=%d text='%.96s' xy=(%.1f,%.1f) scale=(%.3f,%.3f) style=%d max=%d cursor=%d/%d colorBytes=(%u,%u,%u,%u) font=%p\n",
                s_cmdList ? s_cmdList->usedTotal : -1,
                byteCount,

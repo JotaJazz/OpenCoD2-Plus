@@ -30,7 +30,7 @@
 - **Host a game from the client**, for friends to join, with bots if you like (libcod).
 - **A dedicated server for 1.3 and 1.0**, built on [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus): on Linux it passes CoD2rev-Plus's whole smoke test.
 - **A Linux client**, and one on Vulkan (DXVK) that draws with the game's own shaders too.
-- **CoD2x's improvements, written in the engine**: `sensitivity_MG`, compass options, `cl_maxpackets` up to 125, `com_writeConfig`, 4096 dvars and a report when the game freezes (`com_freezeWatch`).
+- **CoD2x's improvements, written in the engine**: `sensitivity_MG`, compass options, `cl_maxpackets` up to 125, `com_writeConfig`, `cl_hideServerIp`, 4096 dvars and a report when the game freezes (`com_freezeWatch`).
 - **Checked against the original 1.3 binaries**: movement prediction, effects, sounds, recoil, menus and many fixes ([what changed](docs/changes.md)).
 
 > [!NOTE]
