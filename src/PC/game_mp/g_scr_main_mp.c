@@ -106,7 +106,7 @@ extern void SV_GameSendServerCommand(int clientnum, svscmd_type type, const char
 extern void Scr_Notify(gentity_t *ent, unsigned short stringValue, unsigned int paramcount);
 extern struct XModel *SV_XModelGet(const char *name);
 extern int XModelNumBones(const struct XModel *model);
-extern int XModelBoneNames(XModel *model);
+extern intptr_t XModelBoneNames(XModel *model);
 extern void G_AddDebugString(const vec_t *xyz, const vec_t *color, float scale, const char *pszText);
 extern void CL_AddDebugLine(const vec_t *start, const vec_t *end, const vec_t *color, int depthTest, int duration, int fromServer);
 extern int G_ModelIndex(const char *name);

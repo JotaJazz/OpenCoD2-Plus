@@ -2852,7 +2852,7 @@ typedef int CGDataProvider;
 typedef int CGImage;
 typedef int CSpecArray;
 typedef int Exop;
-typedef int FxImpactEntry;
+typedef intptr_t FxImpactEntry;   /* an effect pointer: pointer-sized on x64 */
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;
@@ -4953,7 +4953,7 @@ typedef char io_name_t[128];
 typedef jpeg_common_struct * j_common_ptr;
 typedef jpeg_compress_struct * j_compress_ptr;
 typedef jpeg_decompress_struct * j_decompress_ptr;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(COD2_X64)   /* x64: the system's, 200 bytes, not 1.3's 39 ints */
 #include <setjmp.h>
 #else
 typedef int jmp_buf[39];

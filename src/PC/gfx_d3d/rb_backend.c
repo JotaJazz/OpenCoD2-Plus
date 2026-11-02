@@ -1427,7 +1427,7 @@ static void RB_SetLightPropertiesCmd(GfxRenderCommandExecState *execState)
     *(int *)&backEnd.light[idx].specular[2] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[2];
     *(int *)&backEnd.light[idx].specular[3] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[3];
 
-    *(int *)&backEnd.light[idx].def = (int)(((GfxCmdSetLightProperties *)cmd)->lightDef);
+    *(void **)&backEnd.light[idx].def = (void *)((GfxCmdSetLightProperties *)cmd)->lightDef;
 
     *(int *)&backEnd.light[idx].position[0] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[0];
     *(int *)&backEnd.light[idx].position[1] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[1];

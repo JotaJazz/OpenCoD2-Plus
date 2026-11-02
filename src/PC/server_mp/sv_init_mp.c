@@ -190,7 +190,7 @@ extern int Sys_Milliseconds(void);
 extern int Sys_MillisecondsRaw(void);
 extern void NET_Sleep(int msec);
 extern Bool NET_OutOfBandPrint(int sock, netadr_t adr, const char *data);
-extern int *G_GetSavePersist(void);
+extern int G_GetSavePersist(void);
 extern const char *ClientConnect(int clientNum, unsigned short scriptId);
 extern int __mh_execute_header;
 
@@ -827,7 +827,7 @@ void SV_SpawnServer(const char *server)
     CL_InitLoad(server, (sv_gametype)->current.string);
 
     if ((com_sv_running)->current.enabled) {
-        savepersist = (int)G_GetSavePersist();
+        savepersist = G_GetSavePersist();
 
         {
             serverStatic_t *svsPtr = (serverStatic_t *)imp_svs;

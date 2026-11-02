@@ -133,10 +133,10 @@ static int R_CompareDumpSceneEntities(const void *e0, const void *e1)
 
     switch (type) {
     case 0:
-        return (int)DObjGetModel((void *)sceneEnt0->u.obj, 0) - (int)DObjGetModel((void *)sceneEnt1->u.obj, 0);
+        return COD2_PTR_ORDER(DObjGetModel((void *)sceneEnt0->u.obj, 0), DObjGetModel((void *)sceneEnt1->u.obj, 0));
     case 1:
     case 2:
-        return (int)((byte *)sceneEnt0->u.data - (byte *)sceneEnt1->u.data);
+        return COD2_PTR_ORDER(sceneEnt0->u.data, sceneEnt1->u.data);
     case 3:
         return ((int)((byte *)sceneEnt0->u.data - (byte *)sceneEnt1->u.data)) >> 5;
     default:
@@ -658,7 +658,7 @@ void R_RenderScene(const refdef_t *refdef)
     int debugEntIndices[2048];
 
     R_RenderScene_diag(rg_p->registered, (r_norefresh)->current.enabled,
-                       (int)rgp_p->world ? 1 : 0);
+                       rgp_p->world ? 1 : 0);
 
     if (!rg_p->registered)
         return;

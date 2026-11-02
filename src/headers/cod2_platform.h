@@ -111,6 +111,14 @@ extern "C" {
 #define COD2_REGPARM_AND_STACKPARM
 #endif
 
+/* the order of two pointers for a sort: 1.3's (int)(a - b) on 32 bits; on x64 that difference
+   can pass an int, so it compares (-1, 0, 1) */
+#ifdef COD2_X64
+#define COD2_PTR_ORDER(a, b) (((uintptr_t)(a) > (uintptr_t)(b)) - ((uintptr_t)(a) < (uintptr_t)(b)))
+#else
+#define COD2_PTR_ORDER(a, b) ((int)((uintptr_t)(a) - (uintptr_t)(b)))
+#endif
+
 #ifdef __cplusplus
 }
 #endif

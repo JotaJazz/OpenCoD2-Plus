@@ -40,7 +40,7 @@ typedef void (*re_floatp_func)(float *);
 typedef float (*re_font_height_func)(FontHandle, float);
 typedef int (*re_font_iheight_func)(FontHandle);
 typedef void (*re_draw_string_func)(const char *, int, FontHandle, float, float, float, float, const float *, int);
-typedef void (*re_draw_console_func)(const short int *, int, int, float, float, float, float, const float *, int);
+typedef void (*re_draw_console_func)(const short int *, int, FontHandle, float, float, float, float, const float *, int);
 typedef void (*re_write_cubemap_func)(const char *, int, float, float);
 
 /* The offsets are x86 byte offsets into refexport_t's function-pointer table
@@ -114,7 +114,7 @@ void SCR_DrawConsoleString(int x, int y, const short int *string, int maxChars, 
     int fontHeight = RE_FUNC(re, 0x118, re_font_iheight_func)(font);
 
     RE_FUNC(re, 0x128, re_draw_console_func)(
-        string, maxChars, (int)font, (float)x, (float)y + (float)fontHeight,
+        string, maxChars, font, (float)x, (float)y + (float)fontHeight,
         1.0f, 1.0f, setColor, 0);
 }
 

@@ -168,7 +168,7 @@ static int CompareSortedEffects(const void *e0, const void *e1)
     if (result)
         return result;
 
-    result = (int)fx0->mRefEnt.customMaterial - (int)fx1->mRefEnt.customMaterial;
+    result = COD2_PTR_ORDER(fx0->mRefEnt.customMaterial, fx1->mRefEnt.customMaterial);
     if (result)
         return result;
 
@@ -938,7 +938,7 @@ static Bool FX_AddPrimitive_impl(byte *prim, Effect *particle, const vec_t *orig
     int endTime = curTime + (int)lifeRange;
     Effect_SetTimeStartEnd((const Effect *)(particle), curTime, endTime);
 
-    (((Effect *)(particle))->impactEffect) = (struct Effect *)(uintptr_t)(int)ep->fx;
+    (((Effect *)(particle))->impactEffect) = (struct Effect *)(uintptr_t)ep->fx;
     (((Effect *)(particle))->field_0x38) = ((PrimitiveTemplate *)primTemp)->mParentPrimIndex;
     (((Effect *)(particle))->field_0x10) = ((PrimitiveTemplate *)primTemp)->mGroupFlags;
 

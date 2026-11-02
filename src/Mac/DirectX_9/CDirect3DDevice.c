@@ -67,7 +67,7 @@ extern void CDirect3DSurface_CDirect3DSurface(const CDirect3DSurface *_this,
                                               SurfaceType s, GLenum CubemapID, UINT32 Level, UINT32 Width, UINT32 Height,
                                               D3DFORMAT Format, const void *pSurfaceMemory, COpenGLTexture *pOpenGLTextureInfo);
 extern void CDirect3DSurface_UpdateOpenGLSurfaceObject(const CDirect3DSurface *_this, int bRecreateSurface);
-extern int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
+extern intptr_t CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
 extern int CDirect3DSwapChain_SetBackBuffer(const CDirect3DSwapChain *_this, const IDirect3DSurface9 *pBackBuffer);
 
 extern UINT32 MacOpenGLUtils_GetImageSizeInBytes(UINT32 Width, UINT32 Height, UINT32 Depth, UINT32 LevelCount, const D3DFORMAT *f);

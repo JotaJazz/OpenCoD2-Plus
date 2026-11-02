@@ -1187,9 +1187,7 @@ void CG_EntityEvent(centity_t *cent, int event)
                               cgs->media.grenadeExplodeSound[0]);
 
             {
-                char *fxLookup = (char *)cgs->media.fx;
-                char *fxData = *(char **)(fxLookup + 4);
-                EffectTemplate *effect = *(EffectTemplate **)(fxData + 0x33c);
+                EffectTemplate *effect = (EffectTemplate *)((const FxImpactEntry *)cgs->media.fx->table)[9 * 23];
                 if (effect) {
 
                     FX_PlayEffect(effect, position, dir);
@@ -1231,9 +1229,7 @@ void CG_EntityEvent(centity_t *cent, int event)
                               cgs->media.grenadeBounceSound[surfType]);
 
             {
-                char *fxLookup = (char *)cgs->media.fx;
-                char *fxData = *(char **)(fxLookup + 4);
-                EffectTemplate *effect = *(EffectTemplate **)(fxData + 0x2e0 + surfType * 4);
+                EffectTemplate *effect = (EffectTemplate *)((const FxImpactEntry *)cgs->media.fx->table)[8 * 23 + surfType];
                 if (effect) {
 
                     FX_PlayEffect(effect, position, dir);
@@ -1252,9 +1248,7 @@ void CG_EntityEvent(centity_t *cent, int event)
                               cgs->media.grenadeExplodeSound[surfType2]);
 
             {
-                char *fxLookup = (char *)cgs->media.fx;
-                char *fxData = *(char **)(fxLookup + 4);
-                EffectTemplate *effect = *(EffectTemplate **)(fxData + 0x33c + surfType2 * 4);
+                EffectTemplate *effect = (EffectTemplate *)((const FxImpactEntry *)cgs->media.fx->table)[9 * 23 + surfType2];
                 if (effect) {
 
                     FX_PlayEffect(effect, position, dir);
@@ -1298,10 +1292,8 @@ void CG_EntityEvent(centity_t *cent, int event)
                                   cgs->media.rocketExplodeSound[surfType3]);
 
                 {
-                    char *fxLookup = (char *)cgs->media.fx;
-                    char *fxData = *(char **)(fxLookup + 4);
                     int surfType4 = es->surfType;
-                    EffectTemplate *effect = *(EffectTemplate **)(fxData + 0x398 + surfType4 * 4);
+                    EffectTemplate *effect = (EffectTemplate *)((const FxImpactEntry *)cgs->media.fx->table)[10 * 23 + surfType4];
                     if (effect) {
 
                         FX_PlayEffect(effect, position, dir);
@@ -1341,10 +1333,8 @@ void CG_EntityEvent(centity_t *cent, int event)
                               cgs->media.rocketExplodeSound[surfType5]);
 
             {
-                char *fxLookup = (char *)cgs->media.fx;
-                char *fxData = *(char **)(fxLookup + 4);
                 int surfType6 = es->surfType;
-                EffectTemplate *effect = *(EffectTemplate **)(fxData + 0x398 + surfType6 * 4);
+                EffectTemplate *effect = (EffectTemplate *)((const FxImpactEntry *)cgs->media.fx->table)[10 * 23 + surfType6];
                 if (effect) {
 
                     FX_PlayEffect(effect, position, dir);

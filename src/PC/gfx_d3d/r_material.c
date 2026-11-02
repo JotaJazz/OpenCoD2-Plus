@@ -257,7 +257,7 @@ static Bool Material_Compare(const Material *mtl0, const Material *mtl1)
     int diff = (int)mtl0->info.sortKey - (int)mtl1->info.sortKey;
     if (diff != 0)
         return (unsigned int)diff >> 31;
-    diff = (int)((unsigned int)mtl0->techniqueSet - (unsigned int)mtl1->techniqueSet);
+    diff = COD2_PTR_ORDER(mtl0->techniqueSet, mtl1->techniqueSet);
     if (diff == 0)
         return 0;
     return (unsigned int)diff >> 31;
@@ -969,12 +969,12 @@ void R_Cmd_ReloadMaterialTextures(void)
             img = ((MaterialTextureDef *)texdef)->u.image;
             if (!lastReloaded) {
 
-                if ((unsigned int)img > (unsigned int)best)
+                if ((uintptr_t)img > (uintptr_t)best)
                     best = img;
             } else {
 
-                if ((unsigned int)img > (unsigned int)best &&
-                    (unsigned int)img < (unsigned int)lastReloaded)
+                if ((uintptr_t)img > (uintptr_t)best &&
+                    (uintptr_t)img < (uintptr_t)lastReloaded)
                     best = img;
             }
         }

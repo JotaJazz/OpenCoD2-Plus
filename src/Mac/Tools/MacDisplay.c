@@ -418,10 +418,10 @@ short unsigned int MacDisplay_SetGammaRamp(const _D3DGAMMARAMP *inRamp)
 
 short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
 {
-    int port;
+    intptr_t port;
 
     if (sInitialized && !sInWindowMode && sScreenContext)
-        port = (int)sScreenContext->mDrawable;
+        port = (intptr_t)sScreenContext->mDrawable;
     else
         port = GetWindowPort(sMainWindow);
 
@@ -431,10 +431,10 @@ short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
 
 short unsigned int MacDisplay_GlobalToLocal(Point *ioPoint)
 {
-    int port;
+    intptr_t port;
 
     if (sInitialized && !sInWindowMode && sScreenContext)
-        port = (int)sScreenContext->mDrawable;
+        port = (intptr_t)sScreenContext->mDrawable;
     else
         port = GetWindowPort(sMainWindow);
 

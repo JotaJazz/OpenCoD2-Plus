@@ -1146,7 +1146,7 @@ typedef int CGDataProvider;
 typedef int CGImage;
 typedef int CSpecArray;
 typedef int Exop;
-typedef int FxImpactEntry;
+typedef intptr_t FxImpactEntry;   /* an effect pointer: pointer-sized on x64 */
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;

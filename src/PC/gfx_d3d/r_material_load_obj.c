@@ -1785,6 +1785,7 @@ extern const byte s_techniqueTypeNames[];
  * can share the (layout-neutral, text-parsed) techset loader. */
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack);
 
+#ifndef COD2_X64   /* x64 marshals the 32-bit file instead (Material_Marshal32To64) */
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialObj *material, int imageTrack)
 {
     byte *mtl = (byte *)material;
@@ -1849,6 +1850,8 @@ static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialOb
         return Material_ResolveTechniqueSet((Material *)mtl, tsName, imageTrack);
     }
 }
+
+#endif
 
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack)
 {
@@ -2522,10 +2525,12 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
     }
 }
 
+#ifndef COD2_X64
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance(MaterialObj *material, int imageTrack)
 {
     return Material_FinishLoadingInstance_impl(material, imageTrack);
 }
+#endif
 
 extern int Material_LoadFile(const char *filename, int *fileHandle);
 extern void *Material_Alloc(int size);

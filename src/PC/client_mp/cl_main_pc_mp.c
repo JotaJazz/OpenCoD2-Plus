@@ -657,13 +657,13 @@ void CL_ServersResponsePacket(netadr_t from, msg_t *msg)
 
     numservers = 0;
 
-    while ((unsigned int)(buffptr + 1) < (unsigned int)buffend) {
+    while ((uintptr_t)(buffptr + 1) < (uintptr_t)buffend) {
         if (*buffptr == '\\')
             break;
         buffptr++;
     }
 
-    while ((unsigned int)(buffptr + 1) < (unsigned int)(buffend - 6)) {
+    while ((uintptr_t)(buffptr + 1) < (uintptr_t)(buffend - 6)) {
 
         ip[0] = buffptr[1];
         ip[1] = buffptr[2];

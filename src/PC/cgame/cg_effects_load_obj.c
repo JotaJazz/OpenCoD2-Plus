@@ -180,16 +180,16 @@ FxImpactTable *CG_RegisterImpactEffects(const char *mapname)
                 Com_Printf("no entry for effect type '%s' on surface type '%s'\n",
                            pszTypeName, Com_SurfaceTypeToName(surfIdx));
                 typeBadCount++;
-                ((int *)entries)[surfIdx] = 0;
+                entries[surfIdx] = 0;
             } else if (*effectFile == '\0') {
-                ((int *)entries)[surfIdx] = 0;
+                entries[surfIdx] = 0;
             } else {
-                ((int *)entries)[surfIdx] = (int)FX_RegisterEffect(effectFile);
+                entries[surfIdx] = (FxImpactEntry)FX_RegisterEffect(effectFile);
             }
         }
 
         iBadCount += typeBadCount;
-        offset += 23 * 4;
+        offset += 23 * (int)sizeof(FxImpactEntry);
     }
 
     if (iBadCount != 0) {

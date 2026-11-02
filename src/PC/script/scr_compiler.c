@@ -22,7 +22,7 @@ extern unsigned int GetArray(unsigned int id);
 extern void SetVariableValue(unsigned int id, VariableValue *value);
 extern void Com_Error(int code, const char *fmt, ...);
 extern void CompileError(unsigned int sourcePos, const char *fmt, ...);
-extern void CompileError2(int codePos, const char *msg);
+extern void CompileError2(const char *codePos, const char *msg, ...);
 extern void AddOpcodePos(unsigned int sourcePos, int type);
 extern void RemoveOpcodePos(void);
 extern void AddThreadStartOpcodePos(unsigned int sourcePos);
@@ -156,7 +156,7 @@ static unsigned int __attribute_regparm__(3)
 
         if (pos->type == SCRCOMP_VAR_DEVELOPER_CODEPOS) {
             if (type == SCRCOMP_VAR_CODEPOS) {
-                CompileError2( (int)(codePtr), "normal script cannot reference a function in a /# ... #/ comment");
+                CompileError2( (const char *)(codePtr), "normal script cannot reference a function in a /# ... #/ comment");
                 continue;
             }
         } else {
@@ -165,7 +165,7 @@ static unsigned int __attribute_regparm__(3)
                 fprintf(stderr, "[UNKFN-LINKTHREAD-169 nodef] threadId=%u count=%d i=%d valueId=%u progoff=%d\n",
                         threadId, count, i, valueId, (int)(codePtr - SCRVP->programBuffer));
 #    endif
-                CompileError2( (int)(codePtr), "unknown function");
+                CompileError2( (const char *)(codePtr), "unknown function");
                 continue;
             }
 
@@ -174,7 +174,7 @@ static unsigned int __attribute_regparm__(3)
                 fprintf(stderr, "[UNKFN-LINKTHREAD-174 farcall] threadId=%u progoff=%d\n",
                         threadId, (int)(codePtr - SCRVP->programBuffer));
 #    endif
-                CompileError2( (int)(codePtr), "unknown function");
+                CompileError2( (const char *)(codePtr), "unknown function");
                 continue;
             }
         }

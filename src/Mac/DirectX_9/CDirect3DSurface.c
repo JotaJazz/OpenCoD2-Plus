@@ -139,7 +139,7 @@ HRESULT CDirect3DSurface_LockRect(const CDirect3DSurface *_this, D3DLOCKED_RECT 
 
     (void)Flags;
 
-    if (!surface->surfaceMemory || (unsigned int)surface->surfaceMemory >= 0xf0000000) {
+    if (!surface->surfaceMemory || (uintptr_t)surface->surfaceMemory >= 0xf0000000) {
         static byte scratch[4 * 1024 * 1024];
         pLockedRect->pBits = scratch;
     } else {

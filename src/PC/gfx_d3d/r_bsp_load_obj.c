@@ -311,8 +311,8 @@ void R_InterpretSunLightParseParamsIntoLights(SunLightParseParams *sunParse, Gfx
     {
         static GfxLight sunLightScratch;
 
-        if ((unsigned int)sunLight < 0x1000 ||
-            ((unsigned int)sunLight >= 0x08200000 && (unsigned int)sunLight < 0x08800000)) {
+        if ((uintptr_t)sunLight < 0x1000 ||
+            ((uintptr_t)sunLight >= 0x08200000 && (uintptr_t)sunLight < 0x08800000)) {
             sunLight = &sunLightScratch;
             sl = (byte *)sunLight;
         }
