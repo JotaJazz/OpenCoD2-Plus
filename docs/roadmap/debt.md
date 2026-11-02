@@ -15,7 +15,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | A Windows dedicated server on IPX loses a byte of its address | replies to the wrong node | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; `win_net.cpp` writes it for every protocol |
 | Client and server movement differ by 1 ULP on some frames | none measurable | CoD2rev-Plus's `bgame` moved literals to float (`0.001f`, `0.4f`, `0.65f`), `src/PC/bgame` keeps doubles; far below `prediction_test.py`'s 0.1 miss |
 | `r_gfxApi d3d12` shows a black screen | experimental: use `vulkan` | on an RTX 5080 the device works: every call succeeds and the back buffer holds the frame (read back at frames 30 and 150), but nothing reaches the screen. Suspect presentation in the SDL window; not tried: `Windowed` 0, another swap effect. A menu screenshot came back black, unexplained |
-| `prediction_test.py --maxfps 60` gives about 500 misses of 1 unit in some runs | unknown | also at 20 Hz on the vendored server, and 0 in other runs of the same setup; Windows sessions show few, so it may be the Linux client under llvmpipe |
+| `prediction_test.py --maxfps 60` gives about 500 misses of 1 unit in some runs | unknown | also at 20 Hz on the vendored server, and 0 in other runs of the same setup; 2026-11-02 against `main`'s server: 0 in two runs, 1.3's client 1 and 0; Windows sessions show few, so it may be the Linux client under llvmpipe |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |
 
 ## Accepted debt

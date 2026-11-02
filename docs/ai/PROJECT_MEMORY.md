@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — prediction measured against 1.3's own client
+
+- `prediction_test.py --wine` runs 1.3's `CoD2MP_s.exe` on the same moves, map and server (`main`'s dedicated: `plus`'s refuses stock clients). Misses, ours against 1.3: 5–11 against 10–11 at 20 fps (two runs gave the same 10 misses, 13.1 in total); 18, 18 against 18, 20 with 40 ms of ping (largest 4.1 in both); 0, 0 against 1, 0 at 60 fps. Prediction is 1.3's: the earlier online gap (53 against 26 on Titan) came from two different sessions.
+- 1.3 under Wine needs its DLLs off DrvFs (`mss32.dll`'s entry faults when mapped from `/mnt/e`), a base dir without `main/players` (else it takes the user's profile, here with `com_hunkMegs 512`, out of memory) and a profile with `com_introPlayed 1`.
+
 ## 2026-11-02 — 4096 dvars and a freeze report
 
 - The client's dvar pool goes from 1280 to 4096, as CoD2x's does; the dedicated server keeps CoD2rev-Plus's limit. The command buffer goes from 64 KB to 512 KB: `exec` has to hold a whole file, and past 64 KB `config_mp.cfg` was dropped, then rewritten from defaults, which more dvars reach. The review of this change found that.
