@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — the compass shows objectives
+
+- `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it. Same port as the `plus` branch, without that branch's compass offsets.
+- `scripts/compass_objectives_test.py` plays without a team and on one, and demands an icon's white. `entNum` is bounded here, as it comes from the server.
+- Left as it is: 1.3's friendlies (`0x4dafe0`) read `cg_hudObjectiveMaxRange` and `MinAlpha` too, and our port does not.
+
 ## 2026-11-01 — final review of plus before main
 
 - `r_gfxApi vulkan` died at every start on a device without Vulkan 1.3, since DXVK throws out of `Direct3DCreate9` and the menu saves the choice. The client now asks Vulkan first, and falls back when the layer cannot make a device.
