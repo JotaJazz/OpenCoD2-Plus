@@ -7,12 +7,12 @@ Rules for contributors and AI agents. Tooling details:
 
 | Step | Rule |
 |---|---|
-| Branch | one branch per piece of work, from `main` |
+| Branch | one branch per piece of work, from `dev` (the development branch; `main` is the stable one) |
 | Investigate | reproduce first; find the root cause; compare with the 1.3 binary ([validation](../development/validation.md)) |
 | Change | smallest change that matches the original; vendored code upstream first ([vendored](../development/vendored.md)) |
 | Verify | `scripts/build_check.py all`, unit tests, `scripts/check_docs.py`, the runtime tests the change touches; the full suite before merging ([testing](../development/testing.md)) |
 | Review | a fresh reviewer reads the whole branch before merge |
-| Merge | `git merge --ff-only` into `main` |
+| Merge | `git merge --ff-only` into `dev`; `dev` goes into `main` when its changes are stable |
 | Publish | never push without the maintainer's decision |
 
 ## Commits

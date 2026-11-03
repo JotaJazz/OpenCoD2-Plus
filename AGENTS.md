@@ -16,7 +16,7 @@ OpenCoD2-Plus Server's code over the reconstructed engine.
 - The original 1.3 binaries define correct behavior; cite the address a fix follows ([docs/development/validation.md](docs/development/validation.md)).
 - Prove every fix with a test or check you ran; `python3 scripts/build_check.py all` and `python3 -m unittest discover -s test` stay green.
 - No personal data in the repository (CD keys, personal paths, private server addresses).
-- Never push; merges are `--ff-only` into `main` after a review.
+- Never push; work branches from `dev` and merges `--ff-only` into `dev` after a review; `dev` goes into `main` when its changes are stable.
 
 ## Keep the docs in sync
 

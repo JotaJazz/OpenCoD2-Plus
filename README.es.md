@@ -8,7 +8,7 @@
 ![Architectures: x86 | x64](https://img.shields.io/badge/arch-x86%20%7C%20x64-lightgrey)
 ![CoD2 1.3 | 1.3 Plus](https://img.shields.io/badge/CoD2-1.3%20%7C%201.3%20Plus-c9b37e)
 [![Fork of opencod2/opencod2](https://img.shields.io/badge/fork%20of-opencod2%2Fopencod2-555)](https://github.com/opencod2/opencod2)
-[![Last commit](https://img.shields.io/github/last-commit/JotaJazz/OpenCoD2-Plus)](https://github.com/JotaJazz/OpenCoD2-Plus/commits/main)
+[![Last commit](https://img.shields.io/github/last-commit/JotaJazz/OpenCoD2-Plus/dev)](https://github.com/JotaJazz/OpenCoD2-Plus/commits/dev)
 
 **Español** · [English](README.md) · [Português](README.pt.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 

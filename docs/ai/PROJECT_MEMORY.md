@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-03 — two branches: main and dev
+
+- `plus` was where development happened and `main` took critical fixes only; now `dev` (from `plus`) is the development branch and `main` the stable one, which takes `dev` when its changes are stable. `plus` is gone from GitHub; `main`'s two commits beyond it were already in `dev` by cherry-pick (the compass's objectives, the shellshock sounds), so the first `dev` into `main` is a merge.
+
 ## 2026-11-03 — the server is named OpenCoD2-Plus Server
 
 - CoD2rev-Plus renamed itself OpenCoD2-Plus Server (its ADR 0016; repository `JotaJazz/OpenCoD2-Plus-Server`), and its ADR says this repository follows in its own documents: the living docs and ADRs use the new name, the READMEs say what it was called; past memory stages, commits and code comments keep the old one.
