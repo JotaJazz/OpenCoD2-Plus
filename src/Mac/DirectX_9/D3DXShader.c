@@ -2,6 +2,11 @@
 #include "imports.h"
 #include <stdlib.h>
 #include <string.h>
+#include "../../PC/gfx_d3d/r_water_hlsl.h"
+
+extern const dvar_t *r_water;
+/* the include handler's copy of our water text: the compiler strips it in place, and Close must not free it */
+static char s_waterInclude[sizeof(r_waterShaderText)];
 typedef void (*fnptr_t)(void);
 extern fnptr_t vtbl_CD3DXBuffer[];
 extern fnptr_t vtbl_CD3DXConstantTable[];
@@ -748,6 +753,15 @@ static int REALINCLUDE_CC RealInclude_Open(void *_this, int IncludeType,
     (void)IncludeType;
     (void)pParentData;
 
+    if (r_water && r_water->current.enabled && !strcmp(pFileName, "lib/water.hlsl")) {
+        memcpy(s_waterInclude, r_waterShaderText, sizeof(r_waterShaderText));
+        StripConstRegisters(s_waterInclude, (int)sizeof(r_waterShaderText) - 1);
+        StripLineComments(s_waterInclude, (int)sizeof(r_waterShaderText) - 1);
+        *ppData = s_waterInclude;
+        *pBytes = (UINT)(sizeof(r_waterShaderText) - 1);
+        return 0;
+    }
+
     snprintf(path, sizeof(path), "materials/shaders/%s", pFileName);
     len = FS_ReadFile(path, &data);
     if ((len < 0 || !data) && !strchr(pFileName, '/')) {
@@ -770,7 +784,7 @@ static int REALINCLUDE_CC RealInclude_Open(void *_this, int IncludeType,
 static int REALINCLUDE_CC RealInclude_Close(void *_this, const void *pData)
 {
     (void)_this;
-    if (pData && ((const char *)pData)[0])
+    if (pData && ((const char *)pData)[0] && pData != s_waterInclude)
         FS_FreeFile((void *)pData);
     return 0;
 }

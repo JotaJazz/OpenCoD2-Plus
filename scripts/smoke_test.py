@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Starts the Linux server against a real game folder and checks that it answers.
 
-    python3 scripts/smoke_test.py /path/to/CoD2 [--protocol 118] [--binary bin/cod2rev_lnxded]
+    python3 scripts/smoke_test.py /path/to/CoD2 [--protocol 118] [--plus] [--binary bin/cod2rev_lnxded]
+
+--plus checks a `make PLUS=1` build: stock and other Plus clients are told to
+update, and a Plus client gets Plus snapshots.
 
 Besides the queries, a minimal client (cod2client.py) connects, receives the
 gamestate, enters the game and sends commands, one of them in a fragmented
@@ -75,7 +78,7 @@ def wait_for(condition, seconds=5.0):
     return False
 
 
-def check_client(port, protocol, password, game_log, check):
+def check_client(port, protocol, plus, password, game_log, check):
     """Connects a minimal client that receives the gamestate, enters the game
     and sends commands, including one message split into fragments, so the
     netchan, the XOR keys, Huffman decompression, SV_ClientCommand and
@@ -136,7 +139,23 @@ def check_client(port, protocol, password, game_log, check):
         check('client parses snapshots', frames and entities and client.parsed_clean == client.parsed,
               f'{len(frames)} snapshots, {client.parsed_clean} of {client.parsed} messages clean, '
               f'{entities} entities' + (f', {client.parse_errors[0]}' if client.parse_errors else ''))
+        check('a client gets the snapshots of its version', frames and all(f['plus'] == plus for f in frames))
         check('client receives server commands', any('smokesnap' in c for f in frames for c in f['commands']))
+
+        # someone behind the same IP who guesses the qport must not take the
+        # client's address, but a client whose port changes keeps playing
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as thief:
+            header = (0x7ffffff0).to_bytes(4, 'little') + client.qport.to_bytes(2, 'little')
+            thief.sendto(header + bytes(16), ('127.0.0.1', port))
+            thief.sendto(PREFIX + b'v\0' + client.qport.to_bytes(2, 'little') + bytes(8), ('127.0.0.1', port))
+            time.sleep(0.2)
+        client.command(server_id, 'userinfo "\\name\\smokeqport\\rate\\25000\\snaps\\20"')
+        check('a guessed qport keeps the client', wait_for(lambda: listed('smokeqport')))
+        moved = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sock.close()
+        client.sock = moved
+        client.command(server_id, 'userinfo "\\name\\smokemoved\\rate\\25000\\snaps\\20"')
+        check('a translated port keeps the client', wait_for(lambda: listed('smokemoved')))
 
         client.command(server_id, 'userinfo "\\name\\smokerenamed\\rate\\25000\\snaps\\20"')
         check('client command runs', wait_for(lambda: listed('smokerenamed')),
@@ -150,6 +169,15 @@ def check_client(port, protocol, password, game_log, check):
         packets = client.commands(server_id, texts)
         check('fragmented client message runs', packets > 1 and wait_for(lambda: listed('smokefragment2')),
               f'{packets} packets')
+
+        # one message runs at most 64 commands, the rest when they come again
+        first = client.command_sequence + 1
+        cap = 'userinfo "\\name\\smokecap%s\\rate\\25000\\snaps\\20"'
+        client.commands(server_id, [cap % 'a'] * 99 + [cap % 'b'])
+        capped = wait_for(lambda: listed('smokecapa')) and not listed('smokecapb')
+        check('one message runs at most 64 commands', capped, ', '.join(players(port) or {}))
+        client.resend(server_id, first + 64)
+        check('the rest run when sent again', wait_for(lambda: listed('smokecapb')))
 
         # line breaks in a name or a chat message must not start a fake log
         # line, and a say right after a userinfo must not be flood protected
@@ -405,7 +433,7 @@ def check_alt_client(alt_port, password, port, check):
         client.close()
 
 
-def check_connect_limit(port, protocol, check):
+def check_connect_limit(port, protocol, plus, check):
     """A local proxy's players, all from 127.0.0.1, get in together; a flood from another address is cut."""
     joined = []
     for i in range(12):
@@ -420,6 +448,21 @@ def check_connect_limit(port, protocol, check):
     check('clients joining together connect', refused is None, refused or '')
     for client in joined:
         client.close()
+
+    if plus:
+        plain, old, current = cod2client.Client(port), cod2client.Client(port), cod2client.Client(port)
+        try:
+            refused = plain.connect(protocol, 'stock', plus=None)
+            check('a stock client is told to update', refused is not None and 'OpenCoD2-Plus' in refused, str(refused))
+            refused = old.connect(protocol, 'old', plus=120)
+            check('another Plus version is told to update', refused is not None and 'OpenCoD2-Plus' in refused, str(refused))
+            refused = current.connect(protocol, 'plus')
+            check('a Plus client is told the version', refused is None and current.connect_reply.split()[1:] == ['122'],
+                  refused or current.connect_reply)
+        finally:
+            plain.close()
+            old.close()
+            current.close()
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.bind(('127.0.0.2', 0))
@@ -480,9 +523,12 @@ def main():
     ap.add_argument('game_dir', help='game folder that contains "main" with the .iwd files')
     ap.add_argument('--binary', default=os.path.join(ROOT, 'bin', 'cod2rev_lnxded'))
     ap.add_argument('--protocol', type=int, help='protocol the build must report (115 or 118)')
+    ap.add_argument('--plus', action='store_true', help='the binary is a make PLUS=1 build (implies --protocol 118)')
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--timeout', type=int, default=120, help='seconds to wait for the map to load')
     args = ap.parse_args()
+    if args.plus:
+        args.protocol = 118
 
     if not os.path.isdir(os.path.join(args.game_dir, 'main')):
         sys.exit(f'{args.game_dir} has no "main" folder')
@@ -549,6 +595,7 @@ def main():
             if info:
                 header, values = info
                 check('getinfo reply', header == 'infoResponse' and values.get('challenge') == 'smoke')
+                check('over-long getinfo challenge ignored', query(port, 'getinfo ' + 'x' * 1000, 1.0) is None)
                 check('hostname', values.get('hostname') == hostname, values.get('hostname', ''))
                 protocol = values.get('protocol', '')
                 if args.protocol:
@@ -562,9 +609,22 @@ def main():
                       f'version {status[1].get("shortversion", "?")}' if status else '')
 
                 if protocol.isdigit():
-                    check_client(port, int(protocol), password, os.path.join(home, 'main', 'games_mp.log'), check)
-                    check_connect_limit(port, int(protocol), check)
+                    check_client(port, int(protocol), args.plus, password, os.path.join(home, 'main', 'games_mp.log'), check)
+                    check_connect_limit(port, int(protocol), args.plus, check)
                     check_challenge_during_queries(port, check)
+
+                # manymaps must not take a map name that leaves its library
+                os.makedirs(os.path.join(home, 'library'))
+                open(os.path.join(home, 'smoke_escape.iwd'), 'wb').close()
+                rcon(port, password, 'fs_library ' + os.path.join(home, 'library'))
+                reply = rcon(port, password, 'map ../smoke_escape')
+                rcon(port, password, 'fs_library ""')
+                escaped = os.path.join(os.path.dirname(home), 'smoke_escape.iwd')
+                linked = os.path.lexists(escaped)
+                if linked:
+                    os.remove(escaped)
+                check('manymaps refuses ../ in a map name', not linked and 'NEW LINK' not in reply,
+                      reply.strip().replace('\n', ' ')[:80])
 
 
                 time.sleep(2)

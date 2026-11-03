@@ -382,9 +382,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
     Dvar_Init();
 
     {
-        extern int sv_disableClientConsole;
+        extern const dvar_t *sv_disableClientConsole;
         if (!sv_disableClientConsole)
-            sv_disableClientConsole = (int)Dvar_RegisterBool("sv_disableClientConsole", 0, 0x1008);
+            sv_disableClientConsole = Dvar_RegisterBool("sv_disableClientConsole", 0, 0x1008);
     }
 
     sys_info.cpuGHz = Sys_CpuGHz();

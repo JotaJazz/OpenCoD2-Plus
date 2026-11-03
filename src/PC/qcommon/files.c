@@ -78,7 +78,7 @@ extern void FS_ShutdownServerIwdNames(void);
 extern void Com_Memcpy(void *dest, const void *src, int count);
 extern void SND_StopSounds(snd_stopsounds_arg_t flags);
 extern void FS_ShutdownServerReferencedIwds(void);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern int stricmp(const char *s1, const char *s2);
 extern void *Z_MallocInternal(int size);
 extern char **Sys_ListFiles(const char *directory, const char *extension, const char *filter, int *numfiles, int wantSubs);
@@ -646,6 +646,15 @@ const char *FS_ReferencedIwdPureChecksums(void)
     return info6;
 }
 
+/* Past the 1024 of an info string the server drops one list of a pair, and 1.3 ends the session. A
+   client does without the rest: what it loses is a download or a pure check, which fail on their own. */
+static int FS_IwdListsAgree(int sums, int names)
+{
+    if (sums != names)
+        Com_Printf("WARNING: the server's iwd lists differ: %i sums, %i names\n", sums, names);
+    return sums < names ? sums : names;
+}
+
 void FS_PureServerSetLoadedIwds(const char *iwdSums, const char *iwdNames)
 {
     int serverIwds[1024];
@@ -673,14 +682,12 @@ void FS_PureServerSetLoadedIwds(const char *iwdSums, const char *iwdNames)
         d = 0x400;
     }
 
+    c = d = FS_IwdListsAgree(c, d);
+
     if (d > 0) {
         for (i = 0; i < d; i++) {
             serverIwdNames[i] = CopyStringInternal(Cmd_Argv(i));
         }
-    }
-
-    if (c != d) {
-        Com_Error(1, "FS_PureServerSetLoadedIwds: count mismatch");
     }
 
     {
@@ -752,7 +759,7 @@ do_reload:
 
         Com_Memcpy(imp_fs_serverIwds, serverIwds, c * 4);
 
-        Com_Memcpy(imp_fs_serverIwdNames, serverIwdNames, c * 4);
+        Com_Memcpy(imp_fs_serverIwdNames, serverIwdNames, c * sizeof(char *));
 
         *(int *)imp_fs_fakeChkSum = 0;
     }
@@ -785,11 +792,7 @@ void FS_PureServerSetReferencedIwds(const char *iwdSums, const char *iwdNames)
 
     if (iwdNames == NULL || iwdNames[0] == '\0') {
 
-        if (c != 0) {
-            Com_Error(1, "FS_PureServerSetReferencedIwds: count mismatch");
-        }
-
-        *(int *)imp_fs_numServerReferencedIwds = c;
+        *(int *)imp_fs_numServerReferencedIwds = FS_IwdListsAgree(c, 0);
         return;
     }
 
@@ -799,9 +802,7 @@ void FS_PureServerSetReferencedIwds(const char *iwdSums, const char *iwdNames)
         d = 0x400;
     }
 
-    if (c != d) {
-        Com_Error(1, "FS_PureServerSetReferencedIwds: count mismatch");
-    }
+    c = d = FS_IwdListsAgree(c, d);
 
     if (d > 0) {
         fs_serverReferencedIwdNames = (char **)imp_fs_serverReferencedIwdNames;
@@ -906,7 +907,7 @@ int FS_GetModList(char *listbuf, int bufsize)
                 n2++;
         }
 
-        pFiles = (char **)Z_MallocInternal((n0 + n1 + n2 + 1) * 4);
+        pFiles = (char **)Z_MallocInternal((n0 + n1 + n2 + 1) * sizeof(char *));
 
         {
             int idx = 0;

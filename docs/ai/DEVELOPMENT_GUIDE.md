@@ -7,12 +7,12 @@ Rules for contributors and AI agents. Tooling details:
 
 | Step | Rule |
 |---|---|
-| Branch | one branch per piece of work, from `main` |
+| Branch | one branch per piece of work, from `dev` (the development branch; `main` is the stable one) |
 | Investigate | reproduce first; find the root cause; compare with the 1.3 binary ([validation](../development/validation.md)) |
 | Change | smallest change that matches the original; vendored code upstream first ([vendored](../development/vendored.md)) |
 | Verify | `scripts/build_check.py all`, unit tests, `scripts/check_docs.py`, the runtime tests the change touches; the full suite before merging ([testing](../development/testing.md)) |
 | Review | a fresh reviewer reads the whole branch before merge |
-| Merge | `git merge --ff-only` into `main` |
+| Merge | `git merge --ff-only` into `dev`; `dev` goes into `main` when its changes are stable |
 | Publish | never push without the maintainer's decision |
 
 ## Commits
@@ -41,7 +41,7 @@ Rules for contributors and AI agents. Tooling details:
 | Task | Steps |
 |---|---|
 | Fix an engine bug | reproduce → locate the original function → compare → fix with the address in a comment → test → note in the subsystem doc if it explains how something works |
-| Add an engine ↔ CoD2rev-Plus crossing | add it to the interface list in `test/` → regenerate with `scripts/gen_script_bridge.py` → refresh the ABI file if needed (`scripts/engine_abi.py`) → `build_check.py` |
+| Add an engine ↔ OpenCoD2-Plus Server crossing | add it to the interface list in `test/` → regenerate with `scripts/gen_script_bridge.py` → refresh the ABI file if needed (`scripts/engine_abi.py`) → `build_check.py` |
 | Add a test script | `scripts/<name>_test.py` with a usage docstring, exit 0 on pass, skipped without a CD key if it needs a real client → add to `docs/development/testing.md` |
 | Add an ADR | copy the template in `docs/architecture/adr/README.md`, next number, add to the index |
 

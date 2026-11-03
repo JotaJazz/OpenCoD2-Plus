@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 typedef void (*fnptr_t)(void);
@@ -14,6 +15,10 @@ typedef struct {
     byte *data;
     DWORD usage;
 } CDirect3DVertexBufferClean;
+D3D_HEAD_CHECK(CDirect3DVertexBufferClean, D3DBufferHead, refCount);
+D3D_HEAD_CHECK(CDirect3DVertexBufferClean, D3DBufferHead, lengthBytes);
+D3D_HEAD_CHECK(CDirect3DVertexBufferClean, D3DBufferHead, data);
+
 
 ULONG CDirect3DVertexBuffer_AddRef(const CDirect3DVertexBuffer *_this);
 void ZN21CDirect3DVertexBufferD0Ev(void *_this);

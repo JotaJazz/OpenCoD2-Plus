@@ -503,7 +503,7 @@ void CG_EntityEffects(centity_t *cent)
     int constantLight;
 
     if (loopSound) {
-        if (cent->nextState.constantLight == 0x00FFFFFF) {
+        if (cent->nextState.solid == 0x00FFFFFF) {
             vec3_t origin;
             vec_t *midpoint = cgs->inlineModelMidpoints[cent->nextState.index.brushmodel];
 
@@ -775,7 +775,7 @@ void CG_ScriptMover(centity_t *cent)
     AnglesToAxis(cent->lerpAngles, ent.axis);
     ent.renderFxFlags = 0x40;
 
-    if (s1->constantLight == 0x00FFFFFF) {
+    if (s1->solid == 0x00FFFFFF) { /* 1.3 tests solid (centity_t +0x18c), the bmodel marker */
         GfxModel model;
 
         ent.reType = (refEntityType_t)(3);

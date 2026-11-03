@@ -5,7 +5,7 @@
 
 ## Context
 
-CoD2rev-Plus is C++ and the bridge calls it by its C++ names; the engine's C let mismatched declarations, missing returns and implicit conversions pass unnoticed.
+OpenCoD2-Plus Server is C++ and the bridge calls it by its C++ names; the engine's C let mismatched declarations, missing returns and implicit conversions pass unnoticed.
 
 ## Decision
 

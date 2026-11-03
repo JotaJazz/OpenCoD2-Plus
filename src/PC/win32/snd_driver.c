@@ -123,24 +123,17 @@ extern int stricmp(const char *a, const char *b);
 
 extern const dvar_t *mss_3d_provider;
 extern const dvar_t *mss_q3fs;
+long sndWavFileLen;     /* snd_ail.c: FS_ReadFile's length, which AIL_WAV_info's signature does not carry */
 static struct MssLocal milesGlob;
 
 /* The 2D channels are chaninfo 45-52; their Miles samples are
  * milesGlob.handle_2D[0-7] (the original reads [index * 4 + 0x14b2c34]). */
 #define MSS_2D_HANDLE(index) (milesGlob.handle_2D[(index) - 45])
 
-/* Miles calls its file callbacks __stdcall (AILCALLBACK): the original's
- * pop their arguments (ret 8, 4, 0xc, 0xc). The Mac port's MacMSS.c calls
- * them as plain functions. */
-#ifdef COD2_MSS32_DLL
-#define MSS_CALLBACK __stdcall
-#else
-#define MSS_CALLBACK
-#endif
-static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
-static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle);
-static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
-static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
+static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle);
+static void MSS_FileCloseCallback(long unsigned int hFileHandle);
+static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type);
+static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes);
 void SND_ShutdownDriver(void);
 int SND_GetDriverCPUPercentage(void);
 void SND_Stop2DChannel(int index);
@@ -194,18 +187,18 @@ Bool SND_InitDriver(void);
 void SND_SetStreamChannelFromSaveInfo(int index, snd_save_stream_t *info);
 void SND_DriverPostUpdate(int frametime);
 
-static long unsigned int MSS_CALLBACK MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
+static long unsigned int MSS_FileOpenCallback(const char *pszFilename, long unsigned int *phFileHandle)
 {
 
     return ((unsigned int)FS_FOpenFileReadStream(pszFilename, phFileHandle, 1) >> 31) ^ 1;
 }
 
-static void MSS_CALLBACK MSS_FileCloseCallback(long unsigned int hFileHandle)
+static void MSS_FileCloseCallback(long unsigned int hFileHandle)
 {
     FS_FCloseFile((int)hFileHandle);
 }
 
-static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
+static long int MSS_FileSeekCallback(long unsigned int hFileHandle, long int offset, long unsigned int type)
 {
     switch (type) {
     case 0:
@@ -222,7 +215,7 @@ static long int MSS_CALLBACK MSS_FileSeekCallback(long unsigned int hFileHandle,
     }
 }
 
-static long unsigned int MSS_CALLBACK MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
+static long unsigned int MSS_FileReadCallback(long unsigned int hFileHandle, void *pBuffer, long unsigned int bytes)
 {
     return FS_Read(pBuffer, (int)bytes, (int)hFileHandle);
 }
@@ -675,7 +668,7 @@ void SND_RawSamples(int samples, int rate, int width, int s_channels, const byte
 int SND_GetSoundFileSize(const void *pSoundFile)
 {
     const MssSound *sound = (const MssSound *)pSoundFile;
-    return (int)sound->info.data_len + 0x24;
+    return (int)sound->info.data_len + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24);
 }
 
 void SND_DriverPreUpdate(int frametime)
@@ -700,10 +693,11 @@ void SND_Update2DChannelReverb(int index)
     const snd_alias_t *pAlias = chaninfo->pAlias0;
     float reverbLevel;
 
+    /* 1.3 0x4b7900 */
     if (pAlias == NULL || ((*(dvar_t **)imp_snd_enableReverb)->current.enabled != 0 && !(pAlias->flags & 0x10))) {
-        reverbLevel = 0;
-    } else {
         reverbLevel = sndGlob->effect->wetlevel;
+    } else {
+        reverbLevel = 0;
     }
     AIL_set_sample_reverb_levels(MSS_2D_HANDLE(index), 1.0f, reverbLevel);
 }
@@ -715,10 +709,11 @@ void SND_Update3DChannelReverb(int index)
     const snd_alias_t *pAlias = chaninfo->pAlias0;
     float reverbLevel;
 
+    /* 1.3 0x4b7970 */
     if (pAlias == NULL || ((*(dvar_t **)imp_snd_enableReverb)->current.enabled != 0 && !(pAlias->flags & 0x10))) {
-        reverbLevel = 0;
-    } else {
         reverbLevel = sndGlob->effect->wetlevel;
+    } else {
+        reverbLevel = 0;
     }
     AIL_set_3D_sample_effects_level(milesGlob.handle_3D[index], reverbLevel);
 }
@@ -992,7 +987,8 @@ void SND_LoadSoundFile(SoundFile *soundFile)
     }
 
     snprintf(realname, sizeof(realname), "sound/%s", soundFile->soundName);
-    if (FS_ReadFile(realname, &buffer) < 0) {
+    sndWavFileLen = FS_ReadFile(realname, &buffer);
+    if (sndWavFileLen < 0) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' not found\n", realname);
         soundFile->fileMem = NULL;
         return;
@@ -1001,7 +997,7 @@ void SND_LoadSoundFile(SoundFile *soundFile)
     if (!AIL_WAV_info(buffer, &mixinfo)) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' is in an invalid or corrupted format\n", realname);
         sound = NULL;
-    } else if ((totalSize = (int)mixinfo.Info.data_len + 0x24) == 0) {
+    } else if ((totalSize = (int)mixinfo.Info.data_len + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24)) == 0) {
         Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
         sound = NULL;
     } else if (mixinfo.Info.rate <= (unsigned long int)sndGlob->playback_rate &&
@@ -1064,7 +1060,7 @@ void SND_LoadSoundFile(SoundFile *soundFile)
         }
 
         datasize = AIL_size_processed_digital_audio(rate, procFormat, 1, &mixinfo);
-        sound = (MssSound *)Hunk_AllocNoZeroInternal(datasize + 0x24);
+        sound = (MssSound *)Hunk_AllocNoZeroInternal(datasize + (int)COD2_OFFSETOF_1_3(MssSound, data, 0x24));
 
         sound->info.format = mixinfo.Info.format;
         sound->info.data_ptr = sound->data;
@@ -1402,6 +1398,9 @@ got_handle:
         if (total_msec == 0) {
             Com_Printf((const char *)"^1ERROR: Sound file '%s' is zero length, invalid\n", realname);
         }
+        /* no channel owns it, so nothing would close it before FS_Shutdown closes its file under the reader */
+        AIL_close_stream(handle);
+        milesGlob.handle_stream[streamIdx] = NULL;
         return 0;
     }
 

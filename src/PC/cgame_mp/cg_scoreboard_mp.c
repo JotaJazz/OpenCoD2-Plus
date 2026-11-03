@@ -23,7 +23,7 @@ extern Bool CL_IsPlayerMuted(int clientIndex);
 extern Bool CL_IsPlayerTalking(int clientIndex);
 extern void CG_TranslateHudElemMessage(const char *message, const char *messageType, char *hudElemString);
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern const char *FS_GetMapBaseName(const char *mapfile);
 extern const char *UI_SafeTranslateString(const char *key);

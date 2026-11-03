@@ -51,6 +51,56 @@ Vulkan device is llvmpipe (the processor): correct pictures, slow.
 | particle cloud draw counts (`RB_TessParticleCloud`) | `0x10041405` | no cloud drawn |
 | outdoor map size `{512, 512, 256}` | `0x10190398` | nothing outdoors |
 
+## Water
+
+A water material (techset `water`, texture semantic 5) carries the parameters
+of a wave simulation: `RB_UploadWaterTexture` (`r_water.c`) runs an FFT of
+them each frame into its height map, as 1.3 does when it binds the map
+(`gfx_d3d_mp_x86_s.dll` `0x1003a2db`), behind `r_drawWater`. Until 2026-11-02
+nothing called it, so every water surface stood still and flat.
+
+`r_water 1` (the default; 0 is 1.3's, after `vid_restart`) gives the real
+Direct3D 9 path our text for the game's `lib/water.hlsl`
+(`r_water_hlsl.h`, served by `RealInclude_Open` in `D3DXShader.c`): two
+layers of that height map drifting with `gameTime`, Schlick's fresnel between
+the water's color and the reflection of the map's own sky (`skySampler`, a
+default code sampler of ours on `sampler.sky`; the material's generic cube
+keeps only its alpha as reflectivity), and a sharper sun highlight. A map
+without a sky gives that sampler `$watercolor` instead of 1.3's error.
+Same inputs and material arguments; its pixel shader compiles as `ps_2_a`
+(512 slots): Microsoft's compiler counts 91 arithmetic slots, past `ps_2_0`'s 64.
+
+With `r_water` on the real Direct3D 9 path, no antialiasing and a card
+that takes it, the frame buffer's depth is an INTZ texture
+(`r_rendertarget.c`), which `floatZ` binds (1.3 binds nothing there on PC).
+The water's shader reads the scene's depth behind each pixel: under 1.3's
+infinite far plane a depth `d` is `1 - near / z`, so each water pixel finds
+`near` from its own depth and turns the scene's into a distance. Shallow water
+foams at the shore; water materials draw without writing depth while they
+read it. Without INTZ `floatZ` reads 0, which the shader takes as deep water.
+
+With that depth the water also refracts: before the first water surface of a
+draw list, `RB_EndSurface` copies the scene drawn so far into
+`resolvedScene` (`renderTargets[2]`, which 1.3 fills only for its late post
+effects), bound by name as `sceneColorSampler`. The shader shows it under
+the water, bent by the waves' normal (a bent sample that lands on something
+in front of the water takes the straight one), clear at the shore and fading
+into the water's color 160 units down; the water is then opaque, as its
+vertex alpha says. Over the void (`mp_harbor`'s open sea) it is the water's
+color, as before. Without INTZ there is no copy and water fades by alpha;
+`sceneColorSampler` then gets black (1.3 never binds `resolvedScene` without a
+copy: `techFlags & 2` skips the technique, which a sampler bound by name does
+not set). `floatZ` gets the INTZ depth only for water materials, the ones that
+stop writing it. Techniques with `sampler.resolvedScene` drawn after the water
+see its copy for the rest of the frame, where 1.3 would skip them.
+
+The sky's surfaces are the ones whose material has bit 8 in `gameFlags`
+(1.3 `0x10002cb0`); until 2026-11-02 the loader read `surfaceFlags`, found
+none, so `sampler.sky` had no image and the visibility pass never added the
+sky past the far plane, as 1.3 does. The GL device
+keeps its stand-in shaders. Stock maps with this water: `mp_harbor` only;
+custom maps reuse its materials (`water_duhoc` in `sps_island`).
+
 ## Outdoor map
 
 `src/PC/gfx_d3d/r_outdoor.c`: a 512×512 height map of the world, traced from

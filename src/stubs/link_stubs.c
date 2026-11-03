@@ -537,7 +537,7 @@ char g_deadChat_ptr[64] __attribute__((aligned(4))) = { 0 };
 char g_enemylookDist[64] __attribute__((aligned(4))) = { 0 };
 
 char GetComponentVersion[64] __attribute__((aligned(4))) = { 0 };
-#if !defined(_M_X64)  /* x64: real kernel32 GetCurrentProcess (Mac PSN stub collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: real kernel32 GetCurrentProcess (Mac PSN stub collides by name); MinGW links these as 32 bits does */
 int GetCurrentProcess(void *psn)
 {
     (void)psn;
@@ -594,8 +594,6 @@ void G_SpawnTriggerHurt(int numBrushModels)
 char g_sv_running_ptr[64] __attribute__((aligned(4))) = { 0 };
 
 void *g_trace_zero_ptr __attribute__((aligned(4))) = (void *)vec3_origin;
-char g_unknown_195f22c[64] __attribute__((aligned(4))) = { 0 };
-char g_unknown_195f230[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateHoldTime[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateReuseTime[64] __attribute__((aligned(4))) = { 0 };
 char g_vidConfig[64] __attribute__((aligned(4))) = { 0 };

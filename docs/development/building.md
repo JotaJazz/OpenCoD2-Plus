@@ -16,8 +16,14 @@ top of it.
 | Windows client on Vulkan | `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE`, then Options > Graphics or `+set r_gfxApi vulkan` ([ADR 0011](../architecture/adr/0011-graphics-apis-behind-direct3d-9.md)) | `dxvk/d3d9.dll` |
 | MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
-| Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
-| x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
+| Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, OpenCoD2-Plus Server's sources only, no multilib needed |
+| Linux 64-bit client | `scripts/linux_x64_deps.sh` (amd64 SDL2 headers, no root), then `-DCOD2_X64=ON` | `cod2_linux` for x86_64, on OpenCoD2-Plus Server's VM and server like the 32-bit client; loads maps, not yet equal to it ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
+| Windows 64-bit client | `scripts/mingw64_deps.sh` (MinGW-w64 x86_64 and SDL2's x86_64 libraries, no root), then `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake -DCOD2_X64=ON -DCOD2_WIN32_CLIENT=ON` | `cod2_win32.exe` for x86_64, real Direct3D 9, on OpenCoD2-Plus Server's VM and server; loads maps under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`), not yet equal to the 32-bit one; no libcod (it keeps pointers in `long`, 4 bytes on Win64) |
+
+The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
+`src/stubs`) links into `cod2_linux`, `cod2_linux_vk` and `cod2_win32`, where
+those files alone are `-O2`, as a mixer has a deadline. MP3 comes from
+`src/snd_sdl/minimp3.h`, one unchanged header of `lieff/minimp3` `ea99364` (CC0).
 
 ## build_check.py
 
@@ -31,25 +37,27 @@ variant into `build/check-<variant>/` and runs the static checks.
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
+| `mingw-client-x64` | 64-bit MinGW client (`cmake/toolchain-mingw64.cmake`, `-DCOD2_X64=ON`; skipped without `scripts/mingw64_deps.sh`'s SDL2); the three bridge checks with x86_64's `nm` and no `_` prefix |
 | `linux-vk` | Linux client on real Direct3D 9 (`-DCOD2_LINUX_DXVK=ON`; skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
+| `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`; skipped without `scripts/linux_x64_deps.sh`'s headers); glibc and the three bridge checks apply |
 
 Checks it runs (each a script in `scripts/`):
 
 | Check | Variants | Fails when |
 |---|---|---|
 | glibc floor | Linux | a binary needs glibc newer than 2.34, or `cod2_lnxded` needs a client library |
-| `check_duplicates.py` | all executables | a C name comes from both CoD2rev-Plus and the engine |
+| `check_duplicates.py` | all executables | a C name comes from both OpenCoD2-Plus Server and the engine |
 | `check_single_impl.py` | all executables | an engine object still defines a function the bridge exports |
 | `check_bridge_symbols.py` | dedicated server, client | a bridge import calls a data symbol |
 | `check_bgame_names.py` | Linux client | a plain bgame name is left where `eng_` should apply |
-| `bgame_plus_consts.py --check` | Linux | `bg_plus_consts.h` differs from CoD2rev-Plus's values |
+| `bgame_plus_consts.py --check` | Linux | `bg_plus_consts.h` differs from OpenCoD2-Plus Server's values |
 | `check_c_decls.py` | Linux | a call's types differ from the definition's (DWARF); pointers by what they point to (float, integer, struct; `void *` matches any) |
 | `check_var_sizes.py` | Linux | a global, array or not, is used as larger than the binary defines it |
 | `check_c_linkage.py` | `linux`, `linux-10` | a C++-mangled name is not in `test/c_linkage_allowlist.txt` |
-| `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from CoD2rev-Plus's |
+| `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from OpenCoD2-Plus Server's |
 | `gen_script_bridge.py` | `all` only | `src/compat` differs from what the generator writes |
 
-A variant skipped for lack of SDL2 or DXVK fails the run unless `--allow-skip`
+A variant skipped for lack of SDL2, DXVK, the amd64 SDL2 headers or the MinGW-w64 x86_64 SDL2 fails the run unless `--allow-skip`
 is given.
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,
@@ -115,4 +123,3 @@ The client's ABI is read from a client built with
 `scripts/portable_wine.sh DIR` downloads a 32-bit Wine and its i386
 dependencies with `apt-get download` (no root) into `DIR` and writes
 `DIR/wine.sh`. `COD2_CONSOLE_STDOUT=1` copies the engine's console to stdout.
-Wine cannot load the game's real `mss32.dll`, so sound is not testable there.

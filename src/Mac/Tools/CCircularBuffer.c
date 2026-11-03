@@ -116,8 +116,8 @@ void CCircularBuffer_Alloc(CCircularBuffer *_this, UInt32 inBufferSize)
         ((int *)p)[4] = 0;
     }
 
-    ((int *)p)[0] = (int)malloc(inBufferSize);
-    ((int *)p)[1] = inBufferSize;
+    *(void **)p = malloc(inBufferSize);
+    ((int *)p)[sizeof(void *) / 4] = inBufferSize;   /* after the pointer, as [1] on 32 bits */
 }
 
 void CCircularBuffer_Write(const CCircularBuffer *_this, const void *inBuffer, UInt32 *ioSize)

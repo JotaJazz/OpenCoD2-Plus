@@ -29,7 +29,8 @@ extern const char *va(const char *format, ...);
 extern int cmd_wait;
 extern cmd_t cmd_texts[1];
 extern cmd_t *cmd_text;
-static cmd_text_buf_t cmd_text_buf;
+/* 1.3: 64 KB, which exec has to hold whole, and config_mp.cfg passes that with 4096 dvars */
+static byte cmd_text_buf[0x80000];
 static int cmd_argc;
 static char *cmd_argv[512];
 static char cmd_tokenized[8704];
@@ -56,7 +57,7 @@ void Cmd_Wait_f(void)
 void Cbuf_Init(void)
 {
     cmd_texts[0].data = (byte *)cmd_text_buf;
-    cmd_texts[0].maxsize = 0x10000;
+    cmd_texts[0].maxsize = sizeof(cmd_text_buf);
     cmd_texts[0].cmdsize = 0;
 }
 

@@ -12,6 +12,7 @@ static struct DxGlobals * const dx_g = &dx;
 
 extern unsigned char mtlLoadGlob[];
 extern dvar_t *r_rendererInUse;
+extern const dvar_t *r_water;
 
 #if defined(__x86_64__) || defined(_M_X64)
 #    define MTLGLOB_COUNT (*(int *)mtlLoadGlob)
@@ -1557,6 +1558,12 @@ static MaterialShader *MATERIAL_REGPARM2_ABI COD2_FORCE_ALIGN_ARG_POINTER Materi
         } else {
             Com_sprintf(target, 16, "ps_%i_%i", compileVer / 10, compileVer % 10);
             entryPoint = "ps_main";
+#ifdef GFX_REAL_D3D9
+            /* not 1.3's: r_water's text for lib/water.hlsl (r_water_hlsl.h) passes ps_2_0's 64
+               arithmetic slots (Microsoft's compiler counts 91): ps_2_a has 512 */
+            if (r_water && r_water->current.enabled && !strncmp(filename, "water", 5))
+                Com_sprintf(target, 16, "ps_2_a");
+#endif
         }
     }
 
@@ -1778,6 +1785,7 @@ extern const byte s_techniqueTypeNames[];
  * can share the (layout-neutral, text-parsed) techset loader. */
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack);
 
+#ifndef COD2_X64   /* x64 marshals the 32-bit file instead (Material_Marshal32To64) */
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialObj *material, int imageTrack)
 {
     byte *mtl = (byte *)material;
@@ -1843,6 +1851,8 @@ static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialOb
     }
 }
 
+#endif
+
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack)
 {
     byte *mtl = (byte *)mtlx;
@@ -1854,7 +1864,7 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
             static int tl;
             if (tl++ < 20) {
                 fprintf(stderr, "[TSLOAD] mtl='%.24s' tsOff=%d tsName='%.32s' found=%p\n",
-                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (unsigned)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
+                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (uintptr_t)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
                 fflush(stderr);
             }
         }
@@ -2515,10 +2525,12 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
     }
 }
 
+#ifndef COD2_X64
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance(MaterialObj *material, int imageTrack)
 {
     return Material_FinishLoadingInstance_impl(material, imageTrack);
 }
+#endif
 
 extern int Material_LoadFile(const char *filename, int *fileHandle);
 extern void *Material_Alloc(int size);

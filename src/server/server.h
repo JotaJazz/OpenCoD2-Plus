@@ -44,6 +44,9 @@ extern dvar_t *rcon_password;
 extern dvar_t *sv_rconMaxAttempts;
 extern dvar_t *sv_rconLockTime;
 extern dvar_t *sv_rconWhitelist;
+#ifdef COD2_PLUS
+extern dvar_t *sv_plusNotice;
+#endif
 extern dvar_t *sv_logRcon;
 extern dvar_t *sv_authorizeServer;
 extern dvar_t *sv_authorizePort;
@@ -189,6 +192,9 @@ typedef struct client_s
 	bool			sendVoice;
 	char PBguid[33];
 	char clientPBguid[33];
+#ifdef COD2_PLUS
+	int plusVersion; // docs/architecture/plus-protocol.md
+#endif
 } client_t;
 
 typedef struct archivedSnapshot_s

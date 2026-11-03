@@ -46,7 +46,7 @@ HRESULT CDirect3DSwapChain_QueryInterface(const CDirect3DSwapChain *_this, const
 ULONG CDirect3DSwapChain_Release(const CDirect3DSwapChain *_this);
 HRESULT CDirect3DSwapChain_GetBackBuffer(const CDirect3DSwapChain *_this, UINT BackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9 **ppBackBuffer);
 int CDirect3DSwapChain_SetBackBuffer(const CDirect3DSwapChain *_this, const IDirect3DSurface9 *pBackBuffer);
-int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
+intptr_t CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
 HRESULT CDirect3DSwapChain_Present(const CDirect3DSwapChain *_this, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags);
 HRESULT CDirect3DSwapChain_GetFrontBufferData(const CDirect3DSwapChain *_this, IDirect3DSurface9 *pDestSurface);
 HRESULT CDirect3DSwapChain_GetRasterStatus(const CDirect3DSwapChain *_this, D3DRASTER_STATUS *pRasterStatus);
@@ -119,7 +119,7 @@ int CDirect3DSwapChain_SetBackBuffer(const CDirect3DSwapChain *_this, const IDir
     return (int)CDirect3DSwapChain_SurfaceAddRef(swapChain->backBuffer);
 }
 
-int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this)
+intptr_t CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this)
 {
     CDirect3DSwapChainImpl *swapChain;
 
@@ -127,7 +127,7 @@ int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this)
     swapChain->vtable = (void**)vtbl_CDirect3DSwapChain;
     swapChain->backBuffer = NULL;
     swapChain->refCount = 1;
-    return (int)_this;
+    return (intptr_t)_this;
 }
 
 HRESULT CDirect3DSwapChain_Present(const CDirect3DSwapChain *_this, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion, DWORD dwFlags)

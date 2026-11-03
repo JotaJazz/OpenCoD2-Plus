@@ -113,7 +113,7 @@ void XModelPartsSetData(const char *name, XModelParts *modelParts, Alloc_t Alloc
 XModelSurfs *XModelSurfsFindData(const char *name);
 void XModelSurfsSetData(const char *name, XModelSurfs *modelSurfs, Alloc_t Alloc);
 XModel *XModelPrecache(const char *name, Alloc_t Alloc, Alloc_t AllocColl);
-int XModelBoneNames(XModel *model);
+intptr_t XModelBoneNames(XModel *model);
 int XModelGetBoneIndex(const XModel *model, unsigned int name);
 const char *XModelGetLodName(const XModel *model, int lod);
 int XModelGetContents(const XModel *model);

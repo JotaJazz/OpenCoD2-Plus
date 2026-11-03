@@ -23,6 +23,8 @@ extern void Image_SetupSystem(GfxImage *image, int width, int height, D3DFORMAT 
 extern IDirect3DSurface9 *Image_GetSurface(GfxImage *image);
 extern void Image_Release(GfxImage *image);
 extern void Image_TrackFullscreenTexture(GfxImage *image, int picmip, D3DFORMAT format);
+extern const dvar_t *r_water;
+
 extern void Image_TrackTexture(GfxImage *image, int imageFlags, D3DFORMAT format, int width, int height, int depth);
 
 #define DX() ((byte *)dx_g)
@@ -109,6 +111,47 @@ static IDirect3DSurface9 *R_GetOrCreateDepthStencil(byte *dxPtr, int fullWidth, 
     }
 
     return ((DxGlobals *)(dxPtr))->singleSampleDepthStencilSurface ;
+}
+
+/* not 1.3's: with r_water, the frame buffer's depth is an INTZ texture that the water's shader reads
+   through floatZ (which 1.3 binds to nothing on PC), to fade at the shore. Real Direct3D 9 only,
+   without antialiasing, where the card takes INTZ; otherwise the D24S8 surface 1.3 makes. */
+GfxImage r_sceneDepthImage;
+
+static IDirect3DSurface9 *R_CreateSceneDepthTexture(int width, int height)
+{
+#ifdef GFX_REAL_D3D9
+    const D3DFORMAT intz = (D3DFORMAT)(('I') | ('N' << 8) | ('T' << 16) | ('Z' << 24));
+    IDirect3DTexture9 *texture = NULL;
+    IDirect3DSurface9 *surface = NULL;
+    void *device = dx.device;
+
+    if (!r_water || !r_water->current.enabled || dx.multiSampleType != 0)
+        return NULL;
+    /* IDirect3D9::CheckDeviceFormat, IDirect3DDevice9::CreateTexture, IDirect3DTexture9::GetSurfaceLevel */
+    if (((HRESULT(D3DVTCC *)(void *, UINT, int, D3DFORMAT, DWORD, int, D3DFORMAT))VTABLE(dx.d3d9)[0x28 / 4])(
+            dx.d3d9, dx.adapterIndex, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, 2, D3DRTYPE_TEXTURE, intz) < 0)
+        return NULL;
+    if (((HRESULT(D3DVTCC *)(void *, UINT, UINT, UINT, DWORD, D3DFORMAT, int, IDirect3DTexture9 **, void *))VTABLE(device)[0x5c / 4])(
+            device, width, height, 1, 2, intz, D3DPOOL_DEFAULT, &texture, NULL) < 0)
+        return NULL;
+    if (((HRESULT(D3DVTCC *)(void *, UINT, IDirect3DSurface9 **))VTABLE(texture)[0x48 / 4])(texture, 0, &surface) < 0) {
+        ((IUnknown_ReleaseFn)VTABLE(texture)[2])((void *)texture);
+        return NULL;
+    }
+    memset(&r_sceneDepthImage, 0, sizeof(r_sceneDepthImage));
+    r_sceneDepthImage.mapType = 3;
+    r_sceneDepthImage.texture.basemap = (IDirect3DBaseTexture9 *)texture;
+    r_sceneDepthImage.width = (unsigned short)width;
+    r_sceneDepthImage.height = (unsigned short)height;
+    r_sceneDepthImage.depth = 1;
+    r_sceneDepthImage.name = "$sceneDepth";
+    return surface;
+#else
+    (void)width;
+    (void)height;
+    return NULL;
+#endif
 }
 
 static void R_InitFullscreenRenderTargetImage(int imageProgId, int picmip, D3DFORMAT format, RenderTargetUsage usage, GfxRenderTarget *renderTarget)
@@ -213,6 +256,11 @@ void R_ShutdownRenderTargets(void)
         }
     }
 
+    if (r_sceneDepthImage.texture.basemap) {
+        ((IUnknown_ReleaseFn)VTABLE(r_sceneDepthImage.texture.basemap)[2])((void *)r_sceneDepthImage.texture.basemap);
+        r_sceneDepthImage.texture.basemap = NULL;
+    }
+
     dxPtr = DX();
     memset(((char *)dxPtr + offsetof(DxGlobals, renderTargets[0].image)), 0, 0x104);
 
@@ -269,10 +317,13 @@ void R_InitRenderTargets(void)
         device = ((DxGlobals *)(dxPtr))->device;
         vtable = VTABLE(device);
 
-        hr = ((D3DDevice_CreateDepthStencilFn)vtable[0x74 / 4])(
-            device, fullWidth, fullHeight, D3DFMT_D24S8,
-            ((DxGlobals *)(dxPtr))->multiSampleType       , ((DxGlobals *)(dxPtr))->multiSampleQuality ,
-            0, &((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_FRAME_BUFFER].depthStencilSurface, NULL);
+        ((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_FRAME_BUFFER].depthStencilSurface = R_CreateSceneDepthTexture(fullWidth, fullHeight);
+        hr = 0;
+        if (!((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_FRAME_BUFFER].depthStencilSurface)
+            hr = ((D3DDevice_CreateDepthStencilFn)vtable[0x74 / 4])(
+                device, fullWidth, fullHeight, D3DFMT_D24S8,
+                ((DxGlobals *)(dxPtr))->multiSampleType       , ((DxGlobals *)(dxPtr))->multiSampleQuality ,
+                0, &((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_FRAME_BUFFER].depthStencilSurface, NULL);
 
         *creatingTex = 0;
 

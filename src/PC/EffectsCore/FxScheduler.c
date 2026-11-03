@@ -506,7 +506,7 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
 
             if (delay > 0) {
 
-                ScheduledEffect *sfx = (ScheduledEffect *)__Znam(0x50);
+                ScheduledEffect *sfx = (ScheduledEffect *)__Znam(COD2_SIZEOF_1_3(ScheduledEffect, 0x50));
                 if (!sfx)
                     continue;
                 memset(sfx, 0, sizeof(ScheduledEffect));
@@ -934,7 +934,7 @@ void FxScheduler_Archive(const FxScheduler *_this, FxArchive *arch)
         FxArchive_ReadData(arch, &pendingCount, 4);
 
         for (i = 0; i < pendingCount; i++) {
-            ScheduledEffect *newSfx = (ScheduledEffect *)__Znam(0x50);
+            ScheduledEffect *newSfx = (ScheduledEffect *)__Znam(COD2_SIZEOF_1_3(ScheduledEffect, 0x50));
             if (newSfx) {
                 memset(newSfx, 0, sizeof(ScheduledEffect));
             }

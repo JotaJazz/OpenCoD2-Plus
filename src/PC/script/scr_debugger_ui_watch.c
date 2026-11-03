@@ -358,7 +358,7 @@ void Scr_SortElementChildren(Scr_WatchElement_s *e)
 
     count = e->childCount;
     arr = e->childArray;
-    sorted = (Scr_WatchElement_s **)Z_MallocInternal(count * 4);
+    sorted = (Scr_WatchElement_s **)Z_MallocInternal(count * sizeof(Scr_WatchElement_s *));
 
     if (count > 0) {
 

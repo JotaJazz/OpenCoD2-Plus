@@ -192,8 +192,9 @@ class Client:
                 if line.startswith(reply) or line.startswith('error'):
                     return line
 
-    def connect(self, protocol, name):
-        """Returns None once connected, otherwise the server's reply."""
+    def connect(self, protocol, name, plus=122):
+        """Returns None once connected, otherwise the server's reply. plus is the
+        CoD2 Plus version to send, or None for a stock client."""
         self.protocol = protocol
         line = self._oob('getchallenge', 'challengeResponse')
         if not line.startswith('challengeResponse'):
@@ -201,7 +202,10 @@ class Client:
         self.challenge = int(line.split()[1])
         userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\%s\\rate\\25000\\snaps\\20\\cl_voice\\1'
                     % (protocol, self.challenge, self.qport, name))
+        if plus is not None:
+            userinfo += '\\plus\\%d' % plus
         line = self._oob('connect "%s"' % userinfo, 'connectResponse')
+        self.connect_reply = line
         return None if line.startswith('connectResponse') else line
 
     # netchan
@@ -366,6 +370,17 @@ class Client:
 
     def command(self, server_id, text):
         return self.commands(server_id, [text])
+
+    def resend(self, server_id, first):
+        """Sends the commands from sequence first on again, as a client does
+        until the server acknowledges them."""
+        payload = MsgWriter()
+        for sequence in range(first, self.command_sequence + 1):
+            payload.bits(CLC_CLIENT_COMMAND, 3)
+            payload.long(sequence)
+            payload.string(self.sent_commands[sequence])
+        payload.bits(CLC_EOF, 3)
+        return self._send(server_id, payload)
 
     def download(self, server_id, name, seconds=2.0):
         """Asks for a file as the client's auto-download does, before entering

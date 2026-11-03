@@ -47,8 +47,10 @@ typedef struct DObjTrace_s DObjTrace;
 typedef struct XAnim_s XAnim;
 
 typedef struct weaponInfo_s weaponInfo_t;
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(COD2_X64)
 typedef int jmp_buf[39];
+#else
+#include <setjmp.h>
 #endif
 
 struct FxHelper {

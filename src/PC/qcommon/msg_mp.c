@@ -2,6 +2,7 @@
 #include "common_types.h"
 #include "imports.h"
 #include <string.h>
+#include "../../qcommon/plus_format.h"
 #if defined(_MSC_VER)
 #define MSG_FORCEINLINE __forceinline
 #else
@@ -737,7 +738,7 @@ void MSG_SetDefaultUserCmd(playerState_t *ps, usercmd_t *cmd)
         }
 
         if (ps->fWeaponPosFrac != 0.0f) {
-            cmd->buttons |= (int)&__mh_execute_header;
+            cmd->buttons |= 0x1000;
         }
     }
 }
@@ -989,6 +990,10 @@ static inline __attribute__((always_inline)) void MSG_WriteValue(msg_t *msg, int
     }
 }
 
+/* Not 0 while CL_ParseSnapshot reads the entities of a Plus snapshot: their
+ * pos.trTime can be an offset from this time. */
+int msg_plusSnapshotTime;
+
 void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field, qboolean print)
 {
     int *fromF;
@@ -1002,6 +1007,11 @@ void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field,
 
     if (!MSG_ReadBit_core(msg)) {
         *toF = *fromF;
+        return;
+    }
+
+    if (msg_plusSnapshotTime && field == entityStateFields && MSG_ReadBit_core(msg)) {
+        *toF = Plus_TimeFromOffset(msg_plusSnapshotTime, MSG_ReadBits(msg, PLUS_TIME_OFFSET_BITS));
         return;
     }
 
@@ -1596,6 +1606,22 @@ static void __attribute_regparm__(3)
     }
 
     MSG_WriteBit1_core(msg);
+
+    /* The client's own server writes through here, not through CoD2rev-Plus's
+     * msg_mp.cpp, and a Plus client reads this bit: the local client, or a
+     * remote one on a listen server. */
+    if (msg_plusSnapshotTime && field == entityStateFields) {
+        unsigned offset = Plus_TimeOffset(msg_plusSnapshotTime, *toF);
+
+        if (offset < PLUS_TIME_OFFSET_LIMIT) {
+            MSG_WriteBit1_core(msg);
+            MSG_WriteBits(msg, offset, PLUS_TIME_OFFSET_BITS);
+            return;
+        }
+
+        MSG_WriteBit0_core(msg); /* too far: as stock */
+    }
+
     bits = field->bits;
 
     if (bits == 0) {

@@ -486,9 +486,19 @@ void DBG_Hunk_PrintUsage(const char *label)
    block and stomps that block's canary first. hunk_guard_check() reports the
    overflowing block + its allocation-site return addresses (preferred-VA @
    0x140000000 base, matches the .map / crash report). */
-#if defined(COD2_X64)
+#if defined(COD2_X64) && defined(_WIN32)
 extern unsigned short __stdcall RtlCaptureStackBackTrace(unsigned long, unsigned long, void **, unsigned long *);
 extern void *__stdcall GetModuleHandleA(const char *);
+#elif defined(COD2_X64)
+/* Linux x64: the guard still finds the overflowing block, without its callers */
+static unsigned short RtlCaptureStackBackTrace(unsigned long skip, unsigned long count, void **frames, unsigned long *hash)
+{
+    (void)skip; (void)count; (void)frames; (void)hash;
+    return 0;
+}
+static void *GetModuleHandleA(const char *name) { (void)name; return 0; }
+#endif
+#if defined(COD2_X64)
 #define HG_CANARY 0xA5A5A5A5A5A5A5A5ull
 #define HG_MAX 8192
 static struct { byte *end; int size; void *ra[4]; } hg_rec[HG_MAX];

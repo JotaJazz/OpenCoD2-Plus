@@ -429,10 +429,12 @@ void SV_VoicePacket( netadr_t from, msg_t *msg )
 			continue;
 		}
 
+		// New: voice has no sequence, so it no longer fixes up a translated
+		// port: anyone behind the same IP could take the client's address,
+		// talk as the client and keep it from timing out
 		if ( cl->netchan.remoteAddress.port != from.port )
 		{
-			Com_Printf( "SV_VoicePacket: fixing up a translated port\n" );
-			cl->netchan.remoteAddress.port = from.port;
+			continue;
 		}
 
 		if ( cl->state == CS_ZOMBIE )
@@ -524,6 +526,13 @@ void SVC_Info( netadr_t from )
 
 	// echo back the parameter to status. so servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
+	// New: as ioq3, a challenge that filled the info string made every later
+	// key fail and print the whole string, about 16 KB of log per request
+	if ( strlen( Cmd_Argv( 1 ) ) > 128 )
+	{
+		return;
+	}
+
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
 	Info_SetValueForKey( infostring, "protocol", va( "%i", from.altPort ? ALT_PORT_PROTOCOL : PROTOCOL_VERSION ) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->current.string );
@@ -678,6 +687,13 @@ void SVC_Status( netadr_t from )
 
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
+	// New: as ioq3, a challenge that filled the info string made every later
+	// key fail and print the whole string, about 16 KB of log per request
+	if ( strlen( Cmd_Argv( 1 ) ) > 128 )
+	{
+		return;
+	}
+
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
 
 	if ( from.altPort )
@@ -778,6 +794,13 @@ void SVC_GameCompleteStatus( netadr_t from )
 
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
+	// New: as ioq3, a challenge that filled the info string made every later
+	// key fail and print the whole string, about 16 KB of log per request
+	if ( strlen( Cmd_Argv( 1 ) ) > 128 )
+	{
+		return;
+	}
+
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
 
 	// add "demo" to the sv_keywords if restricted
@@ -886,6 +909,7 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 	int i;
 	client_t    *cl;
 	int qport;
+	int sequence;
 
 	// check for connectionless packet (0xffffffff) first
 	if ( msg->cursize >= 4 && *(int *)msg->data == -1 )
@@ -899,7 +923,7 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 	// read the qport out of the message so we can fix up
 	// stupid address translating routers
 	MSG_BeginReading( msg );
-	MSG_ReadLong( msg );                // sequence number
+	sequence = MSG_ReadLong( msg ) & 0x7fffffff; // without the fragment bit
 	qport = (unsigned short)MSG_ReadShort(msg);
 
 	// find which client the message is from
@@ -927,6 +951,15 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 		// port assignments
 		if ( cl->netchan.remoteAddress.port != from.port )
 		{
+			// New: anyone behind the same IP could take the client's
+			// address with a guessed qport, and a huge sequence then made
+			// the client's own packets look old until it timed out. A
+			// translated port must continue the client's sequence
+			if ( sequence - cl->netchan.incomingSequence <= 0 || sequence - cl->netchan.incomingSequence > 1024 )
+			{
+				return;
+			}
+
 			Com_Printf( "SV_PacketEvent: fixing up a translated port\n" );
 			cl->netchan.remoteAddress.port = from.port;
 		}
@@ -940,6 +973,12 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 			if ( cl->messageAcknowledge < 0 )
 			{
 				Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
+				return;
+			}
+
+			// New: an acknowledge of a message never sent gave bad deltas
+			if ( cl->messageAcknowledge > cl->netchan.outgoingSequence )
+			{
 				return;
 			}
 

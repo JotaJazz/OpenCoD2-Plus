@@ -30,6 +30,9 @@ dvar_t *rcon_password;
 dvar_t *sv_rconMaxAttempts;
 dvar_t *sv_rconLockTime;
 dvar_t *sv_rconWhitelist;
+#ifdef COD2_PLUS
+dvar_t *sv_plusNotice;
+#endif
 dvar_t *sv_logRcon;
 dvar_t *sv_authorizeServer;
 dvar_t *sv_authorizePort;
@@ -116,11 +119,19 @@ void SV_InitDvar()
 	sv_rconMaxAttempts = Dvar_RegisterInt("sv_rconMaxAttempts", 5, 0, 100, DVAR_CHANGEABLE_RESET);
 	sv_rconLockTime = Dvar_RegisterInt("sv_rconLockTime", 600, 0, 86400, DVAR_CHANGEABLE_RESET);
 	sv_rconWhitelist = Dvar_RegisterString("sv_rconWhitelist", "", DVAR_CHANGEABLE_RESET);
+#ifdef COD2_PLUS
+	sv_plusNotice = Dvar_RegisterString("sv_plusNotice", "", DVAR_CHANGEABLE_RESET);
+#endif
 	sv_logRcon = Dvar_RegisterBool("sv_logRcon", true, DVAR_CHANGEABLE_RESET);
 	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", AUTHORIZE_SERVER_NAME, DVAR_CHANGEABLE_RESET);
 	sv_authorizePort = Dvar_RegisterInt("sv_authorizePort", PORT_AUTHORIZE, 1, 65535, DVAR_CHANGEABLE_RESET);
+#ifdef COD2_PLUS
+	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 1000000, DVAR_CHANGEABLE_RESET);
+	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 1000, DVAR_CHANGEABLE_RESET);
+#else
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_CHANGEABLE_RESET);
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_CHANGEABLE_RESET);
+#endif
 	sv_kickMessages = Dvar_RegisterBool("sv_kickMessages", true, DVAR_CHANGEABLE_RESET);
 	sv_timeoutMessages = Dvar_RegisterBool("sv_timeoutMessages", true, DVAR_CHANGEABLE_RESET);
 	sv_fps = Dvar_RegisterInt("sv_fps", 20, 10, 1000, DVAR_CHANGEABLE_RESET);

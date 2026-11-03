@@ -95,6 +95,22 @@ class Abi(unittest.TestCase):
         code = g.export_thunk('SV_IsLocalClient', ['int'], abi=('i', 4, [4], False))
         self.assertIn('extern "C" cod2_abi_int<decltype(SV_IsLocalClient(std::declval<int>())), 4> cod2x_SV_IsLocalClient(int a0)', code)
 
+    def test_x64_values_pick_by_architecture(self):
+        # test/<module>_abi_x64.txt: a value the two architectures differ on is checked as COD2_ABI_PICK
+        abi = g.ArchAbi(('v', 0, [4, 4], False), ('v', 0, [8, 4], False))
+        code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=abi)
+        self.assertIn('static_assert(cod2_abi_slot<msg_t*>() == COD2_ABI_PICK(4, 8), "MSG_WriteByte: parameter 0', code)
+        self.assertIn('static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteByte: parameter 1', code)
+
+    def test_x64_widened_return_picks(self):
+        code = g.import_thunk('SV_XModelGet', ['char const*'], abi=g.ArchAbi(('i', 4, [4], False), ('i', 8, [8], False)))
+        self.assertIn('cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), COD2_ABI_PICK(4, 8)>', code)
+
+    def test_one_architecture_only_is_guarded(self):
+        code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=g.ArchAbi(('v', 0, [4, 4], False), None))
+        self.assertIn('#ifndef COD2_X64\nstatic_assert(cod2_abi_class<', code)
+        self.assertIn('#endif\n', code)
+
 
 class CustomImports(unittest.TestCase):
     def test_com_sprintf_formats_into_dest(self):

@@ -1,5 +1,7 @@
 #include "gsc.hpp"
 
+#include "mbedtls/entropy.h"
+
 #ifdef LIBCOD
 
 dvar_t *sv_master[MAX_MASTER_SERVERS];
@@ -478,10 +480,20 @@ const char* NET_AdrToStringNoPort( netadr_t a )
 	return s;
 }
 
+// The map name builds the link's paths: "../x" pointed them outside the
+// library and the game folder. Without a separator ".." is just a file name
+static bool manymaps_validName(const char *mapname)
+{
+	return !strpbrk(mapname, "/\\:");
+}
+
 void manymaps_prepare(const char *mapname, int read)
 {
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
+
+	if (!manymaps_validName(mapname))
+		return;
 
 	dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
 	dvar_t *fs_game = Dvar_FindVar("fs_game");
@@ -588,21 +600,42 @@ static leakyBucket_t buckets[ MAX_BUCKETS ];
 static leakyBucket_t* bucketHashes[ MAX_HASHES ];
 leakyBucket_t outboundLeakyBucket;
 
-static long SVC_HashForAddress( netadr_t address )
+// A seed chosen at startup: with ioq3's fixed weighted sum of the IP's bytes,
+// forged packets from chosen addresses filled one chain and every lookup
+// walked it
+static uint32_t SVC_HashSeed()
 {
-	unsigned char *ip = address.ip;
-	int	i;
-	long hash = 0;
+	static uint32_t seed;
+	static bool seeded;
 
-	for ( i = 0; i < 4; i++ )
+	if ( !seeded )
 	{
-		hash += (long)( ip[ i ] ) * ( i + 119 );
+		mbedtls_entropy_context entropy;
+		mbedtls_entropy_init( &entropy );
+		if ( mbedtls_entropy_func( &entropy, (unsigned char *)&seed, sizeof( seed ) ) != 0 )
+			seed = (uint32_t)rand() << 16 ^ (uint32_t)rand() ^ (uint32_t)Sys_Milliseconds();
+		mbedtls_entropy_free( &entropy );
+		seeded = true;
 	}
 
-	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
-	hash &= ( MAX_HASHES - 1 );
+	return seed;
+}
 
-	return hash;
+static long SVC_HashForAddress( netadr_t address )
+{
+	uint32_t x;
+
+	memcpy( &x, address.ip, 4 );
+	x ^= SVC_HashSeed();
+
+	// the MurmurHash3 finalizer, so every bit of the seed reaches the chain
+	x ^= x >> 16;
+	x *= 0x85ebca6b;
+	x ^= x >> 13;
+	x *= 0xc2b2ae35;
+	x ^= x >> 16;
+
+	return x & ( MAX_HASHES - 1 );
 }
 
 static leakyBucket_t *SVC_BucketForAddress( netadr_t address )
@@ -717,7 +750,7 @@ bool hook_SV_MapExists(const char *mapname)
 {
 	bool map_exists = SV_MapExists(mapname);
 
-	if (map_exists)
+	if (map_exists || !manymaps_validName(mapname))
 	{
 		return map_exists;
 	}

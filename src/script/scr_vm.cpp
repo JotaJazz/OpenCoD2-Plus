@@ -47,7 +47,7 @@ Scr_GetLocalVarAtIndex
 */
 unsigned int Scr_GetLocalVarAtIndex( int index )
 {
-	return scrVmPub.localVars[-index];
+	return scrVmPub.localVars[-(intptr_t)index];
 }
 
 /*
@@ -186,6 +186,28 @@ void Scr_StackClear( void )
 {
 	scrVmPub.top = scrVmPub.stack;
 }
+
+#ifdef COD2_PLUS
+/*
+==============
+Scr_FramesPerSecond
+
+Script time takes one step per server frame, and a frame lasts whole
+milliseconds, so sv_fps 60 runs at 62.5
+==============
+*/
+static float Scr_FramesPerSecond()
+{
+	static const dvar_t *fps;
+
+	if ( !fps )
+	{
+		fps = Dvar_FindVar("sv_fps");
+	}
+
+	return fps ? 1000.0f / ( 1000 / fps->current.integer ) : 20.0f;
+}
+#endif
 
 /*
 ==============
@@ -357,7 +379,7 @@ int Scr_GetPointerType( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_POINTER )
 	{
@@ -383,7 +405,7 @@ const char* Scr_GetTypeName( unsigned long index )
 		return NULL;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 	return var_typename[value->type];
 }
 
@@ -402,7 +424,7 @@ int Scr_GetType( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 	return value->type;
 }
 
@@ -421,7 +443,7 @@ unsigned int Scr_GetObject( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_POINTER )
 	{
@@ -454,7 +476,7 @@ scr_entref_t Scr_GetEntityRef( unsigned long index )
 		return entref;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_POINTER )
 	{
@@ -490,7 +512,7 @@ unsigned int Scr_GetFunc( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_FUNCTION )
 	{
@@ -517,7 +539,7 @@ void Scr_GetVector( unsigned long index, vec3_t vectorValue )
 		return;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_VECTOR )
 	{
@@ -544,7 +566,7 @@ unsigned int Scr_GetConstIString( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_ISTRING )
 	{
@@ -571,7 +593,7 @@ float Scr_GetFloat( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	// cast to float
 	if ( value->type == VAR_INTEGER )
@@ -604,7 +626,7 @@ int Scr_GetInt( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_INTEGER )
 	{
@@ -630,7 +652,7 @@ long int Scr_GetInt64( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_INT64 )
 	{
@@ -846,7 +868,7 @@ scr_animtree_t Scr_GetAnimTree( unsigned long index ) // untested
 		return tree;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_INTEGER )
 	{
@@ -900,7 +922,7 @@ scr_anim_s Scr_GetAnim( unsigned long index, XAnimTree_s *tree )
 		return anim;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( value->type != VAR_ANIMATION )
 	{
@@ -977,7 +999,7 @@ unsigned int Scr_GetConstLowercaseString( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( !Scr_CastString(value) )
 	{
@@ -1022,7 +1044,7 @@ unsigned int Scr_GetConstString( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 
 	if ( !Scr_CastString(value) )
 	{
@@ -1080,7 +1102,7 @@ const char* Scr_GetDebugString( unsigned long index )
 		return 0;
 	}
 
-	value = &scrVmPub.top[-index];
+	value = &scrVmPub.top[-(intptr_t)index];
 	Scr_CastDebugString(value);
 
 	assert(value->type == VAR_STRING);
@@ -1104,7 +1126,7 @@ Scr_GetConstStringIncludeNull
 */
 unsigned int Scr_GetConstStringIncludeNull( unsigned long index )
 {
-	if ( index < scrVmPub.outparamcount && scrVmPub.top[-index].type == VAR_UNDEFINED )
+	if ( index < scrVmPub.outparamcount && scrVmPub.top[-(intptr_t)index].type == VAR_UNDEFINED )
 	{
 		return 0;
 	}
@@ -1601,7 +1623,7 @@ void Scr_NotifyNum( int entnum, int classnum, unsigned int stringValue, unsigned
 
 	Scr_ClearOutParams();
 
-	startTop = &scrVmPub.top[-paramcount];
+	startTop = &scrVmPub.top[-(intptr_t)paramcount];
 	paramcount = scrVmPub.inparamcount - paramcount;
 
 	id = FindEntityId(entnum, classnum);
@@ -2994,7 +3016,7 @@ unsigned int VM_Execute( unsigned int localId, const char *pos, unsigned long pa
 	assert(paramcount <= scrVmPub.inparamcount);
 	Scr_ClearOutParams();
 
-	startTop = &scrVmPub.top[-paramcount];
+	startTop = &scrVmPub.top[-(intptr_t)paramcount];
 	paramcount = scrVmPub.inparamcount - paramcount;
 
 	// overflow
@@ -3619,7 +3641,7 @@ end:
 			assert(top+1 <= scrVmPub.maxstack);
 			top++;
 			top->type = VAR_ANIMATION;
-			top->u.pointerValue = Scr_ReadUnsigned(&pos);
+			top->u.codePosValue = Scr_ReadCodePos(&pos); // the anim tree wrote a whole pointer here, as Scr_AddAnim reads it
 			continue;
 
 		case OP_GetGameRef:
@@ -4032,7 +4054,11 @@ post_builtin:
 					goto error;
 				}
 
+#ifdef COD2_PLUS
+				waitTime = Q_rint(top->u.floatValue * Scr_FramesPerSecond());
+#else
 				waitTime = Q_rint(top->u.floatValue * WAIT_FRAME_TIME);
+#endif
 
 				if ( !waitTime )
 				{
@@ -4047,7 +4073,11 @@ post_builtin:
 					goto error;
 				}
 
+#ifdef COD2_PLUS
+				waitTime = Q_rint(top->u.intValue * Scr_FramesPerSecond());
+#else
 				waitTime = top->u.intValue * WAIT_FRAME_TIME;
+#endif
 				break;
 
 			default:
@@ -4232,7 +4262,7 @@ function_call:
 			scrVmPub.function_frame->fs.startTop = startTop;
 
 			pos = Scr_ReadCodePos(&scrVmPub.function_frame->fs.pos);
-			startTop = &top[-Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
+			startTop = &top[-(intptr_t)Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
 thread_call:
 			scrVmPub.function_frame->fs.top = startTop;
 			scrVmPub.function_frame->topType = startTop->type;
@@ -4267,7 +4297,7 @@ thread_call:
 			scrVmPub.function_frame->fs.startTop = startTop;
 
 			pos = tempCodePos;
-			startTop = &top[-Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
+			startTop = &top[-(intptr_t)Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
 			goto thread_call;
 
 		case OP_ScriptMethodThreadCall:
@@ -4292,7 +4322,7 @@ thread_call:
 			scrVmPub.function_frame->fs.startTop = startTop;
 
 			pos = Scr_ReadCodePos(&scrVmPub.function_frame->fs.pos);
-			startTop = &top[-Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
+			startTop = &top[-(intptr_t)Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
 			goto thread_call;
 
 		case OP_ScriptMethodThreadCallPointer:
@@ -4329,7 +4359,7 @@ thread_call:
 			scrVmPub.function_frame->fs.startTop = startTop;
 
 			pos = tempCodePos;
-			startTop = &top[-Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
+			startTop = &top[-(intptr_t)Scr_ReadUnsigned(&scrVmPub.function_frame->fs.pos)];
 			goto thread_call;
 
 		case OP_DecTop:

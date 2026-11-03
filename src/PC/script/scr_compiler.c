@@ -22,7 +22,7 @@ extern unsigned int GetArray(unsigned int id);
 extern void SetVariableValue(unsigned int id, VariableValue *value);
 extern void Com_Error(int code, const char *fmt, ...);
 extern void CompileError(unsigned int sourcePos, const char *fmt, ...);
-extern void CompileError2(int codePos, const char *msg);
+extern void CompileError2(const char *codePos, const char *msg, ...);
 extern void AddOpcodePos(unsigned int sourcePos, int type);
 extern void RemoveOpcodePos(void);
 extern void AddThreadStartOpcodePos(unsigned int sourcePos);
@@ -156,7 +156,7 @@ static unsigned int __attribute_regparm__(3)
 
         if (pos->type == SCRCOMP_VAR_DEVELOPER_CODEPOS) {
             if (type == SCRCOMP_VAR_CODEPOS) {
-                CompileError2( (int)(codePtr), "normal script cannot reference a function in a /# ... #/ comment");
+                CompileError2( (const char *)(codePtr), "normal script cannot reference a function in a /# ... #/ comment");
                 continue;
             }
         } else {
@@ -165,7 +165,7 @@ static unsigned int __attribute_regparm__(3)
                 fprintf(stderr, "[UNKFN-LINKTHREAD-169 nodef] threadId=%u count=%d i=%d valueId=%u progoff=%d\n",
                         threadId, count, i, valueId, (int)(codePtr - SCRVP->programBuffer));
 #    endif
-                CompileError2( (int)(codePtr), "unknown function");
+                CompileError2( (const char *)(codePtr), "unknown function");
                 continue;
             }
 
@@ -174,7 +174,7 @@ static unsigned int __attribute_regparm__(3)
                 fprintf(stderr, "[UNKFN-LINKTHREAD-174 farcall] threadId=%u progoff=%d\n",
                         threadId, (int)(codePtr - SCRVP->programBuffer));
 #    endif
-                CompileError2( (int)(codePtr), "unknown function");
+                CompileError2( (const char *)(codePtr), "unknown function");
                 continue;
             }
         }
@@ -824,8 +824,8 @@ Scr_CalcLocalVarsSwitchStatement(sval_t stmtlist, scr_block_t *block)
 
     oldBreakChildBlocks = SCRCG->breakChildBlocks;
     oldBreakChildCount = SCRCG->breakChildCount;
-    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-    caseBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+    caseBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     breakChildCount = 0;
     caseBlockCount = 0;
     currentBlock = NULL;
@@ -982,8 +982,8 @@ static unsigned int __attribute_regparm__(2)
         oldContinueChildBlocks = SCRCG->continueChildBlocks;
         oldContinueChildCount = SCRCG->continueChildCount;
 
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildBlocks = breakChildBlocks;
         SCRCG->breakChildCount = &breakChildCount;
         SCRCG->continueChildBlocks = continueChildBlocks;
@@ -1030,8 +1030,8 @@ static unsigned int __attribute_regparm__(2)
         oldContinueChildBlocks = SCRCG->continueChildBlocks;
         oldContinueChildCount = SCRCG->continueChildCount;
 
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
-        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
+        continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildBlocks = breakChildBlocks;
         SCRCG->breakChildCount = &breakChildCount;
         SCRCG->continueChildBlocks = continueChildBlocks;
@@ -4514,7 +4514,7 @@ static unsigned int __attribute_regparm__(3)
     SCRCG->breakBlock = whileBlock;
 
     if (constConditional) {
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildCount = &breakChildCount;
         pos2 = NULL;
         nextPos2 = NULL;
@@ -4676,13 +4676,13 @@ static unsigned int __attribute_regparm__(3)
 
     breakChildCount = 0;
     continueChildCount = 0;
-    continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    continueChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     SCRCG->continueChildBlocks = continueChildBlocks;
     SCRCG->continueChildCount = &continueChildCount;
     SCRCG->breakBlock = forBlock;
 
     if (constConditional) {
-        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+        breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
         SCRCG->breakChildCount = &breakChildCount;
         pos2 = NULL;
         nextPos2 = NULL;
@@ -4828,7 +4828,7 @@ static unsigned int __attribute_regparm__(3)
     oldBreakChildCount = SCRCG->breakChildCount;
     oldBreakBlock = SCRCG->breakBlock;
     breakChildCount = 0;
-    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x1000);
+    breakChildBlocks = (scr_block_t **)Hunk_AllocateTempMemoryHighInternal(0x400 * (int)sizeof(scr_block_t *));
     SCRCG->breakChildBlocks = breakChildBlocks;
     SCRCG->breakChildCount = &breakChildCount;
     SCRCG->breakBlock = NULL;

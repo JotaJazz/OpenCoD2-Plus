@@ -80,19 +80,19 @@ long int CSoundObject_set_sample_info(const CSoundObject *_this, const AILSOUNDI
 
 void ZN12CSoundObjectD2Ev(char *_this)
 {
-    *(int *)(_this) = (int)CSOUNDOBJECT_VTABLE_PTR;
+    *(int *)(_this) = (int)(intptr_t)CSOUNDOBJECT_VTABLE_PTR;
     ZN6CMutexD1Ev(_this + 0x20);
 }
 
 void ZN12CSoundObjectD1Ev(char *_this)
 {
-    *(int *)(_this) = (int)CSOUNDOBJECT_VTABLE_PTR;
+    *(int *)(_this) = (int)(intptr_t)CSOUNDOBJECT_VTABLE_PTR;
     ZN6CMutexD1Ev(_this + 0x20);
 }
 
 void ZN12CSoundObjectD0Ev(char *_this)
 {
-    *(int *)(_this) = (int)CSOUNDOBJECT_VTABLE_PTR;
+    *(int *)(_this) = (int)(intptr_t)CSOUNDOBJECT_VTABLE_PTR;
     ZN6CMutexD1Ev(_this + 0x20);
     __ZdlPv(_this);
 }

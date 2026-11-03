@@ -136,6 +136,8 @@
 #define	CPUSTRING	"linux-i386"
 #elif defined __x86_64__
 #define	CPUSTRING	"linux-x64"
+#elif defined __aarch64__
+#define	CPUSTRING	"linux-arm64"
 #elif defined __axp__
 #define	CPUSTRING	"linux-alpha"
 #else

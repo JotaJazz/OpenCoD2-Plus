@@ -38,7 +38,11 @@ struct Cylinder {
 
 struct Emitter {
 
+#ifdef COD2_X64
+    char _base[0x378];  /* sizeof(Particle) on x64, as common_types.h */
+#else
     char _base[0x24c];
+#endif
 
     vec3_t emitPos;
     vec3_t initialVel;

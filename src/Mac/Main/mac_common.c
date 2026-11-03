@@ -131,7 +131,7 @@ char **Sys_ListFiles(const char *directory, const char *extension, const char *f
 #if defined(__x86_64__) || defined(_M_X64)
         listCopy = (char **)Z_MallocInternal((nfiles + 1) * sizeof(char *));
 #else
-        listCopy = (char **)Z_MallocInternal((nfiles + 1) * 4);
+        listCopy = (char **)Z_MallocInternal((nfiles + 1) * sizeof(char *));
 #endif
         for (i = 0; i < nfiles; i++) {
             listCopy[i] = list[i];
@@ -205,7 +205,7 @@ char **Sys_ListFiles(const char *directory, const char *extension, const char *f
 #if defined(__x86_64__) || defined(_M_X64)
     listCopy = (char **)Z_MallocInternal((nfiles + 1) * sizeof(char *));
 #else
-    listCopy = (char **)Z_MallocInternal((nfiles + 1) * 4);
+    listCopy = (char **)Z_MallocInternal((nfiles + 1) * sizeof(char *));
 #endif
     for (i = 0; i < nfiles; i++) {
         listCopy[i] = list[i];

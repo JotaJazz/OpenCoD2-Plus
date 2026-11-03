@@ -227,6 +227,7 @@ static void diag_rb_frame_start(void)
 }
 
 extern int rb_rdsl_call_count;
+extern int rb_waterSceneCopied;
 extern int g_dip_gl_draw;
 extern int g_rb_endsurface_count;
 extern int g_rb_endsurface_draw;
@@ -903,7 +904,7 @@ void RB_InitSceneViewport(void);
 
 void RB_InitBackendGlobalStructs(void)
 {
-    memset(&backEnd, 0, 0x36e90);
+    memset(&backEnd, 0, COD2_SIZEOF_1_3(backEnd, 0x36e90));
     *(int *)&backEnd.worldEntity = 3;
     backEnd.resolvedPostSunTarget = (GfxRenderTargetId)(0xe);
     backEnd.resolvedSceneTarget = (GfxRenderTargetId)(0xe);
@@ -1426,7 +1427,7 @@ static void RB_SetLightPropertiesCmd(GfxRenderCommandExecState *execState)
     *(int *)&backEnd.light[idx].specular[2] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[2];
     *(int *)&backEnd.light[idx].specular[3] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[3];
 
-    *(int *)&backEnd.light[idx].def = (int)(((GfxCmdSetLightProperties *)cmd)->lightDef);
+    *(void **)&backEnd.light[idx].def = (void *)((GfxCmdSetLightProperties *)cmd)->lightDef;
 
     *(int *)&backEnd.light[idx].position[0] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[0];
     *(int *)&backEnd.light[idx].position[1] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[1];
@@ -1619,6 +1620,7 @@ static void RB_RenderDrawSurfList(GfxDrawSurf *drawSurfs, int drawSurfCount,
     GfxEntity *entities;
 
     rb_rdsl_call_count++;
+    rb_waterSceneCopied = 0;   /* r_water copies the scene once per list, rb_shade.c */
 
     backEnd.currentEntity = &backEnd.worldEntity;
     backEnd.currentEntityLighting = NULL;
@@ -1681,7 +1683,7 @@ sort_changed:
             const char *nm = material ? *(const char **)material : "(nomat)";
             const unsigned *w = (const unsigned *)material;
             fprintf(stderr, "[MATDIAG] surf#%d mat=%p name='%.24s' tt=%d | +30..+4c: %08x %08x %08x %08x %08x %08x %08x %08x\n",
-                    md, (void *)material, (nm && (unsigned)nm > 0x10000) ? nm : "(badptr)", techType,
+                    md, (void *)material, (nm && (uintptr_t)nm > 0x10000) ? nm : "(badptr)", techType,
                     w[0x30 / 4], w[0x34 / 4], w[0x38 / 4], w[0x3c / 4], w[0x40 / 4], w[0x44 / 4], w[0x48 / 4], w[0x4c / 4]);
             fflush(stderr);
             md++;
@@ -2382,7 +2384,7 @@ static void RB_DrawSpriteCmd(GfxRenderCommandExecState *execState)
     ((GfxEntity *)entity)->origin[1] = ((GfxCmdDrawSprite *)cmd)->pos[1];
     ((GfxEntity *)entity)->origin[2] = ((GfxCmdDrawSprite *)cmd)->pos[2];
 
-    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((int)(uintptr_t)((GfxCmdDrawSprite *)cmd)->material);
+    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((GfxCmdDrawSprite *)cmd)->material;
 
     ((GfxEntity *)entity)->reType = (refEntityType_t)(4);
 

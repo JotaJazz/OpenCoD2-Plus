@@ -13,7 +13,7 @@ extern const dvar_t *com_sv_running;
 extern const dvar_t *sv_paused;
 extern void SV_DelayDropClient(client_t *drop, const char *reason);
 extern void MSG_WriteReliableCommandToBuffer(const char *pszCommand, char *pszBuffer, int iBufferSize);
-extern int I_strnicmp(const char *s0, const char *s1, size_t n);
+extern int I_strnicmp(const char *s0, const char *s1, int n);
 extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
 
 extern void Scr_FreeValue(int value);

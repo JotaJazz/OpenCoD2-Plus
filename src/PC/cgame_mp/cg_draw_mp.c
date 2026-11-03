@@ -19,6 +19,8 @@ extern const dvar_t *cg_drawCrosshairNames;
 extern const dvar_t *cg_drawCrosshairNamesPosX;
 extern const dvar_t *cg_drawCrosshairNamesPosY;
 extern const dvar_t *cg_drawFPS;
+extern const dvar_t *cg_drawSpectatedPlayerName;
+extern const dvar_t *sensitivity_MG;
 extern const dvar_t *cg_drawGameMessages;
 extern const dvar_t *cg_drawGun;
 extern const dvar_t *cg_drawLagometer;
@@ -887,7 +889,7 @@ unsigned int CG_DrawMaterial(void)
     char szContents[0x1000];
     float y;
 
-    if (!CL_PickMaterial((const vec_t *)cg->refdef.vieworg, (const vec_t *)cg->refdef.viewaxis, szName, szSurfaceFlags, szContents, (int)&__mh_execute_header)) {
+    if (!CL_PickMaterial((const vec_t *)cg->refdef.vieworg, (const vec_t *)cg->refdef.viewaxis, szName, szSurfaceFlags, szContents, 0x1000)) {
         return 0;
     }
 
@@ -957,7 +959,7 @@ qboolean CG_DrawFollow(void)
         return 0;
     }
 
-    if (cg->inKillCam) {
+    if (cg->inKillCam || !cg_drawSpectatedPlayerName->current.enabled) {
         return 0;
     }
 
@@ -1095,6 +1097,8 @@ void CG_DrawActive(void)
         if (shellshockSensitivity != 0.0f)
             sensitivity *= shellshockSensitivity;
     }
+    if (cg->predictedPlayerState.eFlags & 0x300)   /* on a turret, as CG_CalcTurretViewValues */
+        sensitivity *= sensitivity_MG->current.value;
 
     ka = cg->kickAngles;
     oa = cg->offsetAngles;

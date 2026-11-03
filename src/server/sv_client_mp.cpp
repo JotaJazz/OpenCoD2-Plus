@@ -695,6 +695,8 @@ SV_DirectConnect
 A "connect" OOB command has been received
 ==================
 */
+#define PLUS_NOTICE "This server needs the current CoD2 1.3 Plus client: github.com/JotaJazz/OpenCoD2-Plus/releases"
+
 /*
 ==================
 SV_ConnectBanMessage
@@ -843,6 +845,18 @@ void SV_DirectConnect( netadr_t from )
 			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
 			return;
 		}
+
+#ifdef COD2_PLUS
+		// after the challenge, so that a spoofed address gets no reply
+		if ( atoi( Info_ValueForKey( userinfo, "plus" ) ) != PLUS_VERSION )
+		{
+			const char *notice = sv_plusNotice->current.string;
+
+			NET_OutOfBandPrint( NS_SERVER, from, va( "error\n\x15%s", *notice ? notice : PLUS_NOTICE ) );
+			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
+			return;
+		}
+#endif
 
 
 		if ( svs.challenges[i].firstPing == 0 )
@@ -1012,6 +1026,12 @@ gotnewcl:
 	svs.challenges[i].firstPing = 0;
 
 	// send the connect packet to the client
+#ifdef COD2_PLUS
+	newcl->plusVersion = atoi( Info_ValueForKey( userinfo, "plus" ) );
+	if ( newcl->plusVersion == PLUS_VERSION )
+		NET_OutOfBandPrint( NS_SERVER, from, va( "connectResponse %i", PLUS_VERSION ) );
+	else // bots and local clients, which skip the check above
+#endif
 	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse" );
 
 	// when we receive the first packet from the client, we will
@@ -1081,6 +1101,12 @@ void SV_AuthorizeIpPacket( netadr_t from )
 
 	challenge = atoi( SV_Cmd_Argv( 1 ) );
 
+	// New: cleared slots have challenge 0
+	if ( !challenge )
+	{
+		return;
+	}
+
 	for ( i = 0 ; i < MAX_CHALLENGES ; i++ )
 	{
 		if ( svs.challenges[i].challenge == challenge )
@@ -1132,9 +1158,8 @@ void SV_AuthorizeIpPacket( netadr_t from )
 
 	if ( !Q_stricmp( s, "accept" ) )
 	{
-		svs.challenges[i].guid = atoi(SV_Cmd_Argv( 4 ));
-
-		const char *banMessage = SV_ConnectBanMessage( svs.challenges[i].adr, svs.challenges[i].guid );
+		int guid = atoi(SV_Cmd_Argv( 4 ));
+		const char *banMessage = SV_ConnectBanMessage( svs.challenges[i].adr, guid );
 
 		if ( banMessage )
 		{
@@ -1147,6 +1172,10 @@ void SV_AuthorizeIpPacket( netadr_t from )
 
 		if ( !svs.challenges[i].connected )
 		{
+			// New: only before the client connects. A reply can come from
+			// any address, and a reconnect with the same challenge takes
+			// this GUID
+			svs.challenges[i].guid = guid;
 			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr,
 			                    va("challengeResponse %i", svs.challenges[i].challenge) );
 			return;
@@ -2033,6 +2062,28 @@ static void SV_VerifyIwds_f( client_t *cl )
 			break;
 		}
 
+		// get the pure checksums of the pk3 files loaded by the server
+		pPaks = FS_LoadedIwdPureChecksums();
+		Cmd_TokenizeString( pPaks );
+		nServerPaks = Cmd_Argc();
+		if ( nServerPaks > 1024 )
+		{
+			nServerPaks = 1024;
+		}
+
+		for ( i = 0; i < nServerPaks; i++ )
+		{
+			nServerChkSum[i] = atoi( Cmd_Argv( i ) );
+		}
+
+		// New: the check below costs the square of the client's count, and
+		// distinct checksums all loaded by the server are at most as many
+		if ( nClientPaks > nServerPaks )
+		{
+			bGood = qfalse;
+			break;
+		}
+
 		// make sure none of the client check sums are the same
 		// so the client can't send 5 the same checksums
 		for ( i = 0; i < nClientPaks; i++ )
@@ -2057,20 +2108,6 @@ static void SV_VerifyIwds_f( client_t *cl )
 		if ( bGood == qfalse )
 		{
 			break;
-		}
-
-		// get the pure checksums of the pk3 files loaded by the server
-		pPaks = FS_LoadedIwdPureChecksums();
-		Cmd_TokenizeString( pPaks );
-		nServerPaks = Cmd_Argc();
-		if ( nServerPaks > 1024 )
-		{
-			nServerPaks = 1024;
-		}
-
-		for ( i = 0; i < nServerPaks; i++ )
-		{
-			nServerChkSum[i] = atoi( Cmd_Argv( i ) );
 		}
 
 		// check if the client has provided any pure checksums of pk3 files not loaded by the server
@@ -2226,7 +2263,10 @@ static void SV_NextDownload_f( client_t *cl )
 	assert(cl - svs.clients >= 0 && cl - svs.clients < MAX_CLIENTS);
 	int block = atoi( Cmd_Argv( 1 ) );
 
-	if ( block == cl->downloadClientBlock )
+	// New: and only of a block already read. Acks of blocks never sent moved
+	// the window past the file read so far, and the next frame read all the
+	// blocks in between at once
+	if ( block == cl->downloadClientBlock && block < cl->downloadCurrentBlock )
 	{
 		Com_DPrintf( "clientDownload: %d : client acknowledge of block %d\n", cl - svs.clients, block );
 
@@ -2445,7 +2485,7 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK )
 SV_ClientCommand
 ===============
 */
-static qboolean SV_ClientCommand( client_t *cl, msg_t *msg )
+static qboolean SV_ClientCommand( client_t *cl, msg_t *msg, int *executed )
 {
 	int seq;
 	const char  *s;
@@ -2472,6 +2512,14 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg )
 	{
 		Com_Printf( "Client %s lost %i clientCommands\n", cl->name, seq - cl->lastClientCommand + 1 );
 		SV_DropClient( cl, "EXE_LOSTRELIABLECOMMANDS" );
+		return qfalse;
+	}
+
+	// New: flood protection only keeps commands from the game, so one
+	// message of hundreds of commands ran them all in one frame. The client
+	// sends again every command not yet acknowledged
+	if ( ++*executed > 64 )
+	{
 		return qfalse;
 	}
 
@@ -2533,6 +2581,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg )
 	byte msgBuf[MAX_MSGLEN];
 	msg_t decompressMsg;
 	int c;
+	int executed = 0;
 
 	assert(cl - svs.clients >= 0 && cl - svs.clients < MAX_CLIENTS);
 
@@ -2601,7 +2650,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg )
 		{
 			break;
 		}
-		if ( !SV_ClientCommand( cl, &decompressMsg ) )
+		if ( !SV_ClientCommand( cl, &decompressMsg, &executed ) )
 		{
 			return; // we couldn't execute it because of the flood protection
 		}

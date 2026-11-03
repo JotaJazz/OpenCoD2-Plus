@@ -1849,6 +1849,14 @@ void SV_WriteSnapshotToClient( client_t *client, msg_t *msg )
 		}
 	}
 
+#ifdef COD2_PLUS
+	if ( client->plusVersion == PLUS_VERSION )
+	{
+		MSG_WriteByte(msg, svc_snapshotPlus);
+		msg_plusSnapshotTime = svs.time;
+	}
+	else
+#endif
 	MSG_WriteByte(msg, svc_snapshot);
 
 	// send over the current server time so the client can drift
@@ -1896,6 +1904,10 @@ void SV_WriteSnapshotToClient( client_t *client, msg_t *msg )
 		from_first_client = 0;
 		SV_EmitPacketEntities( client - svs.clients, 0, 0, frame->num_entities, frame->first_entity, msg );
 	}
+
+#ifdef COD2_PLUS
+	msg_plusSnapshotTime = 0;
+#endif
 
 	// delta encode the entities
 	SV_EmitPacketClients( client - svs.clients, from_num_clients, from_first_client, frame->num_clients, frame->first_client, msg );

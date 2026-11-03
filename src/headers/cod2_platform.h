@@ -102,13 +102,49 @@ extern "C" {
 #define COD2_STDCALL
 #define COD2_FASTCALL
 #define COD2_FORCE_ALIGN_ARG_POINTER
+#if defined(COD2_X64) && defined(__GNUC__)
+#define COD2_ALIGNED(n) __attribute__((aligned(n)))  /* a layout, not a calling convention: x64 keeps it */
+#else
 #define COD2_ALIGNED(n)
+#endif
 #endif
 
 #if COD2_APPLE_GCC_X86_ABI
 #define COD2_REGPARM_AND_STACKPARM __attribute__((regparmandstackparm))
 #else
 #define COD2_REGPARM_AND_STACKPARM
+#endif
+
+/* the order of two pointers for a sort: 1.3's (int)(a - b) on 32 bits; on x64 that difference
+   can pass an int, so it compares (-1, 0, 1) */
+#ifdef COD2_X64
+#define COD2_PTR_ORDER(a, b) (((uintptr_t)(a) > (uintptr_t)(b)) - ((uintptr_t)(a) < (uintptr_t)(b)))
+#else
+#define COD2_PTR_ORDER(a, b) ((int)((uintptr_t)(a) - (uintptr_t)(b)))
+#endif
+
+/* a size 1.3 hardcodes for a type with pointers: on 32 bits the literal, and the build fails if
+   sizeof(T) differs from it; on x64 sizeof(T) */
+#ifdef COD2_X64
+#define COD2_SIZEOF_1_3(T, n) sizeof(T)
+#else
+#define COD2_SIZEOF_1_3(T, n) (sizeof(char[sizeof(T) == (n) ? 1 : -1]) * (n))
+#endif
+
+/* the same for a field's offset: 1.3's literal on 32 bits (checked), offsetof on x64 */
+#ifdef COD2_X64
+#define COD2_OFFSETOF_1_3(T, f, n) offsetof(T, f)
+#else
+#define COD2_OFFSETOF_1_3(T, f, n) (sizeof(char[offsetof(T, f) == (n) ? 1 : -1]) * (n))
+#endif
+
+/* a size 1.3 hardcodes for an object our headers do not describe whole (its fields are read at
+   1.3's offsets): the literal on 32 bits; on x64 the literal plus room for its pointers to grow.
+   shortcut: 0x100 covers 32 grown pointers, replace with sizeof once the type is complete */
+#ifdef COD2_X64
+#define COD2_SIZE_1_3_PADDED(n) ((n) + 0x100)
+#else
+#define COD2_SIZE_1_3_PADDED(n) (n)
 #endif
 
 #ifdef __cplusplus

@@ -489,7 +489,7 @@ const char *XAnimGetAnimDebugName(const XAnim *anims, unsigned int animIndex)
 
 XAnimTree *XAnimCreateTree(XAnim *anims, Alloc_t Alloc)
 {
-    unsigned int treeSize = anims->size * 5 + 9;
+    unsigned int treeSize = offsetof(XAnimTree_s, infoArray) + anims->size * 5 + 1;  /* header: 8 bytes on 32 bits, 12 on x64 */
     XAnimTree_s *tree = (XAnimTree_s *)Alloc(treeSize);
 
     memset(tree, 0, treeSize);
@@ -1508,7 +1508,7 @@ void XAnimCloneAnimTree(const XAnimTree *from, XAnimTree *to)
 void XAnimFreeTree(XAnimTree *tree, Free_t Free)
 {
     XAnimTree_s *tree_s = (XAnimTree_s *)tree;
-    unsigned int treeSize = tree_s->anims->size * 5 + 9;
+    unsigned int treeSize = offsetof(XAnimTree_s, infoArray) + tree_s->anims->size * 5 + 1;
 
     XAnimClearTree(tree);
 

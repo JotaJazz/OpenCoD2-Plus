@@ -10,7 +10,7 @@ Contributors need their own copy of Call of Duty 2 patched to 1.3.
 |---|---|---|
 | `CoD2MP_s.exe` 1.3 (unpacked) | client, cgame, client-side server, EffectsCore, xanim | `0x400000` |
 | `gfx_d3d_mp_x86_s.dll` | renderer | `0x10000000` |
-| CoD2rev-Plus sources | server, game, bgame, core (second reference) | |
+| OpenCoD2-Plus Server sources | server, game, bgame, core (second reference) | |
 
 ## Tools
 

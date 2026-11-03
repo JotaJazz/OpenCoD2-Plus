@@ -88,9 +88,9 @@ const char *MacDisplay_GetGLVendor(void);
 const char *MacDisplay_GetGLRenderer(void);
 const char *MacDisplay_GetGLExtensions(void);
 Boolean MacDisplay_IsGLExtensionSupported(const char *inExtension);
-void MacDisplay_GetVideoMemoryInfo(long int *outVideoMemory, long int *outTextureMemory);
-long int MacDisplay_GetMaxTextureUnits(void);
-long int MacDisplay_GetMaxTextureImageUnits(void);
+void MacDisplay_GetVideoMemoryInfo(int *outVideoMemory, int *outTextureMemory);
+int MacDisplay_GetMaxTextureUnits(void);
+int MacDisplay_GetMaxTextureImageUnits(void);
 short unsigned int MacDisplay_GetAntiAliasingMultiSampleInfo(int *outMaxSampleBuffers, int *outMaxSamples, Boolean *outDoesSuperSampling, Boolean *outDoesMultiSampling, Boolean *outDoesAlphaSampling);
 UInt32 MacDisplay_GetPCPixelShaderVersion(void);
 Boolean MacDisplay_GetSupportsSeparateBlendFunc(void);
@@ -323,23 +323,23 @@ Boolean MacDisplay_IsGLExtensionSupported(const char *inExtension)
     return gluCheckExtension(inExtension, *(const char **)(di + 0x38));
 }
 
-void MacDisplay_GetVideoMemoryInfo(long int *outVideoMemory, long int *outTextureMemory)
+void MacDisplay_GetVideoMemoryInfo(int *outVideoMemory, int *outTextureMemory)
 {
     char *di = MacDisplay_CurrentDisplayInfo();
-    *outVideoMemory = *(long *)(di + 0x3c);
-    *outTextureMemory = *(long *)(di + 0x40);
+    *outVideoMemory = *(int *)(di + 0x3c);   /* the Mac's 4-byte longs: int on LP64 */
+    *outTextureMemory = *(int *)(di + 0x40);
 }
 
-long int MacDisplay_GetMaxTextureUnits(void)
+int MacDisplay_GetMaxTextureUnits(void)
 {
     char *di = MacDisplay_CurrentDisplayInfo();
-    return *(long *)(di + 0x44);
+    return *(int *)(di + 0x44);
 }
 
-long int MacDisplay_GetMaxTextureImageUnits(void)
+int MacDisplay_GetMaxTextureImageUnits(void)
 {
     char *di = MacDisplay_CurrentDisplayInfo();
-    return *(long *)(di + 0x48);
+    return *(int *)(di + 0x48);
 }
 
 short unsigned int MacDisplay_GetAntiAliasingMultiSampleInfo(int *outMaxSampleBuffers, int *outMaxSamples, Boolean *outDoesSuperSampling, Boolean *outDoesMultiSampling, Boolean *outDoesAlphaSampling)
@@ -418,10 +418,10 @@ short unsigned int MacDisplay_SetGammaRamp(const _D3DGAMMARAMP *inRamp)
 
 short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
 {
-    int port;
+    intptr_t port;
 
     if (sInitialized && !sInWindowMode && sScreenContext)
-        port = (int)sScreenContext->mDrawable;
+        port = (intptr_t)sScreenContext->mDrawable;
     else
         port = GetWindowPort(sMainWindow);
 
@@ -431,10 +431,10 @@ short unsigned int MacDisplay_LocalToGlobal(Point *ioPoint)
 
 short unsigned int MacDisplay_GlobalToLocal(Point *ioPoint)
 {
-    int port;
+    intptr_t port;
 
     if (sInitialized && !sInWindowMode && sScreenContext)
-        port = (int)sScreenContext->mDrawable;
+        port = (intptr_t)sScreenContext->mDrawable;
     else
         port = GetWindowPort(sMainWindow);
 

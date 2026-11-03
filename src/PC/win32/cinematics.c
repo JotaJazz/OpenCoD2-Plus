@@ -723,7 +723,7 @@ void ROQ_DrawCinematicFromHandle(int handle)
     float barSize;
     int barSizeCeil;
     float xf, wf;
-    int material;
+    MaterialHandle material;
 
     if ((unsigned int)handle > 0xf || cinTable[handle].status == FMV_EOF) {
         goto done;
@@ -780,13 +780,13 @@ void ROQ_DrawCinematicFromHandle(int handle)
         barSizeCeil = (int)ceilf(barSize);
         xf = (float)x;
         wf = (float)w;
-        material = (int)(cls->whiteMaterial);
+        material = cls->whiteMaterial;
 
         re = (refexport_t *)(void *)imp_re;
-        ((void (*)(float, float, float, float, float, float, float, float, const vec_t *, int))re->DrawStretchPic)(
+        ((void (*)(float, float, float, float, float, float, float, float, const vec_t *, MaterialHandle))re->DrawStretchPic)(
             xf, (float)y, wf, (float)(int)floorf(barSize),
             0.0f, 0.0f, 0.0f, 0.0f, clearColor, material);
-        ((void (*)(float, float, float, float, float, float, float, float, const vec_t *, int))re->DrawStretchPic)(
+        ((void (*)(float, float, float, float, float, float, float, float, const vec_t *, MaterialHandle))re->DrawStretchPic)(
             xf, (float)(y + h - barSizeCeil), wf, (float)barSizeCeil,
             0.0f, 0.0f, 0.0f, 0.0f, clearColor, material);
     }

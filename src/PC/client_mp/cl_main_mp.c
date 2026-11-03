@@ -30,7 +30,7 @@ extern const dvar_t *sv_voice;
 extern const dvar_t *Dvar_RegisterBool(const char *dvarName, unsigned char value, unsigned short flags);
 extern int CM_BoxSightTrace(int oldHitNum, const vec_t *start, const vec_t *end,
                             const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask);
-extern int I_strnicmp(const char *s0, const char *s1, size_t n);
+extern int I_strnicmp(const char *s0, const char *s1, int n);
 extern char *strupr(char *s);
 extern void *Hunk_AllocAlignInternal(int size, int alignment);
 
@@ -344,6 +344,9 @@ void CL_AddDebugLine(const vec_t *start, const vec_t *end, const vec_t *color, q
 void CL_AddDebugString(const vec_t *xyz, const vec_t *color, float scale, const char *text, qboolean fromServer);
 void CL_RequestAuthorization(void);
 void CL_CheckForResend(void);
+
+/* CoD2rev-Plus's PLUS_VERSION: docs/architecture/plus-protocol.md, on its plus branch */
+#define COD2_PLUS_VERSION 122
 void CL_LocalServers_f(void);
 void CL_PlayLogo_f(void);
 qboolean CL_UpdateDirtyPings_f(int source);
@@ -1063,7 +1066,7 @@ void CL_InitOnceForAllClients(void)
         cl_anglespeedkey = Dvar_RegisterFloat("cl_anglespeedkey", 1.5f, 0.0f, flt_max.f, 0);
     }
 
-    cl_maxpackets = Dvar_RegisterInt("cl_maxpackets", 30, 15, 100, 0x1001);
+    cl_maxpackets = Dvar_RegisterInt("cl_maxpackets", 30, 15, 125, 0x1001);   /* 1.3: 100; one per frame at com_maxfps 125 */
     cl_packetdup = Dvar_RegisterInt("cl_packetdup", 1, 0, 5, 0x1001);
     cl_sensitivity = Dvar_RegisterFloat("sensitivity", 5.0f, 0.01f, 100.0f, 0x1001);
     cl_mouseAccel = Dvar_RegisterFloat("cl_mouseAccel", 0.0f, 0.0f, 100.0f, 0x1001);
@@ -1915,6 +1918,10 @@ void CL_CheckForResend(void)
     Info_SetValueForKey(info, (const char *)"protocol", va((const char *)"%i", COD2_PROTOCOL_VERSION));
     Info_SetValueForKey(info, (const char *)"challenge", va((const char *)"%i", conn->challenge));
     Info_SetValueForKey(info, (const char *)"qport", va((const char *)"%i", conn->qport));
+#if COD2_IS_PATCH_13
+    /* in this packet only: stock servers do not read it */
+    Info_SetValueForKey(info, (const char *)"plus", va((const char *)"%i", COD2_PLUS_VERSION));
+#endif
 
     infoLen = strlen(info);
     data[0] = 'c';
@@ -2247,6 +2254,11 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
             goto finish;
         }
 
+#if COD2_IS_PATCH_13
+        /* a stock server answers without a version; each snapshot says its own format */
+        if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
+            Com_Printf((const char *)"CoD2 1.3 Plus server, version %i\n", COD2_PLUS_VERSION);
+#endif
         Netchan_Setup(NS_CLIENT1, &conn->netchan, from, *(int *)imp_g_qport);
         conn->state = CA_CONNECTED;
         conn->lastPacketSentTime = cls.realtime;

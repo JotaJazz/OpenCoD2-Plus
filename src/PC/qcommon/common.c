@@ -146,6 +146,11 @@ static int Com_GetConfigureDvarNames(const char **text, char *dvarNames);
 static void Com_GetConfigureDvarValues(int dvarCount, const char **text, char *dvarValues);
 static void Com_SetConfigureDvars(int dvarCount, const char *dvarNames, const char *dvarValues);
 static void Com_WriteConfigToFile(const char *filename);
+static const dvar_t *com_writeConfig;
+static const dvar_t *com_freezeWatch;
+#ifdef _WIN32
+extern void Sys_FreezeWatchFrame(int seconds);
+#endif
 void Com_WriteConfig_f(void);
 float Com_GetTimescaleForSnd(void);
 void Com_Close(void);
@@ -1402,7 +1407,7 @@ void Com_ExecStartupConfigs(const char *configFile)
 static qboolean Com_RefuseOtherProtocol(netadr_t from, const msg_t *msg)
 {
     extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
-    extern int I_strnicmp(const char *s1, const char *s2, size_t count);
+    extern int I_strnicmp(const char *s1, const char *s2, int count);
     char line[1024];
     const char *protocol;
     int len;
@@ -1602,7 +1607,8 @@ BM_NOINLINE void Com_Frame_Try_Block_Function(void)
     int msec, rawMsec, minMsec, maxMsec;
     qboolean useTimescale;
 
-    if (com_fullyInitialized && (dvar_modifiedFlags & 1)) {
+    /* with com_writeConfig 0 the bit stays: turned back on, what changed meanwhile is written */
+    if (com_fullyInitialized && (dvar_modifiedFlags & 1) && com_writeConfig->current.enabled) {
         dvar_modifiedFlags &= ~1;
         if (Com_HasPlayerProfile()) {
             char path[64];
@@ -1771,6 +1777,9 @@ void Com_Frame(void)
     if (!setjmp(*abortframe)) {
         Com_Frame_Try_Block_Function();
         com_frameNumber++;
+#ifdef _WIN32
+        Sys_FreezeWatchFrame(com_freezeWatch->current.integer);
+#endif
     }
 
     if (com_errorEntered) {
@@ -1980,7 +1989,7 @@ void Com_Init_Try_Block_Function(char *commandLine)
     extern void Sys_HideSplashWindow(void);
     extern void Sys_LoadingKeepAlive(void);
     extern void Cbuf_AddText(const char *text);
-    extern int I_strnicmp(const char *s1, const char *s2, size_t count);
+    extern int I_strnicmp(const char *s1, const char *s2, int count);
     char *p;
     int i;
 
@@ -2024,6 +2033,8 @@ void Com_Init_Try_Block_Function(char *commandLine)
     }
 
     com_maxfps = Dvar_RegisterInt("com_maxfps", 85, 0, 1000, 0x1001);
+    com_freezeWatch = Dvar_RegisterInt("com_freezeWatch", 30, 0, 3600, 0x1001);   /* not 1.3's: seconds, 0 is off */
+    com_writeConfig = Dvar_RegisterBool("com_writeConfig", 1, 0x1000);   /* not 1.3's: a config kept as it is */
     com_developer = Dvar_RegisterInt("developer", 0, 0, 2, 0x1000);
     com_developer_script = Dvar_RegisterBool("developer_script", 0, 0x1000);
     com_logfile = Dvar_RegisterInt("logfile", 0, 0, 2, 0x1000);

@@ -16,6 +16,61 @@ extern r_global_permanent_t rgp;
 extern struct DxState dxState;
 #include <math.h>
 #include "imports.h"
+
+/* 1.3's offsets, read by field so x64 lays them out its own way */
+COD2_ASSERT_FIELD(GfxWorld, smodelLightingImage, 0x10c);
+COD2_ASSERT_FIELD(GfxWorld, outdoorImage, 0x200);
+COD2_ASSERT_FIELD(GfxWorld, outdoorLookupMatrix, 0x1c0);
+COD2_ASSERT_FIELD(dvar_t, current, 8);
+
+extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
+extern GfxImage r_sceneDepthImage;
+extern IDirect3DSurface9 *Image_GetSurface(GfxImage *image);
+
+/* r_water reads the scene's depth through floatZ: a water material must not write it at the same time */
+static int RB_WaterReadsDepth(const Material *material)
+{
+    int i;
+    if (!r_sceneDepthImage.texture.basemap || !material)
+        return 0;
+    for (i = 0; i < material->textureCount; i++) {
+        if (material->textures[i].semantic == 5)
+            return 1;
+    }
+    return 0;
+}
+
+/* not 1.3's: r_water refracts what lies under the water. Before the first water surface of a draw
+   list, the scene drawn so far is copied into resolvedScene (renderTargets[2], which 1.3 fills only
+   for its late post effects, rb_backend.c); RB_RenderDrawSurfList clears the flag. Only with the
+   scene's depth (r_water's INTZ), which the shader needs to tell what is under the water. */
+int rb_waterSceneCopied;
+
+static void RB_CopySceneForWater(const Material *material)
+{
+#ifdef GFX_REAL_D3D9
+    IDirect3DSurface9 *dest;
+    void *device = dx_g->device;
+
+    HRESULT hr;
+
+    if (rb_waterSceneCopied || dxState.renderTargetId != R_RENDERTARGET_FRAME_BUFFER ||
+        !dxState.renderTargetSurface || !RB_WaterReadsDepth(material))
+        return;
+    rb_waterSceneCopied = 1;
+    dest = Image_GetSurface((GfxImage *)dx_g->renderTargets[R_RENDERTARGET_RESOLVED_SCENE].image);
+    if (!dest)
+        return;
+    /* IDirect3DDevice9::StretchRect, as RB_ApplyLatePostEffectsCmd does */
+    hr = ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))(*(void ***)device)[0x88 / 4])(
+        device, dxState.renderTargetSurface, NULL, dest, NULL, 2);
+    ((HRESULT(D3DVTCC *)(void *))((*(void ***)dest)[2]))((void *)dest);
+    if (hr >= 0)
+        ((r_backEndGlobals_t *)imp_backEnd)->resolvedSceneTarget = R_RENDERTARGET_RESOLVED_SCENE;
+#else
+    (void)material;
+#endif
+}
 extern refimport_t ri;
 extern int alwaysfails;
 #include "bytematch.h"
@@ -488,7 +543,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         char *surfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!surfs || !(*(void **)&((GfxWorld *)surfs)->smodelLightingImage))
             Com_Error(1, "Sampler 'smodelLighting' is only valid in a map.\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x10c);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->smodelLightingImage;
         *samplerState = 0x72;
         return;
     }
@@ -517,11 +572,11 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
             lmapIdx = ((materialCommands_t *)tess)->lmapIndex;
         }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        *image = *(void **)((*(char **)&((GfxWorld *)drawSurfs)->lightmaps) + lmapIdx * 16 + codeTexture * 4 - 0x20);
+        *image = (void *)((GfxWorld *)drawSurfs)->lightmaps[lmapIdx][codeTexture - 8];
         *samplerState = 0x32;
 
         {
-            int mode = *(int *)((char *)*(void **)imp_r_lightMap + 8);
+            int mode = ((const dvar_t *)*(void **)imp_r_lightMap)->current.integer;
             if (mode == 1) {
                 *image = (*(void **)&((r_global_permanent_t *)rgp)->whiteImage);
                 *samplerState = 1;
@@ -551,14 +606,25 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
 
     case 15:
         idx = backEnd->resolvedSceneTarget;
+        /* 1.3 never gets here without a resolved scene (techFlags & 2 skips the technique); r_water's
+           sceneColorSampler, bound by name, does when there was no copy: black, past the array */
+        if (idx >= R_RENDERTARGET_COUNT) {
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->blackImage);
+            *samplerState = 0x32;
+            return;
+        }
         *image = (void *)((DxGlobals *)dx)->renderTargets[idx].image;
         *samplerState = 0x32;
         return;
 
     case 16: {
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage))
-            R_Error(1, "Tried to use 'sampler.sky' when it isn't valid\n");
+        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage)) {
+            /* not 1.3's error: r_water's skySampler on a map without a sky gets the water's own cube */
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->waterColorImage);
+            *samplerState = 0x32;
+            return;
+        }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         *image = (*(void **)&((GfxWorld *)drawSurfs)->skyImage);
         *samplerState = ((GfxWorld *)drawSurfs)->skySamplerState;
@@ -580,7 +646,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
     }
 
     case 19: {
-        int sc_on = *(byte *)((char *)*(void **)imp_sc_enable + 8);
+        int sc_on = ((const dvar_t *)*(void **)imp_sc_enable)->current.enabled;
         if (sc_on) {
             char *entity = (char *)backEnd->currentEntity;
             if (*(int *)entity > 2 || (*(byte *)(entity + 5) & 1)) {
@@ -598,13 +664,14 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->outdoorImage))
             R_Error(1, "Tried to use 'sampler.outdoor' when it isn't valid\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x200);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->outdoorImage;
         *samplerState = 0x32;
         return;
     }
 
     case 21:
-        *image = NULL;
+        /* 1.3 binds nothing here on PC; with r_water, the scene's INTZ depth (r_rendertarget.c) */
+        *image = RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material) ? (void *)&r_sceneDepthImage : NULL;   /* only water stops writing it */
         *samplerState = 0x31;
         return;
 
@@ -1116,10 +1183,10 @@ static const float *RB_GetCodeMatrix_impl(int source, int firstRow)
             biasWorld[1] += downBias;
 
             MatrixTransformVector44((float *)(biasWorld),
-                                    (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (float *)(biasResult));
+                                    ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (float *)(biasResult));
 
             MatrixMultiply44((vec4_t *)(worldMat),
-                             (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (vec4_t *)(codeMatrix));
+                             ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (vec4_t *)(codeMatrix));
 
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][0])) += biasResult[0];
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][1])) += biasResult[1];
@@ -1282,6 +1349,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);
@@ -1501,6 +1570,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);
@@ -1784,6 +1855,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
                                         MaterialWaterDef *water = texDef->u.water;
                                         image = water->map->image;
+                                        /* 1.3 (gfx_d3d_mp_x86_s.dll 0x1003a2db) runs this frame's waves into the map as it binds it */
+                                        RB_UploadWaterTexture((GfxImage *)image, water->map);
                                     } else {
                                         image = texDef->u.image;
                                     }
@@ -1966,6 +2039,7 @@ void RB_EndSurface(void)
     }
 
     backEnd = (r_backEndGlobals_t *)imp_backEnd;
+    RB_CopySceneForWater(material);
     if (backEnd->viewportIsDirty)
         RB_UpdateViewport();
 

@@ -1482,7 +1482,7 @@ int G_RunFrame(int levelTime)
     }
 
     *(void **)imp_bgs = NULL;
-    return (int)imp_bgs;
+    return (int)(intptr_t)imp_bgs;   /* 1.3's eax; no caller reads it */
 }
 
 entityHandler_t entityHandlers[20] = {

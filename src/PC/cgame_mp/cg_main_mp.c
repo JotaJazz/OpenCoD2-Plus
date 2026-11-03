@@ -129,6 +129,11 @@ extern const dvar_t *cg_drawMaterial;
 extern const dvar_t *cg_drawSnapshot;
 extern const dvar_t *cg_drawCrosshair;
 extern const dvar_t *cg_hudCompassSize;
+const dvar_t *cg_drawCompass;
+const dvar_t *cg_hudCompassOffsetX;
+const dvar_t *cg_hudCompassOffsetY;
+const dvar_t *cg_drawSpectatedPlayerName;
+const dvar_t *sensitivity_MG;
 extern const dvar_t *cg_hudCompassMaxRange;
 extern const dvar_t *cg_hudCompassMinRange;
 extern const dvar_t *cg_hudCompassMinRadius;
@@ -928,6 +933,12 @@ static inline __attribute__((always_inline)) void CG_RegisterDvars(void)
     cg_drawCrosshairNamesPosX = Dvar_RegisterInt("cg_drawCrosshairNamesPosX", 0x12c, 0, 0x280, 0x1000);
     cg_drawCrosshairNamesPosY = Dvar_RegisterInt("cg_drawCrosshairNamesPosY", 0xb4, 0, 0x1e0, 0x1000);
     cg_hudCompassSize = Dvar_RegisterFloat("cg_hudCompassSize", 1.0f, 0.0f, FLT_MAX, 0x1001);
+    /* not 1.3's: the options CoD2x gave players */
+    cg_drawCompass = Dvar_RegisterBool_mac("cg_drawCompass", 1, 0x1001);
+    cg_hudCompassOffsetX = Dvar_RegisterFloat("cg_hudCompassOffsetX", 0.0f, -640.0f, 640.0f, 0x1001);
+    cg_hudCompassOffsetY = Dvar_RegisterFloat("cg_hudCompassOffsetY", 0.0f, -480.0f, 480.0f, 0x1001);
+    cg_drawSpectatedPlayerName = Dvar_RegisterBool_mac("cg_drawSpectatedPlayerName", 1, 0x1001);
+    sensitivity_MG = Dvar_RegisterFloat("sensitivity_MG", 1.0f, 0.01f, 10.0f, 0x1001);
     cg_hudCompassMaxRange = Dvar_RegisterFloat("cg_hudCompassMaxRange", 1500.0f, 0.0f, FLT_MAX, 0x1001);
     cg_hudCompassMinRange = Dvar_RegisterFloat("cg_hudCompassMinRange", 0.0f, 0.0f, FLT_MAX, 0x1001);
     cg_hudCompassMinRadius = Dvar_RegisterFloat("cg_hudCompassMinRadius", 0.0f, 0.0f, FLT_MAX, 0x1001);

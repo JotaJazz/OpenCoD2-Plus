@@ -3,13 +3,13 @@
 | Term | Meaning | Where |
 |---|---|---|
 | 1.0 / 1.3 | game versions; protocol 115 / 118; build with or without `-DCOD2_PATCH_10` | `CMakeLists.txt` |
-| bgame | game code shared by server and client: movement, weapons, animation | `src/PC/bgame` (engine), `src/bgame` (CoD2rev-Plus) |
-| `eng_` names | engine bgame globals renamed so they do not clash with CoD2rev-Plus's | `test/engine_bgame_names.txt` |
+| bgame | game code shared by server and client: movement, weapons, animation | `src/PC/bgame` (engine), `src/bgame` (OpenCoD2-Plus Server) |
+| `eng_` names | engine bgame globals renamed so they do not clash with OpenCoD2-Plus Server's | `test/engine_bgame_names.txt` |
 | blob | data reconstructed from the original binaries' sections (globals, tables, literals) | `src/blobs`, `build/native_gen`, `build/win_gen` |
-| bridge | generated C++ thunks between engine C names and CoD2rev-Plus C++ names | `src/compat` |
-| export / import | a bridge function the engine calls and CoD2rev-Plus serves / CoD2rev-Plus calls and the engine serves | `test/*_interface.txt` |
+| bridge | generated C++ thunks between engine C names and OpenCoD2-Plus Server C++ names | `src/compat` |
+| export / import | a bridge function the engine calls and OpenCoD2-Plus Server serves / OpenCoD2-Plus Server calls and the engine serves | `test/*_interface.txt` |
 | ABI file | the engine's return class and parameter slots per function, checked by every thunk | `test/server_abi.txt`, `test/client_server_abi.txt` |
-| CoD2rev-Plus | C++ reconstruction of the CoD2 server (with libcod) vendored here | `test/vendored_files.txt` |
+| OpenCoD2-Plus Server | C++ reconstruction of the CoD2 server (with libcod) vendored here; called CoD2rev-Plus until November 2026 (its ADR 0016), the name past memory stages and commits use | `test/vendored_files.txt` |
 | cgame | client game: HUD, entities, prediction, effects calls | `src/PC/cgame_mp` |
 | configstring | indexed string the server sends to clients (server info, players, models) | server command `d` |
 | server command | reliable text command from server to client, keyed by its first letter | [architecture/client.md](architecture/client.md#server-commands) |

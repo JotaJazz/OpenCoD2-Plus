@@ -12,6 +12,9 @@ extern const dvar_t *cg_hudCompassMinRange;
 extern const dvar_t *cg_hudCompassMinRadius;
 extern const dvar_t *cg_hudObjectiveMaxRange;
 extern const dvar_t *cg_hudObjectiveMinAlpha;
+extern const dvar_t *cg_drawCompass;
+extern const dvar_t *cg_hudCompassOffsetX;
+extern const dvar_t *cg_hudCompassOffsetY;
 extern const dvar_t *cg_hudProneY;
 extern const dvar_t *cg_hudStanceFlash;
 extern const dvar_t *cg_hudStanceHintPrints;
@@ -1735,6 +1738,13 @@ void CG_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
     rect.h = h;
     rect.horzAlign = horzAlign;
     rect.vertAlign = vertAlign;
+    if (ownerDraw == CG_PLAYER_COMPASS || ownerDraw == CG_PLAYER_COMPASS_BACK
+        || ownerDraw == CG_PLAYER_COMPASS_POINTERS || ownerDraw == CG_PLAYER_COMPASS_FRIENDS) {
+        if (!cg_drawCompass->current.enabled)
+            return;
+        rect.x += cg_hudCompassOffsetX->current.value;
+        rect.y += cg_hudCompassOffsetY->current.value;
+    }
 
     switch (ownerDraw) {
     case CG_PLAYER_AMMO_VALUE:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Counts a real client's prediction misses while it moves, jumps and fires.
 
-    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--max-anim-misses N] [--moves CFG] [--spot 'X Y Z YAW'] [--delay MS] [--maxfps N]
+    python3 scripts/prediction_test.py /path/to/CoD2 --protocol {115|118} [--binary PATH] [--server PATH] [--max-misses N] [--max-anim-misses N] [--moves CFG] [--spot 'X Y Z YAW'] [--delay MS] [--maxfps N] [--wine CMD]
 
 Runs the dedicated server with scripts/contact_test.py's mod and a minimal
 client as its target, and a real client (cod2_linux, held at 20 fps) as the
@@ -30,16 +30,20 @@ playerstate and is not set back when the moves are predicted again (3 or 4
 per run, all with no origin miss). --delay MS puts a UDP relay between the
 client and the server that holds each packet MS milliseconds each way (a
 ping of twice that, as online); --maxfps sets the client's com_maxfps
-(default 20). The client opens a window and needs a CD key in
+(default 20). --wine CMD runs a Windows client given with --binary, our
+cod2_win32.exe or 1.3's CoD2MP_s.exe as a baseline (copy it with its DLLs
+off a Windows drive: Wine cannot map mss32.dll from DrvFs), and reads its
+console_mp.log. The client opens a window and needs a CD key in
 ~/.cod2/preferences; without one the test is skipped (exit 0).
 """
-import argparse, heapq, os, re, socket, subprocess, sys, tempfile, threading, time
+import argparse, heapq, os, re, shutil, socket, subprocess, sys, tempfile, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 import smoke_test
 from contact_test import GAMETYPE, game_log
 from hit_location_test import PREFERENCES, RCON, join
+from listen_test import wine_path
 
 DEFAULT_CLIENT = {115: 'build/check-linux-10/cod2_linux', 118: 'build/check-linux/cod2_linux'}
 DEFAULT_SERVER = {115: 'build/check-linux-10/cod2_lnxded', 118: 'build/check-linux/cod2_lnxded'}
@@ -156,7 +160,10 @@ def main():
                     "'' leaves it where it spawns")
     ap.add_argument('--delay', type=int, default=0, help='milliseconds a relay holds each packet, each way (default 0: no relay)')
     ap.add_argument('--maxfps', type=int, default=20, help="the client's com_maxfps (default 20)")
+    ap.add_argument('--wine', help='the command that runs a Windows client')
     args = ap.parse_args()
+    if args.wine and not args.binary:
+        ap.error('--wine needs --binary')
     if args.spot and len(args.spot.split()) != 4:
         ap.error("--spot takes 'x y z yaw'")
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
@@ -214,9 +221,21 @@ def main():
                 if args.delay:
                     relay = Relay(port, args.delay / 1000.0)
                     connect_port = relay.port
+                command, base, homepath = [client_bin], game_dir, client_home
+                if args.wine:
+                    # 1.3 prints nowhere but its window: logfile 2 writes console_mp.log
+                    command, base, homepath = [args.wine, client_bin], wine_path(game_dir), wine_path(client_home)
+                    os.makedirs(os.path.join(client_home, '.cod2'))
+                    shutil.copy(PREFERENCES, os.path.join(client_home, '.cod2'))  # our client reads it from its cwd
+                    # without a profile 1.3 waits in the menu that makes one
+                    os.makedirs(os.path.join(client_home, 'main', 'players', 'test'))
+                    with open(os.path.join(client_home, 'main', 'players', 'test', 'config_mp.cfg'), 'w') as f:
+                        f.write('seta com_introPlayed 1\n')  # its intro would take the place of the connect
+                    with open(os.path.join(client_home, 'main', 'players', 'active.txt'), 'w') as f:
+                        f.write('test')
                 with open(client_log, 'wb') as log:
-                    client = subprocess.Popen([client_bin, '+set', 'fs_basepath', game_dir, '+set', 'fs_homepath',
-                                               client_home, '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', str(args.maxfps),
+                    client = subprocess.Popen(command + ['+set', 'fs_basepath', base, '+set', 'fs_homepath',
+                                               homepath, '+set', 'logfile', '2', '+set', 'cg_showmiss', '1', '+set', 'com_maxfps', str(args.maxfps),
                                                '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{connect_port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
@@ -265,6 +284,8 @@ def main():
                         p.wait(timeout=15)
                     except subprocess.TimeoutExpired:
                         p.kill()
+        if args.wine:
+            client_log = os.path.join(client_home, 'main', 'console_mp.log')
         text = open(client_log, encoding='latin-1').read() if os.path.exists(client_log) else ''
         reports = [n for n in os.listdir(client_home) if n.startswith('cod2_crash_')]
         check('no crash report from the client', 'CRASH REPORT' not in text and not reports, ', '.join(reports))

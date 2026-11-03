@@ -639,13 +639,13 @@ GfxWorld *R_LoadWorldInternal(const char *name)
                           &occIdxCount, &occIdxData);
 
         const short *srcOcc = (const short *)occIdxData;
-        GfxOccluder **dstOcc = (GfxOccluder **)Hunk_AllocInternal(occIdxCount * 4);
+        GfxOccluder **dstOcc = (GfxOccluder **)Hunk_AllocInternal(occIdxCount * sizeof(GfxOccluder *));
         rgl.occluderIndices = dstOcc;
 
         for (i = 0; i < occIdxCount; i++) {
             int idx = (int)(signed short)srcOcc[i];
 
-            dstOcc[i] = (GfxOccluder *)((byte *)rgl.occluders + idx * 36);
+            dstOcc[i] = &rgl.occluders[idx];
         }
     }
 

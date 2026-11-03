@@ -1146,7 +1146,7 @@ typedef int CGDataProvider;
 typedef int CGImage;
 typedef int CSpecArray;
 typedef int Exop;
-typedef int FxImpactEntry;
+typedef intptr_t FxImpactEntry;   /* an effect pointer: pointer-sized on x64 */
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;
@@ -3184,7 +3184,11 @@ typedef _D3DXSHADER_CONSTANTINFO D3DXSHADER_CONSTANTINFO;
 
 typedef int DCTELEM;
 
+#ifdef COD2_X64
+typedef unsigned int DWORD;  /* 32 bits, as on Windows and in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int DWORD;
+#endif
 typedef OpaqueDialogPtr * DialogPtr;
 
 typedef __EventLoopTimer * EventLoopTimerRef;
@@ -3231,7 +3235,11 @@ typedef HCURSOR__ * HCURSOR;
 typedef HINSTANCE__ * HINSTANCE;
 
 typedef long unsigned int HPROENUM;
+#ifdef COD2_X64
+typedef uintptr_t HPROVIDER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef long unsigned int HPROVIDER;
+#endif
 typedef _SAMPLE * HSAMPLE;
 typedef _STREAM * HSTREAM;
 
@@ -3658,7 +3666,11 @@ typedef UInt32 ByteCount;
 typedef UInt32 CFStringEncoding;
 
 typedef UInt32 FourCharCode;
+#ifdef COD2_X64
+typedef uintptr_t HDIGDRIVER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef UInt32 HDIGDRIVER;
+#endif
 
 typedef UInt32 ItemCount;
 typedef UInt32 LSKindID;
@@ -7631,7 +7643,7 @@ struct cplane_s {
 
 struct cspField_t {
     const char *szName;
-    int iOffset;
+    ptrdiff_t iOffset;   /* CoD2rev-Plus's: 8 bytes on x64 */
     int iFieldType;
 };
 
@@ -9426,8 +9438,14 @@ struct scrVmDebugPub_t {
 };
 
 struct scr_anim_s {
-    short unsigned int index;
-    short unsigned int tree;
+    /* CoD2rev-Plus's: while it links an anim, the VM keeps a code position here (8 bytes on x64) */
+    union {
+        struct {
+            short unsigned int index;
+            short unsigned int tree;
+        };
+        const char *linkPointer;
+    };
 };
 
 struct scr_animtree_t {
@@ -10322,20 +10340,20 @@ struct gentity_s {
     qboolean unlinkAfterEvent;
     int clipmask;
     int processedFrame;
-    int parent;
+    struct gentity_s *parent;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     int nextthink;
     int health;
     int maxHealth;
     int damage;
     int count;
-    int chain;
+    struct gentity_s *chain;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     union { struct item_ent_t item; struct trigger_ent_t trigger; struct mover_ent_t mover; struct corpse_ent_t corpse; struct grenade_ent_t grenade; };
-    int tagInfo;
-    int tagChildren;
+    struct tagInfo_s *tagInfo;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
+    struct gentity_s *tagChildren;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     byte attachModelNames[7];
     scr_string_t attachTagNames[7];
     int useCount;
-    int nextFree;
+    struct gentity_s *nextFree;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
 };
 
 int COD2_GEntityHandle(const gentity_t *ent);

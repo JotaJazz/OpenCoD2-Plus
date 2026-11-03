@@ -211,7 +211,7 @@ static __attribute_regparm__(1)
                     cachedFrame = cf;
                     svs = (serverStatic_t *)imp_svs;
                     if (cf->first_entity >= svs->nextCachedSnapshotEntities - 0x4000) {
-                        if (cf->first_client >= svs->nextCachedSnapshotClients - (int)&__mh_execute_header) {
+                        if (cf->first_client >= svs->nextCachedSnapshotClients - 0x1000) {
                             goto cleanup;
                         }
                     }
@@ -515,7 +515,7 @@ void SV_ArchiveSnapshot(void)
 
                         if (((cachedSnapshot_t *)cf)->first_entity < svs.nextCachedSnapshotEntities - 0x4000)
                             break;
-                        if (((cachedSnapshot_t *)cf)->first_client < svs.nextCachedSnapshotClients - (int)&__mh_execute_header)
+                        if (((cachedSnapshot_t *)cf)->first_client < svs.nextCachedSnapshotClients - 0x1000)
                             break;
 
                         MSG_WriteBit0((msg_t *)msg);
@@ -2122,7 +2122,7 @@ void SV_ArchiveSnapshot(void)
                         serverStatic_t *svs2 = (serverStatic_t *)imp_svs;
                         if (((cachedSnapshot_t *)cf)->first_entity < svs2->nextCachedSnapshotEntities - 0x4000)
                             break;
-                        if (((cachedSnapshot_t *)cf)->first_client < svs2->nextCachedSnapshotClients - (int)&__mh_execute_header)
+                        if (((cachedSnapshot_t *)cf)->first_client < svs2->nextCachedSnapshotClients - 0x1000)
                             break;
 
                         MSG_WriteBit0((msg_t *)msg);

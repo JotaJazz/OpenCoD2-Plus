@@ -5,11 +5,11 @@
 
 ## Context
 
-Moving every build to CoD2rev-Plus would mean porting the bridge to MSVC, Emscripten and LP64, none of which the checks cover.
+Moving every build to OpenCoD2-Plus Server would mean porting the bridge to MSVC, Emscripten and LP64, none of which the checks cover.
 
 ## Decision
 
-Keep `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision for MSVC, the web build and x64; Linux and MinGW use CoD2rev-Plus.
+Keep `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision for MSVC, the web build and x64; Linux and MinGW use OpenCoD2-Plus Server.
 
 ## Consequences
 

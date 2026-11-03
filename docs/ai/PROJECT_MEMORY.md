@@ -5,15 +5,152 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
-## 2026-11-02 — shellshock sounds no longer crash
+## 2026-11-03 — two branches: main and dev
 
-- `cg_shellshock.c` declared the listener origin as an `int` and passed its value, a NULL origin, which `SND_StartAliasStreamOnChannel` reads once a shellshock sound is a stream: a client crashed online at the end of a shellshock (seen on `plus`), and `view_weapon_test.py`, whose mod shellshocks, crashed the same way. 1.3 passes `vec3_origin` (`0x59bd2c`); the sound prototypes there now match `snd.c`'s.
+- `plus` was where development happened and `main` took critical fixes only; now `dev` (from `plus`) is the development branch and `main` the stable one, which takes `dev` when its changes are stable. `plus` is gone from GitHub; `main`'s two commits beyond it were already in `dev` by cherry-pick (the compass's objectives, the shellshock sounds), so the first `dev` into `main` is a merge.
+
+## 2026-11-03 — the server is named OpenCoD2-Plus Server
+
+- CoD2rev-Plus renamed itself OpenCoD2-Plus Server (its ADR 0016; repository `JotaJazz/OpenCoD2-Plus-Server`), and its ADR says this repository follows in its own documents: the living docs and ADRs use the new name, the READMEs say what it was called; past memory stages, commits and code comments keep the old one.
+- The banner and `src/win32/opencod2.ico` (from `docs/icon.svg`) take the server's new emblem, a faceted star over "2+" in a roundel, so the two read as one family; the READMEs gained the server's architecture badge and "1.3 Plus".
+
+## 2026-11-02 — the 64-bit Windows client loads a map
+
+- `cod2_win32.exe` cross-builds for x86_64 with MinGW-w64 (`scripts/mingw64_deps.sh`, no root; `build_check.py mingw-client-x64`) on the same blobs and bridge as the Linux x64 client. Win64 is LLP64: casts through `unsigned long` and `HPROVIDER` truncated, PE x64 has no `_` on C names (link aliases, `CDirect3DDevice`'s flags), and MinGW defines `_M_X64`, so guards meant for MSVC x64 took the client off the Mac port's stubs and the real `MessageBoxA` waited for a click.
+- Under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`) the menu equals the 32-bit client's pixel for pixel and `mp_toujane` loads and quits. CoD2rev-Plus's VM needed four LLP64 fixes upstream (f33a05e, 72c9f3e: function and animation references left 4 bytes for a pointer); the renderer's code samplers read the world, lightmaps and dvars at 1.3's offsets.
+- Open: the view is closer and bluer than 32-bit, no effect draws (as on Linux x64), and libcod is left out (`gsc_memory.cpp` keeps pointers in `long`).
+
+## 2026-11-02 — CoD2rev-Plus up to 72c9f3e
+
+- bdb0bfb brought the 2026-11-02 audit's server hardening; then CoD2rev-Plus made the Plus server a build variant (`make PLUS=1`, `COD2_PLUS`). The 1.3 builds here define `COD2_PLUS` (engine and 64-bit server) and `opencod2_smoke.py` passes `--plus` for 118; without it the client's local server would speak stock 1.3 again.
+- 1.0 builds lose CoD2rev-Plus's `msg_plusSnapshotTime`; the client keeps its own there. Smoke 118 and 115 pass with their lists.
+
+## 2026-11-02 — the console says "1.3 Plus"
+
+- A Plus server is reported as "CoD2 1.3 Plus server, version 122" ([ADR 0014](../architecture/adr/0014-name-1-3-plus.md)); `hostile_server_test.py` expects the new line. The vendored server's update notice changes at the next sync (CoD2rev-Plus `bdb0bfb`).
+
+## 2026-11-02 — the name "1.3 Plus"
+
+- The maintainer wanted players to see the client as a patch after 1.3, as CoD2x does with 1.4. "1.4" was rejected: CoD2x uses it, and zk_libcod's `getProtocolString()` already returns it for Game Pass. Players read "1.3 Plus" ([ADR 0014](../architecture/adr/0014-name-1-3-plus.md)); `shortversion` "1.3" and the Plus version stay.
+- Left open: renaming the console line "CoD2 Plus server, version".
+
+## 2026-11-02 — the 64-bit Linux client loads a map
+
+- `cod2_linux` builds for x86_64 (`-DCOD2_X64=ON`, `build_check.py linux-client-x64`) and runs CoD2rev-Plus's VM and server through the bridge, which now records each function's x64 ABI beside the x86 one; the engine's own VM kept values in 4 bytes and ran out of variables. The menu equals the 32-bit client's pixel for pixel; `mp_toujane` loads, plays and quits, and the 32-bit client reads the profile it writes.
+- AddressSanitizer found the rest: 1.3's sizes for structs that hold pointers (FX media lists, `centity_t`, XAnim trees, occluders), `COD2_ALIGNED` off on x64 (it sat with the calling conventions), `DWORD` as an 8-byte `unsigned long`, and a viewport table one entry short on every build (`PINGPONG_1`).
+- Open: the world draws yellower and `mp_toujane`'s smoke is missing; under Xvfb an X-root grab of an in-game frame shows a 2x zoom on both 32- and 64-bit builds while the engine's screenshot does not, so compare screenshots, not grabs.
+
+## 2026-11-02 — review of the water branch
+
+- Without a scene copy (antialiasing, no INTZ) `sceneColorSampler` read `renderTargets[R_RENDERTARGET_NONE]`, past the 13 targets: 1.3's `techFlags & 2` skip never fires for a sampler bound by name (only explicit arguments set it, `r_material_load_obj.c`). It now gets black; checked with `r_aaSamples 4` on `cod2_linux_vk` (water drawn, no crash).
+- `floatZ` binds the INTZ depth only for water materials (the only ones that stop writing it); the copy runs only into the frame buffer and marks `resolvedScene` only when `StretchRect` succeeds.
+- Rejected from the review: that the water technique would be skipped without the copy (the flag is not set, see above).
+
+## 2026-11-02 — water compiles as ps_2_a
+
+- On the user's RTX 5080 Microsoft's `d3dx9_43` refused the refracting water: 91 arithmetic slots, past `ps_2_0`'s 64, so `water_duhoc` loaded without a shader and the seabed's grass showed instead. `r_water`'s water pixel shaders now compile as `ps_2_a` (512 slots).
+- The same `d3dx9_43.dll` and `d3dcompiler_43.dll`, copied from Windows and run under Wine, compiled it as `ps_2_0` without an error: that check does not prove the budget. Open why.
+
+## 2026-11-02 — water refracts
+
+- With `r_water` and INTZ, `RB_EndSurface` copies the scene drawn so far into `resolvedScene` (`renderTargets[2]`; 1.3 fills it only in `RB_ApplyLatePostEffectsCmd`) before the first water surface of each draw list, and the shader samples it as `sceneColorSampler`: the bottom shows under the water, bent by the waves, clear at the shore and the water's color 160 units down. The water is then opaque; the alpha fade stays for cards without INTZ, which get no copy.
+- A bent sample that lands on something in front of the water (its depth nearer than the water's) takes the straight one, so nothing above the water is pulled below it.
+- Checked on `cod2_linux_vk` in `sps_island` from the boat's deck: a debug colour showed depth on DXVK (clear only near the coast: that sea is deeper than 160), and the shore's seabed now shows through. Under Wine's own `d3d9` there is no INTZ (no foam either), so the Windows client can only be checked on the user's card.
+
+## 2026-11-02 — script brush models draw as brush models
+
+- `CG_ScriptMover` and `CG_EntityEffects` told a brush model by `constantLight == 0xffffff`; 1.3 tests `solid` (`centity_t` `+0x18c`, `0x4dea5b` and `0x4cc240`), where the server puts the marker. A `script_brushmodel` without a light fell into the xmodel branch and drew `gameModels[index]` at its origin: in `sps_island` the boats (`barco3`) became a huge stretched hill over the scene, on every renderer; their looping sounds played from the origin instead of the model's middle.
+- Found under Wine on Xvfb at the user's spot: `r_drawEntities 0` and deleting `barco3` by script removed the hill, a trace showed no brush model added and an xmodel at `0 0 0`. After the fix the picture matches 1.3's (1.3 % of pixels differ, the trees' sway; 48 % before).
+- No automated check: it needs the user's map. The water work was not the cause (70f3e91 shows it too).
+
+## 2026-11-02 — water knows how deep it is
+
+- With `r_water`, no antialiasing and INTZ, the frame buffer's depth is an INTZ texture bound to `floatZ` (`NULL` in 1.3 on PC). The water's shader turns it into the distance behind each pixel without the projection matrix: with the infinite far plane `d = 1 - near / z`, so `near` comes from the water's own depth. Shallow water fades and foams; water stops writing depth while it reads it.
+- The first FOURCC was `INZT`, which every card refuses; a debug colour of the shader's values (`sceneD > 0`, `near`) showed it, and that `near` matched `r_znear` 4.
+- Refraction is next on this base; the fade only shows where the material blends (`water_duhoc`, sort 27), not on 1.3's opaque water such as `mp_harbor`'s.
+
+## 2026-11-02 — water reflects the map's sky
+
+- The map loader marked the sky by the material's `surfaceFlags` where 1.3 reads `gameFlags` (`gfx_d3d_mp_x86_s.dll` `0x10002cb0`): no map had sky surfaces, `world->skyImage` stayed empty and the visibility pass never added the sky past the far plane. Fixed; `client_view_test.py` and `shader_compile_test.py` still pass.
+- `r_water`'s reflection now samples that sky through `skySampler`, a default code sampler added to the table (bound by name in the HLSL, like `gameTime`), instead of the material's generic `case64blue` cube, whose alpha stays the reflectivity. `sampler.sky` without a sky now gives `$watercolor` instead of 1.3's error, which no stock material reaches.
+- Shore fade and refraction wait for a depth texture: 1.3 on PC never makes one (`floatZ` binds `NULL`), and refraction alone would show the void under maps whose water was always opaque.
+
+## 2026-11-02 — water that moves
+
+- Nothing called `RB_UploadWaterTexture`, the FFT that animates a water material's height map, and it read `r_drawWater` and an upload flag through two empty stubs (`g_unknown_195f22c/230`, from the Mac port): every water surface was still and flat. It now runs where 1.3 binds the map (`gfx_d3d_mp_x86_s.dll` `0x1003a2db`); the flag, which nothing read, is gone.
+- `r_water 1`, ours, replaces the game's `lib/water.hlsl` in the include handler of the real Direct3D 9 path (`D3DXShader.c`, not `r_material_load_obj.c`'s text cache, which that path does not read): two drifting layers, fresnel, sharper sun. 1.3's own shader samples fixed coordinates and blends the reflection by the cube map's alpha.
+- Checked on `cod2_linux_vk` in `sps_island` (the user's map, `water_duhoc`): still before, waves with 1.3's shader after the fix, and ours. No automated check yet (`debt.md`): in `mp_harbor` its snow and a slightly different turn each run hide the waves' part of the motion.
+
+## 2026-11-02 — cl_hideServerIp
+
+- CoD2x's `cl_hideServerIp`, written here: every text the renderer draws passes through `R_AddCmdDrawTextWithCursor` (the console's lines too, through `R_DrawConsoleText`), which masks the digits of IPv4 addresses on its own copy (`r_hide_address.h`, `test/test_hide_address.py`). One place covers the scoreboard, console, menus and edit fields, and the server browser keeps joining with the real string, the reason the option had been deferred.
+- Not done: CoD2x's server-side `sv_hideServerIp`, which would force it on clients (CoD2rev-Plus's), and masking host names. CoD2x's shotgun pattern, HWID and match system stay out: they are server-side, in CoD2rev-Plus; HWID is a hardware fingerprint a client can forge, and CoD2rev-Plus already bans by the CD key's GUID.
+- Checked in a game on a local server: the scoreboard's footer drew `***.*.*.*:*****` for `127.0.0.1:28930`, fps and the clock untouched. `TEXTCMD_DBG` now picks texts by what was asked and prints what is drawn. The review found an address after a dot (`Connecting...`, a scrolled edit field) or a color code left visible; fixed.
+
+## 2026-11-02 — prediction measured against 1.3's own client
+
+- `prediction_test.py --wine` runs 1.3's `CoD2MP_s.exe` on the same moves, map and server (`main`'s dedicated: `plus`'s refuses stock clients). Misses, ours against 1.3: 5–11 against 10–11 at 20 fps (two runs gave the same 10 misses, 13.1 in total); 18, 18 against 18, 20 with 40 ms of ping (largest 4.1 in both); 0, 0 against 1, 0 at 60 fps. Prediction is 1.3's: the earlier online gap (53 against 26 on Titan) came from two different sessions; one session each on one server and map gave 1.3 8 misses (largest 13.8), ours 5 (largest 6.5).
+- 1.3 under Wine needs its DLLs off DrvFs (`mss32.dll`'s entry faults when mapped from `/mnt/e`), a base dir without `main/players` (else it takes the user's profile, here with `com_hunkMegs 512`, out of memory) and a profile with `com_introPlayed 1`.
+- Our session crashed at the end of a shellshock: `cg_shellshock.c` declared the listener origin as an `int` and passed its value, a NULL origin, which `SND_StartAliasStreamOnChannel` reads once a shellshock sound is a stream. 1.3 passes `vec3_origin` (`0x59bd2c`). `view_weapon_test.py`, whose mod shellshocks, crashed the same way; the runtime suite had not been run since sound went through SDL2.
+
+## 2026-11-02 — 4096 dvars and a freeze report
+
+- The client's dvar pool goes from 1280 to 4096, as CoD2x's does; the dedicated server keeps CoD2rev-Plus's limit. The command buffer goes from 64 KB to 512 KB: `exec` has to hold a whole file, and past 64 KB `config_mp.cfg` was dropped, then rewritten from defaults, which more dvars reach. The review of this change found that.
+- `com_freezeWatch` is ours, in the crash handler, for Windows only: a thread that sees no frame for that many seconds writes `cod2_freeze_<pid>.txt`. It copies the main thread's context and lets it go before writing anything, as a thread suspended on the heap's lock would turn a pause into a hang.
+- With many iwds the server's systeminfo drops one list of a pair, and the client ended the session with a count mismatch, a local game over Titan's iwds included. It now warns and takes the shorter list. CoD2rev-Plus's own `iwd sum/name mismatch` is untouched.
 
 ## 2026-11-02 — the compass shows objectives
 
-- `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it. Same port as the `plus` branch, without that branch's compass offsets.
-- `scripts/compass_objectives_test.py` plays without a team and on one, and demands an icon's white. `entNum` is bounded here, as it comes from the server.
+- `CG_PLAYER_COMPASS_POINTERS` only turned the compass: 1.3's owner draw (`0x4c5620`) was never ported, so no player saw a bomb site. `CG_DrawCompassObjectives` follows it, and takes the owner draw's `rect`, so the compass offsets hold. Found by the review of CoD2x's options, confirmed by the user in Search and Destroy.
+- The review against the binary caught two errors of this port that the first test passed: `0x15cf994` is `infoValid`, not the team, and the icons are `CS_SHADERS`, 1566. `hud_options_test.py` now plays without a team and on one, and demands the icon's white. `entNum` is bounded here, as it comes from the server.
 - Left as it is: 1.3's friendlies (`0x4dafe0`) read `cg_hudObjectiveMaxRange` and `MinAlpha` too, and our port does not.
+
+## 2026-11-02 — CoD2x's client options, in the engine
+
+- `sensitivity_MG`, `cg_drawCompass`, the compass offsets, `cg_drawSpectatedPlayerName`, `com_writeConfig`, and `cl_maxpackets` up to 125. CoD2x's repository has no license, so nothing is copied; the names stay so that players' configs work.
+- `m_rinput` was rejected: SDL 2.30 reads Raw Input in relative mode. `snaps` 40 too: the server caps it at 30, and `g_forceSnaps` decides at 40 Hz. `cl_hideServerIp` waits: the address is printed and shown in several places, and hiding only some would promise privacy it does not give.
+- `sensitivity_MG` and the spectated name were not run: no test puts a player on a turret or in spectate.
+
+## 2026-11-01 — Miles retired from the Windows client
+
+- `src/snd_sdl/` is now the only sound engine on Windows: `mss32_dll.c`, `snd_backend` and the `__stdcall` table are gone, and `AIL_*` are plain functions, as on Linux. The user heard no difference in real games. Going back means reverting this commit; `plus` only, `main` keeps Miles.
+- The crash with `snd_khz 22` went with `mss32.dll`. `sound_test.py --wine` runs without the DLL in the game's folder, and a client without this change is silent there.
+- `src/PC/win32/mss32shim/`, a debug interposer nothing linked, went too. Reverb by ear stays open, now with nothing left to compare against but a build of `main`.
+
+## 2026-11-01 — Plus snapshots from the client's own server
+
+- A local game with moving players died on `Illegible server message 3`: the client announces `plus 122` to its own server, which marks the snapshot as Plus, but it writes through `src/PC/qcommon/msg_mp.c`, which had only the reader. The engine's writer now has the offsets too, which also covers a remote Plus client on a listen server.
+- The reader now clears `msg_plusSnapshotTime` after each snapshot: client and local server share it, and a stale value would have written a gamestate with offsets. `sound_test.py`'s `callback_cost` found this, as the only local case with moving bots.
+- The VM's `sv_fps` reads `Dvar_FindVar` from the server's bridge, so the script module takes it as provided.
+
+## 2026-11-01 — reverb: a bus of our own, and 1.3's conditions
+
+- `src/snd_sdl/snd_reverb.c` is a Freeverb-style bus with the public EAX presets, the one thing that only resembles Miles. Its input is at half of one over the combs, as the tail ran about 8 dB hot; underwater is doubled to keep `shock/default.shock`, the only stock multiplayer case, at the level it had. No value of Miles' table is copied but generic's zero. Tuning by ear stays open.
+- The sound channels' reverb conditions in `snd_driver.c` are now 1.3's. That file is shared, so this changes the sound of the default Miles client too, not only of ours.
+
+## 2026-11-01 — Windows sound: Miles or SDL2
+
+- `snd_backend sdl` runs the Windows client on `src/snd_sdl/`, without loading `mss32.dll`; `miles` stays the default until the user has compared them in real games. It gives this client sound under Wine for the first time: every `sound_test.py` case passes there.
+- The calls cross `__stdcall`, so a wrong size wrecks the caller's stack silently: `AIL_startup` is `@0` although the driver passes it flags. The test reads the sizes from a MinGW object rather than trusting the table.
+- `snd_backend` is registered before the first `AIL_*` call, not beside `mss_3d_provider`, and read once. Only the command line sets it, against the archived flags first written, as a launcher without it silently inherited SDL from the config.
+
+## 2026-11-01 — sound on Linux through SDL2
+
+- The Linux client's `AIL_*` calls land in our own engine, `src/snd_sdl/` ([ADR 0012](../architecture/adr/0012-sound-engine-behind-the-ail-calls.md)); `scripts/sound_test.py` reads what reaches SDL's disk driver.
+- `snd_driver.c` changed in two places: it hands over the file's length, and it closes a stream it does not start, which would have outlived `FS_Shutdown`. Miles' MP3 length is an estimate from the bitrate too, so ours stays.
+- The provider refuses stereo and ADPCM on 3D channels, as read from `msssoft.m3d`; reverb is silent until its bus exists.
+
+## 2026-11-01 — Plus snapshots, version 122
+
+- CoD2rev-Plus sends `pos.trTime` as an offset from the snapshot's time, in a message of its own, `svc_snapshotPlus` (8), so the client reads it with no state from the handshake: demos carry the format, and neither stock servers nor the local game, which has its own server code, change. The version is 122.
+- Vendored `fa4da34` with `src/qcommon/plus_format.h`. Against it: 10 prediction misses and 1 animation miss, as before, the view test passes, and the client joins at 40 Hz and a 1.3 server of `master`.
+- Left open: a real match at 40 Hz, and the original 1.3 executable as a server with this build (the handshake build joined it).
+
+## 2026-11-01 — the client speaks the Plus handshake
+
+- CoD2rev-Plus's `plus` branch refuses a 1.3 client without the Plus version, so the connect packet carries `plus 121`, in that packet only, and a `connectResponse 121` is recognised. A bare answer stays a stock server; the format does not depend on it yet, so nothing is stored. Joined CoD2rev-Plus `0cf6e01` at 20 and 40 Hz.
+- The vendored code stays on `642bc91`: the handshake is client code, and the `plus` branch was still moving. A client's local game does not pass through the check.
+- At 40 Hz the client needs no change: `g_forceSnaps` and `g_forceRate` act on the server, 0 misses against 11 at 20 Hz, and its clock settles tighter.
 
 ## 2026-11-01 — final review of plus before main
 

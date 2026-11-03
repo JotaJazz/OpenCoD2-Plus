@@ -122,15 +122,12 @@ static inline __attribute__((always_inline)) int FindNameIndex(const char *pValu
 
 static inline __attribute__((always_inline)) void BG_InitWeaponDefStrings(WeaponDef *weapDef)
 {
-    const int *pType;
-    const int *pTypeEnd;
+    const cspField_t *field;
 
     weapDef->szInternalName = (char *)"";
-    pType = &weaponDefFields[0].iFieldType;
-    pTypeEnd = &weaponDefFields[366].iFieldType;
-    for (; pType != pTypeEnd; pType = (const int *)((const byte *)pType + sizeof(cspField_t))) {
-        if (*pType == 0) {
-            *(char **)((byte *)weapDef + pType[-1]) = (char *)"";
+    for (field = &weaponDefFields[0]; field != &weaponDefFields[366]; field++) {
+        if (field->iFieldType == 0) {
+            *(char **)((byte *)weapDef + field->iOffset) = (char *)"";
         }
     }
 }
