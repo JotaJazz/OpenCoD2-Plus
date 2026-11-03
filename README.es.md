@@ -68,6 +68,7 @@ Sin `+connect` el cliente abre el menú principal, donde también puedes crear t
 | Compilación | Juega en |
 | --- | --- |
 | La de CMake por defecto (1.3) | Servidores 1.3 (protocolo 118), y servidores `make PLUS=1` de OpenCoD2-Plus Server con el protocolo 1.3 Plus |
+| `-DCOD2_PLUS_PROTOCOL=OFF` (1.3 normal) | Servidores 1.3; su propio servidor y sus partidas locales aceptan a cualquier jugador de 1.3, también de CoD2x, y conserva todas las demás mejoras |
 | `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` (1.0) | Servidores 1.0 (protocolo 115); esta compilación está menos probada |
 
 - **CoD2 1.3 Plus** sigue en desarrollo: snapshots más chicos camino a 40–60 Hz, y un saludo inicial que les dice a los otros clientes que actualicen. Su protocolo está en [la documentación de OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server/blob/dev/docs/architecture/plus-protocol.md).
@@ -145,6 +146,7 @@ Esta compilación todavía compila C y usa la máquina virtual de scripts recons
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | El servidor, el game, el bgame y la colisión de OpenCoD2-Plus Server para las partidas locales del cliente (Linux, y MinGW con `COD2_WIN32_CLIENT`), sobre el núcleo del motor; necesita `COD2_PLUS_SERVER`. `OFF` deja `src/PC/server_mp`, como todavía hacen MSVC, la compilación web y x64. |
 | `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) en el servidor dedicado y, con `COD2_PLUS_CLIENT_SERVER`, en las partidas locales del cliente, con sus módulos salvo MySQL; necesita `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Interruptores de funciones; `-DCOD2_PATCH_10` compila la versión 1.0. |
+| `COD2_PLUS_PROTOCOL` | `ON` | Las compilaciones 1.3 hablan CoD2 1.3 Plus (el `make PLUS=1` de OpenCoD2-Plus Server): sus servidores solo aceptan el cliente Plus. `OFF` compila 1.3 normal, con servidores a los que entra cualquier jugador de 1.3. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: el cliente en vez del servidor dedicado. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | Cliente MinGW: Direct3D 9 real y los shaders del juego (d3dx9 del sistema); `OFF` mantiene el dispositivo GL. |
 | `COD2_WIN_MSVC` | `OFF` | Compilación nativa con MSVC (la activan los presets `msvc-client`). |

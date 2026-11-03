@@ -143,8 +143,12 @@ if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
   set(COD2_PROTOCOL 118)
-  # CoD2rev-Plus's 1.3 Plus variant (its make PLUS=1): the Plus handshake,
-  # snapshots and timing this client's 1.3 speaks
+endif()
+# 1.3 Plus or stock 1.3: with it (OpenCoD2-Plus Server's make PLUS=1) the
+# servers take only the Plus client and the client announces itself as one;
+# without it everything speaks stock 1.3, and every other improvement stays
+option(COD2_PLUS_PROTOCOL "1.3 builds speak CoD2 1.3 Plus (OFF: stock 1.3)" ON)
+if(COD2_PROTOCOL EQUAL 118 AND COD2_PLUS_PROTOCOL)
   add_compile_definitions(COD2_PLUS)
 endif()
 if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))

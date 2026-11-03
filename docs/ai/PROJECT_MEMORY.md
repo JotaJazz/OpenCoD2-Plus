@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-03 — stock 1.3 as a build option
+
+- `COD2_PLUS_PROTOCOL` (ON) decides whether the 1.3 builds define `COD2_PLUS`, as OpenCoD2-Plus Server's `make PLUS=1`: OFF gives a dedicated and local server any 1.3 player can join, and a client that does not announce itself as Plus (its connect key, notice and Plus messages are under `COD2_PLUS` too, since only that build's message code decodes them). `build_check.py linux-13` builds it; `opencod2_smoke.py --stock` passes it whole without `--plus`.
+- Rejected for now: one server that speaks stock 1.3 and Plus to different players in a match; it would start in OpenCoD2-Plus Server, where `PLUS=1` is all or nothing.
+
 ## 2026-11-03 — two branches: main and dev
 
 - `plus` was where development happened and `main` took critical fixes only; now `dev` (from `plus`) is the development branch and `main` the stable one, which takes `dev` when its changes are stable. `plus` is gone from GitHub; `main`'s two commits beyond it were already in `dev` by cherry-pick (the compass's objectives, the shellshock sounds), so the first `dev` into `main` is a merge.

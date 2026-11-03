@@ -1117,7 +1117,7 @@ void CL_ParseServerMessage(msg_t *msg)
 
             CL_ParseSnapshot(&msgCompressed, 0);
             break;
-#if COD2_IS_PATCH_13
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
         case 8: /* the message says its format, so demos need nothing more */
             CL_ParseSnapshot(&msgCompressed, 1);
             msg_plusSnapshotTime = 0; /* the local server writes with it too */

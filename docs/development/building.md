@@ -8,7 +8,8 @@ top of it.
 
 | Build | Configure | Outputs |
 |---|---|---|
-| Linux 1.3 | `cmake -S . -B build/check-linux` | `cod2_linux`, `cod2_lnxded` |
+| Linux 1.3 | `cmake -S . -B build/check-linux` | `cod2_linux`, `cod2_lnxded`, speaking CoD2 1.3 Plus (`COD2_PLUS`, OpenCoD2-Plus Server's `make PLUS=1`): the servers take only the Plus client |
+| Linux stock 1.3 | `+ -DCOD2_PLUS_PROTOCOL=OFF` | same, without 1.3 Plus: the servers take any 1.3 client, the client does not announce itself as Plus; every other improvement stays |
 | Linux 1.0 | `+ -DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` | same, protocol 115 |
 | Linux real Direct3D 9 | `scripts/build_linux_vk_deps.sh`, then `-DCOD2_LINUX_DXVK=ON` | `cod2_linux_vk` with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it |
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
@@ -33,6 +34,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | Variant | Flags |
 |---|---|
 | `linux`, `linux-10` | native, 1.3 / 1.0 |
+| `linux-13` | native stock 1.3 (`-DCOD2_PLUS_PROTOCOL=OFF`) |
 | `linux-x64`, `linux-x64-10` | 64-bit dedicated server (`cmake/lnxded64`), 1.3 / 1.0; only the glibc and library checks apply |
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |

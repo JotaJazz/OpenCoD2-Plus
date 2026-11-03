@@ -68,6 +68,7 @@ Without `+connect` the client opens the main menu, where you can also start your
 | Build | Plays on |
 | --- | --- |
 | CMake's default (1.3) | 1.3 servers (protocol 118), and OpenCoD2-Plus Server's `make PLUS=1` servers with the 1.3 Plus protocol |
+| `-DCOD2_PLUS_PROTOCOL=OFF` (stock 1.3) | 1.3 servers; its own server and local games take any 1.3 player, CoD2x's too, and every other improvement stays |
 | `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` (1.0) | 1.0 servers (protocol 115); this build is tested less |
 
 - **CoD2 1.3 Plus** is still in development: smaller snapshots on the way to 40–60 Hz, and a handshake that tells other clients to update. Its protocol is in [OpenCoD2-Plus Server's documentation](https://github.com/JotaJazz/OpenCoD2-Plus-Server/blob/dev/docs/architecture/plus-protocol.md).
@@ -147,6 +148,7 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as MSVC, the web build and x64 still do. |
 | `COD2_PLUS_LIBCOD` | `ON` | OpenCoD2-Plus Server's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature switches; `-DCOD2_PATCH_10` builds the 1.0 version. |
+| `COD2_PLUS_PROTOCOL` | `ON` | The 1.3 builds speak CoD2 1.3 Plus (OpenCoD2-Plus Server's `make PLUS=1`): their servers take only the Plus client. `OFF` builds stock 1.3, for servers any 1.3 player can join. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: the client instead of the dedicated server. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | MinGW client: real Direct3D 9 and the game's shaders (system d3dx9); `OFF` keeps the GL device. |
 | `COD2_WIN_MSVC` | `OFF` | Native MSVC build (set by the `msvc-client` presets). |

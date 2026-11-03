@@ -68,6 +68,7 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 | Сборка | Играет на |
 | --- | --- |
 | По умолчанию в CMake (1.3) | Серверах 1.3 (протокол 118) и серверах OpenCoD2-Plus Server, собранных с `make PLUS=1`, с протоколом 1.3 Plus |
+| `-DCOD2_PLUS_PROTOCOL=OFF` (обычная 1.3) | Серверах 1.3; её собственный сервер и локальные игры принимают любого игрока 1.3, включая CoD2x, а все остальные улучшения сохраняются |
 | `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` (1.0) | Серверах 1.0 (протокол 115); эта сборка протестирована меньше |
 
 - **CoD2 1.3 Plus** ещё в разработке: меньшие снапшоты на пути к 40–60 Гц и рукопожатие, которое просит другие клиенты обновиться. Протокол описан в [документации OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server/blob/dev/docs/architecture/plus-protocol.md).
@@ -145,6 +146,7 @@ cmake --build build/msvc-release --target cod2_win32
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | Сервер, game, bgame и столкновения OpenCoD2-Plus Server для локальных игр клиента (Linux, и MinGW с `COD2_WIN32_CLIENT`), на ядре движка; требует `COD2_PLUS_SERVER`. `OFF` оставляет `src/PC/server_mp`, как пока делают MSVC, веб-сборка и x64. |
 | `COD2_PLUS_LIBCOD` | `ON` | libcod из OpenCoD2-Plus Server (`src/libcod`) в выделенном сервере и, с `COD2_PLUS_CLIENT_SERVER`, в локальных играх клиента, с её модулями, кроме MySQL; требует `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Переключатели возможностей; `-DCOD2_PATCH_10` собирает версию 1.0. |
+| `COD2_PLUS_PROTOCOL` | `ON` | Сборки 1.3 говорят на CoD2 1.3 Plus (`make PLUS=1` из OpenCoD2-Plus Server): их серверы принимают только клиент Plus. `OFF` собирает обычную 1.3 с серверами, к которым может подключиться любой игрок 1.3. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: клиент вместо выделенного сервера. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | Клиент MinGW: настоящий Direct3D 9 и шейдеры игры (d3dx9 системы); `OFF` оставляет GL-устройство. |
 | `COD2_WIN_MSVC` | `OFF` | Нативная сборка MSVC (задаётся пресетами `msvc-client`). |

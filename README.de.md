@@ -68,6 +68,7 @@ Ohne `+connect` öffnet der Client das Hauptmenü, wo Sie auch Ihr eigenes Spiel
 | Build | Spielt auf |
 | --- | --- |
 | CMakes Standard (1.3) | 1.3-Servern (Protokoll 118) und `make PLUS=1`-Servern von OpenCoD2-Plus Server mit dem Protokoll 1.3 Plus |
+| `-DCOD2_PLUS_PROTOCOL=OFF` (normales 1.3) | 1.3-Servern; sein eigener Server und seine lokalen Spiele nehmen jeden 1.3-Spieler auf, auch CoD2x, und alle anderen Verbesserungen bleiben |
 | `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` (1.0) | 1.0-Servern (Protokoll 115); dieser Build ist weniger getestet |
 
 - **CoD2 1.3 Plus** ist noch in Entwicklung: kleinere Snapshots auf dem Weg zu 40–60 Hz und ein Handshake, der anderen Clients ein Update empfiehlt. Das Protokoll steht in [der Dokumentation von OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server/blob/dev/docs/architecture/plus-protocol.md).
@@ -145,6 +146,7 @@ Dieser Build kompiliert noch C und verwendet die rekonstruierte Skript-VM (`src/
 | `COD2_PLUS_CLIENT_SERVER` | `ON` | Server, Game, Bgame und Kollision von OpenCoD2-Plus Server für die lokalen Spiele des Clients (Linux, und MinGW mit `COD2_WIN32_CLIENT`), auf dem Kern der Engine; braucht `COD2_PLUS_SERVER`. `OFF` behält `src/PC/server_mp`, wie es MSVC, der Web-Build und x64 noch tun. |
 | `COD2_PLUS_LIBCOD` | `ON` | Die libcod von OpenCoD2-Plus Server (`src/libcod`) im dedizierten Server und, mit `COD2_PLUS_CLIENT_SERVER`, in den lokalen Spielen des Clients, mit ihren Modulen außer MySQL; braucht `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature-Schalter; `-DCOD2_PATCH_10` baut die Version 1.0. |
+| `COD2_PLUS_PROTOCOL` | `ON` | Die 1.3-Builds sprechen CoD2 1.3 Plus (`make PLUS=1` von OpenCoD2-Plus Server): ihre Server nehmen nur den Plus-Client auf. `OFF` baut normales 1.3, mit Servern, denen jeder 1.3-Spieler beitreten kann. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: der Client statt des dedizierten Servers. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | MinGW-Client: echtes Direct3D 9 und die Shader des Spiels (d3dx9 des Systems); `OFF` behält das GL-Gerät. |
 | `COD2_WIN_MSVC` | `OFF` | Nativer MSVC-Build (von den Presets `msvc-client` gesetzt). |

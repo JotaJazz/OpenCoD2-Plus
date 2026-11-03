@@ -30,7 +30,7 @@ cod2rad/             upstream tool (not built by default)
 
 | Executable | Build | State |
 |---|---|---|
-| `cod2_lnxded` | Linux 1.3/1.0 | works; passes OpenCoD2-Plus Server's smoke test whole |
+| `cod2_lnxded` | Linux 1.3/1.0 | works; passes OpenCoD2-Plus Server's smoke test whole; 1.3 is the Plus server unless built with `-DCOD2_PLUS_PROTOCOL=OFF` (stock 1.3) |
 | `cod2_win32_ded.exe` | MinGW 1.3/1.0 | works; smoke test under Wine with `test/smoke_expected_failures_wine.txt` |
 | `cod2_linux` | Linux 1.3/1.0 | works; GL device (stand-in shaders) |
 | `cod2_linux` (x86_64) | Linux, `-DCOD2_X64=ON` | loads and plays a map on OpenCoD2-Plus Server's VM and server; not yet equal to the 32-bit client |

@@ -11,7 +11,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 
 | Script | Proves | Real client |
 |---|---|---|
-| `scripts/opencod2_smoke.py GAME --protocol P` | OpenCoD2-Plus Server's smoke test (`scripts/smoke_test.py`, unchanged) against this server; failures compared with `test/smoke_expected_failures_<P>.txt`, which may only shrink; flaky checks in `test/smoke_flaky.txt` | no |
+| `scripts/opencod2_smoke.py GAME --protocol P` | OpenCoD2-Plus Server's smoke test (`scripts/smoke_test.py`, unchanged) against this server; failures compared with `test/smoke_expected_failures_<P>.txt`, which may only shrink; flaky checks in `test/smoke_flaky.txt`. 118 runs it with `--plus`; `--stock` for a build with `-DCOD2_PLUS_PROTOCOL=OFF` (`--binary build/check-linux-13/cod2_lnxded`) | no |
 | `scripts/two_players_test.py` | two clients join, send commands, disconnect, reconnect, kick; `developer 1` | no |
 | `scripts/map_reload_test.py` | alternating `map_restart` and `map` loads | no |
 | `scripts/rcon_drop_test.py` | `rcon error drop` leaves the server up | no |

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
 
-linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
+linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
 (cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
 the client draws with the real d3d9 and d3dx9's HLSL compiler, and
@@ -49,6 +49,8 @@ for _v in ('mingw', 'mingw-client'):
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
 # the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
 VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+# stock 1.3: the client and servers without CoD2 1.3 Plus (COD2_PLUS)
+VARIANTS['linux-13'] = ['-DCOD2_PLUS_PROTOCOL=OFF']
 # the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
 VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
 VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']

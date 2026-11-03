@@ -91,5 +91,11 @@ class BuildCheck(unittest.TestCase):
         self.assertEqual(prefixes, {''})
 
 
+    def test_stock_13_variant(self):
+        """linux-13 is the 1.3 build without the Plus protocol."""
+        self.assertEqual(build_check.VARIANTS['linux-13'], ['-DCOD2_PLUS_PROTOCOL=OFF'])
+        self.assertFalse(build_check.is_x64('linux-13'))
+
+
 if __name__ == '__main__':
     unittest.main()

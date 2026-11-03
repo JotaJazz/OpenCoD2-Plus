@@ -1918,8 +1918,8 @@ void CL_CheckForResend(void)
     Info_SetValueForKey(info, (const char *)"protocol", va((const char *)"%i", COD2_PROTOCOL_VERSION));
     Info_SetValueForKey(info, (const char *)"challenge", va((const char *)"%i", conn->challenge));
     Info_SetValueForKey(info, (const char *)"qport", va((const char *)"%i", conn->qport));
-#if COD2_IS_PATCH_13
-    /* in this packet only: stock servers do not read it */
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
+    /* in this packet only: stock servers do not read it; the stock 1.3 build does not say it */
     Info_SetValueForKey(info, (const char *)"plus", va((const char *)"%i", COD2_PLUS_VERSION));
 #endif
 
@@ -2254,7 +2254,7 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
             goto finish;
         }
 
-#if COD2_IS_PATCH_13
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
         /* a stock server answers without a version; each snapshot says its own format */
         if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
             Com_Printf((const char *)"CoD2 1.3 Plus server, version %i\n", COD2_PLUS_VERSION);

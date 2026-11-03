@@ -117,6 +117,14 @@ def strict_port(launcher, game_dir):
         return failed in text and f'localhost:{port + 1}' not in text and 'Couldn\'t allocate IP port' not in text
 
 
+def smoke_args(game_dir, binary, protocol, stock):
+    """smoke_test.py's command line: the 1.3 builds are OpenCoD2-Plus Server's Plus
+    variant (--plus) unless built with -DCOD2_PLUS_PROTOCOL=OFF (stock)."""
+    return ([sys.executable, os.path.join(ROOT, 'scripts', 'smoke_test.py'), game_dir,
+             '--binary', binary, '--protocol', str(protocol)]
+            + (['--plus'] if protocol == 118 and not stock else []))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('game_dir')
@@ -124,6 +132,7 @@ def main():
     ap.add_argument('--binary')
     ap.add_argument('--wine', help='the command that runs --binary, the Windows server (a wine wrapper)')
     ap.add_argument('--update', action='store_true', help='rewrite the list with the current failures')
+    ap.add_argument('--stock', action='store_true', help='a 1.3 build without the Plus protocol (-DCOD2_PLUS_PROTOCOL=OFF)')
     args = ap.parse_args()
 
     if args.wine and not args.binary:
@@ -133,9 +142,7 @@ def main():
         if args.wine:
             wine = os.path.abspath(args.wine) if os.sep in args.wine else args.wine
             binary = write_launcher(tmp, wine, os.path.abspath(binary))
-        run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'smoke_test.py'), args.game_dir,
-                              '--binary', binary, '--protocol', str(args.protocol)]
-                             + (['--plus'] if args.protocol == 118 else []),  # 1.3 builds CoD2rev-Plus's Plus variant
+        run = subprocess.run(smoke_args(args.game_dir, binary, args.protocol, args.stock),
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
         print(run.stdout, end='')
         results = parse_results(run.stdout)
