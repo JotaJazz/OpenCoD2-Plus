@@ -1739,18 +1739,6 @@ static const unsigned char *XAnimCalcGetAnimToModelLocal(const DObj *obj, const 
 /* x64 only: a size or frames pointer no real anim has (see
  * XAnimCalcAccumulateTransLocal). On 32 bits every pointer is below 4 GB, so
  * the pointer test would drop every animated channel. */
-static int XAnimCalcBadFramesLocal(unsigned int size, const void *frames)
-{
-#if defined(COD2_X64)
-    return size > 4096u || (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
-           (uintptr_t)frames >= 0x800000000000ULL;
-#else
-    (void)size;
-    (void)frames;
-    return 0;
-#endif
-}
-
 /* The key and lerp of a channel with size keys (frames[0..size]). At the
  * anim's end (time 1, or no frames) it is the last key, frames[size], as
  * CoD2rev-Plus's XAnimCalcNonLoopEnd reads it; the time index would stop one
@@ -1784,8 +1772,6 @@ static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQu
         float lerpFrac;
         const XQuat *frames = (const XQuat *)quat->u.frames.u.frames;
 
-        if (XAnimCalcBadFramesLocal(quat->size, frames))
-            return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
@@ -1812,8 +1798,6 @@ static void XAnimCalcAccumulateSimpleQuatLocal(DObjAnimMat *mat, const XAnimPart
         float lerpFrac;
         const XQuat2 *frames = (const XQuat2 *)quat->u.frames.u.frames2;
 
-        if (XAnimCalcBadFramesLocal(quat->size, frames))
-            return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
@@ -1834,16 +1818,6 @@ static void XAnimCalcAccumulateTransLocal(DObjAnimMat *mat, const XAnimPartTrans
             int frameIndex;
             float lerpFrac;
             const vec3_t *frames = (const vec3_t *)trans->u.frames.frames;
-
-            /* x64 TODO(root not found): some XAnimPartTrans present corrupt data here --
-               a garbage size (>4096; no real anim has that many keyframes) and/or a bad
-               frames pointer (truncated OR mid-range non-canonical). The .xanim loader is
-               x64-correct, so the corruption is post-load (anim tree/DObj bone path).
-               Skip this bone's trans accumulation to avoid dereferencing bad data. */
-            if (XAnimCalcBadFramesLocal(trans->size, frames)) {
-                mat->transWeight += weightScale;
-                return;
-            }
 
             XAnimCalcGetKeyLocal(animTime, &trans->u.frames.indices, trans->size, &frameIndex, &lerpFrac);
             if (frameIndex < 0 || frameIndex >= (int)trans->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */

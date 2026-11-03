@@ -408,7 +408,7 @@ XAnimParts *XAnimLoadFile(const char *name, Alloc_t Alloc)
                         quat[1] = -quat[1];
                     }
 
-                    partQuatAlloc = (XAnimPartQuat *)Alloc(8);
+                    partQuatAlloc = (XAnimPartQuat *)Alloc((int)(offsetof(XAnimPartQuat, u.frame02) + sizeof(XQuat2)));   /* 8 on x86; frame02 is at 8 on x64 */
                     part->quat = partQuatAlloc;
 
                     partQuatAlloc->u.frame02[0] = quat[0];
