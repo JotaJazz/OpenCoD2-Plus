@@ -82,11 +82,10 @@ option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on the Linux (32 and 64-bit) and MinGW builds; MSVC,
-# the web build and a cross-compiled x64 keep src/PC/script for now. PROTOCOL_VERSION
-# follows the game version.
+# reconstruction in src/PC/script, on the Linux and MinGW builds (32 and 64-bit); MSVC
+# and the web build keep src/PC/script for now. PROTOCOL_VERSION follows the game version.
 option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(COD2_WIN_MSVC OR EMSCRIPTEN OR (COD2_X64 AND CMAKE_TOOLCHAIN_FILE))   # the Linux x64 client takes CoD2rev-Plus's, as 32 bits
+if(COD2_WIN_MSVC OR EMSCRIPTEN)
   set(COD2_PLUS_SCRIPT OFF)
 endif()
 if(COD2_PLUS_SCRIPT)
@@ -417,7 +416,7 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse;-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
-  "$<$<COMPILE_LANGUAGE:ASM>:-m32>")
+  "$<$<COMPILE_LANGUAGE:ASM>:$<$<NOT:$<BOOL:${COD2_X64}>>:-m32>>")
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${COD2_SRC_DIR}/win32/shims ${CMAKE_SOURCE_DIR})
 
 # PE link: same seam aliases as Linux, but every C symbol carries PE's leading '_'.
@@ -446,8 +445,15 @@ set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
 if(COD2_WIN32_CLIENT)
   list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
   add_compile_definitions(W32_CLIENT)
-  include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
-  list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
+  if(COD2_X64)
+    # the x86_64 static SDL2 of SDL's MinGW package (scripts/mingw64_deps.sh)
+    set(COD2_SDL2_WIN64 ${CMAKE_SOURCE_DIR}/third_party/mingw64-sdl2/SDL2-2.30.9/x86_64-w64-mingw32)
+    include_directories(${COD2_SDL2_WIN64}/include ${COD2_SDL2_WIN64}/include/SDL2)
+    list(APPEND COD2_WIN_LINK -L${COD2_SDL2_WIN64}/lib)
+  else()
+    include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
+    list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
+  endif()
   list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid wininet
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)

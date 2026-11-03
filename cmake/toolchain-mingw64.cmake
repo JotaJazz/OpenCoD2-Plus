@@ -1,0 +1,25 @@
+# MinGW-w64 cross-compile toolchain for the 64-bit Windows client (x86_64, with -DCOD2_X64=ON).
+#   cmake -S . -B build/win64 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake -DCOD2_X64=ON -DCOD2_WIN32_CLIENT=ON
+# Uses the system's x86_64-w64-mingw32 compilers, or scripts/mingw64_deps.sh's copy in third_party/mingw64.
+set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_PROCESSOR AMD64)
+
+set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
+set(_mingw64_bin ${CMAKE_CURRENT_LIST_DIR}/../third_party/mingw64/usr/bin)
+if(EXISTS ${_mingw64_bin}/${TOOLCHAIN_PREFIX}-gcc-posix)
+  set(CMAKE_C_COMPILER   ${_mingw64_bin}/${TOOLCHAIN_PREFIX}-gcc-posix)
+  set(CMAKE_CXX_COMPILER ${_mingw64_bin}/${TOOLCHAIN_PREFIX}-g++-posix)
+  set(CMAKE_ASM_COMPILER ${_mingw64_bin}/${TOOLCHAIN_PREFIX}-gcc-posix)
+  set(CMAKE_RC_COMPILER  ${_mingw64_bin}/${TOOLCHAIN_PREFIX}-windres)
+  set(CMAKE_FIND_ROOT_PATH ${CMAKE_CURRENT_LIST_DIR}/../third_party/mingw64/usr/${TOOLCHAIN_PREFIX})
+else()
+  set(CMAKE_C_COMPILER   ${TOOLCHAIN_PREFIX}-gcc)
+  set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++)
+  set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
+  set(CMAKE_RC_COMPILER  ${TOOLCHAIN_PREFIX}-windres)
+  set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX})
+endif()
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
