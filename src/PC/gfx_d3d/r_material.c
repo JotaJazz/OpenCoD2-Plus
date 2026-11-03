@@ -416,8 +416,8 @@ void Material_UpdatePicmipAll(void)
 
     rg = (byte *)imp_rg;
 
-    for (slot = rg; slot != rg + sizeof(((r_globals_t *)0)->materialHashTable); slot += 4) {
-        material = *(byte **)(slot + 0x28);
+    for (slot = rg; slot != rg + sizeof(((r_globals_t *)0)->materialHashTable); slot += sizeof(void *)) {
+        material = *(byte **)(slot + offsetof(r_globals_t, materialHashTable));
         if (!material)
             continue;
 

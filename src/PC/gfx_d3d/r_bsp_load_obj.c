@@ -275,7 +275,6 @@ const char *R_ParseSunLight(SunLightParseParams *params, const char *text)
 void R_InterpretSunLightParseParamsIntoLights(SunLightParseParams *sunParse, GfxLight *sunLight)
 {
     byte *sp = (byte *)sunParse;
-    byte *sl = (byte *)sunLight;
     vec_t sunDirection[3];
     float ambient, sunIntensity, sunAngleOverride;
     float *sunColor;
@@ -308,15 +307,6 @@ void R_InterpretSunLightParseParamsIntoLights(SunLightParseParams *sunParse, Gfx
     diffG = scale * ((SunLightParseParams *)sp)->sunColor[1];
     diffB = scale * ((SunLightParseParams *)sp)->sunColor[2];
 
-    {
-        static GfxLight sunLightScratch;
-
-        if ((uintptr_t)sunLight < 0x1000 ||
-            ((uintptr_t)sunLight >= 0x08200000 && (uintptr_t)sunLight < 0x08800000)) {
-            sunLight = &sunLightScratch;
-            sl = (byte *)sunLight;
-        }
-    }
     if (sunLight) {
         sunLight->position[0] = sunDirection[0];
         sunLight->position[1] = sunDirection[1];
