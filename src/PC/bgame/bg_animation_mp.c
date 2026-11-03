@@ -1979,7 +1979,7 @@ void BG_LoadAnim(void)
                 vec3_t angleDelta;
                 vec3_t posDelta;
 
-                anim->duration = (int)(length * 1000.0f);
+                anim->duration = (int)(length * 1000.0);  /* x87 multiplied in extended precision: 0.9 gives 899, as the server */
                 XAnimGetRelDelta(anims, i, angleDelta, posDelta, 0.0f, 1.0f);
                 anim->moveSpeed = sqrtf(posDelta[0] * posDelta[0] +
                                         posDelta[1] * posDelta[1] +

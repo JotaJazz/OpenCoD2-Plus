@@ -490,7 +490,7 @@ static void CG_CalcViewValues(void)
 
     menuBlur = CL_GetMenuBlurRadius();
     {
-        float cgBlur = *(float *)((char *)imp_cgDC + 0x28);
+        float cgBlur = ((displayContextDef_t *)imp_cgDC)->blurRadiusOut;
         cg->refdef.blurRadius = __builtin_sqrtf(cgBlur * cgBlur + menuBlur * menuBlur);
     }
 

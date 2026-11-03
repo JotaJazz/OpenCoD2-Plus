@@ -94,9 +94,10 @@ extern "C" void BG_CheckAnimScript(void)
 		        || duration != data->animations[i].duration || moveSpeed != data->animations[i].moveSpeed)
 		{
 			if (animsDiffer < 10)
-				Com_Printf("animscript check: animation %d %s: engine flags %x movetype %llx, Plus flags %x movetype %llx\n",
-				           i, data->animations[i].name, flags, (unsigned long long)movetype, data->animations[i].flags,
-				           (unsigned long long)data->animations[i].movetype);
+				Com_Printf("animscript check: animation %d %s: engine flags %x movetype %llx duration %d speed %g, Plus flags %x movetype %llx duration %d speed %g\n",
+				           i, data->animations[i].name, flags, (unsigned long long)movetype, duration, moveSpeed,
+				           data->animations[i].flags, (unsigned long long)data->animations[i].movetype,
+				           data->animations[i].duration, data->animations[i].moveSpeed);
 			++animsDiffer;
 		}
 	}

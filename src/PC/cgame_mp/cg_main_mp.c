@@ -840,7 +840,7 @@ int CG_PlayEntitySoundAlias(int entitynum, snd_alias_list_t *aliasList)
 {
     const vec_t *origin;
 
-    origin = (const vec_t *)((const byte *)cg_entities + entitynum * 548 + 0x108);
+    origin = (const vec_t *)((const byte *)&((centity_t *)cg_entities)[entitynum] + 0x108);  /* nextState, the same on x64 */
     return CG_PlayPickedAlias(Com_PickSoundAliasFromList(aliasList), entitynum, origin, 0);
 }
 
@@ -1089,27 +1089,24 @@ static inline __attribute__((always_inline)) void CG_InitBgsCallbacks(void)
 
 static inline __attribute__((always_inline)) void CG_InitXAnimTrees(void)
 {
-    byte *cgBase = (byte *)cg;
-    byte *cgsBase = (byte *)cgs;
-    void *anims = (*(void **)&((cg_t *)cgBase)->bgs.generic_human.tree.anims);
-    byte *clientTree = (byte *)(((char *)cgBase + offsetof(cg_t, bgs.clientinfo[0].pXAnimTree)));
-    byte *cgsTree = (byte *)(((char *)cgsBase + offsetof(cgs_t, corpseinfo[0].pXAnimTree)));
+    void *anims = (*(void **)&((cg_t *)cg)->bgs.generic_human.tree.anims);
     int i;
 
-    for (i = 0; i < 64; i++, clientTree += 0x4b8)
-        *(void **)clientTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
+    /* by index: 1.3's 0x4b8 stride is x86's sizeof(clientInfo_t) */
+    for (i = 0; i < 64; i++)
+        ((cg_t *)cg)->bgs.clientinfo[i].pXAnimTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
 
-    for (i = 0; i < 8; i++, cgsTree += 0x4b8)
-        *(void **)cgsTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
+    for (i = 0; i < 8; i++)
+        ((cgs_t *)cgs)->corpseinfo[i].pXAnimTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
 }
 
 static inline __attribute__((always_inline)) void CG_ClearEntityDObjHandles(void)
 {
-    byte *ent = (byte *)cg_entities;
-    int offset;
+    int i;
 
-    for (offset = 0; offset < 0x89000; offset += 0x224)
-        *(int *)(ent + offset + 0x220) = 0;
+    /* 1.3's 0x224 stride and 0x220 offset are x86's centity_t */
+    for (i = 0; i < 1024; i++)
+        ((centity_t *)cg_entities)[i].localClientNum = 0;
 }
 
 void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum)
