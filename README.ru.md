@@ -6,13 +6,15 @@
 ![License: none yet](https://img.shields.io/badge/license-none%20yet-lightgrey)
 ![Platforms: Linux | Windows](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
 ![Architectures: x86 | x64](https://img.shields.io/badge/arch-x86%20%7C%20x64-lightgrey)
-![CoD2 1.3 | 1.3 Plus](https://img.shields.io/badge/CoD2-1.3%20%7C%201.3%20Plus-c9b37e)
+![CoD2 1.0 | 1.3 | 1.3 Plus](https://img.shields.io/badge/CoD2-1.0%20%7C%201.3%20%7C%201.3%20Plus-c9b37e)
 [![Fork of opencod2/opencod2](https://img.shields.io/badge/fork%20of-opencod2%2Fopencod2-555)](https://github.com/opencod2/opencod2)
 [![Last commit](https://img.shields.io/github/last-commit/JotaJazz/OpenCoD2-Plus/dev)](https://github.com/JotaJazz/OpenCoD2-Plus/commits/dev)
 
 [Español](README.es.md) · [English](README.md) · [Português](README.pt.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · **Русский**
 
 **Call of Duty 2 всё ещё жива.** OpenCoD2-Plus — это многопользовательский движок Call of Duty 2, воссозданный из исходного кода: клиент и выделенный сервер для Windows и Linux, созданные людьми, которые до сих пор играют в эту игру и продолжают её улучшать.
+
+Это форк [opencod2/opencod2](https://github.com/opencod2/opencod2), где движок был восстановлен обратной разработкой. Его выделенный сервер и локальные игры клиента работают на [OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server), сервере того же семейства, и это клиент **CoD2 1.3 Plus** — нового протокола, на котором говорит этот сервер.
 
 <table>
   <tr>
@@ -61,9 +63,18 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 ./cod2_lnxded +set fs_basepath /path/to/CoD2 +set dedicated 1 +map mp_toujane
 ```
 
+## Версии игры
+
+| Сборка | Играет на |
+| --- | --- |
+| По умолчанию в CMake (1.3) | Серверах 1.3 (протокол 118) и серверах OpenCoD2-Plus Server, собранных с `make PLUS=1`, с протоколом 1.3 Plus |
+| `-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` (1.0) | Серверах 1.0 (протокол 115); эта сборка протестирована меньше |
+
+- **CoD2 1.3 Plus** ещё в разработке: меньшие снапшоты на пути к 40–60 Гц и рукопожатие, которое просит другие клиенты обновиться. Протокол описан в [документации OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server/blob/dev/docs/architecture/plus-protocol.md).
+
 ## Для участников
 
-Важна любая помощь: играть и сообщать об ошибках, тестировать на других системах или писать код. Техническая документация, на английском, начинается с [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) — точка входа для ИИ-агентов программирования.
+Важна любая помощь: играть и сообщать об ошибках, тестировать на других системах или писать код. Работа ведётся в ветке `dev`, которая попадает в `main`, когда её изменения стабильны. Техническая документация, на английском, начинается с [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) — точка входа для ИИ-агентов программирования.
 
 ## Сборка
 
@@ -218,7 +229,6 @@ python3 -m unittest discover -s test
 - **Кто это поддерживает:** я JotaJazz. Мне нравятся старые игры, и именно поэтому существует этот форк: я хочу и дальше играть в CoD2 с друзьями и поддерживать игру живой для сообщества, которое всё ещё в неё играет, с помощью открытого проекта.
 - **Как здесь ведётся работа:** я работаю с [Claude Code](https://claude.com/claude-code), помощником по программированию от Anthropic. Изменения этого форка, включая этот README и его переводы, написаны с его помощью. Сделанные так коммиты содержат в сообщении строку `Co-Authored-By: Claude`, поэтому их можно найти в истории через `git log`.
 - **Отношения с оригиналом:** реконструкция — работа авторов opencod2 (riicchhaarrd) и Sipex. Этот форк больше не забирает у них изменения; вместо этого он переносит код из OpenCoD2-Plus Server, скопированный без изменений, чтобы его коммиты применялись и здесь.
-- **Лицензия:** пока нет, как и у оригинала. Код OpenCoD2-Plus Server здесь (виртуальная машина скриптов, сервер, game, ядро, libcod и её мод ботов) распространяется под AGPL-3.0, а лицензия всего проекта согласовывается с авторами оригинала. Сторонние библиотеки сохраняют свои: SQLite (общественное достояние), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT) и Speex (BSD, не собирается).
 - **Чем это не является:** это не официальный проект, и он не связан с Activision, Infinity Ward или авторами оригинального репозитория. В нём нет файлов игры.
 
 ## Уведомление
@@ -234,6 +244,10 @@ python3 -m unittest discover -s test
 Если вы являетесь правообладателем и считаете, что что-то здесь не должно распространяться, пожалуйста, откройте issue или свяжитесь с сопровождающим, и вопрос будет оперативно рассмотрен.
 
 На снимках экрана показан контент Call of Duty 2, принадлежащий Activision Publishing, Inc., только для идентификации.
+
+## Лицензия
+
+Пока нет, как и у оригинала. Код OpenCoD2-Plus Server здесь (виртуальная машина скриптов, сервер, game, ядро, libcod и её мод ботов) распространяется под AGPL-3.0, а лицензия всего проекта согласовывается с авторами оригинала. Сторонние библиотеки сохраняют свои: SQLite (общественное достояние), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT) и Speex (BSD, не собирается).
 
 ## Благодарности
 
