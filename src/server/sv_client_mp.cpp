@@ -846,7 +846,7 @@ void SV_DirectConnect( netadr_t from )
 			return;
 		}
 
-#if PROTOCOL_VERSION == 118
+#ifdef COD2_PLUS
 		// after the challenge, so that a spoofed address gets no reply
 		if ( atoi( Info_ValueForKey( userinfo, "plus" ) ) != PLUS_VERSION )
 		{
@@ -1026,7 +1026,7 @@ gotnewcl:
 	svs.challenges[i].firstPing = 0;
 
 	// send the connect packet to the client
-#if PROTOCOL_VERSION == 118
+#ifdef COD2_PLUS
 	newcl->plusVersion = atoi( Info_ValueForKey( userinfo, "plus" ) );
 	if ( newcl->plusVersion == PLUS_VERSION )
 		NET_OutOfBandPrint( NS_SERVER, from, va( "connectResponse %i", PLUS_VERSION ) );

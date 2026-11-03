@@ -143,6 +143,9 @@ if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
   set(COD2_PROTOCOL 115)
 else()
   set(COD2_PROTOCOL 118)
+  # CoD2rev-Plus's 1.3 Plus variant (its make PLUS=1): the Plus handshake,
+  # snapshots and timing this client's 1.3 speaks
+  add_compile_definitions(COD2_PLUS)
 endif()
 if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))
   message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web and MSVC builds")

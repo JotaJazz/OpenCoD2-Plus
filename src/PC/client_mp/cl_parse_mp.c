@@ -103,7 +103,11 @@ extern char *MSG_ReadString(msg_t *msg);
 extern char *MSG_ReadBigString(msg_t *msg);
 extern void MSG_ReadData(msg_t *msg, void *data, int len);
 extern void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to);
+#ifdef COD2_PLUS
 extern int msg_plusSnapshotTime;
+#else
+static int msg_plusSnapshotTime;  /* CoD2rev-Plus's msg defines it only in its 1.3 Plus build */
+#endif
 extern qboolean MSG_ReadDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int number);
 extern qboolean MSG_ReadDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, int number);
 extern void MSG_Init(msg_t *buf, byte *data, int length);

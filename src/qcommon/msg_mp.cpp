@@ -2410,7 +2410,9 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, in
 MSG_WriteDeltaField
 ==============
 */
+#ifdef COD2_PLUS
 int msg_plusSnapshotTime;
+#endif
 
 void MSG_WriteDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *field )
 {
@@ -2427,6 +2429,7 @@ void MSG_WriteDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *fi
 
 	MSG_WriteBit1( msg );  // changed
 
+#ifdef COD2_PLUS
 	if ( msg_plusSnapshotTime && field == entityStateFields ) // pos.trTime
 	{
 		unsigned offset = Plus_TimeOffset( msg_plusSnapshotTime, *toF );
@@ -2440,6 +2443,7 @@ void MSG_WriteDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *fi
 
 		MSG_WriteBit0( msg ); // too far: as stock
 	}
+#endif
 
 	if ( field->bits == 0 )
 	{

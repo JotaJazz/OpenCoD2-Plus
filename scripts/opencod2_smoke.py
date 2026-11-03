@@ -134,7 +134,8 @@ def main():
             wine = os.path.abspath(args.wine) if os.sep in args.wine else args.wine
             binary = write_launcher(tmp, wine, os.path.abspath(binary))
         run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'smoke_test.py'), args.game_dir,
-                              '--binary', binary, '--protocol', str(args.protocol)],
+                              '--binary', binary, '--protocol', str(args.protocol)]
+                             + (['--plus'] if args.protocol == 118 else []),  # 1.3 builds CoD2rev-Plus's Plus variant
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
         print(run.stdout, end='')
         results = parse_results(run.stdout)

@@ -2972,7 +2972,7 @@ void EmitFunction(sval_u func, sval_u sourcePos)
 		}
 	}
 
-	EmitUnsigned(scope);
+	EmitCodepos((const char *)(uintptr_t)scope); // a code position's room: LinkThread writes the function's address here
 
 	countId = GetVariable(threadId, 0);
 	count = Scr_EvalVariable(countId);
@@ -5023,7 +5023,7 @@ void EmitArrayVariableRef( sval_u expr, sval_u index, sval_u sourcePos, sval_u i
 EmitSwitchStatement
 ============
 */
-#define SWITCH_CASE_ENTRY_SIZE (sizeof(unsigned long) + sizeof(unsigned long))
+#define SWITCH_CASE_ENTRY_SIZE (sizeof(unsigned long) + sizeof(const char *)) // the case value, then its code position (EmitCodepos)
 void EmitSwitchStatement( sval_u expr, sval_u stmtlist, sval_u sourcePos, bool lastStatement, unsigned int endSourcePos, scr_block_s *block )
 {
 	int num;
