@@ -8,10 +8,10 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 ## 2026-11-02 — the 64-bit Windows client loads a map
 
 - `cod2_win32.exe` cross-builds for x86_64 with MinGW-w64 (`scripts/mingw64_deps.sh`, no root; `build_check.py mingw-client-x64`) on the same blobs and bridge as the Linux x64 client. Win64 is LLP64: casts through `unsigned long` and `HPROVIDER` truncated, PE x64 has no `_` on C names (link aliases, `CDirect3DDevice`'s flags), and MinGW defines `_M_X64`, so guards meant for MSVC x64 took the client off the Mac port's stubs and the real `MessageBoxA` waited for a click.
-- Under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`) the menu equals the 32-bit client's pixel for pixel and `mp_toujane` loads and quits. CoD2rev-Plus's VM needed three LLP64 fixes upstream (f33a05e); the renderer's code samplers read the world, lightmaps and dvars at 1.3's offsets.
+- Under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`) the menu equals the 32-bit client's pixel for pixel and `mp_toujane` loads and quits. CoD2rev-Plus's VM needed four LLP64 fixes upstream (f33a05e, 72c9f3e: function and animation references left 4 bytes for a pointer); the renderer's code samplers read the world, lightmaps and dvars at 1.3's offsets.
 - Open: the view is closer and bluer than 32-bit, no effect draws (as on Linux x64), and libcod is left out (`gsc_memory.cpp` keeps pointers in `long`).
 
-## 2026-11-02 — CoD2rev-Plus up to f33a05e
+## 2026-11-02 — CoD2rev-Plus up to 72c9f3e
 
 - bdb0bfb brought the 2026-11-02 audit's server hardening; then CoD2rev-Plus made the Plus server a build variant (`make PLUS=1`, `COD2_PLUS`). The 1.3 builds here define `COD2_PLUS` (engine and 64-bit server) and `opencod2_smoke.py` passes `--plus` for 118; without it the client's local server would speak stock 1.3 again.
 - 1.0 builds lose CoD2rev-Plus's `msg_plusSnapshotTime`; the client keeps its own there. Smoke 118 and 115 pass with their lists.

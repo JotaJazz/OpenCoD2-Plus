@@ -3641,7 +3641,7 @@ end:
 			assert(top+1 <= scrVmPub.maxstack);
 			top++;
 			top->type = VAR_ANIMATION;
-			top->u.pointerValue = Scr_ReadUnsigned(&pos);
+			top->u.codePosValue = Scr_ReadCodePos(&pos); // the anim tree wrote a whole pointer here, as Scr_AddAnim reads it
 			continue;
 
 		case OP_GetGameRef:

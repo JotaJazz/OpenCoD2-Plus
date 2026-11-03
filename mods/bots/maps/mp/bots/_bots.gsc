@@ -1,4 +1,4 @@
-// Simple bots for CoD2rev-Plus dedicated servers.
+// Simple bots for OpenCoD2-Plus Server.
 //
 // A bot walks the map over a waypoint graph (_bots_nav.gsc): with nobody in
 // sight it follows what it last saw or heard shooting, patrols towards the
