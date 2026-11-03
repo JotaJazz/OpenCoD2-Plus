@@ -443,10 +443,19 @@ void Libcod_DPrintf(const char *message)
 /*
  * CodeCallback_CLSpam(type, ip) when an address goes over a request rate
  * limit; type is "INFO:ADDRESS", "STATUS:ADDRESS", "CHALLENGE:ADDRESS",
- * "CONNECT:ADDRESS" or "RCON:ADDRESS". Returns true when the callback ran.
+ * "CONNECT:ADDRESS" or "RCON:ADDRESS". Returns true when the callback ran
+ * or the report was dropped.
  */
 bool Libcod_SpamCallback(const char *type, netadr_t from)
 {
+	static leakyBucket_t bucket;
+
+	// every request the rate limiter drops comes here, so a flood of forged
+	// addresses ran a script thread (or Com_DPrintf and CodeCallback_DPrintf)
+	// for each one: past 10 a second they are dropped unreported
+	if ( SVC_RateLimit( &bucket, 10, 100 ) )
+		return true;
+
 	if ( !codecallback_clspam || !Sys_IsMainThread() || !Scr_IsSystemActive() )
 		return false;
 

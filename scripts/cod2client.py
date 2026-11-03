@@ -371,6 +371,17 @@ class Client:
     def command(self, server_id, text):
         return self.commands(server_id, [text])
 
+    def resend(self, server_id, first):
+        """Sends the commands from sequence first on again, as a client does
+        until the server acknowledges them."""
+        payload = MsgWriter()
+        for sequence in range(first, self.command_sequence + 1):
+            payload.bits(CLC_CLIENT_COMMAND, 3)
+            payload.long(sequence)
+            payload.string(self.sent_commands[sequence])
+        payload.bits(CLC_EOF, 3)
+        return self._send(server_id, payload)
+
     def download(self, server_id, name, seconds=2.0):
         """Asks for a file as the client's auto-download does, before entering
         the game, and returns what the svc_download blocks of the following

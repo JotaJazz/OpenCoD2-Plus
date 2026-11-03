@@ -139,6 +139,21 @@ def check_client(port, protocol, password, game_log, check):
         check('a client gets the snapshots of its version', frames and all(f['plus'] == (protocol == 118) for f in frames))
         check('client receives server commands', any('smokesnap' in c for f in frames for c in f['commands']))
 
+        # someone behind the same IP who guesses the qport must not take the
+        # client's address, but a client whose port changes keeps playing
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as thief:
+            header = (0x7ffffff0).to_bytes(4, 'little') + client.qport.to_bytes(2, 'little')
+            thief.sendto(header + bytes(16), ('127.0.0.1', port))
+            thief.sendto(PREFIX + b'v\0' + client.qport.to_bytes(2, 'little') + bytes(8), ('127.0.0.1', port))
+            time.sleep(0.2)
+        client.command(server_id, 'userinfo "\\name\\smokeqport\\rate\\25000\\snaps\\20"')
+        check('a guessed qport keeps the client', wait_for(lambda: listed('smokeqport')))
+        moved = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sock.close()
+        client.sock = moved
+        client.command(server_id, 'userinfo "\\name\\smokemoved\\rate\\25000\\snaps\\20"')
+        check('a translated port keeps the client', wait_for(lambda: listed('smokemoved')))
+
         client.command(server_id, 'userinfo "\\name\\smokerenamed\\rate\\25000\\snaps\\20"')
         check('client command runs', wait_for(lambda: listed('smokerenamed')),
               ', '.join(players(port) or {}))
@@ -151,6 +166,15 @@ def check_client(port, protocol, password, game_log, check):
         packets = client.commands(server_id, texts)
         check('fragmented client message runs', packets > 1 and wait_for(lambda: listed('smokefragment2')),
               f'{packets} packets')
+
+        # one message runs at most 64 commands, the rest when they come again
+        first = client.command_sequence + 1
+        cap = 'userinfo "\\name\\smokecap%s\\rate\\25000\\snaps\\20"'
+        client.commands(server_id, [cap % 'a'] * 99 + [cap % 'b'])
+        capped = wait_for(lambda: listed('smokecapa')) and not listed('smokecapb')
+        check('one message runs at most 64 commands', capped, ', '.join(players(port) or {}))
+        client.resend(server_id, first + 64)
+        check('the rest run when sent again', wait_for(lambda: listed('smokecapb')))
 
         # line breaks in a name or a chat message must not start a fake log
         # line, and a say right after a userinfo must not be flood protected
@@ -565,6 +589,7 @@ def main():
             if info:
                 header, values = info
                 check('getinfo reply', header == 'infoResponse' and values.get('challenge') == 'smoke')
+                check('over-long getinfo challenge ignored', query(port, 'getinfo ' + 'x' * 1000, 1.0) is None)
                 check('hostname', values.get('hostname') == hostname, values.get('hostname', ''))
                 protocol = values.get('protocol', '')
                 if args.protocol:
@@ -581,6 +606,19 @@ def main():
                     check_client(port, int(protocol), password, os.path.join(home, 'main', 'games_mp.log'), check)
                     check_connect_limit(port, int(protocol), check)
                     check_challenge_during_queries(port, check)
+
+                # manymaps must not take a map name that leaves its library
+                os.makedirs(os.path.join(home, 'library'))
+                open(os.path.join(home, 'smoke_escape.iwd'), 'wb').close()
+                rcon(port, password, 'fs_library ' + os.path.join(home, 'library'))
+                reply = rcon(port, password, 'map ../smoke_escape')
+                rcon(port, password, 'fs_library ""')
+                escaped = os.path.join(os.path.dirname(home), 'smoke_escape.iwd')
+                linked = os.path.lexists(escaped)
+                if linked:
+                    os.remove(escaped)
+                check('manymaps refuses ../ in a map name', not linked and 'NEW LINK' not in reply,
+                      reply.strip().replace('\n', ' ')[:80])
 
 
                 time.sleep(2)

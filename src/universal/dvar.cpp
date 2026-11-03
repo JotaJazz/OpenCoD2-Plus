@@ -710,26 +710,30 @@ static dvar_t *Dvar_RegisterNew(const char *dvarName, DvarType type, unsigned sh
 
 static const char *Dvar_ValueToString(const dvar_t *dvar, DvarValue value)
 {
-	static char buffer[MAX_STRING_CHARS];  // Static buffer for formatted strings
+	// Two buffers: callers format the current and the reset value in one printf,
+	// whose argument order differs between compilers and CPUs
+	static char buffers[2][MAX_STRING_CHARS];
+	static int index;
+	char *buffer = buffers[index++ & 1];
 
 	switch (dvar->type)
 	{
 	case DVAR_TYPE_BOOL:
 		return value.boolean ? "1" : "0";
 	case DVAR_TYPE_FLOAT:
-		snprintf(buffer, sizeof(buffer), "%g", value.decimal);
+		snprintf(buffer, MAX_STRING_CHARS, "%g", value.decimal);
 		return buffer;
 	case DVAR_TYPE_VEC2:
-		snprintf(buffer, sizeof(buffer), "%g %g", value.vec2[0], value.vec2[1]);
+		snprintf(buffer, MAX_STRING_CHARS, "%g %g", value.vec2[0], value.vec2[1]);
 		return buffer;
 	case DVAR_TYPE_VEC3:
-		snprintf(buffer, sizeof(buffer), "%g %g %g", value.vec3[0], value.vec3[1], value.vec3[2]);
+		snprintf(buffer, MAX_STRING_CHARS, "%g %g %g", value.vec3[0], value.vec3[1], value.vec3[2]);
 		return buffer;
 	case DVAR_TYPE_VEC4:
-		snprintf(buffer, sizeof(buffer), "%g %g %g %g", value.vec4[0], value.vec4[1], value.vec4[2], value.vec4[3]);
+		snprintf(buffer, MAX_STRING_CHARS, "%g %g %g %g", value.vec4[0], value.vec4[1], value.vec4[2], value.vec4[3]);
 		return buffer;
 	case DVAR_TYPE_INT:
-		snprintf(buffer, sizeof(buffer), "%d", value.integer);
+		snprintf(buffer, MAX_STRING_CHARS, "%d", value.integer);
 		return buffer;
 	case DVAR_TYPE_ENUM:
 		if (dvar->domain.enumeration.stringCount)
@@ -737,10 +741,10 @@ static const char *Dvar_ValueToString(const dvar_t *dvar, DvarValue value)
 		else
 			return "";
 	case DVAR_TYPE_STRING:
-		snprintf(buffer, sizeof(buffer), "%s", value.string);  // Corrected from value.integer
+		snprintf(buffer, MAX_STRING_CHARS, "%s", value.string);  // Corrected from value.integer
 		return buffer;
 	case DVAR_TYPE_COLOR:
-		snprintf(buffer, sizeof(buffer), "%g %g %g %g",
+		snprintf(buffer, MAX_STRING_CHARS, "%g %g %g %g",
 		         (float)(value.color[0] / 255.0f),
 		         (float)(value.color[1] / 255.0f),
 		         (float)(value.color[2] / 255.0f),
