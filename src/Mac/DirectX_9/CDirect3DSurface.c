@@ -140,7 +140,11 @@ HRESULT CDirect3DSurface_LockRect(const CDirect3DSurface *_this, D3DLOCKED_RECT 
 
     (void)Flags;
 
+#ifdef COD2_X64
+    if (!surface->surfaceMemory) {  /* 0xf0000000 is no bound on x64: mmap'd buffers lie above it */
+#else
     if (!surface->surfaceMemory || (uintptr_t)surface->surfaceMemory >= 0xf0000000) {
+#endif
         static byte scratch[4 * 1024 * 1024];
         pLockedRect->pBits = scratch;
     } else {

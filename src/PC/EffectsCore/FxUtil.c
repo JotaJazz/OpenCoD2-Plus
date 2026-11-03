@@ -133,6 +133,10 @@ static Bool FX_AddPrimitive(EffectPrimitive *prim, Effect *particle, const vec_t
 void FX_AddCloud(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddFlash(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddLight(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
+
+/* an Emitter is a Particle followed by its own fields */
+typedef char fx_emitter_base_check[offsetof(Emitter, emitPos) == sizeof(Particle) ? 1 : -1];
+
 void FX_AddCylinder(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddParticle(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
@@ -1089,9 +1093,9 @@ extern void OrientationDirFromWorldDir(const orientation_t *or_, const vec_t *di
 void FX_AddCylinder(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
     (void)lateTime;
-    Effect *p = (Effect *)__Znam(COD2_SIZE_1_3_PADDED(0x278));
+    Effect *p = (Effect *)__Znam(COD2_SIZEOF_1_3(Tail, 0x278));
     if (p)
-        memset(p, 0, COD2_SIZE_1_3_PADDED(0x278));
+        memset(p, 0, COD2_SIZEOF_1_3(Tail, 0x278));
     Cylinder_Cylinder( (const Cylinder *)(p));
     if (!p)
         return;
@@ -1137,9 +1141,9 @@ void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const in
 {
     (void)lateTime;
     (void)indexInBatch;
-    Effect *p = (Effect *)__Znam(COD2_SIZE_1_3_PADDED(0x258));
+    Effect *p = (Effect *)__Znam(COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     if (p)
-        memset(p, 0, COD2_SIZE_1_3_PADDED(0x258));
+        memset(p, 0, COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     Line_Line( (const Line *)(p));
     if (!p)
         return;
@@ -1382,9 +1386,9 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
 extern void OrientedParticle_OrientedParticle(const OrientedParticle *op);
 void FX_AddOrientedParticle(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
-    Effect *p = (Effect *)__Znam(COD2_SIZE_1_3_PADDED(0x258));
+    Effect *p = (Effect *)__Znam(COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     if (p)
-        memset(p, 0, COD2_SIZE_1_3_PADDED(0x258));
+        memset(p, 0, COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     OrientedParticle_OrientedParticle((const OrientedParticle *)(p));
     if (!p)
         return;

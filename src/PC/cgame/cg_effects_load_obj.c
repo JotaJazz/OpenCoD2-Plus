@@ -161,7 +161,7 @@ FxImpactTable *CG_RegisterImpactEffects(const char *mapname)
         CG_RegisterImpactEffectsForDir(mapdir, (char *(*)[23])szEffectFile);
     }
 
-    FxImpactTable *fx = (FxImpactTable *)Hunk_AllocAlignInternal(8, 4);
+    FxImpactTable *fx = (FxImpactTable *)Hunk_AllocAlignInternal(COD2_SIZEOF_1_3(FxImpactTable, 8), 4);
     fx->table = (FxImpactEntry *)Hunk_AllocAlignInternal(sizeof(szEffectFile), 4);
 
     int typeIdx;

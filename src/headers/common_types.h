@@ -6172,7 +6172,11 @@ struct EffectVisInfo {
 
 struct Emitter {
 
+#ifdef COD2_X64
+    char _base[0x378];  /* sizeof(Particle) on x64, checked in FxUtil.c */
+#else
     char _base[0x24c];
+#endif
 
     vec3_t emitPos;
     vec3_t initialVel;
