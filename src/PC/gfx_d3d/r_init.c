@@ -166,13 +166,12 @@ static inline void R_SafeRelease(void **objPtr)
 
 static void R_ReleaseForShutdownOrReset(void)
 {
-    byte *d = (byte *)&dx;
     int i;
 
     {
-        int scCount = *(int *)(d + 11592);
+        int scCount = dx.windowCount;
         for (i = 0; i < scCount; i++) {
-            void **psc = (void **)(d + 0x2d50 + i * 16);
+            void **psc = (void **)&dx.windows[i].swapChain;
             R_SafeRelease(psc);
         }
     }
@@ -180,31 +179,31 @@ static void R_ReleaseForShutdownOrReset(void)
     R_ShutdownRenderTargets();
     R_ShutdownStaticModelCache();
 
-    R_SafeRelease((void **)(d + 11656));
+    R_SafeRelease((void **)&dx.dynamicIndexBufferPool[0].buffer);
 
-    R_SafeRelease((void **)(d + 11696));
+    R_SafeRelease((void **)&dx.dynamicVertexBufferPool[0].buffer);
 
     for (i = 0; i < 2; i++) {
-        R_SafeRelease((void **)(d + 0x2d98 + i * 12));
+        R_SafeRelease((void **)&dx.skinnedCacheVbPool[i].buffer);
     }
 
-    if (*(void **)(d + 11728)) {
+    if (dx.tempSkinBuf) {
 
-        ((void (*)(void *))ri.Z_VirtualFreeInternal)(*(void **)(d + 11728));
-        *(void **)(d + 11728) = NULL;
-        *(int *)(d + 11732) = 0;
+        ((void (*)(void *))ri.Z_VirtualFreeInternal)((void *)dx.tempSkinBuf);
+        *(void **)&dx.tempSkinBuf = NULL;
+        dx.tempSkinPos = 0;
     }
 
-    if (*(void **)(d + 11704)) {
-        R_FreeStaticVertexBuffer(*(IDirect3DVertexBuffer9 **)(d + 11704));
-        *(void **)(d + 11704) = NULL;
+    if (dx.particleCloudVertexBuffer) {
+        R_FreeStaticVertexBuffer((IDirect3DVertexBuffer9 *)dx.particleCloudVertexBuffer);
+        *(void **)&dx.particleCloudVertexBuffer = NULL;
     }
-    if (*(void **)(d + 11708)) {
-        R_FreeStaticIndexBuffer( (IDirect3DIndexBuffer9 *)(*(void **)(d + 11708)));
-        *(void **)(d + 11708) = NULL;
+    if (dx.particleCloudIndexBuffer) {
+        R_FreeStaticIndexBuffer((IDirect3DIndexBuffer9 *)dx.particleCloudIndexBuffer);
+        *(void **)&dx.particleCloudIndexBuffer = NULL;
     }
 
-    R_SafeRelease((void **)(d + 11612));
+    R_SafeRelease((void **)&dx.flushGpuQuery);
 
     {
         byte *sunFlare = (byte *)imp_sunFlareArray;
@@ -522,7 +521,6 @@ void R_FatalLockError(HRESULT hr)
 
 static void R_Shutdown(qboolean destroyWindow)
 {
-    byte *d = (byte *)&dx;
 
 #ifdef GFX_REAL_D3D9
     if (getenv("REALD3D9_MATDIAG")) {
@@ -550,22 +548,23 @@ static void R_Shutdown(qboolean destroyWindow)
     Material_Shutdown();
     R_ShutdownImages();
 
-    *(int *)((byte *)&rgp + 4252) = 0;
+    *(void **)&rgp.world = NULL;
     R_UnlockSkinnedCache();
     R_FlushStaticModelCache();
 
     if (destroyWindow) {
         R_ReleaseForShutdownOrReset();
 
-        while (*(int *)(d + 11592) != 0) {
-            int idx = *(int *)(d + 11592) - 1;
-            *(int *)(d + 11592) = idx;
-            *(void **)(d + 11584 + idx * 16 + 12) = NULL;
+        while (dx.windowCount != 0) {
+            int idx = dx.windowCount - 1;
+            dx.windowCount = idx;
+            *(void **)&dx.windows[idx].hwnd = NULL;
         }
 
-        R_SafeRelease((void **)(d + 8));
+        /* the device, then Direct3D: 1.3's d + 8 and d + 4, x86 offsets */
+        R_SafeRelease((void **)&dx.device);
 
-        R_SafeRelease((void **)(d + 4));
+        R_SafeRelease((void **)&dx.d3d9);
 
         R_UnregisterDvars();
     }
@@ -935,9 +934,9 @@ Bool R_RecoverLostDevice(void)
     if (rgp.world)
         R_ReleaseWorld();
 
-    int displayMode = *(int *)(dxp + 11596);
-    int backBufWidth = *(int *)(dxp + 11604);
-    int backBufHeight = *(int *)(dxp + 11608);
+    int displayMode = (int)(intptr_t)dx.windows[0].hwnd;   /* 1.3's dxp + 11596, read as an int */
+    int backBufWidth = dx.windows[0].width;
+    int backBufHeight = dx.windows[0].height;
     int refreshRate = vidConfig.displayFrequency;
     int isFullscreen = vidConfig.isFullscreen != 0;
     int aaSamples = (*(const dvar_t **)imp_r_aaSamples)->current.integer;
