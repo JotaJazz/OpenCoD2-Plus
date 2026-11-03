@@ -136,7 +136,7 @@ cmake --build build/msvc-release --target cod2_win32
 | `COD2_WIN_MSVC` | `OFF` | Нативная сборка MSVC (задаётся пресетами `msvc-client`). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: один автономный исполняемый файл со статическими SDL2 и средой выполнения C. |
 | `COD2_DEBUG` | `OFF` | `-O0` и без усиления защиты, для отладки. |
-| `COD2_X64` | `OFF` | Цель x86_64: клиент Linux (сначала `scripts/linux_x64_deps.sh`) загружает карты; пока не равен 32-битному. |
+| `COD2_X64` | `OFF` | Цель x86_64: клиенты Linux (сначала `scripts/linux_x64_deps.sh`) и Windows (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) загружают карты; пока не равны 32-битным. |
 
 Есть также сборка WebAssembly (`emcmake cmake -S . -B build/web`, с Emscripten SDK), описанная в начале `CMakeLists.txt`.
 

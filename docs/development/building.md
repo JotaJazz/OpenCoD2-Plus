@@ -18,6 +18,7 @@ top of it.
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
 | Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
 | Linux 64-bit client | `scripts/linux_x64_deps.sh` (amd64 SDL2 headers, no root), then `-DCOD2_X64=ON` | `cod2_linux` for x86_64, on CoD2rev-Plus's VM and server like the 32-bit client; loads maps, not yet equal to it ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
+| Windows 64-bit client | `scripts/mingw64_deps.sh` (MinGW-w64 x86_64 and SDL2's x86_64 libraries, no root), then `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake -DCOD2_X64=ON -DCOD2_WIN32_CLIENT=ON` | `cod2_win32.exe` for x86_64, real Direct3D 9, on CoD2rev-Plus's VM and server; loads maps under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`), not yet equal to the 32-bit one; no libcod (it keeps pointers in `long`, 4 bytes on Win64) |
 
 The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
 `src/stubs`) links into `cod2_linux`, `cod2_linux_vk` and `cod2_win32`, where
@@ -36,6 +37,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
+| `mingw-client-x64` | 64-bit MinGW client (`cmake/toolchain-mingw64.cmake`, `-DCOD2_X64=ON`; skipped without `scripts/mingw64_deps.sh`'s SDL2); the three bridge checks with x86_64's `nm` and no `_` prefix |
 | `linux-vk` | Linux client on real Direct3D 9 (`-DCOD2_LINUX_DXVK=ON`; skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
 | `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`; skipped without `scripts/linux_x64_deps.sh`'s headers); glibc and the three bridge checks apply |
 
@@ -55,7 +57,7 @@ Checks it runs (each a script in `scripts/`):
 | `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from CoD2rev-Plus's |
 | `gen_script_bridge.py` | `all` only | `src/compat` differs from what the generator writes |
 
-A variant skipped for lack of SDL2, DXVK or the amd64 SDL2 headers fails the run unless `--allow-skip`
+A variant skipped for lack of SDL2, DXVK, the amd64 SDL2 headers or the MinGW-w64 x86_64 SDL2 fails the run unless `--allow-skip`
 is given.
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,

@@ -42,7 +42,7 @@ Hand-written parts: `*_missing.cpp` (what one side lacks), `server_data.cpp`,
 
 | Exception | Why | Where decided |
 |---|---|---|
-| MSVC, web and the Windows x64 cross-build keep `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision | those builds do not link CoD2rev-Plus | [ADR 0003](adr/0003-keep-server-mp-for-msvc-web-x64.md) |
+| MSVC and web keep `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision | those builds do not link CoD2rev-Plus | [ADR 0003](adr/0003-keep-server-mp-for-msvc-web-x64.md) |
 | The client keeps the engine's bgame for cgame (prediction) next to CoD2rev-Plus's for the local server | cgame reaches its state through `bgs`; CoD2rev-Plus uses `level_bgs` and another `animation_s` | [client.md](client.md) |
 | Functions only code the dedicated server never runs needs, which CoD2rev-Plus lacks, stop the server with their name (`test/server_fatal.txt`) | linked for symbols, never called | [server.md](server.md) |
 

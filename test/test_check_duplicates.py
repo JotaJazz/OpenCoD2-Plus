@@ -52,6 +52,14 @@ class CheckDuplicates(unittest.TestCase):
                       self.compile('cod2_objs.dir', 'literals', 'int faceAxis = 0;\n'))
         self.assertEqual(r.returncode, 0, r.stdout)
 
+    def test_mingw64_refptr_stubs_not_compared(self):
+        # MinGW-w64 x86_64 emits a .refptr.<name> COMDAT in every object that
+        # reads an external variable: the linker keeps one, they are no duplicates
+        stub = '__asm__(".globl .refptr.com_frameTime\\n.data\\n.refptr.com_frameTime: .long 0");\n'
+        r = self.link(self.compile('cod2_plus_server.dir', 'game', stub),
+                      self.compile('cod2_objs.dir', 'cl_input', stub))
+        self.assertEqual(r.returncode, 0, r.stdout)
+
     def test_two_plus_objects_not_compared(self):
         r = self.link(self.compile('cod2_plus_server.dir', 'a', 'int x = 1;\n'),
                       self.compile('cod2_plus_script.dir', 'b', 'int y = 1;\n'))

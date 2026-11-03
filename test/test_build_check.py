@@ -65,5 +65,31 @@ class BuildCheck(unittest.TestCase):
         self.assertFalse(any('cod2_lnxded' in cmd for cmd in calls), calls)
 
 
+    def test_mingw_client_x64_skipped_without_its_sdl2(self):
+        with mock.patch.object(build_check, 'SDL2_MINGW64', '/no/such/file'):
+            code, out = self.run_main('mingw-client-x64', '--allow-skip')
+        self.assertEqual(code, 0, out)
+        self.assertIn('skip mingw-client-x64', out)
+
+    def test_mingw_client_x64_uses_the_x64_toolchain(self):
+        flags = build_check.VARIANTS['mingw-client-x64']
+        self.assertIn('-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake', flags)
+        self.assertIn('-DCOD2_X64=ON', flags)
+        self.assertIn('-DCOD2_WIN32_CLIENT=ON', flags)
+
+    def test_mingw_client_x64_symbols_have_no_underscore(self):
+        """PE x64 decorates no C name: nm and the prefix are x86_64's."""
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, 'CMakeFiles', 'cod2_win32.dir'))
+            calls = []
+            with mock.patch.object(build_check.subprocess, 'run',
+                                   side_effect=lambda cmd, **kw: calls.append(cmd) or subprocess.CompletedProcess(cmd, 0, '', '')):
+                build_check.duplicates('mingw-client-x64', tmp)
+        nms = {cmd[cmd.index('--nm') + 1] for cmd in calls if '--nm' in cmd}
+        prefixes = {cmd[cmd.index('--prefix') + 1] for cmd in calls if '--prefix' in cmd}
+        self.assertTrue(nms and all(nm.endswith('x86_64-w64-mingw32-nm') for nm in nms), nms)
+        self.assertEqual(prefixes, {''})
+
+
 if __name__ == '__main__':
     unittest.main()

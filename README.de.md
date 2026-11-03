@@ -136,7 +136,7 @@ Dieser Build kompiliert noch C und verwendet die rekonstruierte Skript-VM (`src/
 | `COD2_WIN_MSVC` | `OFF` | Nativer MSVC-Build (von den Presets `msvc-client` gesetzt). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: eine eigenständige ausführbare Datei mit statischem SDL2 und statischer C-Laufzeit. |
 | `COD2_DEBUG` | `OFF` | `-O0` und keine Härtung, zum Debuggen. |
-| `COD2_X64` | `OFF` | x86_64-Ziel: der Linux-Client (zuerst `scripts/linux_x64_deps.sh`) lädt Karten; noch nicht gleich dem 32-Bit-Client. |
+| `COD2_X64` | `OFF` | x86_64-Ziel: der Linux-Client (zuerst `scripts/linux_x64_deps.sh`) und der Windows-Client (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) laden Karten; noch nicht gleich den 32-Bit-Clients. |
 
 Es gibt außerdem einen WebAssembly-Build (`emcmake cmake -S . -B build/web`, mit dem Emscripten-SDK), der am Anfang von `CMakeLists.txt` beschrieben ist.
 

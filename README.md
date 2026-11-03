@@ -100,7 +100,7 @@ cmake --build build-win32 -j
 
 `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE` adds DXVK next to the client, and Options > Graphics > Rendering Method Preference (`r_gfxApi`) then switches it to Vulkan. A device without Vulkan 1.3 stays on Direct3D 9.
 
-Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with; `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
+Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with (`DIR 64`: a 64-bit Wine, for the 64-bit client); `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
 <details>
 <summary><b>Windows (MSVC, native)</b></summary>
@@ -138,7 +138,7 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | `COD2_WIN_MSVC` | `OFF` | Native MSVC build (set by the `msvc-client` presets). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: one standalone executable with static SDL2 and C runtime. |
 | `COD2_DEBUG` | `OFF` | `-O0` and no hardening, for debugging. |
-| `COD2_X64` | `OFF` | x86_64 target: the Linux client (`scripts/linux_x64_deps.sh` first) loads maps; not yet equal to the 32-bit one. |
+| `COD2_X64` | `OFF` | x86_64 target: the Linux client (`scripts/linux_x64_deps.sh` first) and the Windows client (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) load maps; not yet equal to the 32-bit ones. |
 
 There is also a WebAssembly build (`emcmake cmake -S . -B build/web`, with the Emscripten SDK), described at the top of `CMakeLists.txt`.
 

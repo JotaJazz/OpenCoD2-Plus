@@ -19,6 +19,8 @@ PLUS_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_
                 'cod2_plus_script_ded.dir', 'cod2_plus_server.dir', 'cod2_plus_server_client.dir',
                 'cod2_plus_libcod.dir')
 MANGLED = re.compile(r'^_{1,2}Z')
+# MinGW-w64 x86_64's per-object stubs for external variables (COMDAT: the linker keeps one)
+REFPTR = '.refptr.'
 STRONG = set('BDRT')  # not weak (W, V), unique (u) or common (C)
 
 
@@ -36,7 +38,7 @@ def link_objects(build_dir, target):
 def strong_globals(nm, path):
     out = subprocess.run([nm, '-g', '--defined-only', path], capture_output=True, text=True, check=True).stdout
     return {p[-1] for p in (line.split() for line in out.splitlines())
-            if len(p) >= 3 and p[-2] in STRONG and not MANGLED.match(p[-1])}
+            if len(p) >= 3 and p[-2] in STRONG and not MANGLED.match(p[-1]) and not p[-1].startswith(REFPTR)}
 
 
 def main():
