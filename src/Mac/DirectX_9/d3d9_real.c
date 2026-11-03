@@ -332,36 +332,17 @@ void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h, int swapI
     pp->interval = swapInterval ? 1 : 0x80000000u;
 
 #    ifdef _WIN32
-    /* shortcut: D3D9On12 draws a frame that never reaches the screen (an RTX 5080);
-     * COD2_D3D12_PRESENT picks another way to present until one is known to work:
-     * 1 copy, 2 flip with two buffers, 3 exclusive full screen. Remove once settled. */
+    /* D3D9On12 never shows a windowed frame (an RTX 5080, 2026-11-03: discard,
+     * copy and flip all stay black, the back buffer holds the frame); exclusive
+     * full screen at the desktop's refresh shows it */
     if (s_apiInUse == GFX_API_D3D12) {
-        extern void Com_Printf(const char *, ...);
-        const char *v = getenv("COD2_D3D12_PRESENT");
-        int variant = v ? atoi(v) : 0;
+        DEVMODEA mode;
 
-        if (variant == 1) {
-            pp->swapEffect = 3; /* D3DSWAPEFFECT_COPY */
-        } else if (variant == 2) {
-            pp->swapEffect = 2; /* D3DSWAPEFFECT_FLIP */
-            pp->count = 2;
-        } else if (variant == 3) {
-            DEVMODEA mode;
-
-            memset(&mode, 0, sizeof(mode));
-            mode.dmSize = sizeof(mode);
-            pp->windowed = 0;
-            if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &mode))
-                pp->refreshRate = mode.dmDisplayFrequency;
-        }
-        Com_Printf("D3D12 present variant %d: swap effect %u, %u buffers, %s\n", variant, pp->swapEffect,
-                   pp->count, pp->windowed ? "windowed" : "exclusive full screen");
-        if (hwnd) {
-            char title[64];
-
-            sprintf(title, "CoD2 - d3d12 variante %d", variant);
-            SetWindowTextA((HWND)hwnd, title);
-        }
+        memset(&mode, 0, sizeof(mode));
+        mode.dmSize = sizeof(mode);
+        pp->windowed = 0;
+        if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &mode))
+            pp->refreshRate = mode.dmDisplayFrequency;
     }
 #    endif
 }
