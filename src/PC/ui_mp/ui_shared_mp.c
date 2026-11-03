@@ -927,7 +927,7 @@ float Item_Slider_ThumbPosition(itemDef_t *item)
 qboolean Menu_CheckOnKey(displayContextDef_t *dc, menuDef_t *menu, int key)
 {
     byte *m = (byte *)menu;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
     int i;
 
     if (getenv("COD2_KEYDIAG")) {
@@ -1126,7 +1126,7 @@ void Menus_Close(displayContextDef_t *dc, menuDef_t *menu)
     int openCount, i, menuIndex;
     qboolean wasVisible = 0;
     qboolean inStack = 0;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
 
     openCount = (((displayContextDef_s*)(d))->openMenuCount);
     for (i = openCount - 1; i >= 0; i--) {
@@ -2251,7 +2251,7 @@ void Menus_Open(displayContextDef_t *dc, menuDef_t *menu)
     byte *d = (byte *)dc;
     byte *m = (byte *)menu;
     int openCount, i, j;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
 
     openCount = (((displayContextDef_s*)(d))->openMenuCount);
     for (i = openCount - 1; i >= 0; i--)
@@ -4961,7 +4961,7 @@ void Menu_HandleKey(displayContextDef_t *dc, menuDef_t *menu, int key, qboolean 
 
     if (key == 0x1b) {
         if (!g_waitingForKey && (*(void **)&((menuDef_t *)m)->onESC)) {
-            byte tempItem[0x2a0];
+            byte tempItem[sizeof(itemDef_t)];
             *(void **)&(*(unsigned char *)&((itemDef_t *)tempItem)->parent) = menu;
             Item_RunScript(dc, (itemDef_t *)tempItem, ((menuDef_t *)m)->onESC);
         }
@@ -5602,7 +5602,7 @@ void Menus_HandleOOBClick(displayContextDef_t *dc, menuDef_t *menu, int key, qbo
         if ((((Window *)m)->staticFlags & 0x2000000)) {
 
             if (((*(byte *)&((menuDef_t *)m)->window.dynamicFlags[0]) & 4) && (*(void **)&((menuDef_t *)m)->onClose)) {
-                byte tempItem[0x2a0];
+                byte tempItem[sizeof(itemDef_t)];
                 *(void **)&(*(unsigned char *)&((itemDef_t *)tempItem)->parent) = menu;
                 Item_RunScript(dc, (itemDef_t *)tempItem, ((menuDef_t *)m)->onClose);
             }

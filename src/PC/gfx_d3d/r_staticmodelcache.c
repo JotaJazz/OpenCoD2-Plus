@@ -758,7 +758,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
         {
             byte *rgp2 = (byte *)imp_rgp;
             byte *world2 = (*(byte **)&((r_global_permanent_t *)rgp2)->world);
-            float *blc = (float *)((*(byte **)&((GfxWorld *)world2)->smodelInsts) + smodelIndex * 96 + 0x54);
+            float *blc = ((GfxWorld *)world2)->smodelInsts[smodelIndex].baseLightingCoords;
             float val;
 
             val = blc[0] * 32768.0f + 0.5f;

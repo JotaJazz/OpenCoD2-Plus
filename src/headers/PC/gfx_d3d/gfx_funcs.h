@@ -219,7 +219,7 @@ void Material_FinishLoading(void);
 void Material_ReleaseAll(void);
 void Material_UpdatePicmipAll(void);
 int Material_LoadFile(const char *filename, int *file);
-const char *R_GetMaterialName(_ValueType handle);
+const char *R_GetMaterialName(MaterialHandle handle);
 int R_GetMaterialSubimageCount(MaterialHandle handle);
 void Material_Sort(void);
 const char *Material_RegisterString(const char *string);

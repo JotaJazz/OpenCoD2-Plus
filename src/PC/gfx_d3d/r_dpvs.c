@@ -911,7 +911,7 @@ static void R_DPVS_REGPARM3_ABI R_AddVisibleSurfacesInCell_impl(const GfxCell *c
 
                 if (dpvsG.drawXmodels) {
 
-                    int lodLevel = *(int *)&ent->lighting.dx7.sunVisibility;
+                    int lodLevel = *(int *)&ent->lighting.baseCoords[1];  /* the dx7 view's sunVisibility on x86 */
                     if (lodLevel > 1) {
 
                         float *bounds = (float *)modelRef->mins;

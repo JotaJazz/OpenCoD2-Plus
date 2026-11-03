@@ -2505,7 +2505,7 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
                     byte *pb = (byte *)tech + 8;
                     int pi;
                     for (pi = 0; pi < passCount; pi++, pb += 0x5c)
-                        if (!Material_ValidatePassArguments_impl((const Material *)mtl, tsNameStr, (const char *)*(int *)tech, 2, (const MaterialShaderArgument *)&((MaterialPassDx9 *)pb)->pixelShader))
+                        if (!Material_ValidatePassArguments_impl((const Material *)mtl, tsNameStr, tech->name, 2, (const MaterialShaderArgument *)&((MaterialPassDx9 *)pb)->pixelShader))
                             return 0;
                 } else {
                     int pi;

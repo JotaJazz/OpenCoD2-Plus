@@ -74,6 +74,7 @@ static void RB_CopySceneForWater(const Material *material)
 extern refimport_t ri;
 extern int alwaysfails;
 #include "bytematch.h"
+#include "Mac/DirectX_9/d3d_heads.h"
 
 extern void RB_ChangeAlphaStageState(int stageIndex, int texStageBits);
 extern void RB_ChangeColorStageState(int stageIndex, int texStageBits);
@@ -699,8 +700,9 @@ static void RB_SetupLighting_impl(void)
             backEnd->codeConsts[25][2] = smodel->smodelLightingLookupScale[2];
             backEnd->codeConsts[25][3] = 0.0f;
 
-            backEnd->codeConsts[24][0] = (*(float *)&((GfxEntity *)entity)->lighting.dx7.colorForDir);
-            backEnd->codeConsts[24][1] = ((GfxEntity *)entity)->lighting.dx7.sunVisibility;
+            /* 1.3 read these through the dx7 view, which overlaps baseCoords only on x86 */
+            backEnd->codeConsts[24][0] = ((GfxEntity *)entity)->lighting.baseCoords[0];
+            backEnd->codeConsts[24][1] = ((GfxEntity *)entity)->lighting.baseCoords[1];
             backEnd->codeConsts[24][2] = ((GfxEntity *)entity)->lighting.baseCoords[2];
             backEnd->codeConsts[24][3] = 0.0f;
         }
@@ -2041,7 +2043,7 @@ void RB_EndSurface(void)
                         ((void(D3DVTCC *)(void *, int, void *))vtable[0x104 / 4])(device, 0, d3dTexture);
 
                         {
-                            unsigned int texID = *(unsigned int *)((byte *)d3dTexture + 0x54);
+                            unsigned int texID = ((const D3DTextureHead *)d3dTexture)->texIDStorage;
                             unsigned int texTarget = (*(int *)image == 5)
                                                          ? RB_GL_TEXTURE_CUBE_MAP
                                                          : RB_GL_TEXTURE_2D;

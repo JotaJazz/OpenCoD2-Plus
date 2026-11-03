@@ -475,7 +475,9 @@ int DObjGetSurfaces(const DObj *obj, DSurface *surfaces, int *partBits, char *lo
                     (surfPartBits[i] >> invTargBit) | (surfPartBits[i + 1] << targBit);
             }
 
-            partBits[targWord + numBoneBits] |= surfPartBits[numBoneBits] >> invTargBit;
+            /* the bits shifted past the last word are zero when it is partBits[4] (128 bones at most) */
+            if (targWord + numBoneBits < 4)
+                partBits[targWord + numBoneBits] |= surfPartBits[numBoneBits] >> invTargBit;
         } else if (numBoneBits >= 0) {
             int i;
 

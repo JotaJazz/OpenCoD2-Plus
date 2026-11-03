@@ -147,7 +147,7 @@ void Material_FinishLoading(void);
 void Material_ReleaseAll(void);
 void Material_UpdatePicmipAll(void);
 int Material_LoadFile(const char *filename, fileHandle_t *file);
-const char *R_GetMaterialName(_ValueType handle);
+const char *R_GetMaterialName(MaterialHandle handle);
 int R_GetMaterialSubimageCount(MaterialHandle handle);
 void Material_Sort(void);
 const char *Material_RegisterString(const char *string);
@@ -452,9 +452,9 @@ int Material_LoadFile(const char *filename, int *file)
     return ri.FS_FOpenFileRead(fullFilename, file, 1);
 }
 
-const char *R_GetMaterialName(_ValueType handle)
+const char *R_GetMaterialName(MaterialHandle handle)
 {
-    return *(const char **)(*(int *)&handle);
+    return handle->info.name;
 }
 
 int R_GetMaterialSubimageCount(MaterialHandle handle)
