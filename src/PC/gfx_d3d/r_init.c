@@ -277,8 +277,8 @@ static HRESULT R_CreateDevice(HWND hwnd, DWORD behavior, void *d3dpp)
 void R_UpdateGpuSyncType(void)
 {
     int v;
-    if (!*(byte *)(*(int *)imp_r_multiGpu + 8))
-        v = *(int *)(*(int *)imp_r_gpuSync + 8);
+    if (!(*(const dvar_t **)imp_r_multiGpu)->current.enabled)
+        v = (*(const dvar_t **)imp_r_gpuSync)->current.integer;
     else
         v = 0;
     dx.gpuSync = v;
@@ -485,7 +485,7 @@ void R_GammaCorrect(byte *buffer, int bufSize)
     float invGamma;
     int i;
 
-    invGamma = 1.0f / *(float *)(*(int *)imp_r_gamma + 8);
+    invGamma = 1.0f / (*(const dvar_t **)imp_r_gamma)->current.value;
 
     if (invGamma == 1.0f) {
 
@@ -582,7 +582,7 @@ void R_SetColorMappings(void)
     if (!vidConfig.deviceSupportsGamma)
         return;
 
-    invGamma = 1.0f / *(float *)(*(int *)imp_r_gamma + 8);
+    invGamma = 1.0f / (*(const dvar_t **)imp_r_gamma)->current.value;
 
     if (invGamma == 1.0f) {
         for (i = 0; i < 256; i++)
@@ -772,7 +772,8 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             extern void R_GetModeSize(int *width, int *height);
             int width, height;
             void *hwnd;
-            unsigned char pp[56];
+            struct _D3DPRESENT_PARAMETERS_ pp;
+            extern int RealD3D9_PresentParamsSize(void);
             HRESULT hr;
 
             ri_printf(0, "Initializing REAL Direct3D9 (GFX_REAL_D3D9)\n");
@@ -783,9 +784,11 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             if (!dx.d3d9)
                 R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
-            RealD3D9_FillPresentParams(pp, hwnd, width, height, r_swapInterval->current.enabled);
+            if (RealD3D9_PresentParamsSize() != (int)sizeof(pp))
+                R_Error(ERR_FATAL, "D3DPRESENT_PARAMETERS: %i bytes here, %i in d3d9_real.c", (int)sizeof(pp), RealD3D9_PresentParamsSize());
+            RealD3D9_FillPresentParams(&pp, hwnd, width, height, r_swapInterval->current.enabled);
             s_realWindow = hwnd;
-            hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
+            hr = R_CreateDevice_impl((HWND)hwnd, 0x40, &pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
             if ((hr < 0 || !dx.device) && r_gfxApi->current.integer) {
                 ri_printf(0, "^3r_gfxApi could not make a device, using Direct3D 9\n");
@@ -793,7 +796,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
                 dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9(0);
                 if (!dx.d3d9)
                     R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
-                hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
+                hr = R_CreateDevice_impl((HWND)hwnd, 0x40, &pp);
             }
             if (hr < 0 || !dx.device)
                 R_Error(ERR_FATAL, "Couldn't create the Direct3D 9 device: %s", R_ErrorDescription(hr));
@@ -937,7 +940,7 @@ Bool R_RecoverLostDevice(void)
     int backBufHeight = *(int *)(dxp + 11608);
     int refreshRate = vidConfig.displayFrequency;
     int isFullscreen = vidConfig.isFullscreen != 0;
-    int aaSamples = *(int *)(*(int *)imp_r_aaSamples + 8);
+    int aaSamples = (*(const dvar_t **)imp_r_aaSamples)->current.integer;
 
     if (aaSamples > 1) {
         void *d3d = (void *)dx.d3d9;
@@ -960,7 +963,8 @@ Bool R_RecoverLostDevice(void)
 
 aa_done:;
 
-    int d3dpp[14];
+    /* 16: room for the real D3DPRESENT_PARAMETERS on x64 (64 bytes) */
+    __attribute__((aligned(8))) int d3dpp[16];
     memset(d3dpp, 0, sizeof(d3dpp));
     d3dpp[0] = backBufWidth;
     d3dpp[1] = backBufHeight;
@@ -971,7 +975,7 @@ aa_done:;
     d3dpp[6] = 1;
     d3dpp[8] = 0x4b;
 
-    int swapInterval = *(byte *)(*(int *)imp_r_swapInterval + 8);
+    int swapInterval = (*(const dvar_t **)imp_r_swapInterval)->current.enabled;
     d3dpp[11] = swapInterval ? 1 : 0x80000000;
     d3dpp[10] = displayMode;
     d3dpp[9] = 0;

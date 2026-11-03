@@ -781,6 +781,17 @@ static void RB_EndFrame_real(void)
 #endif
         hr = ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *))(vtable[0x44 / 4]))(device, NULL, NULL, NULL, NULL);
 
+#ifdef GFX_REAL_D3D9
+    {
+        /* a result other than S_OK, once each: S_PRESENT_OCCLUDED (0x08760868)
+         * succeeds without showing the frame (r_gfxApi d3d12's black screen) */
+        static HRESULT s_lastPresentHr;
+
+        if (hr != 0 && hr != s_lastPresentHr)
+            ri.Printf(0, "Direct3DDevice9::Present returned 0x%08x\n", (unsigned)hr);
+        s_lastPresentHr = hr;
+    }
+#endif
     if (hr < 0) {
         if (hr != (HRESULT)0x88760868) {
             R_Error(0, "Direct3DDevice9::Present failed: %s\n", R_ErrorDescription(hr));

@@ -114,7 +114,7 @@ void SV_UserVoice(client_t *cl, msg_t *msg)
     int dataSize;
     int i;
 
-    if (*(byte *)(*(int *)(*(int *)imp_sv_voice) + 8) == 0)
+    if ((**(const dvar_t ***)imp_sv_voice)->current.enabled == 0)
         return;
 
     packetCount = MSG_ReadByte(msg);
@@ -149,7 +149,7 @@ void SV_PreGameUserVoice(client_t *cl, msg_t *msg)
     serverStatic_t *svs;
     client_t *otherCl;
 
-    if (*(byte *)(*(int *)(*(int *)imp_sv_voice) + 8) == 0)
+    if ((**(const dvar_t ***)imp_sv_voice)->current.enabled == 0)
         return;
 
     svs = (serverStatic_t *)imp_svs;

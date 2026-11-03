@@ -63,7 +63,7 @@ qboolean CG_ScoreboardDisplayed(void)
 void CG_ScrollScoreboardUp(void)
 {
     if (cg->scoresTop > 0) {
-        cg->scoresTop -= *(int *)(*(int *)imp_cg_scoreboardScrollStep + 8);
+        cg->scoresTop -= (*(const dvar_t **)imp_cg_scoreboardScrollStep)->current.integer;
         if (cg->scoresTop < 0)
             cg->scoresTop = 0;
     }
@@ -72,7 +72,7 @@ void CG_ScrollScoreboardUp(void)
 void CG_ScrollScoreboardDown(void)
 {
     if (cg->scoresOffBottom != 0) {
-        cg->scoresTop += *(int *)(*(int *)imp_cg_scoreboardScrollStep + 8);
+        cg->scoresTop += (*(const dvar_t **)imp_cg_scoreboardScrollStep)->current.integer;
         int maxScroll = cg->numScores - 1;
         if (cg->scoresTop > maxScroll)
             cg->scoresTop = maxScroll;
