@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — the name "1.3 Plus"
+
+- The maintainer wanted players to see the client as a patch after 1.3, as CoD2x does with 1.4. "1.4" was rejected: CoD2x uses it, and zk_libcod's `getProtocolString()` already returns it for Game Pass. Players read "1.3 Plus" ([ADR 0014](../architecture/adr/0014-name-1-3-plus.md)); `shortversion` "1.3" and the Plus version stay.
+- Left open: renaming the console line "CoD2 Plus server, version".
+
 ## 2026-11-02 — the 64-bit Linux client loads a map
 
 - `cod2_linux` builds for x86_64 (`-DCOD2_X64=ON`, `build_check.py linux-client-x64`) and runs CoD2rev-Plus's VM and server through the bridge, which now records each function's x64 ABI beside the x86 one; the engine's own VM kept values in 4 bytes and ran out of variables. The menu equals the 32-bit client's pixel for pixel; `mp_toujane` loads, plays and quits, and the 32-bit client reads the profile it writes.

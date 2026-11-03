@@ -21,6 +21,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0010](0010-64-bit-dedicated-server-without-the-engine.md) | 64-bit dedicated server without the engine | Accepted | 2026-10-31 |
 | [0012](0012-sound-engine-behind-the-ail-calls.md) | Sound engine behind the AIL calls | Accepted | 2026-11-01 |
 | [0013](0013-miles-retired-from-the-windows-client.md) | Miles retired from the Windows client | Accepted | 2026-11-01 |
+| [0014](0014-name-1-3-plus.md) | The player-facing name is "1.3 Plus" | Accepted | 2026-11-02 |
 
 ## Template
 
