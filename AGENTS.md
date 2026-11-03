@@ -2,7 +2,7 @@
 
 Entry point for AI agents and new contributors working on opencod2-plus, a
 reconstruction of Call of Duty 2 multiplayer (1.3/1.0) whose server runs
-CoD2rev-Plus's code over the reconstructed engine.
+OpenCoD2-Plus Server's code over the reconstructed engine.
 
 ## Read first
 
@@ -11,8 +11,8 @@ CoD2rev-Plus's code over the reconstructed engine.
 
 ## Hard rules
 
-- Never edit files listed in `test/vendored_files.txt`; fixes go to CoD2rev-Plus first ([docs/development/vendored.md](docs/development/vendored.md)).
-- Engine ↔ CoD2rev-Plus calls go only through the generated, type-checked bridge in `src/compat` ([docs/architecture/boundaries.md](docs/architecture/boundaries.md)).
+- Never edit files listed in `test/vendored_files.txt`; fixes go to OpenCoD2-Plus Server first ([docs/development/vendored.md](docs/development/vendored.md)).
+- Engine ↔ OpenCoD2-Plus Server calls go only through the generated, type-checked bridge in `src/compat` ([docs/architecture/boundaries.md](docs/architecture/boundaries.md)).
 - The original 1.3 binaries define correct behavior; cite the address a fix follows ([docs/development/validation.md](docs/development/validation.md)).
 - Prove every fix with a test or check you ran; `python3 scripts/build_check.py all` and `python3 -m unittest discover -s test` stay green.
 - No personal data in the repository (CD keys, personal paths, private server addresses).

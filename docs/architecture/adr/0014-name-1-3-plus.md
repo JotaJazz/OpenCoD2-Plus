@@ -5,7 +5,7 @@
 
 ## Context
 
-Players should see that this client is a patch that comes after 1.3, as CoD2x shows with its 1.4.x releases. "1.4" cannot say it: CoD2x uses it and its clients sort servers by version, and mods read "1.4" from zk_libcod's `getProtocolString()` for protocol 119 (Game Pass). The client also keeps `shortversion` at "1.3" (`COD2_VERSION_SHORT`), which 1.3 servers and browsers compare, so it can still join them. CoD2rev-Plus took the same decision in its ADR 0014.
+Players should see that this client is a patch that comes after 1.3, as CoD2x shows with its 1.4.x releases. "1.4" cannot say it: CoD2x uses it and its clients sort servers by version, and mods read "1.4" from zk_libcod's `getProtocolString()` for protocol 119 (Game Pass). The client also keeps `shortversion` at "1.3" (`COD2_VERSION_SHORT`), which 1.3 servers and browsers compare, so it can still join them. OpenCoD2-Plus Server took the same decision in its ADR 0014.
 
 ## Decision
 

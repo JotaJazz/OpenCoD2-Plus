@@ -7,7 +7,7 @@ Normative summary for agents. The full rules are in
 ## Layers
 
 ```
-engine (src/PC, C as C++) --exports--> bridge (src/compat) --C++ calls--> CoD2rev-Plus (vendored)
+engine (src/PC, C as C++) --exports--> bridge (src/compat) --C++ calls--> OpenCoD2-Plus Server (vendored)
         ^                                   |
         +----------- imports ---------------+
 blobs (original data) <- imp_ pointers <- engine
@@ -15,7 +15,7 @@ blobs (original data) <- imp_ pointers <- engine
 
 ## Must
 
-- Cross engine ↔ CoD2rev-Plus only through `src/compat`, with an interface entry (ABI-checked for the server and client modules).
+- Cross engine ↔ OpenCoD2-Plus Server only through `src/compat`, with an interface entry (ABI-checked for the server and client modules).
 - Keep one copy of each state per executable (`test/plus_replaces.txt`).
 - Follow the 1.3 binaries; cite addresses.
 - Reach `cgs_t`/`cg_t` fields by name.
@@ -31,7 +31,7 @@ blobs (original data) <- imp_ pointers <- engine
 
 | Decision | ADR |
 |---|---|
-| CoD2rev-Plus vendored behind a generated bridge | [0001](../architecture/adr/0001-vendor-cod2rev-plus-with-a-generated-bridge.md) |
+| OpenCoD2-Plus Server vendored behind a generated bridge | [0001](../architecture/adr/0001-vendor-cod2rev-plus-with-a-generated-bridge.md) |
 | Engine compiled as C++ | [0002](../architecture/adr/0002-compile-the-engine-as-cpp.md) |
 | Original 1.3 binaries are the reference | [0006](../architecture/adr/0006-original-1-3-binaries-are-the-reference.md) |
 

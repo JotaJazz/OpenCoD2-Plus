@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-03 — the server is named OpenCoD2-Plus Server
+
+- CoD2rev-Plus renamed itself OpenCoD2-Plus Server (its ADR 0016; repository `JotaJazz/OpenCoD2-Plus-Server`), and its ADR says this repository follows in its own documents: the living docs and ADRs use the new name, the READMEs say what it was called; past memory stages, commits and code comments keep the old one.
+- The banner and `src/win32/opencod2.ico` (from `docs/icon.svg`) take the server's new emblem, a faceted star over "2+" in a roundel, so the two read as one family; the READMEs gained the server's architecture badge and "1.3 Plus".
+
 ## 2026-11-02 — the 64-bit Windows client loads a map
 
 - `cod2_win32.exe` cross-builds for x86_64 with MinGW-w64 (`scripts/mingw64_deps.sh`, no root; `build_check.py mingw-client-x64`) on the same blobs and bridge as the Linux x64 client. Win64 is LLP64: casts through `unsigned long` and `HPROVIDER` truncated, PE x64 has no `_` on C names (link aliases, `CDirect3DDevice`'s flags), and MinGW defines `_M_X64`, so guards meant for MSVC x64 took the client off the Mac port's stubs and the real `MessageBoxA` waited for a click.

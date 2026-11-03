@@ -5,14 +5,14 @@
 
 ## Context
 
-Editing copied files in place would make later `git am` of CoD2rev-Plus's commits conflict and hide divergence.
+Editing copied files in place would make later `git am` of OpenCoD2-Plus Server's commits conflict and hide divergence.
 
 ## Decision
 
-A fix to a vendored file is committed to CoD2rev-Plus first and brought back with `git am --keep-cr --include=<paths>`; `test/vendored_files.txt` records the revision; `scripts/vendor_check.py` compares the files.
+A fix to a vendored file is committed to OpenCoD2-Plus Server first and brought back with `git am --keep-cr --include=<paths>`; `test/vendored_files.txt` records the revision; `scripts/vendor_check.py` compares the files.
 
 ## Consequences
 
 - Vendored files are never edited here.
-- A fix needs a CoD2rev-Plus commit, with that repository's own checks.
-- CRLF endings in some CoD2rev-Plus files require `--keep-cr`.
+- A fix needs a OpenCoD2-Plus Server commit, with that repository's own checks.
+- CRLF endings in some OpenCoD2-Plus Server files require `--keep-cr`.

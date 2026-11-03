@@ -5,9 +5,10 @@
 ![Status: in development](https://img.shields.io/badge/status-in%20development-orange)
 ![License: none yet](https://img.shields.io/badge/license-none%20yet-lightgrey)
 ![Platforms: Linux | Windows](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
-![CoD2 1.3](https://img.shields.io/badge/CoD2-1.3-c9b37e)
+![Architectures: x86 | x64](https://img.shields.io/badge/arch-x86%20%7C%20x64-lightgrey)
+![CoD2 1.3 | 1.3 Plus](https://img.shields.io/badge/CoD2-1.3%20%7C%201.3%20Plus-c9b37e)
 [![Fork of opencod2/opencod2](https://img.shields.io/badge/fork%20of-opencod2%2Fopencod2-555)](https://github.com/opencod2/opencod2)
-[![Last commit](https://img.shields.io/github/last-commit/JotaJazz/opencod2-plus)](https://github.com/JotaJazz/opencod2-plus/commits/main)
+[![Last commit](https://img.shields.io/github/last-commit/JotaJazz/OpenCoD2-Plus)](https://github.com/JotaJazz/OpenCoD2-Plus/commits/main)
 
 [Español](README.es.md) · **English** · [Português](README.pt.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
@@ -28,13 +29,15 @@
 
 - **Online play on public 1.3 servers** with the Windows client, with the original lighting: Direct3D 9 and the game's own shaders. A server's mods download over HTTP when it offers them (`sv_wwwBaseURL`), on Windows too.
 - **Host a game from the client**, for friends to join, with bots if you like (libcod).
-- **A dedicated server for 1.3 and 1.0**, built on [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus): on Linux it passes CoD2rev-Plus's whole smoke test.
+- **A dedicated server for 1.3 and 1.0**, built on [OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server) (called CoD2rev-Plus until November 2026): on Linux it passes OpenCoD2-Plus Server's whole smoke test.
 - **A Linux client**, and one on Vulkan (DXVK) that draws with the game's own shaders too.
+- **CoD2 1.3 Plus (in development):** against a Plus server (OpenCoD2-Plus Server's `make PLUS=1`) the client speaks the newer 1.3 Plus protocol, with smaller snapshots, and its own local games use it too; stock 1.3 servers play as before.
+- **64-bit clients (in development):** the Linux and Windows clients also build for x86_64 and load maps; they are not yet equal to the 32-bit ones (no effects yet).
 - **CoD2x's improvements, written in the engine**: `sensitivity_MG`, compass options, `cl_maxpackets` up to 125, `com_writeConfig`, `cl_hideServerIp`, 4096 dvars and a report when the game freezes (`com_freezeWatch`).
 - **Checked against the original 1.3 binaries**: movement prediction, effects, sounds, recoil, menus and many fixes ([what changed](docs/changes.md)).
 
 > [!NOTE]
-> **Still in development.** Expect bugs and missing pieces, and please report them in the [issues](https://github.com/JotaJazz/opencod2-plus/issues).
+> **Still in development.** Expect bugs and missing pieces, and please report them in the [issues](https://github.com/JotaJazz/OpenCoD2-Plus/issues).
 
 > [!IMPORTANT]
 > **No game content is included — bring your own data.** This repository is source code only: no executables, archives, maps, models, textures, sounds or scripts. To run anything you must supply data files from a copy of the game that **you legally own**.
@@ -100,7 +103,7 @@ cmake --build build-win32 -j
 
 `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE` adds DXVK next to the client, and Options > Graphics > Rendering Method Preference (`r_gfxApi`) then switches it to Vulkan. A device without Vulkan 1.3 stays on Direct3D 9.
 
-Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on CoD2rev-Plus's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with (`DIR 64`: a 64-bit Wine, for the 64-bit client); `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
+Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on OpenCoD2-Plus Server's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with (`DIR 64`: a 64-bit Wine, for the 64-bit client); `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
 <details>
 <summary><b>Windows (MSVC, native)</b></summary>
@@ -128,10 +131,10 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compiles the engine as C++ on Linux and MinGW. `OFF` builds C. |
 | `COD2_CXX_DIRS` | `""` | With `COD2_CXX_ALL=OFF`, the `src/` modules or files still compiled as C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | CoD2rev-Plus's script VM (`src/script`) on Linux and MinGW. `OFF` uses the reconstructed one (`src/PC/script`), as MSVC, the web build and x64 do. |
-| `COD2_PLUS_SERVER` | `ON` | CoD2rev-Plus's server, game, bgame and core (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` or `src/win32`) in the dedicated server, on Linux and MinGW; needs `COD2_PLUS_SCRIPT`. `OFF` uses the reconstructed ones (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | CoD2rev-Plus's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as MSVC, the web build and x64 still do. |
-| `COD2_PLUS_LIBCOD` | `ON` | CoD2rev-Plus's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_SCRIPT` | `ON` | OpenCoD2-Plus Server's script VM (`src/script`) on Linux and MinGW. `OFF` uses the reconstructed one (`src/PC/script`), as MSVC, the web build and x64 do. |
+| `COD2_PLUS_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and core (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` or `src/win32`) in the dedicated server, on Linux and MinGW; needs `COD2_PLUS_SCRIPT`. `OFF` uses the reconstructed ones (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
+| `COD2_PLUS_CLIENT_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as MSVC, the web build and x64 still do. |
+| `COD2_PLUS_LIBCOD` | `ON` | OpenCoD2-Plus Server's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature switches; `-DCOD2_PATCH_10` builds the 1.0 version. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: the client instead of the dedicated server. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | MinGW client: real Direct3D 9 and the game's shaders (system d3dx9); `OFF` keeps the GL device. |
@@ -154,7 +157,7 @@ The checks need the build and, for the ones that start the server, a game folder
 ```bash
 python3 scripts/build_check.py all                      # every variant (linux, linux-10, mingw, mingw-client...) into build/check-*/
 python3 scripts/check_c_linkage.py build/check-linux    # no unexpected C++ names in the engine
-python3 scripts/layout_parity.py                        # types shared with CoD2rev-Plus's VM lay out alike
+python3 scripts/layout_parity.py                        # types shared with OpenCoD2-Plus Server's VM lay out alike
 python3 scripts/check_c_decls.py build/check-linux     # every engine call matches its definition's types
 python3 scripts/check_var_sizes.py build/check-linux    # no global is used as larger than it is defined
 python3 scripts/opencod2_smoke.py /path/to/CoD2 --protocol 118
@@ -169,11 +172,11 @@ python3 scripts/hud_align_test.py /path/to/CoD2 --protocol 118
 python3 scripts/www_download_test.py /path/to/CoD2
 python3 scripts/bots_test.py /path/to/CoD2 --binary build/check-linux/cod2_lnxded
 python3 scripts/http_test.py /path/to/CoD2 --binary build/check-linux/cod2_lnxded
-python3 scripts/vendor_check.py /path/to/CoD2rev-Plus   # files copied from CoD2rev-Plus are unchanged
+python3 scripts/vendor_check.py /path/to/OpenCoD2-Plus-Server   # files copied from OpenCoD2-Plus Server are unchanged
 python3 -m unittest discover -s test
 ```
 
-- `opencod2_smoke.py` runs CoD2rev-Plus's `scripts/smoke_test.py`, unchanged, and compares its failures with `test/smoke_expected_failures_<protocol>.txt`: the checks this server does not pass yet. It fails on a new failure and on a listed one that now passes, so the lists only shrink. `--protocol 115` tests the 1.0 build. `--protocol 118 --binary build/check-mingw/cod2_win32_ded.exe --wine DIR/wine.sh` runs it against the Windows dedicated server under Wine (`scripts/portable_wine.sh`), with its own list, `test/smoke_expected_failures_wine.txt`: under Wine the server prints only to its window and a signal does not reach it as one (a SIGSEGV sent with `kill` is ignored, SIGTERM ends it at once), so the crash report, the SIGTERM checks and those that read its output are not checked there (the wrapper checks `net_strictPort` in its console log). The Linux lists are empty: the dedicated server passes the whole smoke test.
+- `opencod2_smoke.py` runs OpenCoD2-Plus Server's `scripts/smoke_test.py`, unchanged, and compares its failures with `test/smoke_expected_failures_<protocol>.txt`: the checks this server does not pass yet. It fails on a new failure and on a listed one that now passes, so the lists only shrink. `--protocol 115` tests the 1.0 build. `--protocol 118 --binary build/check-mingw/cod2_win32_ded.exe --wine DIR/wine.sh` runs it against the Windows dedicated server under Wine (`scripts/portable_wine.sh`), with its own list, `test/smoke_expected_failures_wine.txt`: under Wine the server prints only to its window and a signal does not reach it as one (a SIGSEGV sent with `kill` is ignored, SIGTERM ends it at once), so the crash report, the SIGTERM checks and those that read its output are not checked there (the wrapper checks `net_strictPort` in its console log). The Linux lists are empty: the dedicated server passes the whole smoke test.
 - `two_players_test.py` joins two clients on tdm, has them send commands, disconnects one and brings it back, and kicks the other; the server, with `developer 1` so that a script error stops the map, must answer after every step.
 - `listen_test.py` starts a client that hosts a game and a second one that joins it, and checks both after a `map_restart` and a map change; it needs a CD key in `~/.cod2/preferences`.
 - `map_reload_test.py` loads maps by rcon, alternating `map_restart` and `map` between two maps, and checks every load; `rcon_drop_test.py` raises a drop error from rcon (`error drop`) and checks the server stays up.
@@ -182,7 +185,7 @@ python3 -m unittest discover -s test
 - `fx_test.py` has a real client (with a CD key) play a sprite, a bullet's impact and two explosions in front of it, and checks each changes the screenshot.
 - `hud_align_test.py` gives a real client (with a CD key) three colored boxes with different `horzAlign`/`vertAlign` pairs, as a killcam's title, and checks in a screenshot that each lands where 1.3 puts it.
 - `www_download_test.py` has a client join a server whose mod it lacks and fetch it from a local HTTP server; `--wine DIR/wine.sh --binary build/check-mingw-client/cod2_win32.exe` runs the Windows client, `--disconnect` lets the server ask it to leave, download and come back.
-- `bots_test.py` and `http_test.py` are CoD2rev-Plus's, unchanged, for libcod: the bots of `mods/bots` must find their paths, save and reload their graph and fight on a real map; `httpFetch` and `webSocket*` must work against local HTTP, HTTPS, WS and WSS servers (they need `openssl`). Pass `--binary build/check-linux/cod2_lnxded`.
+- `bots_test.py` and `http_test.py` are OpenCoD2-Plus Server's, unchanged, for libcod: the bots of `mods/bots` must find their paths, save and reload their graph and fight on a real map; `httpFetch` and `webSocket*` must work against local HTTP, HTTPS, WS and WSS servers (they need `openssl`). Pass `--binary build/check-linux/cod2_lnxded`.
 - `scripts/cxx_errors.py` counts the C++ errors of a module (`--return-type` finds non-void functions that can end without a return, which is undefined in C++); `scripts/gen_script_bridge.py --module script|server|client_server` regenerates the bridge to the script VM or to the server, and `scripts/engine_abi.py --module server` records, with gdb, the engine's ABI the bridge checks against (`test/server_abi.txt`).
 
 </details>
@@ -194,19 +197,19 @@ python3 -m unittest discover -s test
 
 | Path | Contents |
 | --- | --- |
-| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), server (`server_mp`), game (`game_mp`, `bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`), animations (`xanim`) and the reconstructed script VM (`script`). On Linux and in the MinGW dedicated server, `server_mp`, `game_mp`, `game` and the core CoD2rev-Plus replaces are left out (`test/plus_replaces.txt`); the MinGW client leaves out `server_mp`, `game_mp`, `game` and the collision. |
+| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), server (`server_mp`), game (`game_mp`, `bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`), animations (`xanim`) and the reconstructed script VM (`script`). On Linux and in the MinGW dedicated server, `server_mp`, `game_mp`, `game` and the core OpenCoD2-Plus Server replaces are left out (`test/plus_replaces.txt`); the MinGW client leaves out `server_mp`, `game_mp`, `game` and the collision. |
 | `src/Mac` | The Mac port's platform layer that the reconstruction came from: OpenGL behind a Direct3D interface, and input. |
 | `src/snd_sdl` | Our own sound engine on SDL2, behind Miles' `AIL_*` calls: the sound of both clients, without `mss32.dll`. |
-| `src/script` | CoD2rev-Plus's script VM, copied unchanged, with the headers it needs in `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` and `src/libcod`. |
-| `src/server` | CoD2rev-Plus's server, copied unchanged; the dedicated server uses it. |
-| `src/game`, `src/bgame` | CoD2rev-Plus's game and bgame, copied unchanged; the dedicated server uses them. |
-| `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | CoD2rev-Plus's core and platform code, copied unchanged; the dedicated server runs on them. `test/plus_replaces.txt` lists the engine sources they replace there. |
-| `src/libcod`, `mods/bots` | CoD2rev-Plus's libcod and its libraries (yyjson, SQLite, Mbed TLS; its Speex is not built, the engine's is used), and its bots mod, copied unchanged; the dedicated server and the client's local games use them. |
-| `src/compat` | The bridges between the engine's C names and CoD2rev-Plus's C++ VM, server and core; mostly generated. |
+| `src/script` | OpenCoD2-Plus Server's script VM, copied unchanged, with the headers it needs in `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` and `src/libcod`. |
+| `src/server` | OpenCoD2-Plus Server's server, copied unchanged; the dedicated server uses it. |
+| `src/game`, `src/bgame` | OpenCoD2-Plus Server's game and bgame, copied unchanged; the dedicated server uses them. |
+| `src/universal`, `src/qcommon`, `src/xanim`, `src/unix`, `src/win32` | OpenCoD2-Plus Server's core and platform code, copied unchanged; the dedicated server runs on them. `test/plus_replaces.txt` lists the engine sources they replace there. |
+| `src/libcod`, `mods/bots` | OpenCoD2-Plus Server's libcod and its libraries (yyjson, SQLite, Mbed TLS; its Speex is not built, the engine's is used), and its bots mod, copied unchanged; the dedicated server and the client's local games use them. |
+| `src/compat` | The bridges between the engine's C names and OpenCoD2-Plus Server's C++ VM, server and core; mostly generated. |
 | `src/headers`, `src/imports` | Shared types, offsets checked against the original binary, and declarations of imported functions. |
 | `src/blobs`, `build/native_gen`, `build/win_gen` | Data taken from the original binary, still used by the engine. |
 | `src/unix`, `src/win32`, `src/stubs`, `src/web` | Platform code and stubs. |
-| `scripts` | Build and test scripts, and the test client from CoD2rev-Plus. |
+| `scripts` | Build and test scripts, and the test client from OpenCoD2-Plus Server. |
 | `test` | Unit tests and the lists the checks read. |
 | `docs` | The [documentation](docs/README.md) and the banner. |
 
@@ -216,8 +219,8 @@ python3 -m unittest discover -s test
 
 - **Who maintains this:** I'm JotaJazz. I like old games, and that is why this fork exists: I want to keep playing CoD2 with my friends, and to keep the game alive for the community that still plays it, with an open project.
 - **How the work is done:** I work with [Claude Code](https://claude.com/claude-code), Anthropic's coding assistant. The changes in this fork, including this README and its translations, are written with its help. Commits made this way carry a `Co-Authored-By: Claude` line in their message, so they can be identified in the history with `git log`.
-- **Relationship with the original:** the reconstruction is the work of the opencod2 authors (riicchhaarrd) and of Sipex. This fork no longer pulls changes from them; it brings in code from CoD2rev-Plus instead, copied unchanged so that its commits apply here too.
-- **License:** none yet, as in the original. CoD2rev-Plus's code here (script VM, server, game, core, libcod and its bots mod) is AGPL-3.0, and the license of the whole is being sorted out with the original authors. Third-party libraries keep theirs: SQLite (public domain), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT) and Speex (BSD, not built).
+- **Relationship with the original:** the reconstruction is the work of the opencod2 authors (riicchhaarrd) and of Sipex. This fork no longer pulls changes from them; it brings in code from OpenCoD2-Plus Server instead, copied unchanged so that its commits apply here too.
+- **License:** none yet, as in the original. OpenCoD2-Plus Server's code here (script VM, server, game, core, libcod and its bots mod) is AGPL-3.0, and the license of the whole is being sorted out with the original authors. Third-party libraries keep theirs: SQLite (public domain), Mbed TLS (Apache-2.0, `src/libcod/mbedtls/LICENSE`), yyjson (MIT) and Speex (BSD, not built).
 - **What it is not:** it is not an official project and is not affiliated with Activision, Infinity Ward or the authors of the original repository. It contains no game files.
 
 ## Notice
@@ -238,6 +241,6 @@ The screenshots show content of Call of Duty 2, property of Activision Publishin
 
 - [opencod2](https://github.com/opencod2/opencod2) (riicchhaarrd), the reconstruction of the engine
 - [Sipex18/opencod2-web](https://github.com/Sipex18/opencod2-web) (Sipex), hardening and network fixes
-- [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) and [voron00/CoD2rev_Server](https://github.com/voron00/CoD2rev_Server), the dedicated server and the script VM
+- [OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server) and [voron00/CoD2rev_Server](https://github.com/voron00/CoD2rev_Server), the dedicated server and the script VM
 - id Software
 - Activision / Infinity Ward
