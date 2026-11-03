@@ -1683,7 +1683,7 @@ sort_changed:
             const char *nm = material ? *(const char **)material : "(nomat)";
             const unsigned *w = (const unsigned *)material;
             fprintf(stderr, "[MATDIAG] surf#%d mat=%p name='%.24s' tt=%d | +30..+4c: %08x %08x %08x %08x %08x %08x %08x %08x\n",
-                    md, (void *)material, (nm && (unsigned)nm > 0x10000) ? nm : "(badptr)", techType,
+                    md, (void *)material, (nm && (uintptr_t)nm > 0x10000) ? nm : "(badptr)", techType,
                     w[0x30 / 4], w[0x34 / 4], w[0x38 / 4], w[0x3c / 4], w[0x40 / 4], w[0x44 / 4], w[0x48 / 4], w[0x4c / 4]);
             fflush(stderr);
             md++;

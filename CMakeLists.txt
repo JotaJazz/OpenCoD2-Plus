@@ -122,6 +122,10 @@ if(NOT COD2_PLUS_SERVER OR (COD2_WIN32_CLIENT AND NOT COD2_PLUS_CLIENT_SERVER))
   # its local server
   set(COD2_PLUS_LIBCOD OFF)
 endif()
+if(WIN32 AND COD2_X64)
+  # libcod keeps pointers in long (gsc_memory.cpp), 4 bytes on Win64
+  set(COD2_PLUS_LIBCOD OFF)
+endif()
 # the client too: then the script VM, which both share, has libcod's blocks;
 # otherwise the dedicated server builds its own (cod2_plus_script_ded)
 set(COD2_LIBCOD_CLIENT OFF)
@@ -550,7 +554,7 @@ if(COD2_WIN32_CLIENT)
   # is not and a mixer has a deadline. SDL's threads enter with a 4-byte stack.
   file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
   set_source_files_properties(${COD2_SND_SDL_C} PROPERTIES COMPILE_OPTIONS
-    "-O2;-fno-strict-aliasing;-fwrapv;-mincoming-stack-boundary=2")
+    "-O2;-fno-strict-aliasing;-fwrapv;$<$<NOT:$<BOOL:${COD2_X64}>>:-mincoming-stack-boundary=2>")
   list(APPEND WIN_C ${COD2_SND_SDL_C})
 endif()
 enable_language(RC)

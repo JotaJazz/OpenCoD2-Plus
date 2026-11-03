@@ -1864,7 +1864,7 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
             static int tl;
             if (tl++ < 20) {
                 fprintf(stderr, "[TSLOAD] mtl='%.24s' tsOff=%d tsName='%.32s' found=%p\n",
-                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (unsigned)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
+                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (uintptr_t)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
                 fflush(stderr);
             }
         }

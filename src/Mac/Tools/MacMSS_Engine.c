@@ -272,5 +272,5 @@ CSoundObject *CSoundEngine_NewSampleSound(const CSoundEngine *_this)
 void CSoundEngine_set_digital_master_room_type(const CSoundEngine *_this, long int room_type)
 {
     *(long int *)((char *)_this + 0x1a8) = room_type;
-    return (void)(unsigned long)_this;
+    (void)_this;
 }

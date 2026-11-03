@@ -232,7 +232,7 @@ void COpenGLNVidiaRegisterCombinersProgram_COpenGLNVidiaRegisterCombinersProgram
     program->vtable = (void**)vtbl_CDirect3DPixelShader_NVidia;
     program->refCount = 1;
     program->textureUsageMask = 0;
-    program->pad0xc = (UINT32)(unsigned long)pSrcData;
+    program->pad0xc = (UINT32)(uintptr_t)pSrcData;
     program->stageCount = 0;
     return;
 }

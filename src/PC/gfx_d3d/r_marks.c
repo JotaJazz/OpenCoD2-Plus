@@ -98,7 +98,7 @@ static void R_MARKS_REGPARM3_ABI R_AABBTreeSurfaces_r(GfxAabbTree *tree, const v
         }
     } else if (tree->childCount > 0) {
 
-        GfxAabbTree *children = (GfxAabbTree *)(unsigned long)tree->children;
+        GfxAabbTree *children = (GfxAabbTree *)(uintptr_t)tree->children;
         for (childIndex = 0; childIndex < tree->childCount; childIndex++) {
             R_AABBTreeSurfaces_r(&children[childIndex], mins, maxs,
                                  surfList, surfListSize, surfCount);

@@ -4788,7 +4788,11 @@ typedef HDC__ * HDC;
 typedef HINSTANCE__ * HINSTANCE;
 typedef HMONITOR__ * HMONITOR;
 typedef long unsigned int HPROENUM;
+#ifdef COD2_X64
+typedef uintptr_t HPROVIDER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef long unsigned int HPROVIDER;
+#endif
 typedef _SAMPLE * HSAMPLE;
 typedef _STREAM * HSTREAM;
 typedef HWND__ * HWND;
@@ -5126,7 +5130,11 @@ typedef UInt32 AudioUnitRenderActionFlags;
 typedef UInt32 ByteCount;
 typedef UInt32 CFStringEncoding;
 typedef UInt32 FourCharCode;
+#ifdef COD2_X64
+typedef uintptr_t HDIGDRIVER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef UInt32 HDIGDRIVER;
+#endif
 typedef UInt32 ItemCount;
 typedef UInt32 LSKindID;
 typedef UInt32 OptionBits;
