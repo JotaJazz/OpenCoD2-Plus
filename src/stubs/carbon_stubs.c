@@ -94,7 +94,7 @@ void HideWindow(WindowRef window)
 {
 }
 
-#if !defined(_M_X64)  /* x64: real user32 ShowWindow (Mac Carbon stub collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: real user32 ShowWindow (Mac Carbon stub collides by name); MinGW links these as 32 bits does */
 void ShowWindow(WindowRef window)
 {
 }
@@ -259,7 +259,7 @@ OSStatus CreateNewWindow(unsigned int wClass, unsigned int attrs, const Rect *bo
     return 0;
 }
 
-#if !defined(_M_X64)  /* x64: real user32 MoveWindow (Mac Carbon stub collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: real user32 MoveWindow (Mac Carbon stub collides by name); MinGW links these as 32 bits does */
 void MoveWindow(WindowRef window, short h, short v, Boolean front)
 {
 }
