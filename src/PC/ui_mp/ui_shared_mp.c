@@ -1790,12 +1790,12 @@ void Script_SetItemColor(displayContextDef_t *dc, itemDef_t *item, const char **
 
         float *out = NULL;
         if (I_stricmp(name, "backcolor") == 0) {
-            out = (float *)(item2 + 0x1dc);
+            out = ((itemDef_t *)item2)->window.backColor;
         } else if (I_stricmp(name, "forecolor") == 0) {
-            out = (float *)(item2 + 0x1cc);
+            out = ((itemDef_t *)item2)->window.foreColor;
             Window_AddDynamicFlags( (itemDef_t *)((void *)item2), 0x10000);
         } else if (I_stricmp(name, "bordercolor") == 0) {
-            out = (float *)(item2 + 0x1ec);
+            out = ((itemDef_t *)item2)->window.borderColor;
         }
 
         if (out) {
@@ -4299,7 +4299,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
                     if (curVal != (((multiDef_s*)(mDef))->dvarValue[0])) {
                         int i;
                         for (i = 1; i < count; i++) {
-                            if (*(float *)(mDef + 0x100 + i * 4) == curVal) {
+                            if (((multiDef_s *)mDef)->dvarValue[i] == curVal) {
                                 current = i;
                                 break;
                             }
@@ -4314,7 +4314,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
                 if (count > 0) {
                     int i;
                     for (i = 0; i < count; i++) {
-                        if (I_stricmp(string, *(const char **)(mDef + 0x80 + i * 4)) == 0) {
+                        if (I_stricmp(string, ((multiDef_s *)mDef)->dvarStr[i]) == 0) {
                             current = i;
                             break;
                         }
@@ -4349,7 +4349,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
         const char *newVal;
         if ((((multiDef_s*)(multiPtr))->strDef)) {
 
-            newVal = *(const char **)(multiPtr + 0x80 + newIndex * 4);
+            newVal = ((multiDef_s *)multiPtr)->dvarStr[newIndex];
         } else {
 
             newVal = va("%g", (double)(((multiDef_s*)(multiPtr))->dvarValue[newIndex]));
