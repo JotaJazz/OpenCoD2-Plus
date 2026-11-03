@@ -239,7 +239,7 @@ struct ScheduledEffect {
     vec3_t mAxis[3];
     int mSeed;
     int mIndexInBatch;
-    int mScheduledNext;
+    struct ScheduledEffect *mScheduledNext;
 };
 
 struct SortedEffect {

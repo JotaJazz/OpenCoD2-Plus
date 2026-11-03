@@ -168,8 +168,8 @@ unsigned char dvarPool[46080];
 unsigned char isDvarSystemActive[1];
 unsigned char isLoadingAutoExecGlobalFlag[63];
 unsigned char milesGlob[384];
-unsigned char effectListArrayNonBolt[7296];
-unsigned char effectListArrayBolt[7296];
+unsigned char effectListArrayNonBolt[7296 / 4 * sizeof(void *)];  /* 1824 Effect pointers */
+unsigned char effectListArrayBolt[7296 / 4 * sizeof(void *)];
 unsigned char effectClusterArray[28800];
 unsigned char visibleEffectsBolt[14400];
 unsigned char visibleEffectsNonBolt[14400];
@@ -295,7 +295,11 @@ struct GfxDebugFrameGlob s_debugFrameGlob;   /* x86 blob 2399616; x64 sizeof 305
 #else
 unsigned char s_debugFrameGlob[2399616];
 #endif
+#if defined(COD2_X64) || defined(__x86_64__)
+__attribute__((aligned(16))) unsigned char s_backEndData[sizeof(GfxBackEndData)];   /* x86 blob 2399596; pointers grow on x64 */
+#else
 unsigned char s_backEndData[2399596];
+#endif
 unsigned char g_dummyBuf[20];
 refexport_t re;
 BSSINT warnCount_00c85b00;

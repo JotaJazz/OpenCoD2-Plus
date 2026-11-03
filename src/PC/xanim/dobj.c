@@ -336,8 +336,8 @@ int DObjHasContents(DObj *obj, int contentmask)
 
 void DObjSetModel(DObj *obj, const XModel *model)
 {
-    obj->skel = (DSkel *)(*(int *)model + 0x14);
-    obj->numBones = (unsigned char)*(unsigned short *)*(int *)model;
+    obj->skel = (DSkel *)(*(char **)model + offsetof(XModelParts, skel));
+    obj->numBones = (unsigned char)*(unsigned short *)*(char **)model;
     obj->models[0] = (XModel *)model;
 }
 

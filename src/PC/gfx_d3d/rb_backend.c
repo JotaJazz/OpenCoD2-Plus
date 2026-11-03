@@ -87,94 +87,6 @@ void rdsl_log_null_technique2(void *material, int techType)
 int rb_drawsurfscmd_count = 0;
 int rb_drawsurfscmd_dxskip = 0;
 
-static void RB_X64TraceText(const char *text, const Font *font, const Material *material,
-                            GfxColor color, int style, float x, float y, float xScale, float yScale)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 120) {
-        return;
-    }
-
-    f = fopen("x64_text_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f, "text[%d]='%.96s' font=%p fontName=%s material=%p matName=%s color=0x%08x style=%d xy=(%.1f,%.1f) scale=(%.3f,%.3f)\n",
-            traceCount,
-            text ? text : "<null>",
-            (const void *)font,
-            font && font->name ? font->name : "<null>",
-            (const void *)material,
-            material && material->info.name ? material->info.name : "<null>",
-            color.packed,
-            style,
-            x, y, xScale, yScale);
-    fclose(f);
-    traceCount++;
-#else
-    (void)text;
-    (void)font;
-    (void)material;
-    (void)color;
-    (void)style;
-    (void)x;
-    (void)y;
-    (void)xScale;
-    (void)yScale;
-#endif
-}
-
-static void RB_X64TraceGlyph(const char *text, int ch, const Glyph *glyph,
-                             float glyphX, float glyphY, float w, float h, GfxColor color)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 80) {
-        return;
-    }
-
-    f = fopen("x64_glyph_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f, "glyph[%d] text='%.48s' ch=%d glyph=%p letter=%u x0=%d y0=%d dx=%u size=%ux%u st=(%.4f,%.4f %.4f,%.4f) draw=(%.1f,%.1f %.1fx%.1f) color=0x%08x\n",
-            traceCount,
-            text ? text : "<null>",
-            ch,
-            (const void *)glyph,
-            glyph ? glyph->letter : 0,
-            glyph ? (int)glyph->x0 : 0,
-            glyph ? (int)glyph->y0 : 0,
-            glyph ? (unsigned)glyph->dx : 0,
-            glyph ? (unsigned)glyph->pixelWidth : 0,
-            glyph ? (unsigned)glyph->pixelHeight : 0,
-            glyph ? glyph->s0 : 0.0f,
-            glyph ? glyph->t0 : 0.0f,
-            glyph ? glyph->s1 : 0.0f,
-            glyph ? glyph->t1 : 0.0f,
-            glyphX, glyphY, w, h,
-            color.packed);
-    fclose(f);
-    traceCount++;
-#else
-    (void)text;
-    (void)ch;
-    (void)glyph;
-    (void)glyphX;
-    (void)glyphY;
-    (void)w;
-    (void)h;
-    (void)color;
-#endif
-}
-
 #define RB_DVAR(imp) (*(const dvar_t **)(imp))
 
 static int RB_TextTraceContains(const char *text, const char *needle)
@@ -3711,7 +3623,6 @@ static void RB_BACKEND_REGPARM3_SSE_ABI RB_DrawTextWithCursor_impl(const char *t
             h = (float)glyph->pixelHeight * yScale;
             w = (float)glyph->pixelWidth * xScale;
             if (count == 0) {
-                RB_X64TraceGlyph(text, ch, glyph, glyphX, glyphY, w, h, newColor);
             }
             if (traceText && count == 0) {
                 printf("[textcmd-glyph0] ch=%d glyph=(%d,%d %dx%d) draw=(%.1f,%.1f %.1fx%.1f) st=(%.3f,%.3f %.3f,%.3f) color=0x%08x mat=%s\n",
@@ -3795,8 +3706,6 @@ static void RB_DrawTextCmd(GfxRenderCommandExecState *execState)
     int cursorPos = cmd->cursorPos;
     int cursor = (signed char)cmd->cursor;
 
-    RB_X64TraceText(text, font, font ? (const Material *)font->material : NULL,
-                    color, style, x, y, xScale, yScale);
 
     if (RB_ShouldTraceTextCmd(text)) {
         printf("[textcmd-back] cmd=%p bytes=%u text='%.96s' xy=(%.1f,%.1f) scale=(%.3f,%.3f) color=0x%08x bytes=(%u,%u,%u,%u) style=%d max=%d cursor=%d/%d font=%p\n",

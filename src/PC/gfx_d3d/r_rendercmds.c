@@ -55,31 +55,6 @@ extern void RB_AdaptiveGpuSyncTarget(void);
 extern void Material_Sort(void);
 extern struct r_globals_t rg;
 
-static void R_X64TraceStretchPic(MaterialHandle material, float x, float y, float w, float h)
-{
-#if defined(COD2_X64)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 4096)
-        return;
-
-    f = fopen("x64_stretchpic_trace.txt", traceCount ? "a" : "w");
-    if (f) {
-        fprintf(f, "stretch[%d] material=%p xywh=(%.1f,%.1f,%.1f,%.1f)\n",
-                traceCount, (void *)material, x, y, w, h);
-        fclose(f);
-    }
-    traceCount++;
-#else
-    (void)material;
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-#endif
-}
-
 extern unsigned char s_backEndData[];
 extern GfxCmdArray *s_cmdList;
 extern struct GfxDebugFrameGlob s_debugFrameGlob;
@@ -668,7 +643,6 @@ void R_AddCmdDrawStretchPic(float x, float y, float w, float h, float s0, float 
 {
     GfxCmdStretchPic *cmd;
 
-    R_X64TraceStretchPic(material, x, y, w, h);
     { extern int g_q_stretchpic; extern void Com_Printf(const char *, ...); g_q_stretchpic++; if (g_q_stretchpic <= 4) Com_Printf("[qsp] #%d material=%p\n", g_q_stretchpic, (void *)material); }
     cmd = (GfxCmdStretchPic *)R_AllocCmd((int)sizeof(GfxCmdStretchPic), 0, 0xf);
     if (cmd == NULL) {

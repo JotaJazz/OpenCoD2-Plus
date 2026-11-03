@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-03 — the 64-bit client draws effects and lights the world as 32-bit
+
+- Effects were skipped on x64; they failed on 1.3's 4-byte types, not on the vtables the skip blamed: `Effect`'s vptr, `UInt32`/`SInt32`/`UINT4`/GL integers as `long` (8 bytes on LP64, so `irand` ran a 64-bit LCG), x86 offsets into `PrimitiveTemplate`, `Particle`, `GfxEntity`, `trace_t` and `ScheduledEffect`, `int` effect pointers in `cg_view_mp.c` and `g_missile_mp.c`, `fx_freeze` read at byte 8, and blobs sized for 4-byte pointers (`effectListArray*`, `s_backEndData`, `modelDObjBuf`). `fx_test.py` passes on x64 under ASan; each rename kept the 32-bit code identical (objdump) except where a type change reorders registers.
+- Fixed on both builds: `CG_ImpactMark` passed one axis where `R_MarkFragments` reads three (decals took their texture axes from the stack), and `R_UpdateXModelBounds` tested the effect's XModel as a DObj instead of the shared one it had just set up.
+- The yellow world: `R_InterpretSunLightParseParamsIntoLights` wrote `GfxLight` at x86 offsets, so the sun's blue was the ambient's; eye-level views now equal 32-bit's. Left: translucent effects sort by material address, so overlaps can blend in another order than on 32-bit; Win64 still untested on real Windows.
+
 ## 2026-11-03 — stock 1.3 as a build option
 
 - `COD2_PLUS_PROTOCOL` (ON) decides whether the 1.3 builds define `COD2_PLUS`, as OpenCoD2-Plus Server's `make PLUS=1`: OFF gives a dedicated and local server any 1.3 player can join, and a client that does not announce itself as Plus (its connect key, notice and Plus messages are under `COD2_PLUS` too, since only that build's message code decodes them). `build_check.py linux-13` builds it; `opencod2_smoke.py --stock` passes it whole without `--plus`.

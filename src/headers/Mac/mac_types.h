@@ -156,7 +156,11 @@ typedef unsigned char GLubyte;
 typedef HDC__ * HDC;
 typedef HMONITOR__ * HMONITOR;
 typedef short unsigned int * PUINT16;
+#ifdef COD2_X64
+typedef unsigned int ULONG;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int ULONG;
+#endif
 typedef unsigned long VAOSet;
 typedef long unsigned int __darwin_size_t;
 #if !defined(__cplusplus) || !defined(__GNUC__)

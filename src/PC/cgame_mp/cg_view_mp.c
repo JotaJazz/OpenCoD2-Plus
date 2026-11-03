@@ -47,8 +47,8 @@ extern int FX_InitSystem(int maxEffects);
 extern int Cmd_Argc(void);
 extern const char *CG_Argv(int arg);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
-extern int FX_RegisterEffect(const char *name);
-extern void FX_PlaySimpleEffect(int effectIndex, const vec_t *origin);
+extern EffectTemplate *FX_RegisterEffect(const char *name);
+extern void FX_PlaySimpleEffect(EffectTemplate *fx, const vec_t *origin);
 extern int BG_GetViewmodelWeaponIndex(const playerState_t *ps);
 extern int BG_GetNumWeapons(void);
 extern int CL_BeginDelayedDrawing(void);
@@ -114,7 +114,7 @@ void CG_FxRestart(void)
 void CG_FxTest(void)
 {
     char *fxName;
-    int fx;
+    EffectTemplate *fx;
 
     if (Cmd_Argc() - 1 <= 0) {
         Com_Printf((const char *)"Must supply filename from base path.  Optional restart time.\n");

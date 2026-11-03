@@ -1495,10 +1495,10 @@ void RB_TessEntity(const GfxEntity *re)
             }
 
             if (isDx7) {
-                RB_AddLineDx7_impl(((GfxEntity *)ent)->origin, (float *)(ent + 0x48),
+                RB_AddLineDx7_impl(((GfxEntity *)ent)->origin, (float *)(ent + offsetof(GfxEntity, endpos)),
                                    ((GfxEntity *)ent)->radius[0], color, s0, t0, s1, t1);
             } else {
-                RB_AddLine_impl(((GfxEntity *)ent)->origin, (float *)(ent + 0x48),
+                RB_AddLine_impl(((GfxEntity *)ent)->origin, (float *)(ent + offsetof(GfxEntity, endpos)),
                                 ((GfxEntity *)ent)->radius[0], color, s0, t0, s1, t1);
             }
         }

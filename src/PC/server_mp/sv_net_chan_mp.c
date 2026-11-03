@@ -104,11 +104,6 @@ Bool SV_Netchan_Transmit(client_t *client, int length, byte *data)
     byte *encodeData;
     int i;
     netchan_t *netchan;
-#if defined(_M_X64) || defined(__x86_64__)
-    static int x64TraceCount;
-    byte beforeTrace[16];
-    int beforeTraceLen;
-#endif
 
     dataSize = length - 4;
     encodeData = data + 4;
@@ -120,12 +115,6 @@ Bool SV_Netchan_Transmit(client_t *client, int length, byte *data)
     key ^= (byte)outgoingSequence;
 
     index = 0;
-#if defined(_M_X64) || defined(__x86_64__)
-    beforeTraceLen = dataSize < (int)sizeof(beforeTrace) ? dataSize : (int)sizeof(beforeTrace);
-    for (i = 0; i < beforeTraceLen; ++i) {
-        beforeTrace[i] = encodeData[i];
-    }
-#endif
     for (i = 0; i < dataSize; i++) {
         byte ch;
 
@@ -141,33 +130,6 @@ Bool SV_Netchan_Transmit(client_t *client, int length, byte *data)
 
         encodeData[i] ^= key;
     }
-
-#if defined(_M_X64) || defined(__x86_64__)
-    if (x64TraceCount < 12) {
-        FILE *f = fopen("x64_netchan_trace.txt", x64TraceCount ? "a" : "w");
-        if (f) {
-            fprintf(f,
-                    "svenc[%d] len=%d dataSize=%d seq=%d challenge=%d keyEnd=%02x string=\"%.48s\" before:",
-                    x64TraceCount,
-                    length,
-                    dataSize,
-                    outgoingSequence,
-                    client->challenge,
-                    key,
-                    string);
-            for (i = 0; i < beforeTraceLen; ++i) {
-                fprintf(f, " %02x", beforeTrace[i]);
-            }
-            fprintf(f, " after:");
-            for (i = 0; i < beforeTraceLen; ++i) {
-                fprintf(f, " %02x", encodeData[i]);
-            }
-            fprintf(f, "\n");
-            fclose(f);
-        }
-        x64TraceCount++;
-    }
-#endif
 
     netchan = &client->netchan;
     return Netchan_Transmit(netchan, length, data);

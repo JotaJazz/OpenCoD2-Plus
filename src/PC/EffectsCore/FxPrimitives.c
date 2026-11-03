@@ -378,8 +378,8 @@ void Cloud_CreateChannelInstances(const Cloud *_this, const PrimitiveTemplate *p
     byte *t = (byte *)_this;
     byte *p = (byte *)primTemp;
     Particle_CreateChannelInstances((const Particle *)_this, primTemp);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x160), (FxChannelInstance *)&((Cloud *)t)->heightChannel.curveIterator.master);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x16c), (FxChannelInstance *)&((Cloud *)t)->heightRandChannel.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[8], (FxChannelInstance *)&((Cloud *)t)->heightChannel.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[9], (FxChannelInstance *)&((Cloud *)t)->heightRandChannel.curveIterator.master);
 }
 
 unsigned char Cloud_TypeID(const Cloud *_this)
@@ -401,8 +401,8 @@ void Tail_CreateChannelInstances(const Tail *_this, const PrimitiveTemplate *pri
     byte *t = (byte *)_this;
     byte *p = (byte *)primTemp;
     Particle_CreateChannelInstances((const Particle *)_this, primTemp);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x160), (FxChannelInstance *)&((Tail *)t)->lengthChannelInstance.curveIterator.master);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x16c), (FxChannelInstance *)&((Tail *)t)->lengthRandChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[8], (FxChannelInstance *)&((Tail *)t)->lengthChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[9], (FxChannelInstance *)&((Tail *)t)->lengthRandChannelInstance.curveIterator.master);
 }
 
 unsigned char Tail_TypeID(const Tail *_this)
@@ -429,10 +429,10 @@ void Light_CreateChannelInstances(const Light *_this, const PrimitiveTemplate *p
 {
     byte *t = (byte *)_this;
     byte *p = (byte *)primTemp;
-    FxChannelInstance_Create((const FxChannel *)(p + 0x100), (FxChannelInstance *)&((Light *)t)->colorChannelInstance.curveIterator.master);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x10c), (FxChannelInstance *)&((Light *)t)->colorRandChannelInstance.curveIterator.master);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x130), (FxChannelInstance *)&((Light *)t)->sizeChannelInstance.curveIterator.master);
-    FxChannelInstance_Create((const FxChannel *)(p + 0x13c), (FxChannelInstance *)&((Light *)t)->sizeRandChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[0], (FxChannelInstance *)&((Light *)t)->colorChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[1], (FxChannelInstance *)&((Light *)t)->colorRandChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[4], (FxChannelInstance *)&((Light *)t)->sizeChannelInstance.curveIterator.master);
+    FxChannelInstance_Create(&((PrimitiveTemplate *)p)->mFxChannels[5], (FxChannelInstance *)&((Light *)t)->sizeRandChannelInstance.curveIterator.master);
 }
 
 extern void FxHelper_AddLightToScene(const FxHelper *helper, float *origin, float radius, float r, float g, float b);
@@ -466,7 +466,7 @@ void Flash_Init(const Flash *_this)
     camOrigin = helper->mCamera.vieworg;
     dif[0] = PART_ANCHOR_X(p) - camOrigin[0];
     dif[1] = PART_ANCHOR_Y(p) - camOrigin[1];
-    dif[2] = *(float *)(p + 0xc) - camOrigin[2];
+    dif[2] = PART_ANCHOR_Z(p) - camOrigin[2];
 
     dist = Vec3Normalize(dif);
 
@@ -485,7 +485,7 @@ void Flash_Init(const Flash *_this)
     falloff = dist * dist / (-360000.0f) + 1.0f;
     dot *= falloff;
 
-    *(float *)(p + 0xd4) *= dot;
+    ((Light *)p)->colorChannelInstance.scale *= dot;
 }
 
 unsigned char Flash_TypeID(const Flash *_this)
@@ -523,10 +523,10 @@ extern void AxisCopy(vec3_t *in, vec3_t *out);
 extern void FxHelper_AddFxToScene(const FxHelper *helper, GfxEntity *ent, const XModel *model);
 static void FX_AddFxToScene_impl(byte *effect, int reType)
 {
-    byte ent[0x74];
+    byte ent[sizeof(GfxEntity)];
     memset(ent, 0, sizeof(GfxEntity));
     (*(int *)&((GfxEntity *)(ent))->reType) = reType;
-    (*(int *)&((GfxEntity *)(ent))->customMaterial) = (*(int *)&((Effect *)(effect))->mRefEnt.customMaterial);
+    ((GfxEntity *)(ent))->customMaterial = ((Effect *)(effect))->mRefEnt.customMaterial;
     (*(int *)&((GfxEntity *)(ent))->rotation) = (*(int *)&((Effect *)(effect))->mRefEnt.rotation);
     AxisCopy( (vec3_t (*))(((vec_t *)((byte *)(effect) + offsetof(Effect, mRefEnt.axis)))), (vec3_t (*))(((vec_t *)((byte *)(ent) + offsetof(GfxEntity, axis)))));
 
@@ -565,7 +565,7 @@ void Emitter_Draw(const Emitter *_this)
 {
     byte *p = (byte *)_this;
 
-    if (!((*(int *)&((Emitter *)p)->_base[168]) & 0x10))
+    if (!(((Effect *)p)->mFlags & 0x10))
         return;
 
     if ((((Effect *)(p))->mRefEnt.scale) == 0.0f)
@@ -642,7 +642,7 @@ Bool Particle_Cull(const Particle *_this)
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
 
-    if (*(byte *)(p + 0xab) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -654,7 +654,7 @@ Bool OrientedParticle_Cull(const OrientedParticle *_this)
     byte *p = (byte *)_this;
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
-    if ((*(byte *)&((OrientedParticle *)p)->_base[171]) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -668,7 +668,7 @@ Bool Cloud_Cull(const Cloud *_this)
     int cullType = (helper->mCamera.numPlanes);
     float halfLen, height, radius, cullRadius;
 
-    if (*(byte *)(p + 0xab) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -688,7 +688,7 @@ Bool Line_Cull(const Line *_this)
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
     float radius;
-    if ((*(byte *)&((Line *)p)->_base[171]) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -702,7 +702,7 @@ Bool Tail_Cull(const Tail *_this)
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
     float radius;
-    if (*(byte *)(p + 0xab) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -715,7 +715,7 @@ Bool Cylinder_Cull(const Cylinder *_this)
     byte *p = (byte *)_this;
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
-    if (*(byte *)(p + 0xab) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -728,7 +728,7 @@ Bool Light_Cull(const Light *_this)
     byte *p = (byte *)_this;
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
     int cullType = (helper->mCamera.numPlanes);
-    if (*(byte *)(p + 0xab) & 2) {
+    if ((((byte *)&((Effect *)p)->mFlags)[3] & 0x2)) {
         if (cullType >= 5)
             cullType = 5;
     }
@@ -780,8 +780,8 @@ static inline __attribute__((always_inline)) void Particle_FixupArchiveLoad_core
     byte *p = (byte *)primTemplate;
 
 #define FIX(field, idx)                                                      \
-    *(int *)&((Particle *)t)->field.curveIterator.master =                   \
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[idx].curve
+    *(void **)&((Particle *)t)->field.curveIterator.master =                   \
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[idx].curve
     FIX(colorChannelInstance, 0);
     FIX(colorRandChannelInstance, 1);
     FIX(alphaChannelInstance, 2);
@@ -817,8 +817,8 @@ void Light_FixupArchiveLoad(const Light *_this, const PrimitiveTemplate *primTem
     byte *t = (byte *)_this;
     byte *p = (byte *)primTemplate;
 #define FIX(field, idx)                                                   \
-    *(int *)&((Light *)t)->field.curveIterator.master =                   \
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[idx].curve
+    *(void **)&((Light *)t)->field.curveIterator.master =                   \
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[idx].curve
     FIX(colorChannelInstance, 0);
     FIX(colorRandChannelInstance, 1);
     FIX(sizeChannelInstance, 4);
@@ -886,7 +886,7 @@ void Flash_Draw(const Flash *_this)
     byte *self = (byte *)_this;
 
     float color[4];
-    const float *src = (const float *)(self + 0x6c);
+    const float *src = (const float *)((Effect *)self)->mRefEnt.dlightColor;
     int n;
     for (n = 1; n != 4; n++) {
         float v = *src++;
@@ -996,7 +996,7 @@ void Particle_Die(const Particle *_this)
     }
 
     scheduler = *(void **)imp_theFxScheduler;
-    FxScheduler_PlayEffectWithDir(scheduler, (*(void **)&((Particle *)p)->base.emitEffect), (float *)(p + 4), norm);
+    FxScheduler_PlayEffectWithDir(scheduler, (*(void **)&((Particle *)p)->base.emitEffect), ((Effect *)p)->origin, norm);
 }
 
 void Tail_CalcNewEndpoint(const Tail *_this, const orientation_t *or_)
@@ -1043,10 +1043,10 @@ void Cloud_FixupArchiveLoad(const Cloud *_this, const PrimitiveTemplate *primTem
 
     Particle_FixupArchiveLoad_core((const Particle *)_this, primTemplate);
 
-    *(int *)&((Cloud *)t)->heightChannel.curveIterator.master =
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[8].curve;
-    *(int *)&((Cloud *)t)->heightRandChannel.curveIterator.master =
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[9].curve;
+    *(void **)&((Cloud *)t)->heightChannel.curveIterator.master =
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[8].curve;
+    *(void **)&((Cloud *)t)->heightRandChannel.curveIterator.master =
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[9].curve;
 }
 
 void Tail_FixupArchiveLoad(const Tail *_this, const PrimitiveTemplate *primTemplate)
@@ -1056,10 +1056,10 @@ void Tail_FixupArchiveLoad(const Tail *_this, const PrimitiveTemplate *primTempl
 
     Particle_FixupArchiveLoad_core((const Particle *)_this, primTemplate);
 
-    *(int *)&((Tail *)t)->lengthChannelInstance.curveIterator.master =
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[8].curve;
-    *(int *)&((Tail *)t)->lengthRandChannelInstance.curveIterator.master =
-        *(int *)&((PrimitiveTemplate *)p)->mFxChannels[9].curve;
+    *(void **)&((Tail *)t)->lengthChannelInstance.curveIterator.master =
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[8].curve;
+    *(void **)&((Tail *)t)->lengthRandChannelInstance.curveIterator.master =
+        *(void **)&((PrimitiveTemplate *)p)->mFxChannels[9].curve;
 }
 
 #define KEY_TIME(k) (*(float *)(k))
@@ -1119,13 +1119,13 @@ void Light_UpdateRGB(const Light *_this, const Light *_this_1)
     float normTime = ((Effect *)self)->normTime;
     float *rgb = (float *)&((Light *)self)->base.mRefEnt.dlightColor[0];
 
-    if (*(byte *)(self + 0xa9) & 0x20) {
+    if ((((byte *)&((Effect *)self)->mFlags)[1] & 0x20)) {
 
         float blendFactor = ((Light *)self)->colorBlendFactor;
         float val0[3], val1[3];
         EvalCurve3( (byte *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master))), normTime, val0);
         EvalCurve3( (byte *)(((char *)self + offsetof(Light, colorRandChannelInstance.curveIterator.master))), normTime, val1);
-        float scale = *(float *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master)) + 8);
+        float scale = *(float *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
         rgb[0] = (val0[0] + (val1[0] - val0[0]) * blendFactor) * scale;
         rgb[1] = (val0[1] + (val1[1] - val0[1]) * blendFactor) * scale;
         rgb[2] = (val0[2] + (val1[2] - val0[2]) * blendFactor) * scale;
@@ -1133,7 +1133,7 @@ void Light_UpdateRGB(const Light *_this, const Light *_this_1)
 
         float val[3];
         EvalCurve3( (byte *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master))), normTime, val);
-        float scale = *(float *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master)) + 8);
+        float scale = *(float *)(((char *)self + offsetof(Light, colorChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
         rgb[0] = val[0] * scale;
         rgb[1] = val[1] * scale;
         rgb[2] = val[2] * scale;
@@ -1258,19 +1258,19 @@ void Particle_UpdateRGB(const Particle *_this)
     float normTime = ((Effect *)self)->normTime;
     float rgb[3];
 
-    if (*(byte *)(self + 0xa9) & 0x20) {
+    if ((((byte *)&((Effect *)self)->mFlags)[1] & 0x20)) {
 
         float blendFactor = (((Particle *)(self))->blendWeight[0]);
         float v0[3], v1[3];
         EvalCurve3( (byte *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master))), normTime, v0);
         EvalCurve3( (byte *)(((char *)self + offsetof(Particle, colorRandChannelInstance.curveIterator.master))), normTime, v1);
-        float scale = *(float *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master)) + 8);
+        float scale = *(float *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
         rgb[0] = (v0[0] + (v1[0] - v0[0]) * blendFactor) * scale;
         rgb[1] = (v0[1] + (v1[1] - v0[1]) * blendFactor) * scale;
         rgb[2] = (v0[2] + (v1[2] - v0[2]) * blendFactor) * scale;
     } else {
         EvalCurve3( (byte *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master))), normTime, rgb);
-        float scale = *(float *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master)) + 8);
+        float scale = *(float *)(((char *)self + offsetof(Particle, colorChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
         rgb[0] *= scale;
         rgb[1] *= scale;
         rgb[2] *= scale;
@@ -1288,7 +1288,7 @@ Bool Flash_Update(const Flash *_this)
 {
     byte *p = (byte *)_this;
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
-    int startTime = *(int *)(p + 0xb8);
+    int startTime = ((Effect *)p)->mTimeStart;
     int curTime = FXH_TIME(helper);
     int endTime;
     float normDuration;
@@ -1296,15 +1296,15 @@ Bool Flash_Update(const Flash *_this)
     if (startTime > curTime)
         return 0;
 
-    endTime = *(int *)(p + 0xbc);
+    endTime = ((Effect *)p)->mTimeEnd;
     normDuration = (float)(curTime - startTime) / (float)(endTime - startTime);
-    *(float *)(p + 0x3c) = normDuration;
+    ((Effect *)p)->normTime = normDuration;
 
     if (normDuration > 1.0f)
-        *(float *)(p + 0x3c) = 1.0f;
+        ((Effect *)p)->normTime = 1.0f;
 
-    if (0.0f > *(float *)(p + 0x3c))
-        *(float *)(p + 0x3c) = 0.0f;
+    if (0.0f > ((Effect *)p)->normTime)
+        ((Effect *)p)->normTime = 0.0f;
 
     Light_UpdateRGB((const Light *)_this, (const Light *)_this);
     return 1;
@@ -1326,20 +1326,20 @@ static inline __attribute__((always_inline)) float IntegrateChannel(byte *self, 
 void Particle_IntegrateVelocity(const Particle *_this, float normDuration, vec_t *outVector)
 {
     byte *self = (byte *)_this;
-    int useBlend = (*(byte *)(self + 0xaa) & 8) != 0;
+    int useBlend = ((((byte *)&((Effect *)self)->mFlags)[2] & 0x8)) != 0;
     float vx, vy, vz;
 
     if (useBlend) {
-        vx = IntegrateChannel(self, 0x1bc, 0x1e0, (((Particle *)(self))->velocityWeightX), 0x1bc + 8, normDuration, 1);
-        vy = IntegrateChannel(self, 0x1c8, 0x1ec, (((Particle *)(self))->velocityWeightY), 0x1c8 + 8, normDuration, 1);
-        vz = IntegrateChannel(self, 0x1d4, 0x1f8, (((Particle *)(self))->velocityWeightZ), 0x1d4 + 8, normDuration, 1);
+        vx = IntegrateChannel(self, offsetof(Particle, velocityXChannelInstance), offsetof(Particle, velocityXRandChannelInstance), (((Particle *)(self))->velocityWeightX), offsetof(Particle, velocityXChannelInstance.scale), normDuration, 1);
+        vy = IntegrateChannel(self, offsetof(Particle, velocityYChannelInstance), offsetof(Particle, velocityYRandChannelInstance), (((Particle *)(self))->velocityWeightY), offsetof(Particle, velocityYChannelInstance.scale), normDuration, 1);
+        vz = IntegrateChannel(self, offsetof(Particle, velocityZChannelInstance), offsetof(Particle, velocityZRandChannelInstance), (((Particle *)(self))->velocityWeightZ), offsetof(Particle, velocityZChannelInstance.scale), normDuration, 1);
     } else {
-        vx = IntegrateChannel(self, 0x1bc, 0, 0, 0x1bc + 8, normDuration, 0);
-        vy = IntegrateChannel(self, 0x1c8, 0, 0, 0x1c8 + 8, normDuration, 0);
-        vz = IntegrateChannel(self, 0x1d4, 0, 0, 0x1d4 + 8, normDuration, 0);
+        vx = IntegrateChannel(self, offsetof(Particle, velocityXChannelInstance), 0, 0, offsetof(Particle, velocityXChannelInstance.scale), normDuration, 0);
+        vy = IntegrateChannel(self, offsetof(Particle, velocityYChannelInstance), 0, 0, offsetof(Particle, velocityYChannelInstance.scale), normDuration, 0);
+        vz = IntegrateChannel(self, offsetof(Particle, velocityZChannelInstance), 0, 0, offsetof(Particle, velocityZChannelInstance.scale), normDuration, 0);
     }
 
-    if (!(*(byte *)(self + 0xaa) & 0x20)) {
+    if (!((((byte *)&((Effect *)self)->mFlags)[2] & 0x20))) {
         AxisTransformVector((vec3_t *)((char *)self + offsetof(Particle, displayAxis[0][0])), vx, vy, vz, outVector);
     } else {
         outVector[0] = vx;
@@ -1360,13 +1360,13 @@ void Particle_IntegrateVelocity2(const Particle *_this, float normDuration, vec_
     float vx, vy, vz;
 
     if (useBlend) {
-        vx = IntegrateChannel(self, 0x204, 0x228, (((Particle *)(self))->velocity2WeightX), 0x204 + 8, normDuration, 1);
-        vy = IntegrateChannel(self, 0x210, 0x234, (((Particle *)(self))->velocity2WeightY), 0x210 + 8, normDuration, 1);
-        vz = IntegrateChannel(self, 0x21c, 0x240, (((Particle *)(self))->velocity2WeightZ), 0x21c + 8, normDuration, 1);
+        vx = IntegrateChannel(self, offsetof(Particle, velocity2XChannelInstance), offsetof(Particle, velocity2XRandChannelInstance), (((Particle *)(self))->velocity2WeightX), offsetof(Particle, velocity2XChannelInstance.scale), normDuration, 1);
+        vy = IntegrateChannel(self, offsetof(Particle, velocity2YChannelInstance), offsetof(Particle, velocity2YRandChannelInstance), (((Particle *)(self))->velocity2WeightY), offsetof(Particle, velocity2YChannelInstance.scale), normDuration, 1);
+        vz = IntegrateChannel(self, offsetof(Particle, velocity2ZChannelInstance), offsetof(Particle, velocity2ZRandChannelInstance), (((Particle *)(self))->velocity2WeightZ), offsetof(Particle, velocity2ZChannelInstance.scale), normDuration, 1);
     } else {
-        vx = IntegrateChannel(self, 0x204, 0, 0, 0x204 + 8, normDuration, 0);
-        vy = IntegrateChannel(self, 0x210, 0, 0, 0x210 + 8, normDuration, 0);
-        vz = IntegrateChannel(self, 0x21c, 0, 0, 0x21c + 8, normDuration, 0);
+        vx = IntegrateChannel(self, offsetof(Particle, velocity2XChannelInstance), 0, 0, offsetof(Particle, velocity2XChannelInstance.scale), normDuration, 0);
+        vy = IntegrateChannel(self, offsetof(Particle, velocity2YChannelInstance), 0, 0, offsetof(Particle, velocity2YChannelInstance.scale), normDuration, 0);
+        vz = IntegrateChannel(self, offsetof(Particle, velocity2ZChannelInstance), 0, 0, offsetof(Particle, velocity2ZChannelInstance.scale), normDuration, 0);
     }
 
     if (!(((Effect *)self)->mFlags & 0x400000)) { /* absoluteVel2 */
@@ -1415,7 +1415,7 @@ void Particle_Particle(const Particle *_this)
     int zero = 0;
     ((struct Effect *)_this)->mBolt.value = 0;
     *(void **)_this = (byte *)__ZTV8Particle + (2 * (int)sizeof(void *));
-    p = (int *)((byte *)_this + 0xc4);
+    p = &((Particle *)_this)->subclassField0;
     p[0] = zero;
     p[1] = zero;
     p[2] = zero;
@@ -1481,13 +1481,13 @@ void Tail_InitEndPoint(const Tail *_this)
     float normTime = ((Effect *)self)->normTime;
 
     float tailLen;
-    if (*(byte *)(self + 0xaa) & 2) {
+    if ((((byte *)&((Effect *)self)->mFlags)[2] & 0x2)) {
         float blendFactor = ((Tail *)self)->lengthBlendFactor;
         float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master))), normTime);
         float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthRandChannelInstance.curveIterator.master))), normTime);
-        tailLen = (v0 + (v1 - v0) * blendFactor) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + 8);
+        tailLen = (v0 + (v1 - v0) * blendFactor) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     } else {
-        tailLen = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + 8);
+        tailLen = EvalCurve1( (byte *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Tail, lengthChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     }
     (((Tail *)(self))->tailLength) = tailLen;
 
@@ -1534,16 +1534,16 @@ Bool Light_Update(const Light *_this)
         float bf = ((Light *)self)->sizeBlendFactor;
         float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master))), normTime);
         float v1 = EvalCurve1( (byte *)(((char *)self + offsetof(Light, sizeRandChannelInstance.curveIterator.master))), normTime);
-        radius = (v0 + (v1 - v0) * bf) * *(float *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master)) + 8);
+        radius = (v0 + (v1 - v0) * bf) * *(float *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     } else {
-        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master)) + 8);
+        radius = EvalCurve1( (byte *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Light, sizeChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     }
     (((Effect *)(self))->mRefEnt.radius[0]) = radius;
 
     Light_UpdateRGB(_this, NULL);
 
     if (orient) {
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), (vec_t *)&((Light *)self)->base.mRefEnt.origin[0]);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, (vec_t *)&((Light *)self)->base.mRefEnt.origin[0]);
     } else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -1581,27 +1581,27 @@ void Particle_CalcVelocityValue(const Particle *_this, float normTime, vec_t *ou
     byte *self = (byte *)_this;
     float vx, vy, vz;
 
-    if (*(byte *)(self + 0xaa) & 8) {
+    if ((((byte *)&((Effect *)self)->mFlags)[2] & 0x8)) {
 
         float bfx = (((Particle *)(self))->velocityWeightX);
         float v0x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master))), normTime);
         float v1x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityXRandChannelInstance.curveIterator.master))), normTime);
-        vx = (v0x + (v1x - v0x) * bfx) * *(float *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master)) + 8);
+        vx = (v0x + (v1x - v0x) * bfx) * *(float *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
 
         float bfy = (((Particle *)(self))->velocityWeightY);
         float v0y = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master))), normTime);
         float v1y = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityYRandChannelInstance.curveIterator.master))), normTime);
-        vy = (v0y + (v1y - v0y) * bfy) * *(float *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master)) + 8);
+        vy = (v0y + (v1y - v0y) * bfy) * *(float *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
 
         float bfz = (((Particle *)(self))->velocityWeightZ);
         float v0z = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master))), normTime);
         float v1z = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityZRandChannelInstance.curveIterator.master))), normTime);
-        vz = (v0z + (v1z - v0z) * bfz) * *(float *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master)) + 8);
+        vz = (v0z + (v1z - v0z) * bfz) * *(float *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     } else {
 
-        vx = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master)) + 8);
-        vy = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master)) + 8);
-        vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master)) + 8);
+        vx = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityXChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
+        vy = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityYChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
+        vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocityZChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     }
 
     Particle_OrientVelocity(_this, 0x200000, vx, vy, vz, outVector, or_);
@@ -1616,21 +1616,21 @@ void Particle_CalcVelocity2Value(const Particle *_this, float normTime, vec_t *o
         float bfx = (((Particle *)(self))->velocity2WeightX);
         float v0x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master))), normTime);
         float v1x = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XRandChannelInstance.curveIterator.master))), normTime);
-        vx = (v0x + (v1x - v0x) * bfx) * *(float *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master)) + 8);
+        vx = (v0x + (v1x - v0x) * bfx) * *(float *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
 
         float bfy = (((Particle *)(self))->velocity2WeightY);
         float v0y = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master))), normTime);
         float v1y = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2YRandChannelInstance.curveIterator.master))), normTime);
-        vy = (v0y + (v1y - v0y) * bfy) * *(float *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master)) + 8);
+        vy = (v0y + (v1y - v0y) * bfy) * *(float *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
 
         float bfz = (((Particle *)(self))->velocity2WeightZ);
         float v0z = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master))), normTime);
         float v1z = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2ZRandChannelInstance.curveIterator.master))), normTime);
-        vz = (v0z + (v1z - v0z) * bfz) * *(float *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master)) + 8);
+        vz = (v0z + (v1z - v0z) * bfz) * *(float *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     } else {
-        vx = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master)) + 8);
-        vy = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master)) + 8);
-        vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master)) + 8);
+        vx = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2XChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
+        vy = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2YChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
+        vz = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master))), normTime) * *(float *)(((char *)self + offsetof(Particle, velocity2ZChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
     }
 
     Particle_OrientVelocity(_this, 0x400000, vx, vy, vz, outVector, or_);
@@ -1723,7 +1723,7 @@ void Emitter_UpdateEmitFx(const Emitter *_this, vec_t *bindVelocity, const orien
             vec3_t spawn;
             OrientationPosToWorldPos(or_, org, spawn);
             FxScheduler_PlayEffect(*(void **)imp_theFxScheduler, em->emitFx, spawn, (float *)0,
-                                   (*(byte **)&e->mBolt.value) + 0x3c);
+                                   (byte *)&e->mBolt.value->mBolt);
         } else {
             vec3_t axis[3];
             float len = __builtin_sqrtf(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
@@ -1865,7 +1865,7 @@ Bool Particle_UpdateOrigin(const Particle *_this, const orientation_t *or_)
 {
     byte *self = (byte *)_this;
 
-    if (*(byte *)(self + 0xab) & 1)
+    if ((((byte *)&((Effect *)self)->mFlags)[3] & 0x1))
         return 1;
 
     FxHelper *helper = *(FxHelper **)imp_theFxHelper;
@@ -1884,7 +1884,7 @@ Bool Particle_UpdateOrigin(const Particle *_this, const orientation_t *or_)
     vec3_t velocity;
     Particle_GetTotalVelocity(_this, normTime, velocity, or_);
 
-    float *origin = (float *)(self + 4);
+    float *origin = ((Effect *)self)->origin;
     vec3_t new_origin;
     new_origin[0] = origin[0] + velocity[0] * ftime;
     new_origin[1] = origin[1] + velocity[1] * ftime;
@@ -1918,7 +1918,7 @@ Bool Particle_UpdateOrigin(const Particle *_this, const orientation_t *or_)
         FxHelper_Trace(helper, (trace_t *)(trace), start_pt, (vec_t *)mins, (vec_t *)maxs, end_pt, -1, 1);
 
         float fraction = *(float *)trace;
-        if (trace[0x23] == 0 && trace[0x22] == 0 && fraction != 1.0f) {
+        if (trace[offsetof(trace_t, startsolid)] == 0 && trace[offsetof(trace_t, allsolid)] == 0 && fraction != 1.0f) {
 
             if (flags & 0x800) {
 
@@ -2032,7 +2032,7 @@ Bool Emitter_Update(const Emitter *_this)
         if (orient) {
             vec3_t local[3];
             int i;
-            OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+            OrientationPosToWorldPos(orient, ((Effect *)self)->origin, ((Effect *)self)->mRefEnt.origin);
             for (i = 0; i < 3; i++) {
                 local[i][0] = ((Effect *)self)->mRefEnt.axis[i][0];
                 local[i][1] = ((Effect *)self)->mRefEnt.axis[i][1];
@@ -2065,7 +2065,7 @@ void Particle_UpdateAlpha(const Particle *_this)
     float normTime = ((Effect *)self)->normTime;
     float alpha;
 
-    if (*(byte *)(self + 0xa9) & 0x40) {
+    if ((((byte *)&((Effect *)self)->mFlags)[1] & 0x40)) {
 
         float blendFactor = (((Particle *)(self))->blendWeight[1]);
         float v0 = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, alphaChannelInstance.curveIterator.master))), normTime);
@@ -2074,7 +2074,7 @@ void Particle_UpdateAlpha(const Particle *_this)
     } else {
         alpha = EvalCurve1( (byte *)(((char *)self + offsetof(Particle, alphaChannelInstance.curveIterator.master))), normTime);
     }
-    alpha *= *(float *)(((char *)self + offsetof(Particle, alphaChannelInstance.curveIterator.master)) + 8);
+    alpha *= *(float *)(((char *)self + offsetof(Particle, alphaChannelInstance.curveIterator.master)) + offsetof(FxChannelInstance, scale));
 
     if (alpha > 1.0f)
         alpha = 1.0f;
@@ -2239,7 +2239,7 @@ Bool Cylinder_Update(const Cylinder *_this)
     Particle_UpdateRGB((const Particle *)_this);
     Particle_UpdateAlpha((const Particle *)_this);
 
-    float *origin = (float *)(self + 4);
+    float *origin = ((Effect *)self)->origin;
     float *dir = ((Effect *)self)->mRefEnt.axis[0];
     float length = ((Tail *)self)->tailLength;
     vec3_t end;
@@ -2306,7 +2306,7 @@ Bool Tail_Update(const Tail *_this)
         return 0;
 
     if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, ((Effect *)self)->mRefEnt.origin);
     else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -2363,8 +2363,8 @@ Bool Line_Update(const Line *_this)
         return 0;
 
     if (orient) {
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 0x24c), ((Effect *)self)->mRefEnt.endpos);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, ((Effect *)self)->mRefEnt.origin);
+        OrientationPosToWorldPos(orient, ((Tail *)self)->endpoint, ((Effect *)self)->mRefEnt.endpos);
     } else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -2450,7 +2450,7 @@ Bool Cloud_Update(const Cloud *_this)
         ((Effect *)self)->mRefEnt.radius[1] = *length;
 
     if (orient)
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, ((Effect *)self)->mRefEnt.origin);
     else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -2514,8 +2514,8 @@ Bool OrientedParticle_Update(const OrientedParticle *_this)
     Particle_UpdateSequence((const Particle *)_this);
 
     if (orient) {
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), ((Effect *)self)->mRefEnt.origin);
-        OrientationDirToWorldDir(orient, (vec_t *)(self + 0x24c), ((Effect *)self)->mRefEnt.axis[0]);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, ((Effect *)self)->mRefEnt.origin);
+        OrientationDirToWorldDir(orient, ((Tail *)self)->endpoint, ((Effect *)self)->mRefEnt.axis[0]);
     } else {
         (((Effect *)(self))->mRefEnt.origin[0]) = PART_ANCHOR_X(self);
         (((Effect *)(self))->mRefEnt.origin[1]) = PART_ANCHOR_Y(self);
@@ -2576,7 +2576,7 @@ Bool Particle_Update(const Particle *_this, const Particle *_this_1, const Cloud
 
     if (orient) {
         vec3_t worldPos;
-        OrientationPosToWorldPos(orient, (vec_t *)(self + 4), worldPos);
+        OrientationPosToWorldPos(orient, ((Effect *)self)->origin, worldPos);
         (((Effect *)(self))->mRefEnt.origin[0]) = worldPos[0];
         (((Effect *)(self))->mRefEnt.origin[1]) = worldPos[1];
         (((Effect *)(self))->mRefEnt.origin[2]) = worldPos[2];
@@ -2743,9 +2743,9 @@ void OrientedParticle_Archive(const OrientedParticle *_this, FxArchive *arch)
     byte *a = (byte *)arch;
     float *end_xyz;
     Particle_Archive((const Particle *)_this, arch);
-    end_xyz = (float *)(self + 0x24c);
+    end_xyz = ((Tail *)self)->endpoint;
     if ((((FxArchive *)(a))->isReading)) {
-        FxArchive_ReadData((const FxArchive *)(arch), self + 0x24c, 0xc);
+        FxArchive_ReadData((const FxArchive *)(arch), (byte *)((Tail *)self)->endpoint, 0xc);
     } else {
         float f;
         f = end_xyz[0];
@@ -2803,9 +2803,9 @@ void Line_Archive(const Line *_this, FxArchive *arch)
     byte *a = (byte *)arch;
     float *end_xyz;
     Particle_Archive((const Particle *)_this, arch);
-    end_xyz = (float *)(self + 0x24c);
+    end_xyz = ((Tail *)self)->endpoint;
     if ((((FxArchive *)(a))->isReading)) {
-        FxArchive_ReadData((const FxArchive *)(arch), self + 0x24c, 0xc);
+        FxArchive_ReadData((const FxArchive *)(arch), (byte *)((Tail *)self)->endpoint, 0xc);
     } else {
         float f;
         f = end_xyz[0];

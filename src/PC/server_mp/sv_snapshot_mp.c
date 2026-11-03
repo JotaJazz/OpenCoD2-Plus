@@ -942,63 +942,6 @@ void SV_SendMessageToClient(msg_t *msg, client_t *client)
 
     compressedSize = MSG_WriteBitsCompress(msg->data + 4, compressedBuf + 4, msg->cursize - 4) + 4;
 
-#if defined(_M_X64) || defined(__x86_64__)
-    {
-        static int traceCount;
-
-        if (traceCount < 12) {
-            byte verifyBuf_ll[24];
-            byte *verifyBuf;
-            int verifySize;
-            int originalSize;
-            int compareSize;
-            int mismatch;
-            int i;
-            FILE *f;
-
-            traceCount++;
-            LargeLocal_LargeLocal(verifyBuf_ll, MAX_MSGLEN);
-            verifyBuf = (byte *)LargeLocal_GetBuf((const LargeLocal *)verifyBuf_ll);
-
-            originalSize = msg->cursize - 4;
-            verifySize = MSG_ReadBitsCompressLimit(compressedBuf + 4, verifyBuf, compressedSize - 4, MAX_MSGLEN);
-            compareSize = verifySize < originalSize ? verifySize : originalSize;
-            mismatch = -1;
-            for (i = 0; i < compareSize; ++i) {
-                if (verifyBuf[i] != msg->data[i + 4]) {
-                    mismatch = i;
-                    break;
-                }
-            }
-            if (mismatch < 0 && verifySize != originalSize) {
-                mismatch = compareSize;
-            }
-
-            f = fopen("x64_sv_compress_trace.txt", "a");
-            if (f) {
-                fprintf(f,
-                        "sv[%d] original=%d compressed=%d verify=%d mismatch=%d firstOrig:",
-                        traceCount - 1,
-                        originalSize,
-                        compressedSize - 4,
-                        verifySize,
-                        mismatch);
-                for (i = 0; i < originalSize && i < 32; ++i) {
-                    fprintf(f, " %02x", msg->data[i + 4]);
-                }
-                fprintf(f, " firstVerify:");
-                for (i = 0; i < verifySize && i < 32; ++i) {
-                    fprintf(f, " %02x", verifyBuf[i]);
-                }
-                fprintf(f, "\n");
-                fclose(f);
-            }
-
-            ZN10LargeLocalD1Ev(verifyBuf_ll);
-        }
-    }
-#endif
-
     if (client->dropReason != NULL) {
         SV_DropClient(client, client->dropReason);
     }

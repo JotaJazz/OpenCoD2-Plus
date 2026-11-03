@@ -34,7 +34,7 @@ Es un fork de [opencod2/opencod2](https://github.com/opencod2/opencod2), donde s
 - **Un servidor dedicado para 1.3 y 1.0**, basado en [OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server) (llamado CoD2rev-Plus hasta noviembre de 2026): en Linux pasa la prueba de humo completa de OpenCoD2-Plus Server.
 - **Un cliente de Linux**, y otro sobre Vulkan (DXVK) que también dibuja con los shaders del propio juego.
 - **CoD2 1.3 Plus (en desarrollo):** con un servidor Plus (el `make PLUS=1` de OpenCoD2-Plus Server) el cliente habla el protocolo nuevo 1.3 Plus, con snapshots más chicos, y sus propias partidas locales también lo usan; los servidores 1.3 normales se juegan como antes.
-- **Clientes de 64 bits (en desarrollo):** los clientes de Linux y Windows también se compilan para x86_64 y cargan mapas; todavía no son iguales a los de 32 bits (aún sin efectos).
+- **Clientes de 64 bits (en desarrollo):** los clientes de Linux y Windows también se compilan para x86_64 y cargan mapas; todavía no son iguales a los de 32 bits: en Linux ya dibujan los efectos e iluminan el mundo como los de 32 bits; el de Windows aún no se probó en un Windows real.
 - **Las mejoras de CoD2x, escritas en el motor**: `sensitivity_MG`, opciones de la brújula, `cl_maxpackets` hasta 125, `com_writeConfig`, `cl_hideServerIp`, 4096 dvars y un informe cuando el juego se congela (`com_freezeWatch`).
 - **Comprobado contra los binarios originales de 1.3**: predicción de movimiento, efectos, sonidos, retroceso, menús y muchos arreglos ([qué cambió](docs/changes.md)).
 

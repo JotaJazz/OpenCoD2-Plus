@@ -3204,14 +3204,34 @@ typedef float Float32;
 typedef double Float64;
 typedef void (*Free_t)(void *, int);   /* real Free(ptr,size) sig; byte-neutral fn-ptr */
 typedef GDevice * GDPtr;
+#ifdef COD2_X64
+typedef unsigned int GLbitfield;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLbitfield;
+#endif
 
 typedef unsigned char GLboolean;
+#ifdef COD2_X64
+typedef unsigned int GLenum;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLenum;
+#endif
 typedef float GLfloat;
+#ifdef COD2_X64
+typedef int GLint;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long int GLint;
+#endif
+#ifdef COD2_X64
+typedef int GLsizei;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long int GLsizei;
+#endif
+#ifdef COD2_X64
+typedef unsigned int GLuint;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLuint;
+#endif
 
 typedef unsigned int GfxDrawSurfSort;
 
@@ -3332,7 +3352,11 @@ typedef OpaqueRgnHandle * RgnHandle;
 typedef short int SHORT;
 
 typedef short int SInt16;
+#ifdef COD2_X64
+typedef int SInt32;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long int SInt32;
+#endif
 
 typedef long long int SInt64;
 typedef signed char SInt8;
@@ -3365,14 +3389,22 @@ typedef TrackType * * Track;
 typedef short unsigned int UINT16;
 typedef unsigned int UINT32;
 
+#ifdef COD2_X64
+typedef unsigned int UINT4;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int UINT4;
+#endif
 
 typedef unsigned char UINT8;
 
 typedef unsigned int UINT_PTR;
 
 typedef short unsigned int UInt16;
+#ifdef COD2_X64
+typedef unsigned int UInt32;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int UInt32;
+#endif
 
 typedef long long unsigned int UInt64;
 
@@ -4977,7 +5009,7 @@ struct FxGfxEntity {
 
 struct Effect {
 
-    int _vptr$Effect;
+    void *_vptr$Effect;
     vec3_t origin;
     int field_0x10;
     vec3_t axis[2];

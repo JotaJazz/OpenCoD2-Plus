@@ -51,8 +51,8 @@ extern int SV_PointContents(const vec_t *p, int passEntityNum, int contentmask);
 extern void SV_LinkEntity(gentity_t *ent);
 extern qboolean G_RadiusDamage(const vec_t *origin, gentity_t *inflictor, gentity_t *attacker, float fInnerDamage, float fOuterDamage, float radius, gentity_t *ignore, int mod);
 extern void Server_SwitchToValidFxScheduler(void);
-extern int FX_RegisterEffect(const char *name);
-extern float FX_GetEffectLength(int handle);
+extern EffectTemplate *FX_RegisterEffect(const char *name);
+extern float FX_GetEffectLength(EffectTemplate *fx);
 extern gentity_t *G_Spawn(void);
 extern void Scr_SetString(scr_string_t *dst, unsigned int str);
 extern void vectoangles(const vec_t *vec, vec_t *angles);
@@ -197,7 +197,7 @@ void G_ExplodeMissile(gentity_t *ent)
 
         (_ENT(ent)->s.eFlags) |= 0x10000;
         Server_SwitchToValidFxScheduler();
-        int fxHandle = FX_RegisterEffect(weapDef->szProjExplosionEffect);
+        EffectTemplate *fxHandle = FX_RegisterEffect(weapDef->szProjExplosionEffect);
         (_ENT(ent)->s.time) = LEVEL_TIME;
         float fxLength = FX_GetEffectLength(fxHandle);
         (_ENT(ent)->s.time2) = LEVEL_TIME + (int)(fxLength + 1.0f);

@@ -139,142 +139,6 @@ void RB_EndSurface(void);
 extern int g_tess_since_begin;
 int g_begin_surface_calls = 0;
 
-static int RB_MaterialNameContains(const Material *material, const char *needle)
-{
-    const char *name;
-    const char *hay;
-    const char *n;
-
-    if (!material || !needle || !*needle) {
-        return 0;
-    }
-
-    name = material->info.name;
-    if (!name) {
-        return 0;
-    }
-
-    for (hay = name; *hay; ++hay) {
-        n = needle;
-        while (*n && hay[n - needle] == *n) {
-            ++n;
-        }
-        if (!*n) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-static void RB_X64TraceEndSurface(const char *stage, const Material *material,
-                                  const MaterialTechnique *technique, const materialCommands_t *mc)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 160 || !RB_MaterialNameContains(material, "fonts/gamefonts")) {
-        return;
-    }
-
-    f = fopen("x64_surface_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    {
-        const MaterialPassDx9 *pass = technique ? &technique->passArray.dx9[0] : NULL;
-        const MaterialTextureDef *tex = material && material->textureCount > 0 ? &material->textures[0] : NULL;
-        const GfxImage *image = tex && tex->semantic != 5 ? tex->u.image : NULL;
-
-        fprintf(f,
-                "surface[%d] %s mat=%p name=%s techType=%d tech=%p passCount=%u flags=0x%x idx=%d verts=%d optIdx=%d decl=%d viewportNull=%d texCount=%u tex0=%s texState=0x%x texSem=%d img=%p imgName=%s imgSem=%d imgSize=%ux%u imgTex=%p vArgs=%u pArgs=%u vs=%s ps=%s\n",
-                traceCount,
-                stage ? stage : "<null>",
-                (const void *)material,
-                material && material->info.name ? material->info.name : "<null>",
-                mc ? mc->techType : -1,
-                (const void *)technique,
-                technique ? (unsigned)technique->passCount : 0,
-                technique ? (unsigned)technique->flags : 0,
-                mc ? mc->indexCount : -1,
-                mc ? mc->vertexCount : -1,
-                mc ? mc->optimizedIndexCount : -1,
-                mc ? mc->declType : -1,
-                dxState.viewportIsNull,
-                material ? (unsigned)material->textureCount : 0,
-                tex && tex->name ? tex->name : "<null>",
-                tex ? (unsigned)tex->samplerState : 0,
-                tex ? (int)tex->semantic : -1,
-                (const void *)image,
-                image && image->name ? image->name : "<null>",
-                image ? (int)image->semantic : -1,
-                image ? image->width : 0,
-                image ? image->height : 0,
-                image ? (void *)image->texture.basemap : NULL,
-                pass ? (unsigned)pass->vertexArgCount : 0,
-                pass ? (unsigned)pass->pixelArgCount : 0,
-                pass && pass->vertexShader && pass->vertexShader->name ? pass->vertexShader->name : "<null>",
-                pass && pass->pixelShader && pass->pixelShader->name ? pass->pixelShader->name : "<null>");
-    }
-    fclose(f);
-    traceCount++;
-#else
-    (void)stage;
-    (void)material;
-    (void)technique;
-    (void)mc;
-#endif
-}
-
-static void RB_X64TraceSampler(const char *stage, const Material *material, int argType, int dest,
-                               const char *sourceName, int codeTexture, GfxImage *image, int samplerState)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 80 || !RB_MaterialNameContains(material, "fonts/gamefonts")) {
-        return;
-    }
-
-    f = fopen("x64_sampler_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f,
-            "sampler[%d] %s mat=%s type=%d dest=%d source=%s code=%d state=0x%x image=%p imageName=%s mapType=%d semantic=%d size=%ux%u tex=%p\n",
-            traceCount,
-            stage ? stage : "<null>",
-            material && material->info.name ? material->info.name : "<null>",
-            argType,
-            dest,
-            sourceName ? sourceName : "<null>",
-            codeTexture,
-            samplerState,
-            (void *)image,
-            image && image->name ? image->name : "<null>",
-            image ? image->mapType : -1,
-            image ? image->semantic : -1,
-            image ? image->width : 0,
-            image ? image->height : 0,
-            image ? (void *)image->texture.basemap : NULL);
-    fclose(f);
-    traceCount++;
-#else
-    (void)stage;
-    (void)material;
-    (void)argType;
-    (void)dest;
-    (void)sourceName;
-    (void)codeTexture;
-    (void)image;
-    (void)samplerState;
-#endif
-}
-
 /* the last surface begun and who began it, for the crash report */
 volatile struct RbBeginDbg {
     const void *material;
@@ -1817,8 +1681,6 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
                         byte samplerState = 0;
 
                         RB_GetTextureFromCode_impl(codeTexture, &image, &samplerState);
-                        RB_X64TraceSampler("code", ((materialCommands_t *)RB_TessBase())->material,
-                                           type, entry->dest, NULL, codeTexture, (GfxImage *)image, samplerState);
 #ifdef GFX_REAL_D3D9
                         if (getenv("REALD3D9_SAMPLOG")) {
                             static int spl = 0;
@@ -1873,12 +1735,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
                         }
 
                         if (image) {
-                            RB_X64TraceSampler("material", ((materialCommands_t *)RB_TessBase())->material,
-                                               type, destSampler, textureName, -1, (GfxImage *)image, samplerState);
                             RB_SetSampler(destSampler, samplerState, (GfxImage *)(image));
                         } else {
-                            RB_X64TraceSampler("material-null", ((materialCommands_t *)RB_TessBase())->material,
-                                               type, destSampler, textureName, -1, NULL, samplerState);
                         }
                         break;
                     }
@@ -2030,10 +1888,8 @@ void RB_EndSurface(void)
     technique = material->techniqueSet->techniques[(*(MaterialTechniqueType *)&((materialCommands_t *)tess)->techType)];
 
     g_rb_endsurface_count++;
-    RB_X64TraceEndSurface("loaded", material, technique, (const materialCommands_t *)tess);
 
     if (!technique) {
-        RB_X64TraceEndSurface("skip-notech", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_notechnique++;
         goto cleanup;
     }
@@ -2044,7 +1900,6 @@ void RB_EndSurface(void)
         RB_UpdateViewport();
 
     if (dxState.viewportIsNull) {
-        RB_X64TraceEndSurface("skip-viewport", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_dxstate++;
         goto cleanup;
     }
@@ -2053,14 +1908,12 @@ void RB_EndSurface(void)
     if (techFlags & 1) {
         if (backEnd->resolvedPostSunTarget == 0xe) {
             g_rb_endsurface_flag1skip++;
-            RB_X64TraceEndSurface("skip-flag1", material, technique, (const materialCommands_t *)tess);
             goto cleanup;
         }
     }
     if (techFlags & 2) {
         if (backEnd->resolvedSceneTarget == 0xe) {
             g_rb_endsurface_flag2skip++;
-            RB_X64TraceEndSurface("skip-flag2", material, technique, (const materialCommands_t *)tess);
             goto cleanup;
         }
     }
@@ -2107,7 +1960,6 @@ void RB_EndSurface(void)
 
     indexCount = ((materialCommands_t *)tess)->indexCount;
     if (indexCount == 0) {
-        RB_X64TraceEndSurface("skip-index0", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_idxzero++;
         g_rb_tess_type_idxzero[g_rb_last_tess_type]++;
         diag_idxzero(tess);
@@ -2224,7 +2076,6 @@ void RB_EndSurface(void)
     }
 
     g_rb_endsurface_draw++;
-    RB_X64TraceEndSurface("draw", material, technique, (const materialCommands_t *)tess);
     RB_DrawTechnique((*(MaterialVertexDeclType *)&((materialCommands_t *)tess)->declType), &args);
 
     tess = RB_TessBase();

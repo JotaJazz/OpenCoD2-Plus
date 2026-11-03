@@ -438,8 +438,8 @@ static void R_XModelDebugBoxes_impl(const byte *sceneEnt, const byte *ent, const
         return;
 
     vec4_t color = { 1.0f, 1.0f, 1.0f, 0.0f };
-    byte *entMatrix = (byte *)(ent + 0x14);
-    float *entOrigin = (float *)(ent + 0x3c);
+    byte *entMatrix = (byte *)(ent + offsetof(GfxEntity, axis));
+    float *entOrigin = (float *)(ent + offsetof(GfxEntity, origin));
     DebugGlobals *debugGlobals = &frontEndDataOut->debugGlobals;
 
     for (boneIndex = 0; boneIndex < boneCount; boneIndex++) {
@@ -504,8 +504,8 @@ static void R_XModelDebugAxes_impl(const byte *sceneEnt, const byte *ent, const 
     if (!rotTransArray || boneCount <= 0)
         return;
 
-    byte *entMatrix = (byte *)(ent + 0x14);
-    float *entOrigin = (float *)(ent + 0x3c);
+    byte *entMatrix = (byte *)(ent + offsetof(GfxEntity, axis));
+    float *entOrigin = (float *)(ent + offsetof(GfxEntity, origin));
     DebugGlobals *debugGlobals = &frontEndDataOut->debugGlobals;
 
     for (boneIndex = 0; boneIndex < boneCount; boneIndex++) {
@@ -579,8 +579,8 @@ void R_UpdateXModelBounds(GfxSceneEntity *sceneEnt, GfxEntity *ent)
 
     if (((GfxEntity *)e)->reType != 0) {
         void *defaultModel = rgg->modelDObj;
-        obj = (void *)((GfxSceneEntity *)se)->u.data;
-        DObjSetModel((DObj_s *)defaultModel, (const XModel *)(obj));
+        DObjSetModel((DObj_s *)defaultModel, (const XModel *)((GfxSceneEntity *)se)->u.data);
+        obj = defaultModel;  /* the model in the shared DObj, not the XModel as a DObj */
     } else {
         obj = (void *)((GfxSceneEntity *)se)->u.data;
     }

@@ -240,7 +240,7 @@ void R_UpdateLightsFromDvars(void)
 void R_LoadWorld(const char *name, int *checksum)
 {
     byte *world;
-    byte *worldData;
+    SunLightParseParams *sp;
     refimport_t *refimport;
     dvar_t *dvar;
     byte *frontEnd;
@@ -255,27 +255,27 @@ void R_LoadWorld(const char *name, int *checksum)
     }
 
     world = *(byte **)&rgp.world;
-    worldData = (byte *)(((char *)world + offsetof(GfxWorld, sunParse.name[0])));
+    sp = &((GfxWorld *)world)->sunParse;
 
     refimport = (refimport_t *)&ri;
 
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakAmbient), (*(float *)&((GfxWorld *)worldData)->sunParse.name[12]));
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakDiffuseFraction), (*(float *)&((GfxWorld *)worldData)->sunParse.name[28]));
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakSunLight), (*(float *)&((GfxWorld *)worldData)->sunParse.name[32]));
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakAmbient), sp->ambientScale);
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakDiffuseFraction), sp->diffuseFraction);
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakSunLight), sp->sunLight);
 
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakAmbientColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[16]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[20]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[24]), 1.0f);
+                             sp->ambientColor[0], sp->ambientColor[1],
+                             sp->ambientColor[2], 1.0f);
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakSunColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[36]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[40]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[44]), 1.0f);
+                             sp->sunColor[0], sp->sunColor[1],
+                             sp->sunColor[2], 1.0f);
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakSunDiffuseColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[48]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[52]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[56]), 1.0f);
+                             sp->diffuseColor[0], sp->diffuseColor[1],
+                             sp->diffuseColor[2], 1.0f);
 
     refimport->Dvar_SetVec3(R_DvarFromImport(imp_r_lightTweakSunDirection),
-                            ((GfxWorld *)worldData)->sunParse.ambientScale, ((GfxWorld *)worldData)->sunParse.ambientColor[0],
-                            ((GfxWorld *)worldData)->sunParse.ambientColor[1]);
+                            sp->angles[0], sp->angles[1],
+                            sp->angles[2]);
 
     dvar = R_DvarFromImport(imp_r_lightTweakAmbient);
     refimport->Dvar_SetModified(dvar);

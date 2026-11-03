@@ -1026,9 +1026,6 @@ void CL_ParseServerMessage(msg_t *msg)
     byte *msgCompressed_buf;
     msg_t msgCompressed;
     int cmd;
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int x64TraceCount;
-#endif
 
     LargeLocal_LargeLocal(&msgCompressed_buf_large_local, MAX_MSG_DECOMPRESS_BYTES);
     msgCompressed_buf = (byte *)LargeLocal_GetBuf(&msgCompressed_buf_large_local);
@@ -1047,23 +1044,6 @@ void CL_ParseServerMessage(msg_t *msg)
                                                       msgCompressed_buf,
                                                       msg->cursize - msg->readcount,
                                                       MAX_MSG_DECOMPRESS_BYTES);
-
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    if (x64TraceCount < 16) {
-        FILE *f = fopen("x64_msg_trace.txt", x64TraceCount ? "a" : "w");
-        if (f) {
-            int i;
-            fprintf(f, "msg[%d] srcSize=%d srcRead=%d decSize=%d first:",
-                    x64TraceCount, msg->cursize, msg->readcount, msgCompressed.cursize);
-            for (i = 0; i < msgCompressed.cursize && i < 32; i++) {
-                fprintf(f, " %02x", msgCompressed_buf[i]);
-            }
-            fprintf(f, "\n");
-            fclose(f);
-        }
-        x64TraceCount++;
-    }
-#endif
 
     msg_plusSnapshotTime = 0; /* an error may have left a snapshot unfinished */
 

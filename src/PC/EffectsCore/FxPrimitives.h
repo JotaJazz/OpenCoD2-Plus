@@ -17,7 +17,7 @@ struct Light;
 struct Particle;
 
 struct Effect {
-    int _vptr$Effect;
+    void *_vptr$Effect;
     struct FxGfxEntity mRefEnt;
     int mFlags;
     int mClusterId;

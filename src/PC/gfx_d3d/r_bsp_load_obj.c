@@ -318,16 +318,16 @@ void R_InterpretSunLightParseParamsIntoLights(SunLightParseParams *sunParse, Gfx
         }
     }
     if (sunLight) {
-        (*(float *)&((SunLightParseParams *)sl)->name[4]) = sunDirection[0];
-        (*(float *)&((SunLightParseParams *)sl)->name[8]) = sunDirection[1];
-        (*(float *)&((SunLightParseParams *)sl)->name[12]) = sunDirection[2];
-        (*(float *)&((SunLightParseParams *)sl)->name[16]) = 0.0f;
-        (*(float *)&((SunLightParseParams *)sl)->name[20]) = diffR;
-        (*(float *)&((SunLightParseParams *)sl)->name[24]) = diffG;
-        (*(float *)&((SunLightParseParams *)sl)->name[28]) = diffB;
-        (*(float *)&((SunLightParseParams *)sl)->name[32]) = ambientR;
-        (*(float *)&((SunLightParseParams *)sl)->name[36]) = ambientG;
-        (*(float *)&((SunLightParseParams *)sl)->name[40]) = ambientB;
+        sunLight->position[0] = sunDirection[0];
+        sunLight->position[1] = sunDirection[1];
+        sunLight->position[2] = sunDirection[2];
+        sunLight->position[3] = 0.0f;
+        sunLight->color[0] = diffR;
+        sunLight->color[1] = diffG;
+        sunLight->color[2] = diffB;
+        sunLight->u.dir.ambientColor[0] = ambientR;
+        sunLight->u.dir.ambientColor[1] = ambientG;
+        sunLight->u.dir.ambientColor[2] = ambientB;
     }
 }
 
