@@ -36,7 +36,7 @@ COD2_ALT("CDirect3DDevice_mNeedsVertexShaderValidation", "__ZN15CDirect3DDevice2
 COD2_ALT("CDirect3DDevice_mNeedsTransformationValidation", "__ZN15CDirect3DDevice30mNeedsTransformationValidationE")
 COD2_ALT("CDirect3DDevice_mNeedsRasterizationValidation", "__ZN15CDirect3DDevice29mNeedsRasterizationValidationE")
 #else
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_WIN64)  /* PE32 decorates C names; PE x64 does not */
 #define COD2_COFF_ASM_PREFIX "_"
 #else
 #define COD2_COFF_ASM_PREFIX ""

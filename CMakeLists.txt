@@ -423,31 +423,39 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:ASM>:$<$<NOT:$<BOOL:${COD2_X64}>>:-m32>>")
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${COD2_SRC_DIR}/win32/shims ${CMAKE_SOURCE_DIR})
 
-# PE link: same seam aliases as Linux, but every C symbol carries PE's leading '_'.
+# PE link: same seam aliases as Linux; PE32 decorates every C symbol with a
+# leading '_', PE x64 does not
+if(COD2_X64)
+  set(COD2_PE_C "")
+else()
+  set(COD2_PE_C "_")
+endif()
 set(COD2_WIN_LINK
   -static -static-libgcc -static-libstdc++
   -Wl,--allow-multiple-definition -Wl,--wrap,R_Error
-  -Wl,--defsym,___mh_execute_header=0x1000
-  -Wl,--defsym,_level_ptr=_level
-  -Wl,--defsym,_g_entities_ptr=_g_entities
-  -Wl,--defsym,_scr_const_ptr=_scr_const
-  -Wl,--defsym,_playerCorpseInfo_ptr=_g_scr_data
-  -Wl,--defsym,_g_renderer_ptr=_re
-  -Wl,--defsym,_scrAnimPub_ptr=_scrAnimPub
-  -Wl,--defsym,_scrCompPub_ptr=_scrCompilePub
-  -Wl,--defsym,_scrParserPub_ptr=_scrParserPub
-  -Wl,--defsym,_r_frontEndData_ptr=_rg
-  -Wl,--defsym,_r_sys_ptr=_ri
-  -Wl,--defsym,_r_limits_ptr=_vidConfig
-  -Wl,--defsym,_sv_ptr=_sv
-  -Wl,--defsym,_svs_ptr=_svs
-  -Wl,--defsym,_cg_globUI=_legacyHacks
-  -Wl,--defsym,_g_time=_imp_level_bgs
-  -Wl,--defsym,_g_time_ptr=_imp_bgs)
+  -Wl,--defsym,${COD2_PE_C}__mh_execute_header=0x1000
+  -Wl,--defsym,${COD2_PE_C}level_ptr=${COD2_PE_C}level
+  -Wl,--defsym,${COD2_PE_C}g_entities_ptr=${COD2_PE_C}g_entities
+  -Wl,--defsym,${COD2_PE_C}scr_const_ptr=${COD2_PE_C}scr_const
+  -Wl,--defsym,${COD2_PE_C}playerCorpseInfo_ptr=${COD2_PE_C}g_scr_data
+  -Wl,--defsym,${COD2_PE_C}g_renderer_ptr=${COD2_PE_C}re
+  -Wl,--defsym,${COD2_PE_C}scrAnimPub_ptr=${COD2_PE_C}scrAnimPub
+  -Wl,--defsym,${COD2_PE_C}scrCompPub_ptr=${COD2_PE_C}scrCompilePub
+  -Wl,--defsym,${COD2_PE_C}scrParserPub_ptr=${COD2_PE_C}scrParserPub
+  -Wl,--defsym,${COD2_PE_C}r_frontEndData_ptr=${COD2_PE_C}rg
+  -Wl,--defsym,${COD2_PE_C}r_sys_ptr=${COD2_PE_C}ri
+  -Wl,--defsym,${COD2_PE_C}r_limits_ptr=${COD2_PE_C}vidConfig
+  -Wl,--defsym,${COD2_PE_C}sv_ptr=${COD2_PE_C}sv
+  -Wl,--defsym,${COD2_PE_C}svs_ptr=${COD2_PE_C}svs
+  -Wl,--defsym,${COD2_PE_C}cg_globUI=${COD2_PE_C}legacyHacks
+  -Wl,--defsym,${COD2_PE_C}g_time=${COD2_PE_C}imp_level_bgs
+  -Wl,--defsym,${COD2_PE_C}g_time_ptr=${COD2_PE_C}imp_bgs)
 set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
 
 if(COD2_WIN32_CLIENT)
-  list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+  if(NOT COD2_X64)
+    list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+  endif()
   add_compile_definitions(W32_CLIENT)
   if(COD2_X64)
     # the x86_64 static SDL2 of SDL's MinGW package (scripts/mingw64_deps.sh)
@@ -503,8 +511,15 @@ endif()
 
 # ELF .S data blobs -> PE/COFF .S, then assemble (data/literals/import_pointers/vtables).
 set(W32GEN ${CMAKE_SOURCE_DIR}/build/win_gen)
-set(WIN_ASM_GEN ${W32GEN}/data.win.S ${W32GEN}/literals.win.S ${W32GEN}/import_pointers.win.S)
-set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
+if(COD2_X64)
+  # x64: the portable C blobs (pointer slots as void *), as the 64-bit Linux
+  # client and MSVC; PE x64 names need no '_' aliases for their C++ symbols
+  set(WIN_ASM_GEN ${CMAKE_SOURCE_DIR}/build/native_gen/data32.c ${CMAKE_SOURCE_DIR}/build/native_gen/literals32.c
+      ${CMAKE_SOURCE_DIR}/build/native_gen/import_pointers_native.c)
+else()
+  set(WIN_ASM_GEN ${W32GEN}/data.win.S ${W32GEN}/literals.win.S ${W32GEN}/import_pointers.win.S)
+  set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
+endif()
 
 # PE link aliases for C++ symbols stored in the (C-compiled) data blobs: the C
 # compiler prefixes them to '___ZN...' (common syms, no address until link), so
@@ -512,9 +527,11 @@ set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
 # bind a common symbol). Generated at configure time from the blob sources.
 file(STRINGS ${W32GEN}/cxx_defsyms_c.txt COD2_CXX_DEFSYMS_C)
 file(STRINGS ${W32GEN}/cxx_defsyms_asm.txt COD2_CXX_DEFSYMS_ASM)
-foreach(pair ${COD2_CXX_DEFSYMS_C} ${COD2_CXX_DEFSYMS_ASM})
-  list(APPEND COD2_WIN_LINK -Wl,--defsym,${pair})
-endforeach()
+if(NOT COD2_X64)
+  foreach(pair ${COD2_CXX_DEFSYMS_C} ${COD2_CXX_DEFSYMS_ASM})
+    list(APPEND COD2_WIN_LINK -Wl,--defsym,${pair})
+  endforeach()
+endif()
 
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
