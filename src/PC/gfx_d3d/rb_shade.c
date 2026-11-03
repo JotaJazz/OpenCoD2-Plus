@@ -20,6 +20,7 @@ extern struct DxState dxState;
 /* 1.3's offsets, read by field so x64 lays them out its own way */
 COD2_ASSERT_FIELD(GfxWorld, smodelLightingImage, 0x10c);
 COD2_ASSERT_FIELD(GfxWorld, outdoorImage, 0x200);
+COD2_ASSERT_FIELD(GfxWorld, outdoorLookupMatrix, 0x1c0);
 COD2_ASSERT_FIELD(dvar_t, current, 8);
 
 extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
@@ -1182,10 +1183,10 @@ static const float *RB_GetCodeMatrix_impl(int source, int firstRow)
             biasWorld[1] += downBias;
 
             MatrixTransformVector44((float *)(biasWorld),
-                                    (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (float *)(biasResult));
+                                    ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (float *)(biasResult));
 
             MatrixMultiply44((vec4_t *)(worldMat),
-                             (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (vec4_t *)(codeMatrix));
+                             ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (vec4_t *)(codeMatrix));
 
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][0])) += biasResult[0];
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][1])) += biasResult[1];

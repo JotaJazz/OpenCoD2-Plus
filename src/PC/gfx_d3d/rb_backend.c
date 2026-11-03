@@ -2384,7 +2384,7 @@ static void RB_DrawSpriteCmd(GfxRenderCommandExecState *execState)
     ((GfxEntity *)entity)->origin[1] = ((GfxCmdDrawSprite *)cmd)->pos[1];
     ((GfxEntity *)entity)->origin[2] = ((GfxCmdDrawSprite *)cmd)->pos[2];
 
-    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((int)(uintptr_t)((GfxCmdDrawSprite *)cmd)->material);
+    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((GfxCmdDrawSprite *)cmd)->material;
 
     ((GfxEntity *)entity)->reType = (refEntityType_t)(4);
 
