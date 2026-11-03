@@ -827,8 +827,7 @@ identity:
 __attribute_regparm__(3) __attribute_sseregparm__
     void XAnimCalcRelDeltaParts(const XAnimParts *parts, XAnimSimpleRotPos *rotPos, int quatIndex, float weightScale, float time1, float time2)
 {
-    vec2_t q1;
-    vec2_t q2;
+    vec2_t q[2];  /* quatIndex picks one: the two must be adjacent */
     vec3_t vec1;
     vec3_t vec2;
     float *quat;
@@ -840,8 +839,8 @@ __attribute_regparm__(3) __attribute_sseregparm__
     float norm;
     float rotScale;
 
-    XAnim_CalcDeltaForTime(parts, q1, vec1, time1);
-    XAnim_CalcDeltaForTime(parts, q2, vec2, time2);
+    XAnim_CalcDeltaForTime(parts, q[0], vec1, time1);
+    XAnim_CalcDeltaForTime(parts, q[1], vec2, time2);
 
     if (parts->bLoop && time1 > time2) {
         XAnimDeltaPartTrans *trans = parts->deltaPart->trans;
@@ -857,14 +856,14 @@ __attribute_regparm__(3) __attribute_sseregparm__
     }
 
     rotScale = weightScale * 9.313794180343393e-10f;
-    rotPos->rot[0] += (q2[0] * q1[1] - q2[1] * q1[0]) * rotScale;
-    rotPos->rot[1] += (q2[0] * q1[0] + q2[1] * q1[1]) * rotScale;
+    rotPos->rot[0] += (q[1][0] * q[0][1] - q[1][1] * q[0][0]) * rotScale;
+    rotPos->rot[1] += (q[1][0] * q[0][0] + q[1][1] * q[0][1]) * rotScale;
 
     dx = vec2[0] - vec1[0];
     dy = vec2[1] - vec1[1];
     dz = vec2[2] - vec1[2];
 
-    quat = (float *)q1 + quatIndex * 2;
+    quat = q[quatIndex];
     qx = quat[0];
     qy = quat[1];
     norm = qx * qx + qy * qy;
