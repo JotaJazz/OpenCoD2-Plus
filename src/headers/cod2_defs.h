@@ -3184,7 +3184,11 @@ typedef _D3DXSHADER_CONSTANTINFO D3DXSHADER_CONSTANTINFO;
 
 typedef int DCTELEM;
 
+#ifdef COD2_X64
+typedef unsigned int DWORD;  /* 32 bits, as on Windows and in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int DWORD;
+#endif
 typedef OpaqueDialogPtr * DialogPtr;
 
 typedef __EventLoopTimer * EventLoopTimerRef;

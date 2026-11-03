@@ -1023,7 +1023,7 @@ static void R_LoadOccluders_impl(const GfxBspLoad *load)
     if (occLumpSize < 0 || occluderCount * 20 != occLumpSize)
         R_Error(1, "LoadMap: funny lump size in %s", s_world.name);
     const byte *diskOcc = bspData + *(int *)(bspHeader + 0x9C);
-    byte *occluders = (byte *)Hunk_AllocInternal(occluderCount * 36);
+    GfxOccluder *occluders = (GfxOccluder *)Hunk_AllocInternal(occluderCount * COD2_SIZEOF_1_3(GfxOccluder, 36));
 
     int planeLumpSize = *(int *)(bspHeader + 0xA0);
     if (*(int *)(bspHeader + 0xA4) + planeLumpSize > fileSize)
@@ -1034,7 +1034,7 @@ static void R_LoadOccluders_impl(const GfxBspLoad *load)
     if (planeLumpSize < 0 || planeIdxCount * 4 != planeLumpSize)
         R_Error(1, "LoadMap: funny lump size in %s", s_world.name);
     const byte *planeIndices = bspData + *(int *)(bspHeader + 0xA4);
-    byte *sidePlanes = (byte *)Hunk_AllocInternal(planeIdxCount * 20);
+    DpvsPlane *sidePlanes = (DpvsPlane *)Hunk_AllocInternal(planeIdxCount * COD2_SIZEOF_1_3(DpvsPlane, 20));
 
     int edgeLumpSize = *(int *)(bspHeader + 0xA8);
     if (*(int *)(bspHeader + 0xAC) + edgeLumpSize > fileSize)
@@ -1045,60 +1045,58 @@ static void R_LoadOccluders_impl(const GfxBspLoad *load)
     if (edgeLumpSize < 0 || edgeCount * 4 != edgeLumpSize)
         R_Error(1, "LoadMap: funny lump size in %s", s_world.name);
     const byte *diskEdges = bspData + *(int *)(bspHeader + 0xAC);
-    byte *edges = (byte *)Hunk_AllocInternal(edgeCount * 16);
+    GfxOccluderEdge *edges = (GfxOccluderEdge *)Hunk_AllocInternal(edgeCount * COD2_SIZEOF_1_3(GfxOccluderEdge, 16));
 
-    rgl.occluders = (GfxOccluder *)occluders;
+    rgl.occluders = occluders;
     byte *vertBase = (byte *)rgl.portalVerts;
 
-    byte *out = (byte *)&((GfxOccluder *)occluders)->edges;
+    /* by field: 1.3's offsets (36-byte occluders, 16-byte edges) are 32 bits' */
     for (i = 0; i < occluderCount; i++) {
+        GfxOccluder *occ = &occluders[i];
         int nPlanes = *(short *)(diskOcc + 4);
-        *(int *)(out - 0xc) = nPlanes;
-
         int firstPlane = *(int *)diskOcc;
-        byte *planeBase = sidePlanes + firstPlane * 20;
-        *(byte **)(out - 8) = planeBase;
+        DpvsPlane *planeBase = &sidePlanes[firstPlane];
+
+        occ->planeCount = nPlanes;
+        occ->planes = planeBase;
 
         if (nPlanes > 0) {
             const int *plIdx = (const int *)(planeIndices + firstPlane * 4);
             for (j = 0; j < nPlanes; j++) {
                 float *src = (float *)CM_GetPlaneNum(plIdx[j]);
-                byte *dst = planeBase + j * 20;
-                *(float *)(dst + 0) = src[0];
-                *(float *)(dst + 4) = src[1];
-                *(float *)(dst + 8) = src[2];
-                *(int *)(dst + 12) = *(int *)(src + 3) ^ 0x80000000;
-                dst[16] = (*(int *)(dst + 0) > 0) ? 0x0C : 0x00;
-                dst[17] = (*(int *)(dst + 4) > 0) ? 0x10 : 0x04;
-                dst[18] = (*(int *)(dst + 8) > 0) ? 0x14 : 0x08;
+                DpvsPlane *dst = &planeBase[j];
+                dst->coeffs[0] = src[0];
+                dst->coeffs[1] = src[1];
+                dst->coeffs[2] = src[2];
+                *(int *)&dst->coeffs[3] = *(int *)(src + 3) ^ 0x80000000;
+                dst->side[0] = (*(int *)&dst->coeffs[0] > 0) ? 0x0C : 0x00;
+                dst->side[1] = (*(int *)&dst->coeffs[1] > 0) ? 0x10 : 0x04;
+                dst->side[2] = (*(int *)&dst->coeffs[2] > 0) ? 0x14 : 0x08;
             }
         }
 
-        *(byte **)(out + 8) = vertBase + *(int *)(diskOcc + 0xc) * 12;
-        *(int *)(out + 4) = *(short *)(diskOcc + 0x10);
+        occ->vertices = (vec3_t *)(vertBase + *(int *)(diskOcc + 0xc) * 12);
+        occ->vertexCount = *(short *)(diskOcc + 0x10);
 
         int nEdges = *(short *)(diskOcc + 6);
-        *(int *)(out - 4) = nEdges;
-
         int firstEdge = *(int *)(diskOcc + 8);
-        byte *edgeBase = edges + firstEdge * 16;
-        *(byte **)(out + 0) = edgeBase;
+        GfxOccluderEdge *edgeBase = &edges[firstEdge];
+        occ->edgeCount = nEdges;
+        occ->edges = edgeBase;
 
         const byte *de = diskEdges + firstEdge * 4;
         for (j = 0; j < nEdges; j++) {
-            byte *e = edgeBase + j * 16;
-            *(byte **)(e + 0) = planeBase + de[j * 4 + 0] * 20;
-            *(byte **)(e + 4) = planeBase + de[j * 4 + 1] * 20;
-            byte *cv = *(byte **)(out + 8);
-            *(byte **)(e + 8) = cv + de[j * 4 + 2] * 12;
-            *(byte **)(e + 12) = cv + de[j * 4 + 3] * 12;
+            GfxOccluderEdge *e = &edgeBase[j];
+            e->plane[0] = &planeBase[de[j * 4 + 0]];
+            e->plane[1] = &planeBase[de[j * 4 + 1]];
+            e->vertex[0] = &occ->vertices[de[j * 4 + 2]];
+            e->vertex[1] = &occ->vertices[de[j * 4 + 3]];
         }
 
-        *(int *)(out + 16) = 0;
-        *(int *)(out + 20) = 0;
+        occ->viewPlaneCount = 0;
+        occ->viewPlanes = NULL;
 
         diskOcc += 20;
-        out += 36;
     }
 }
 

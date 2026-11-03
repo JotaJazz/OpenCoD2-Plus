@@ -59,7 +59,11 @@ extern "C" {
 #define COD2_STDCALL
 #define COD2_FASTCALL
 #define COD2_FORCE_ALIGN_ARG_POINTER
+#if defined(COD2_X64) && defined(__GNUC__)
+#define COD2_ALIGNED(n) __attribute__((aligned(n)))  /* a layout, not a calling convention: x64 keeps it */
+#else
 #define COD2_ALIGNED(n)
+#endif
 #endif
 
 #if COD2_APPLE_GCC_X86_ABI
@@ -4740,7 +4744,11 @@ typedef _D3DRESOURCETYPE D3DRESOURCETYPE;
 typedef _D3DTEXTUREFILTERTYPE D3DTEXTUREFILTERTYPE;
 typedef _D3DXSHADER_CONSTANTINFO D3DXSHADER_CONSTANTINFO;
 typedef int DCTELEM;
+#ifdef COD2_X64
+typedef unsigned int DWORD;  /* 32 bits, as on Windows and in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int DWORD;
+#endif
 typedef OpaqueDialogPtr * DialogPtr;
 typedef OpaqueEventHandlerRef * EventHandlerRef;
 typedef __EventLoopTimer * EventLoopTimerRef;

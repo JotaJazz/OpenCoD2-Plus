@@ -759,7 +759,7 @@ do_reload:
 
         Com_Memcpy(imp_fs_serverIwds, serverIwds, c * 4);
 
-        Com_Memcpy(imp_fs_serverIwdNames, serverIwdNames, c * 4);
+        Com_Memcpy(imp_fs_serverIwdNames, serverIwdNames, c * sizeof(char *));
 
         *(int *)imp_fs_fakeChkSum = 0;
     }
@@ -907,7 +907,7 @@ int FS_GetModList(char *listbuf, int bufsize)
                 n2++;
         }
 
-        pFiles = (char **)Z_MallocInternal((n0 + n1 + n2 + 1) * 4);
+        pFiles = (char **)Z_MallocInternal((n0 + n1 + n2 + 1) * sizeof(char *));
 
         {
             int idx = 0;

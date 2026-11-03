@@ -873,9 +873,9 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
     FFT_Init(rg.fftBitswap, rg.fftTrigTable);
 
     {
-        int args[3] = { 0, 0, 0 };
+        struct DObjModel_s args = { 0 };  /* two pointers: 24 bytes on x64, not 1.3's 12 */
         ((void (*)(void *, int, void *, void *, int))ri.DObjCreate)(
-            args, 1, NULL, rg.modelDObjBuf, 0);
+            &args, 1, NULL, rg.modelDObjBuf, 0);
         rg.modelDObj = (struct DObj_s *)rg.modelDObjBuf;
     }
 

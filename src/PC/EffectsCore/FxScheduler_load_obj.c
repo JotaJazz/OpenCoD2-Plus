@@ -92,9 +92,9 @@ void MediaHandles_AddHandle(const MediaHandles *_this, TMediaElement item)
         } else {
             self->mMediaList.maxSize = 4;
         }
-        newElements = Z_MallocInternal(self->mMediaList.maxSize * 4);
+        newElements = Z_MallocInternal(self->mMediaList.maxSize * sizeof(void *));
         if (self->mMediaList.elements != NULL) {
-            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * 4);
+            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * sizeof(void *));
             Z_FreeInternal(self->mMediaList.elements);
         }
         self->mMediaList.elements = (TMediaElement *)(newElements);
@@ -261,9 +261,9 @@ void MediaHandles_AddEffect(const MediaHandles *_this, EffectTemplate *fx)
         } else {
             self->mMediaList.maxSize = 4;
         }
-        newElements = Z_MallocInternal(self->mMediaList.maxSize * 4);
+        newElements = Z_MallocInternal(self->mMediaList.maxSize * sizeof(void *));
         if (self->mMediaList.elements != NULL) {
-            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * 4);
+            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * sizeof(void *));
             Z_FreeInternal(self->mMediaList.elements);
         }
         self->mMediaList.elements = (TMediaElement *)(newElements);

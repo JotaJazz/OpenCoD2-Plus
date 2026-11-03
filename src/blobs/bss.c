@@ -409,7 +409,7 @@ BSSINT completionString;
 unsigned char tinystr[120];
 itemInfo_t cg_itemsArray[256];
 weaponInfo_t cg_weaponsArray[128];
-unsigned char cg_entitiesArray[561152];
+unsigned char cg_entitiesArray[1024 * COD2_SIZEOF_1_3(centity_t, 548)];  /* centity_t holds pointers */
 
 unsigned char cgsArray[sizeof(cgs_t)];
 cg_t cgArray[1];
@@ -487,7 +487,7 @@ unsigned char botport[128];
 unsigned char ui_arenaInfos[256];
 unsigned char ui_numArenas[128];
 unsigned char defineBits[1152];
-unsigned char weaponStrings[1024];
+unsigned char weaponStrings[128 * COD2_SIZEOF_1_3(animStringItem_t, 8)];  /* a char * per entry */
 BSSINT parseEvent;
 BSSINT parseMovetype;
 unsigned char defineStringsOffset[24];

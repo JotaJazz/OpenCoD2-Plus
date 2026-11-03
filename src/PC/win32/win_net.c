@@ -21,7 +21,7 @@ static struct sockaddr socksRelayAddr;
 static int ip_socket;
 static int numIP;
 static byte localIP[16][4];
-static char winsockdata[400];
+static char winsockdata[COD2_SIZEOF_1_3(WSADATA, 400)];  /* WSADATA has a char * (408 bytes on x64) */
 static qboolean winsockInitialized;
 static int socks_socket;
 static int ipx_socket;

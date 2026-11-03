@@ -904,7 +904,7 @@ void DObjCreate(DObjModel_s *dobjModels, unsigned int numModels, XAnimTree_s *tr
         unsigned char *pAge;
         unsigned char nextAge;
 
-        obj->animToModel = (unsigned short *)((char *)tree + 8 + animBytes);
+        obj->animToModel = &tree->infoArray[animCount];  /* infoArray is at +8 on 32 bits, +12 on x64 */
         pAge = (unsigned char *)obj->animToModel + animBytes;
         nextAge = (unsigned char)(pAge[0] + 1);
         if (!nextAge) {

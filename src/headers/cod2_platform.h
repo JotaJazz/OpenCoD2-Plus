@@ -102,7 +102,11 @@ extern "C" {
 #define COD2_STDCALL
 #define COD2_FASTCALL
 #define COD2_FORCE_ALIGN_ARG_POINTER
+#if defined(COD2_X64) && defined(__GNUC__)
+#define COD2_ALIGNED(n) __attribute__((aligned(n)))  /* a layout, not a calling convention: x64 keeps it */
+#else
 #define COD2_ALIGNED(n)
+#endif
 #endif
 
 #if COD2_APPLE_GCC_X86_ABI
