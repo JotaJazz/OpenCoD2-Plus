@@ -2257,7 +2257,7 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
 #if COD2_IS_PATCH_13
         /* a stock server answers without a version; each snapshot says its own format */
         if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
-            Com_Printf((const char *)"CoD2 Plus server, version %i\n", COD2_PLUS_VERSION);
+            Com_Printf((const char *)"CoD2 1.3 Plus server, version %i\n", COD2_PLUS_VERSION);
 #endif
         Netchan_Setup(NS_CLIENT1, &conn->netchan, from, *(int *)imp_g_qport);
         conn->state = CA_CONNECTED;

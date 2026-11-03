@@ -340,8 +340,8 @@ def make_cases(strings):
         Case('iwd_sums_only', strings={1: set_info(strings[1], 'sv_iwds', info_value(strings[1], 'sv_iwds') + ' 1 2 3')},
              expect='iwd lists differ', forbid='count mismatch'),
         # not hostile: a Plus server's answer, and one claiming another version
-        Case('plus_server', connect_reply=b'connectResponse 122', expect='CoD2 Plus server'),
-        Case('plus_other_version', connect_reply=b'connectResponse 999', forbid='CoD2 Plus server'),
+        Case('plus_server', connect_reply=b'connectResponse 122', expect='CoD2 1.3 Plus server'),
+        Case('plus_other_version', connect_reply=b'connectResponse 999', forbid='CoD2 1.3 Plus server'),
         Case('huffman_bomb', after=huffman_bomb),
         Case('disconnect_percent', after=command('w "%s%s%s%s%n"')),
         Case('translate_long', after=command('e "' + ('\x14' + LONG_KEY) * 6 + '"')),

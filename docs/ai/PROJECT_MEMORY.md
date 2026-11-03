@@ -5,6 +5,10 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — the console says "1.3 Plus"
+
+- A Plus server is reported as "CoD2 1.3 Plus server, version 122" ([ADR 0014](../architecture/adr/0014-name-1-3-plus.md)); `hostile_server_test.py` expects the new line. The vendored server's update notice changes at the next sync (CoD2rev-Plus `bdb0bfb`).
+
 ## 2026-11-02 — the name "1.3 Plus"
 
 - The maintainer wanted players to see the client as a patch after 1.3, as CoD2x does with 1.4. "1.4" was rejected: CoD2x uses it, and zk_libcod's `getProtocolString()` already returns it for Game Pass. Players read "1.3 Plus" ([ADR 0014](../architecture/adr/0014-name-1-3-plus.md)); `shortversion` "1.3" and the Plus version stay.
