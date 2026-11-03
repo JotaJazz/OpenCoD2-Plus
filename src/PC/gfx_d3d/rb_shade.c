@@ -17,6 +17,11 @@ extern struct DxState dxState;
 #include <math.h>
 #include "imports.h"
 
+/* 1.3's offsets, read by field so x64 lays them out its own way */
+COD2_ASSERT_FIELD(GfxWorld, smodelLightingImage, 0x10c);
+COD2_ASSERT_FIELD(GfxWorld, outdoorImage, 0x200);
+COD2_ASSERT_FIELD(dvar_t, current, 8);
+
 extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
 extern GfxImage r_sceneDepthImage;
 extern IDirect3DSurface9 *Image_GetSurface(GfxImage *image);
@@ -537,7 +542,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         char *surfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!surfs || !(*(void **)&((GfxWorld *)surfs)->smodelLightingImage))
             Com_Error(1, "Sampler 'smodelLighting' is only valid in a map.\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x10c);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->smodelLightingImage;
         *samplerState = 0x72;
         return;
     }
@@ -566,11 +571,11 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
             lmapIdx = ((materialCommands_t *)tess)->lmapIndex;
         }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        *image = *(void **)((*(char **)&((GfxWorld *)drawSurfs)->lightmaps) + lmapIdx * 16 + codeTexture * 4 - 0x20);
+        *image = (void *)((GfxWorld *)drawSurfs)->lightmaps[lmapIdx][codeTexture - 8];
         *samplerState = 0x32;
 
         {
-            int mode = *(int *)((char *)*(void **)imp_r_lightMap + 8);
+            int mode = ((const dvar_t *)*(void **)imp_r_lightMap)->current.integer;
             if (mode == 1) {
                 *image = (*(void **)&((r_global_permanent_t *)rgp)->whiteImage);
                 *samplerState = 1;
@@ -640,7 +645,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
     }
 
     case 19: {
-        int sc_on = *(byte *)((char *)*(void **)imp_sc_enable + 8);
+        int sc_on = ((const dvar_t *)*(void **)imp_sc_enable)->current.enabled;
         if (sc_on) {
             char *entity = (char *)backEnd->currentEntity;
             if (*(int *)entity > 2 || (*(byte *)(entity + 5) & 1)) {
@@ -658,7 +663,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->outdoorImage))
             R_Error(1, "Tried to use 'sampler.outdoor' when it isn't valid\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x200);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->outdoorImage;
         *samplerState = 0x32;
         return;
     }
