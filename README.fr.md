@@ -136,7 +136,7 @@ Cette compilation compile encore en C et utilise la machine virtuelle de scripts
 | `COD2_WIN_MSVC` | `OFF` | Compilation MSVC native (activée par les presets `msvc-client`). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC : un seul exécutable autonome avec SDL2 et le runtime C statiques. |
 | `COD2_DEBUG` | `OFF` | `-O0` et sans durcissement, pour le débogage. |
-| `COD2_X64` | `OFF` | Cible x86_64 ; un portage en cours qui compile mais ne fonctionne pas encore. |
+| `COD2_X64` | `OFF` | Cible x86_64 : le client Linux (d'abord `scripts/linux_x64_deps.sh`) charge les cartes ; pas encore identique au client 32 bits. |
 
 Il existe aussi une compilation WebAssembly (`emcmake cmake -S . -B build/web`, avec l'Emscripten SDK), décrite en tête de `CMakeLists.txt`.
 

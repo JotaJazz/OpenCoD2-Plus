@@ -17,7 +17,7 @@ top of it.
 | MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
 | Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
-| x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
+| Linux 64-bit client | `scripts/linux_x64_deps.sh` (amd64 SDL2 headers, no root), then `-DCOD2_X64=ON` | `cod2_linux` for x86_64, on CoD2rev-Plus's VM and server like the 32-bit client; loads maps, not yet equal to it ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 
 The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
 `src/stubs`) links into `cod2_linux`, `cod2_linux_vk` and `cod2_win32`, where
@@ -37,6 +37,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
 | `linux-vk` | Linux client on real Direct3D 9 (`-DCOD2_LINUX_DXVK=ON`; skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
+| `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`; skipped without `scripts/linux_x64_deps.sh`'s headers); glibc and the three bridge checks apply |
 
 Checks it runs (each a script in `scripts/`):
 
@@ -54,7 +55,7 @@ Checks it runs (each a script in `scripts/`):
 | `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from CoD2rev-Plus's |
 | `gen_script_bridge.py` | `all` only | `src/compat` differs from what the generator writes |
 
-A variant skipped for lack of SDL2 or DXVK fails the run unless `--allow-skip`
+A variant skipped for lack of SDL2, DXVK or the amd64 SDL2 headers fails the run unless `--allow-skip`
 is given.
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,

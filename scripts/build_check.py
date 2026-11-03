@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|linux-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
 (cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
 the client draws with the real d3d9 and d3dx9's HLSL compiler, and
 mingw-client-gl builds it on the Mac port's GL device instead
-(COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. The engine compiles as C++ unless --c is given; with --c,
+(COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. linux-client-x64 builds the
+64-bit Linux client (cod2_linux, -DCOD2_X64=ON), skipped without the amd64 SDL2
+headers scripts/linux_x64_deps.sh unpacks. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -49,6 +51,10 @@ VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
 # the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
 VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
 VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
+# the 64-bit Linux client: the engine on LP64, with scripts/linux_x64_deps.sh's SDL2 headers
+VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON']
+LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
+                              '_real_SDL_config.h')
 LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
 # the MinGW client links the static SDL2 the user supplies
 LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
@@ -67,7 +73,8 @@ def build(variant, extra):
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
     # the client's own target
-    target = ['--target', 'cod2_win32'] if variant.startswith('mingw-client') else []
+    target = (['--target', 'cod2_win32'] if variant.startswith('mingw-client')
+              else ['--target', 'cod2_linux'] if variant == 'linux-client-x64' else [])
     result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4)] + target + ['--', '-k'],
                             cwd=ROOT, capture_output=True, text=True)
     output = result.stdout + result.stderr
@@ -112,6 +119,8 @@ def duplicates(variant, build_dir):
         targets = [('cod2_win32', 'client_server')]
     elif variant.startswith('mingw'):
         targets = [('cod2_win32_ded', 'server')]
+    elif variant == 'linux-client-x64':
+        targets = [('cod2_linux', 'client_server')]
     else:
         targets = [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')]
     errors = []
@@ -256,6 +265,10 @@ def main():
             print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
             skipped = True
             continue
+        if variant == 'linux-client-x64' and not os.path.exists(LINUX_X64_SDL2):
+            print(f'skip {variant} (no {os.path.relpath(LINUX_X64_SDL2, ROOT)}: scripts/linux_x64_deps.sh)')
+            skipped = True
+            continue
         if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):
             print(f'skip {variant} (no {os.path.relpath(LINUX_VK_DXVK, ROOT)}: scripts/build_linux_vk_deps.sh)')
             skipped = True
@@ -266,7 +279,7 @@ def main():
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
         if not errors and not is_x64(variant):
             errors = duplicates(variant, build_dir)
-        if not errors and variant.startswith('linux') and not is_x64(variant):
+        if not errors and variant.startswith('linux') and not is_x64(variant) and variant != 'linux-client-x64':
             errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir) + var_sizes(build_dir)
         if not errors and variant in ('linux', 'linux-10'):
             errors = c_linkage(build_dir)

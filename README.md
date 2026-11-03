@@ -138,7 +138,7 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | `COD2_WIN_MSVC` | `OFF` | Native MSVC build (set by the `msvc-client` presets). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: one standalone executable with static SDL2 and C runtime. |
 | `COD2_DEBUG` | `OFF` | `-O0` and no hardening, for debugging. |
-| `COD2_X64` | `OFF` | x86_64 target; a port in progress that compiles but does not run yet. |
+| `COD2_X64` | `OFF` | x86_64 target: the Linux client (`scripts/linux_x64_deps.sh` first) loads maps; not yet equal to the 32-bit one. |
 
 There is also a WebAssembly build (`emcmake cmake -S . -B build/web`, with the Emscripten SDK), described at the top of `CMakeLists.txt`.
 

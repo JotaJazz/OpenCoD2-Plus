@@ -8,8 +8,8 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Risk | Impact | Notes |
 |---|---|---|
 | MSVC build unchecked | may not build or may diverge | not covered by `build_check.py`; compiles C with the reconstructed VM and server |
-| Engine's server/game/collision still used by MSVC, web, x64 | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
-| x64 client | does not compile as C++, does not run | `COD2_X64`: about 100 pointer casts to `int`, 32-bit data blobs and the bridge's 4-byte slots ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)); the 64-bit dedicated server does not depend on it |
+| Engine's server/game/collision still used by MSVC, web and the Windows x64 cross-build | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
+| x64 client not equal to the 32-bit one | the world draws yellower on `mp_toujane`, its smoke effect is missing | Linux only (`linux-client-x64`); checked on one map under llvmpipe. `COD2_X64` debug code (from acccfb7) writes `x64_*_trace.txt` into the working directory. A Windows x64 build is not started ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 | Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | A Windows dedicated server on IPX loses a byte of its address | replies to the wrong node | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; `win_net.cpp` writes it for every protocol |
@@ -43,7 +43,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Decision | Waiting on |
 |---|---|
-| Move MSVC, web and x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
+| Move MSVC, web and Windows x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
 | An OpenGL 4.5 Core device | a new device behind `IDirect3DDevice9`: the Mac port's is legacy GL. vkd3d-shader turned all 194 shader compilations of a `mp_toujane` load into SPIR-V, which needs `GL_ARB_gl_spirv`; its GLSL target is experimental and off by default |
 | Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 

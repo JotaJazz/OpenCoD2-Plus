@@ -16,3 +16,4 @@ CoD2rev-Plus builds 64-bit by default on Linux; a host needs no multilib and its
 - A 64-bit server needs nothing from the engine and tracks CoD2rev-Plus directly.
 - It links the system's zlib, since `src/zlib` holds only CoD2rev-Plus's unzip, and builds CoD2rev-Plus's Speex rather than the engine's.
 - The clients stay 32-bit. A 64-bit Linux client needs the casts fixed, pointer-free data blobs and a bridge without fixed slots; a 64-bit Windows client also needs a sound layer other than the game's 32-bit `mss32.dll`.
+- Update 2026-11-02: the 64-bit Linux client exists, as a variant of the engine's build (`-DCOD2_X64=ON`, `build_check.py linux-client-x64`), not of `cmake/lnxded64`. The bridge records each function's x64 ABI next to its x86 one (`test/*_abi_x64.txt`), so the client runs CoD2rev-Plus's VM and server as the 32-bit one does; this decision stands for the dedicated server.

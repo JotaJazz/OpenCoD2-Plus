@@ -136,7 +136,7 @@ Esta compilación todavía compila C y usa la máquina virtual de scripts recons
 | `COD2_WIN_MSVC` | `OFF` | Compilación nativa con MSVC (la activan los presets `msvc-client`). |
 | `COD2_SDL2_STATIC` | `OFF` | MSVC: un solo ejecutable independiente con SDL2 y runtime de C estáticos. |
 | `COD2_DEBUG` | `OFF` | `-O0` y sin endurecimiento, para depurar. |
-| `COD2_X64` | `OFF` | Objetivo x86_64; un port en curso que compila pero todavía no se ejecuta. |
+| `COD2_X64` | `OFF` | Objetivo x86_64: el cliente Linux (antes `scripts/linux_x64_deps.sh`) carga mapas; todavía no es igual al de 32 bits. |
 
 También hay una compilación WebAssembly (`emcmake cmake -S . -B build/web`, con el SDK de Emscripten), descrita al principio de `CMakeLists.txt`.
 

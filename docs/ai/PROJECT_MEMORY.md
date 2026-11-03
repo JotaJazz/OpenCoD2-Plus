@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-02 — the 64-bit Linux client loads a map
+
+- `cod2_linux` builds for x86_64 (`-DCOD2_X64=ON`, `build_check.py linux-client-x64`) and runs CoD2rev-Plus's VM and server through the bridge, which now records each function's x64 ABI beside the x86 one; the engine's own VM kept values in 4 bytes and ran out of variables. The menu equals the 32-bit client's pixel for pixel; `mp_toujane` loads, plays and quits, and the 32-bit client reads the profile it writes.
+- AddressSanitizer found the rest: 1.3's sizes for structs that hold pointers (FX media lists, `centity_t`, XAnim trees, occluders), `COD2_ALIGNED` off on x64 (it sat with the calling conventions), `DWORD` as an 8-byte `unsigned long`, and a viewport table one entry short on every build (`PINGPONG_1`).
+- Open: the world draws yellower and `mp_toujane`'s smoke is missing; under Xvfb an X-root grab of an in-game frame shows a 2x zoom on both 32- and 64-bit builds while the engine's screenshot does not, so compare screenshots, not grabs.
+
 ## 2026-11-02 — review of the water branch
 
 - Without a scene copy (antialiasing, no INTZ) `sceneColorSampler` read `renderTargets[R_RENDERTARGET_NONE]`, past the 13 targets: 1.3's `techFlags & 2` skip never fires for a sampler bound by name (only explicit arguments set it, `r_material_load_obj.c`). It now gets black; checked with `r_aaSamples 4` on `cod2_linux_vk` (water drawn, no crash).

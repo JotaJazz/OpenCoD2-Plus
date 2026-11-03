@@ -1,6 +1,6 @@
 # System summary (live snapshot)
 
-Last updated: 2026-11-01. Update in the same commit as the change that makes
+Last updated: 2026-11-02. Update in the same commit as the change that makes
 a line wrong.
 
 ## Repository
@@ -33,6 +33,7 @@ cod2rad/             upstream tool (not built by default)
 | `cod2_lnxded` | Linux 1.3/1.0 | works; passes CoD2rev-Plus's smoke test whole |
 | `cod2_win32_ded.exe` | MinGW 1.3/1.0 | works; smoke test under Wine with `test/smoke_expected_failures_wine.txt` |
 | `cod2_linux` | Linux 1.3/1.0 | works; GL device (stand-in shaders) |
+| `cod2_linux` (x86_64) | Linux, `-DCOD2_X64=ON` | loads and plays a map on CoD2rev-Plus's VM and server; not yet equal to the 32-bit client |
 | `cod2_linux_vk` | Linux, `-DCOD2_LINUX_DXVK=ON` | works; real Direct3D 9 on DXVK native and vkd3d-shader (the game's shaders) |
 | `cod2_win32.exe` | MinGW | works; real Direct3D 9; plays on public 1.3 servers |
 | `cod2_win32.exe` | MSVC | builds; not checked by scripts |
