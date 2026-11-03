@@ -848,7 +848,7 @@ void R_AddCmdSetMaterialColor(const vec_t *color)
 {
     GfxCmdSetMaterialColor *cmd;
 
-    cmd = (GfxCmdSetMaterialColor *)R_AllocCriticalCmd(0x14, 4);
+    cmd = (GfxCmdSetMaterialColor *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetMaterialColor), 4);
 
     if (color != NULL) {
         cmd->color[0] = color[0];
@@ -868,7 +868,7 @@ void R_AddCmdLightProperties(int lightIndex, const GfxLight *light)
     float scale;
     GfxCmdSetLightProperties *cmd;
 
-    cmd = (GfxCmdSetLightProperties *)R_AllocCriticalCmd(0x4c, 5);
+    cmd = (GfxCmdSetLightProperties *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetLightProperties), 5);
 
     cmd->lightIndex = lightIndex;
     cmd->position[0] = light->position[0];
@@ -898,7 +898,7 @@ void R_AddCmdSetRenderTarget(GfxRenderTargetId renderTargetId)
 {
     GfxCmdSetRenderTarget *cmd;
 
-    cmd = (GfxCmdSetRenderTarget *)R_AllocCriticalCmd(8, 0xe);
+    cmd = (GfxCmdSetRenderTarget *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetRenderTarget), 0xe);
     cmd->renderTargetId = renderTargetId;
 }
 
@@ -906,7 +906,7 @@ void R_AddCmdDrawSun(int viewIndex)
 {
     GfxCmdDrawSunPostEffects *cmd;
 
-    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd(8, 0, 0x18);
+    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd((int)sizeof(GfxCmdDrawSunPostEffects), 0, 0x18);
     cmd->viewIndex = viewIndex;
 }
 
@@ -914,7 +914,7 @@ void R_AddCmdBeginView(int viewCount, const GfxSceneDef *sceneDef, const GfxView
 {
     GfxCmdBeginView *cmd;
 
-    cmd = (GfxCmdBeginView *)R_AllocCriticalCmd(0x30, 0xc);
+    cmd = (GfxCmdBeginView *)R_AllocCriticalCmd((int)sizeof(GfxCmdBeginView), 0xc);
 
     cmd->viewCount = viewCount;
     cmd->sceneDef = *sceneDef;
@@ -926,7 +926,7 @@ void R_AddCmdSetViewport(int x, int y, int width, int height)
 {
     GfxCmdSetViewport *cmd;
 
-    cmd = (GfxCmdSetViewport *)R_AllocCriticalCmd(0x14, 0xd);
+    cmd = (GfxCmdSetViewport *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetViewport), 0xd);
     cmd->viewport.x = x;
     cmd->viewport.y = y;
     cmd->viewport.width = width;
@@ -973,7 +973,7 @@ void R_AddCmdApplyLatePostEffects(float blurRadius)
 {
     GfxCmdApplyLatePostEffects *cmd;
 
-    cmd = (GfxCmdApplyLatePostEffects *)R_AllocCmd(8, 0, 0x1a);
+    cmd = (GfxCmdApplyLatePostEffects *)R_AllocCmd((int)sizeof(GfxCmdApplyLatePostEffects), 0, 0x1a);
     if (cmd == NULL) {
         return;
     }
@@ -985,7 +985,7 @@ void R_AddCmdDrawSunPostEffects(int viewIndex)
 {
     GfxCmdDrawSunPostEffects *cmd;
 
-    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd(8, 0, 0x1b);
+    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd((int)sizeof(GfxCmdDrawSunPostEffects), 0, 0x1b);
     if (cmd == NULL) {
         return;
     }
@@ -997,7 +997,7 @@ void R_AddCmdClearScreen(int whichToClear, const vec_t *color, float depth, int 
 {
     GfxCmdClearScreen *cmd;
 
-    cmd = (GfxCmdClearScreen *)R_AllocCriticalCmd(0x1c, 0xb);
+    cmd = (GfxCmdClearScreen *)R_AllocCriticalCmd((int)sizeof(GfxCmdClearScreen), 0xb);
 
     cmd->whichToClear = (byte)whichToClear;
     cmd->stencil = (byte)stencil;

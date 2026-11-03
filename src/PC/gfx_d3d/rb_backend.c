@@ -2282,7 +2282,7 @@ static void RB_DrawSpriteCmd(GfxRenderCommandExecState *execState)
     byte *cmd;
     const Material *spriteMaterial;
     char *t = (char *)&tess;
-    byte entity[0x74];
+    byte entity[sizeof(GfxEntity)];
 
     cmd = (byte *)execState->cmd;
 

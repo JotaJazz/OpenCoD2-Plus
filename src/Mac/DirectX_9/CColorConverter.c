@@ -73,7 +73,7 @@ static void CColorConverter_SetVTable(void *object, void **vtable)
 
 static void **CColorConverter_GetBaseVTable(void)
 {
-    return (void **)((char *)imp___ZTV15CColorConverter + 8);
+    return (void **)((char *)imp___ZTV15CColorConverter + 2 * sizeof(void *));
 }
 
 void StdConverterARGB_Convert(const StdConverterARGB *_this, const void *pDst, const void *pSrc);

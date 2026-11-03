@@ -375,7 +375,7 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum);
 
 void CG_GetEntityOrientation(int entnum, vec_t *origin_out, vec3_t *axis_out)
 {
-    char *ent = (char *)cg_entities + entnum * 548;
+    char *ent = (char *)&((centity_t *)cg_entities)[entnum];
     vec_t *origin = (vec_t *)((centity_t *)ent)->lerpOrigin;
     origin_out[0] = origin[0];
     origin_out[1] = origin[1];
@@ -609,21 +609,20 @@ void CG_Shutdown(void)
     CL_FreeWeaponInfoMemory();
     FX_FreeSystem();
 
-    cgBase = (byte *)cg;
-    for (i = 0; i < 64; ++i, cgBase += 0x4b8) {
-        struct XAnimTree_s *tree = ((cg_t *)cgBase)->bgs.clientinfo[0].pXAnimTree;
+    /* by index, as CG_InitXAnimTrees: 1.3's 0x4b8 stride is x86's sizeof(clientInfo_t) */
+    for (i = 0; i < 64; ++i) {
+        struct XAnimTree_s *tree = cg->bgs.clientinfo[i].pXAnimTree;
         if (tree) {
             XAnimFreeTree(tree, 0);
-            ((cg_t *)cgBase)->bgs.clientinfo[0].pXAnimTree = NULL;
+            cg->bgs.clientinfo[i].pXAnimTree = NULL;
         }
     }
 
-    cgsBase = (byte *)cgs;
-    for (i = 0; i < 8; ++i, cgsBase += 0x4b8) {
-        struct XAnimTree_s *tree = ((cgs_t *)cgsBase)->corpseinfo[0].pXAnimTree;
+    for (i = 0; i < 8; ++i) {
+        struct XAnimTree_s *tree = cgs->corpseinfo[i].pXAnimTree;
         if (tree) {
             XAnimFreeTree(tree, 0);
-            ((cgs_t *)cgsBase)->corpseinfo[0].pXAnimTree = NULL;
+            cgs->corpseinfo[i].pXAnimTree = NULL;
         }
     }
 
@@ -707,7 +706,7 @@ void CG_GetDObjOrientation(int dobjHandle, orientation_t *orient)
     const byte *cent;
 
     if ((unsigned int)dobjHandle <= 0x3ff) {
-        cent = (const byte *)cg_entities + dobjHandle * 548;
+        cent = (const byte *)&((centity_t *)cg_entities)[dobjHandle];
         orient->origin[0] = ((centity_t *)cent)->lerpOrigin[0];
         orient->origin[1] = ((centity_t *)cent)->lerpOrigin[1];
         orient->origin[2] = ((centity_t *)cent)->lerpOrigin[2];
