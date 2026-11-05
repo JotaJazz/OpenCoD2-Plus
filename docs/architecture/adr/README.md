@@ -10,7 +10,7 @@ old one is its status line, set to `Superseded by NNNN`.
 |---|---|---|---|
 | [0001](0001-vendor-cod2rev-plus-with-a-generated-bridge.md) | Vendor OpenCoD2-Plus Server behind a generated bridge | Accepted | 2026-10-18 |
 | [0002](0002-compile-the-engine-as-cpp.md) | Compile the engine as C++ | Accepted | 2026-10-18 |
-| [0003](0003-keep-server-mp-for-msvc-web-x64.md) | Keep the engine's server for MSVC, web and x64 | Superseded by 0015 (MSVC) | 2026-10-19 |
+| [0003](0003-keep-server-mp-for-msvc-web-x64.md) | Keep the engine's server for MSVC, web and x64 | Superseded by 0015 | 2026-10-19 |
 | [0004](0004-client-local-games-on-cod2rev-plus.md) | Run the client's local games on OpenCoD2-Plus Server's server | Accepted | 2026-10-18 |
 | [0005](0005-fix-vendored-code-upstream-first.md) | Fix vendored code upstream first | Accepted | 2026-10-19 |
 | [0006](0006-original-1-3-binaries-are-the-reference.md) | The original 1.3 binaries are the reference | Accepted | 2026-10-20 |

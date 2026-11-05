@@ -71,12 +71,8 @@ option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on the Linux and Windows builds (32 and 64-bit); the
-# web build keeps src/PC/script for now. PROTOCOL_VERSION follows the game version.
+# reconstruction in src/PC/script, on every build. PROTOCOL_VERSION follows the game version.
 option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(EMSCRIPTEN)
-  set(COD2_PLUS_SCRIPT OFF)
-endif()
 if(COD2_PLUS_SCRIPT)
   add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
 endif()
@@ -111,8 +107,9 @@ if(NOT COD2_PLUS_SERVER OR (COD2_WIN32_CLIENT AND NOT COD2_PLUS_CLIENT_SERVER))
   # its local server
   set(COD2_PLUS_LIBCOD OFF)
 endif()
-if(WIN32 AND COD2_X64)
-  # libcod keeps pointers in long (gsc_memory.cpp), 4 bytes on Win64
+if((WIN32 AND COD2_X64) OR EMSCRIPTEN)
+  # libcod keeps pointers in long (gsc_memory.cpp), 4 bytes on Win64; the web
+  # build has none of its threads, sockets and SQLite
   set(COD2_PLUS_LIBCOD OFF)
 endif()
 # the client too: then the script VM, which both share, has libcod's blocks;
@@ -348,7 +345,15 @@ list(APPEND WEB_C
   src/PC/zlib/inflate.c src/PC/zlib/inftrees.c src/PC/zlib/infutil.c src/PC/zlib/zutil.c
   src/web/webgl2_compat.c src/web/wasm_aliases.c src/web/cod2_wasmfs_mount.c)
 
-add_executable(cod2 ${WEB_C} ${WEB_GEN_C})
+# the local games on OpenCoD2-Plus Server's VM, server, game, bgame and
+# collision, through the bridge, as the other clients
+add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1
+  "MAC_STATIC=")   # OpenCoD2-Plus Server's q_shared.h defines it per platform, none of them wasm
+list(FILTER WEB_C EXCLUDE REGEX "^src/PC/(script|server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
+cod2_plus_script()
+cod2_plus_server_client()
+add_executable(cod2 ${WEB_C} ${WEB_GEN_C} $<TARGET_OBJECTS:cod2_plus_script>
+  $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
 target_compile_definitions(cod2 PRIVATE WEB_BUILD=1 SDL_DISABLE_IMMINTRIN_H)
 target_include_directories(cod2 PRIVATE
   ${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR}/PC/zlib ${COD2_SRC_DIR}

@@ -40,6 +40,15 @@ EXTRA_ARGS = {
     'FS_FreeFileList': (['int'], ['10']),
 }
 
+# Exports the engine calls with 1.3's trailing arguments, which CoD2rev-Plus's
+# versions dropped: the thunk takes them unnamed and ignores them, since a
+# call through another signature traps on wasm (x86's cdecl only ignores them).
+EXPORT_TRAILING = {
+    'MT_Alloc': ['int'],            # type
+    'SL_GetString_': ['int'],       # type
+    'SL_GetStringOfLen': ['int'],   # type
+}
+
 # Engine functions with another name in this repo.
 RENAMED = {
     'Hunk_ClearTempMemoryHighInternal': 'Hunk_ClearTempMemoryHigh',
@@ -540,7 +549,7 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
     """The C symbol name calling CoD2rev-Plus's target (name unless renamed)."""
     cfg = cfg or MODULES['script']
     target = target or name
-    sig = ', '.join(named(p, i) for i, p in enumerate(params))
+    sig = ', '.join([named(p, i) for i, p in enumerate(params)] + EXPORT_TRAILING.get(name, []))
     args = ', '.join(f'a{i}' for i in range(len(fixed(params))))
     r = ret_type(target, params)
     guard = '' if name in cfg['struct_return_ok'] else \

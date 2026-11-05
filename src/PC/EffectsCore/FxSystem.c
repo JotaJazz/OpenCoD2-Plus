@@ -6,7 +6,7 @@ extern const dvar_t *fx_freeze;   /* real global; imp_fx_freeze holds its value 
 #include <string.h>
 extern refexport_t re;
 
-extern void CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
+extern int CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
 extern GfxEntity *R_AddRefEntityToScene(GfxEntity *ent, const struct XModel *model, int unk);
 extern void FX_AddScheduledEffects(const vec_t *start, const vec_t *end);
 extern void FX_UpdateAllNonBolt(void);

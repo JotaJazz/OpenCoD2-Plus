@@ -293,7 +293,7 @@ extern unsigned char bg_foliagesnd_slowinterval[];
 extern unsigned char bg_iNumWeapons[];
 extern unsigned char bg_itemlist[];
 extern unsigned char bg_ladder_yawcap[];
-extern void bg_numItems(void);
+extern char bg_numItems[];   /* data: wasm-ld tells functions from data */
 extern unsigned char bg_prone_yawcap[];
 extern unsigned char bg_swingSpeed[];
 extern unsigned char bgs[];

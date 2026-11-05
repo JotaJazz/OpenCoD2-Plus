@@ -1,6 +1,6 @@
 # 0003. Keep the engine's server for MSVC, web and x64
 
-- Status: Superseded by [0015](0015-msvc-abi-client-on-the-bridge.md) for MSVC (x64 moved to the bridge in the 64-bit client phases)
+- Status: Superseded by [0015](0015-msvc-abi-client-on-the-bridge.md) (MSVC and web moved to the bridge; x64 did in the 64-bit client phases)
 - Date: 2026-10-19
 
 ## Context

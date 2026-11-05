@@ -5,8 +5,8 @@
 #include "script_decls.h"
 
 static_assert(cod2_bridge_returns_scalar<decltype(MT_Alloc(std::declval<int>()))>::value, "MT_Alloc returns a struct");
-extern "C" decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0) __asm__(COD2_SYM("MT_Alloc"));
-decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0) { return MT_Alloc(a0); }
+extern "C" decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0, int) __asm__(COD2_SYM("MT_Alloc"));
+decltype(MT_Alloc(std::declval<int>())) cod2x_MT_Alloc(int a0, int) { return MT_Alloc(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(MT_DumpTree())>::value, "MT_DumpTree returns a struct");
 extern "C" decltype(MT_DumpTree()) cod2x_MT_DumpTree() __asm__(COD2_SYM("MT_DumpTree"));
@@ -379,12 +379,12 @@ extern "C" decltype(SL_GetString(std::declval<char const*>(), std::declval<unsig
 decltype(SL_GetString(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString(char const* a0, unsigned int a1) { return SL_GetString(a0, a1); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>()))>::value, "SL_GetString_ returns a struct");
-extern "C" decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) __asm__(COD2_SYM("SL_GetString_"));
-decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1) { return SL_GetString_(a0, a1); }
+extern "C" decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1, int) __asm__(COD2_SYM("SL_GetString_"));
+decltype(SL_GetString_(std::declval<char const*>(), std::declval<unsigned int>())) cod2x_SL_GetString_(char const* a0, unsigned int a1, int) { return SL_GetString_(a0, a1); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>()))>::value, "SL_GetStringOfLen returns a struct");
-extern "C" decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) __asm__(COD2_SYM("SL_GetStringOfLen"));
-decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2) { return SL_GetStringOfLen(a0, a1, a2); }
+extern "C" decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2, int) __asm__(COD2_SYM("SL_GetStringOfLen"));
+decltype(SL_GetStringOfLen(std::declval<char const*>(), std::declval<unsigned int>(), std::declval<unsigned int>())) cod2x_SL_GetStringOfLen(char const* a0, unsigned int a1, unsigned int a2, int) { return SL_GetStringOfLen(a0, a1, a2); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SL_RemoveRefToString(std::declval<unsigned int>()))>::value, "SL_RemoveRefToString returns a struct");
 extern "C" decltype(SL_RemoveRefToString(std::declval<unsigned int>())) cod2x_SL_RemoveRefToString(unsigned int a0) __asm__(COD2_SYM("SL_RemoveRefToString"));

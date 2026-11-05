@@ -1,5 +1,4 @@
 # Symbols the web build links undefined (-sERROR_ON_UNDEFINED_SYMBOLS=0, as upstream); build_check.py web fails on one not listed. May only shrink.
-bg_numItems
 CG_AddPlayerWeapon
 CG_AddViewWeapon
 CG_BulletHitClientEvent
@@ -63,12 +62,5 @@ R_LoadNodesAndLeafs
 R_LoadOccluders
 R_LoadPortals
 R_LoadPortalVerts
-Scr_CompileShutdown
-ScriptCompile
-SV_GetArchivedClientInfo
-SV_GetClientPositionAtTime
-SV_SendClientMessages
-SV_SendClientSnapshot
-SV_SendMessageToClient
 UI_DrawConnectScreen
 __ZTV15CColorConverter

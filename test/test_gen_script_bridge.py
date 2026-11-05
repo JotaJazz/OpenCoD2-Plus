@@ -61,6 +61,13 @@ class Thunks(unittest.TestCase):
         code = g.export_thunk('Scr_GetEntityRef', ['unsigned long'])
         self.assertNotIn('static_assert', code)
 
+    def test_trailing_engine_args(self):
+        """The engine passes 1.3's trailing argument CoD2rev-Plus dropped: the thunk takes and ignores it,
+        as a call through a wrong signature traps on wasm."""
+        code = g.export_thunk('SL_GetString_', ['char const*', 'unsigned int'])
+        self.assertIn('cod2x_SL_GetString_(char const* a0, unsigned int a1, int)', code)
+        self.assertIn('return SL_GetString_(a0, a1);', code)
+
     def test_get_anim_custom(self):
         self.assertIn('unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)', g.EXPORT_CUSTOM['Scr_GetAnim'])
 

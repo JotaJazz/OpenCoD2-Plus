@@ -13,7 +13,7 @@ static unsigned int g_end;
 extern void SL_RemoveRefToString(unsigned int stringValue);
 extern void SL_AddRefToString(unsigned int stringValue);
 extern const char *SL_ConvertToString(unsigned int stringValue);
-extern unsigned int Scr_AddConstString(unsigned int value);
+extern void Scr_AddConstString(unsigned int value);   /* as OpenCoD2-Plus Server defines it */
 extern void Scr_NotifyNum(int entnum, int classnum, unsigned int stringValue, unsigned int paramcount);
 static XAnimNotify g_notifyList[128];
 static int g_notifyListSize;

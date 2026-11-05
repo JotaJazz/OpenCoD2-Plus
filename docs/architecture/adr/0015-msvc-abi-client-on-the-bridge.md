@@ -26,4 +26,5 @@ globals, which the MSVC ABI mangles. cl.exe is no longer supported.
 - One Windows client source set; the MSVC build runs the same server as every other client.
 - It needs clang (VS's "C++ Clang tools" or any recent clang with lld-link) besides the MSVC toolset and SDK.
 - `build_check.py msvc-client` builds it, from WSL through `cmd.exe`; elsewhere it is skipped.
+- The web build moved to the bridge too (without libcod), so no build keeps the engine's server, game, script VM or collision.
 - The MSVC ABI exposed a calling-convention bug gcc's frames hid (the color converter called as stdcall); such engine bugs now surface on one more compiler.

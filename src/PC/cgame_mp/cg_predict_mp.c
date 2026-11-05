@@ -15,7 +15,7 @@ static centity_t *cg_triggerEntities[256];
 extern int CM_PointContents(const vec_t *point, unsigned int model);
 extern int CM_TransformedPointContents(const vec_t *point, unsigned int model, const vec_t *origin, const vec_t *angles);
 extern int CM_ContentsOfModel(unsigned int model);
-extern void CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
+extern int CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
 extern clipHandle_t CM_TempBoxModel(const vec_t *mins, const vec_t *maxs, int contents);
 extern int CM_TransformedBoxTraceExternal(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask, const vec_t *origin, const vec_t *angles);
 extern float CM_RadiusOfModel(unsigned int model);
