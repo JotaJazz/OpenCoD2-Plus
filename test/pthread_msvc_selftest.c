@@ -23,6 +23,11 @@ static void *other(void *arg)
 static void *detached(void *arg) { detachedRan = 1; return arg; }
 static void *noop(void *arg) { return arg; }
 
+static pthread_key_t key;
+static void *volatile destroyed;
+static void key_destructor(void *value) { destroyed = value; }
+static void *set_key(void *arg) { pthread_setspecific(key, arg); return 0; }
+
 int main(void)
 {
     pthread_t t;
@@ -70,6 +75,27 @@ int main(void)
         CHECK(a.tv_sec > 1577836800 && a.tv_sec < 4102444800LL);   /* between 2020 and 2100 */
         CHECK(clock_gettime(7, &a) != 0);
     }
+    /* a key's destructor runs at the thread's exit with its value */
+    CHECK(pthread_key_create(&key, key_destructor) == 0);
+    CHECK(pthread_create(&t, 0, set_key, &m) == 0);
+    CHECK(pthread_join(t, 0) == 0);
+    CHECK(destroyed == &m);
+
+    /* joinable threads nobody joins must not use up the joinable ones after them */
+    for (i = 0; i < 70; i++) {
+        pthread_t w;
+        CHECK(pthread_create(&w, 0, noop, 0) == 0);
+    }
+    for (i = 0; i < 200; i++) {
+        pthread_t w;
+        pthread_create(&w, 0, noop, 0);
+        pthread_join(w, 0);   /* gives the 70 time to exit */
+    }
+    CHECK(pthread_create(&t, 0, noop, &once) == 0);
+    ret = 0;
+    CHECK(pthread_join(t, &ret) == 0);
+    CHECK(ret == &once);
+
     printf("ok\n");
     return 0;
 }

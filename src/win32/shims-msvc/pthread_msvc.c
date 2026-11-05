@@ -30,7 +30,7 @@ int pthread_mutex_destroy(pthread_mutex_t *m) { (void)m; return 0; }
 int pthread_mutex_lock(pthread_mutex_t *m)
 {
     DWORD self = GetCurrentThreadId();
-    if (m->depth && m->owner == self) {
+    if (*(volatile unsigned *)&m->depth && *(volatile unsigned long *)&m->owner == self) {   /* only this thread can have set its own id */
         m->depth++;
         return 0;
     }
@@ -43,7 +43,7 @@ int pthread_mutex_lock(pthread_mutex_t *m)
 int pthread_mutex_trylock(pthread_mutex_t *m)
 {
     DWORD self = GetCurrentThreadId();
-    if (m->depth && m->owner == self) {
+    if (*(volatile unsigned *)&m->depth && *(volatile unsigned long *)&m->owner == self) {   /* only this thread can have set its own id */
         m->depth++;
         return 0;
     }
@@ -81,12 +81,18 @@ static int cod2_joinable_put(DWORD id, HANDLE h)
 {
     int i, put = 0;
     AcquireSRWLockExclusive(&cod2_joinable_lock);
-    for (i = 0; i < COD2_JOINABLE_MAX && !put; i++)
+    for (i = 0; i < COD2_JOINABLE_MAX && !put; i++) {
+        /* a slot whose thread exited unjoined is free again: nobody joined it in time */
+        if (cod2_joinable[i].h && WaitForSingleObject(cod2_joinable[i].h, 0) == WAIT_OBJECT_0) {
+            CloseHandle(cod2_joinable[i].h);
+            cod2_joinable[i].h = 0;
+        }
         if (!cod2_joinable[i].h) {
             cod2_joinable[i].id = id;
             cod2_joinable[i].h = h;
             put = 1;
         }
+    }
     ReleaseSRWLockExclusive(&cod2_joinable_lock);
     return put;
 }
@@ -167,9 +173,31 @@ int pthread_once(pthread_once_t *once, void (*fn)(void))
     return InitOnceExecuteOnce((PINIT_ONCE)once, cod2_once_main, (PVOID)fn, 0) ? 0 : 1;
 }
 
+/* FLS calls its callback NTAPI (stdcall), pthread's destructors are cdecl: one
+   trampoline calls the key's own destructor, kept per key here */
+static void (*cod2_key_destructor[8])(void *);
+static volatile LONG cod2_keys;
+
+#define COD2_KEY_TRAMPOLINE(n) \
+    static VOID NTAPI cod2_key_trampoline_##n(PVOID value) { if (value) cod2_key_destructor[n](value); }
+COD2_KEY_TRAMPOLINE(0) COD2_KEY_TRAMPOLINE(1) COD2_KEY_TRAMPOLINE(2) COD2_KEY_TRAMPOLINE(3)
+COD2_KEY_TRAMPOLINE(4) COD2_KEY_TRAMPOLINE(5) COD2_KEY_TRAMPOLINE(6) COD2_KEY_TRAMPOLINE(7)
+static const PFLS_CALLBACK_FUNCTION cod2_key_trampolines[] = {
+    cod2_key_trampoline_0, cod2_key_trampoline_1, cod2_key_trampoline_2, cod2_key_trampoline_3,
+    cod2_key_trampoline_4, cod2_key_trampoline_5, cod2_key_trampoline_6, cod2_key_trampoline_7 };
+
 int pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 {
-    DWORD k = FlsAlloc((PFLS_CALLBACK_FUNCTION)destructor);   /* FLS runs the destructor at thread exit */
+    DWORD k;
+    LONG slot = -1;
+    if (destructor) {
+        slot = InterlockedIncrement(&cod2_keys) - 1;
+        /* shortcut: 8 keys with destructors (the engine makes 1), raise COD2_KEY_TRAMPOLINE's list if more */
+        if (slot >= (LONG)(sizeof(cod2_key_trampolines) / sizeof(cod2_key_trampolines[0])))
+            return 11;   /* EAGAIN */
+        cod2_key_destructor[slot] = destructor;
+    }
+    k = FlsAlloc(slot >= 0 ? cod2_key_trampolines[slot] : 0);   /* FLS runs it at thread exit */
     if (k == FLS_OUT_OF_INDEXES)
         return 11;
     *key = k;
