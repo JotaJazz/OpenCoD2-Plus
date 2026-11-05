@@ -116,9 +116,6 @@ Build all three first, or the MinGW link may miss imports.
 | Regenerate a bridge module | `python3 scripts/gen_script_bridge.py --module script\|server\|client_server` |
 | Regenerate the `eng_` names header | `python3 scripts/bgame_names.py` |
 
-The client's ABI is read from a client built with
-`-DCOD2_PLUS_CLIENT_SERVER=OFF`.
-
 ## Windows client without Windows
 
 `scripts/portable_wine.sh DIR` downloads a 32-bit Wine and its i386

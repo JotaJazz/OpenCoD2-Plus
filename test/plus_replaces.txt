@@ -3,10 +3,7 @@
 # client keeps them. A line ending in / is a directory. These hold state that
 # CoD2rev-Plus's copy also holds (dvars, hunk, files, commands, network,
 # collision, the clock), so only one copy may be linked.
-# The server, game and bgame (phases 2 and 3a).
-src/PC/server_mp/
-src/PC/game_mp/
-src/PC/game/
+# The bgame (phase 3a; the engine's server and game are gone).
 src/PC/bgame/
 # universal
 src/PC/universal/dvar.c
@@ -23,15 +20,6 @@ src/PC/qcommon/net_chan_mp.c
 src/PC/qcommon/huffman.c
 src/PC/qcommon/md4.c
 src/PC/qcommon/dobj_management.c
-src/PC/qcommon/cm_load.c
-src/PC/qcommon/cm_load_obj.c
-src/PC/qcommon/cm_mesh.c
-src/PC/qcommon/cm_staticmodel.c
-src/PC/qcommon/cm_staticmodel_load_obj.c
-src/PC/qcommon/cm_test.c
-src/PC/qcommon/cm_tracebox.c
-src/PC/qcommon/cm_trace.c
-src/PC/qcommon/cm_world.c
 src/PC/qcommon/com_bsp_load_obj.c
 src/PC/qcommon/com_fileaccess.c
 # zlib's unzip (CoD2rev-Plus's has the 64-bit API it uses)

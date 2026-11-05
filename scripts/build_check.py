@@ -113,7 +113,7 @@ def build(variant, extra):
         return build_web(build_dir)
     if variant == 'msvc-client':
         result = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'msvc_build.py'), '--variant', variant, '--']
-                                + [e for e in extra if not e.startswith('-DCOD2_PLUS_SCRIPT=')],
+                                + extra,
                                 cwd=ROOT, capture_output=True, text=True)
         if result.returncode == 0:
             return []
@@ -310,13 +310,11 @@ def main():
     ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
     ap.add_argument('--c', action='store_true', help='builds C instead of C++ (-DCOD2_CXX_ALL=OFF)')
     ap.add_argument('--allow-skip', action='store_true', help='a variant whose dependencies are missing is no failure')
-    ap.add_argument('--old-script', action='store_true', help='src/PC/script instead of CoD2rev-Plus\'s VM (-DCOD2_PLUS_SCRIPT=OFF)')
     args = ap.parse_args()
 
     variants = list(VARIANTS) if 'all' in args.variants else args.variants
     extra = ['-DCOD2_CXX_DIRS=' + (args.cxx_dirs or '')]
     extra.append('-DCOD2_CXX_ALL=' + ('OFF' if args.c else 'ON'))
-    extra.append('-DCOD2_PLUS_SCRIPT=' + ('OFF' if args.old_script else 'ON'))
 
     failed = False
     skipped = False

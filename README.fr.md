@@ -137,10 +137,7 @@ Copie `SDL2.dll` à côté de l'exécutable. Sous WSL, `python3 scripts/build_ch
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compile le moteur en C++ sous Linux et MinGW. `OFF` compile en C. |
 | `COD2_CXX_DIRS` | `""` | Avec `COD2_CXX_ALL=OFF`, les modules ou fichiers de `src/` encore compilés en C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | La machine virtuelle de scripts de OpenCoD2-Plus Server (`src/script`) sous Linux et MinGW. `OFF` utilise celle reconstruite (`src/PC/script`), comme le fait la compilation web. |
-| `COD2_PLUS_SERVER` | `ON` | Le serveur, le game, le bgame et le noyau de OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` ou `src/win32`) dans le serveur dédié, sous Linux et MinGW ; nécessite `COD2_PLUS_SCRIPT`. `OFF` utilise ceux reconstruits (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | Le serveur, le game, le bgame et la collision de OpenCoD2-Plus Server pour les parties locales du client (Linux, et MinGW avec `COD2_WIN32_CLIENT`), sur le noyau du moteur ; nécessite `COD2_PLUS_SERVER`. `OFF` garde `src/PC/server_mp`, comme le fait encore la version web. |
-| `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) dans le serveur dédié et, avec `COD2_PLUS_CLIENT_SERVER`, dans les parties locales du client, avec ses modules sauf MySQL ; nécessite `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) dans le serveur dédié et dans les parties locales du client, avec ses modules sauf MySQL ; ni dans le client Windows 64 bits ni dans la version web. |
 | `COD2_FEATURE_CFLAGS` | `""` | Options de fonctionnalités ; `-DCOD2_PATCH_10` compile la version 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | Les compilations 1.3 parlent CoD2 1.3 Plus (le `make PLUS=1` d'OpenCoD2-Plus Server) : leurs serveurs n'acceptent que le client Plus. `OFF` compile la 1.3 standard, avec des serveurs que tout joueur 1.3 peut rejoindre. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW : le client au lieu du serveur dédié. |

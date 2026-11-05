@@ -70,27 +70,17 @@ set(COD2_CXX_DIRS "" CACHE STRING "With COD2_CXX_ALL=OFF: src/ subdirectories or
 option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
-# CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on every build. PROTOCOL_VERSION follows the game version.
-option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(COD2_PLUS_SCRIPT)
-  add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
-endif()
-# CoD2rev-Plus's server, game and bgame (src/server, src/game, src/bgame) in
-# the dedicated server, on the 32-bit Linux and MinGW builds; the client keeps
-# src/PC/server_mp, src/PC/game_mp, src/PC/game and src/PC/bgame. They call
-# CoD2rev-Plus's script VM, so they need COD2_PLUS_SCRIPT.
-option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server, game and bgame (src/server, src/game, src/bgame) in the dedicated server" ON)
-if(NOT COD2_PLUS_SCRIPT)
-  set(COD2_PLUS_SERVER OFF)
-endif()
-# CoD2rev-Plus's server, game and bgame for the client's local games (Linux,
-# and MinGW with COD2_WIN32_CLIENT), on the engine's core and xanim; cgame
+# OpenCoD2-Plus Server's script VM, server, game, bgame and collision in every
+# build (the engine's own were removed, ADR 0015); the sources and the data
+# blobs test these macros. The client's local games run on them too, and cgame
 # keeps the engine's bgame, whose globals have their eng_ names
-# (scripts/bgame_names.py). It needs COD2_PLUS_SERVER.
-option(COD2_PLUS_CLIENT_SERVER "Use CoD2rev-Plus's server, game and bgame in the client's local games" ON)
-if(NOT COD2_PLUS_SERVER OR (WIN32 AND NOT COD2_WIN32_CLIENT))
-  set(COD2_PLUS_CLIENT_SERVER OFF)
+# (scripts/bgame_names.py). PROTOCOL_VERSION follows the game version.
+set(COD2_PLUS_SCRIPT ON)
+set(COD2_PLUS_SERVER ON)
+add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
+set(COD2_PLUS_CLIENT_SERVER ON)
+if(WIN32 AND NOT COD2_WIN32_CLIENT)
+  set(COD2_PLUS_CLIENT_SERVER OFF)   # a MinGW configure builds either the client or the dedicated server
 endif()
 if(COD2_PLUS_CLIENT_SERVER)
   add_compile_definitions(COD2_PLUS_CLIENT_SERVER=1)  # cgame no longer shares the bgame with a local server
@@ -102,11 +92,6 @@ endif()
 # games. Their LIBCOD blocks in the server, game, bgame, core and script VM
 # are compiled in with it.
 option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server and the client's local games" ON)
-if(NOT COD2_PLUS_SERVER OR (COD2_WIN32_CLIENT AND NOT COD2_PLUS_CLIENT_SERVER))
-  # a MinGW client's configuration has no dedicated server: libcod only with
-  # its local server
-  set(COD2_PLUS_LIBCOD OFF)
-endif()
 if((WIN32 AND COD2_X64) OR EMSCRIPTEN)
   # libcod keeps pointers in long (gsc_memory.cpp), 4 bytes on Win64; the web
   # build has none of its threads, sockets and SQLite
@@ -349,7 +334,6 @@ list(APPEND WEB_C
 # collision, through the bridge, as the other clients
 add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1
   "MAC_STATIC=")   # OpenCoD2-Plus Server's q_shared.h defines it per platform, none of them wasm
-list(FILTER WEB_C EXCLUDE REGEX "^src/PC/(script|server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
 cod2_plus_script()
 cod2_plus_server_client()
 add_executable(cod2 ${WEB_C} ${WEB_GEN_C} $<TARGET_OBJECTS:cod2_plus_script>
@@ -570,14 +554,9 @@ endif()
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
-set(COD2_SCRIPT_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/script/")
-  cod2_plus_script()
-  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
-endif()
-set(COD2_W32_SERVER_OBJS "")
-if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
+cod2_plus_script()
+set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
+if(NOT COD2_WIN32_CLIENT)
   cod2_plus_replaced(WIN_C replaced)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
@@ -587,17 +566,13 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
     endif()
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
-elseif(COD2_PLUS_CLIENT_SERVER)
-  # the client runs CoD2rev-Plus's server, game, bgame and collision
-  # instead, as cod2_linux does
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
+else()
+  # the client runs CoD2rev-Plus's server, game, bgame and collision, as cod2_linux does
   cod2_plus_server_client()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
   if(COD2_LIBCOD_CLIENT)
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
-elseif(COD2_PLUS_SCRIPT)
-  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
 if(COD2_WIN32_CLIENT)
@@ -809,12 +784,8 @@ endif()
 # WSL), and no .iwd is found.
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
-set(COD2_SCRIPT_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/script/")
-  cod2_plus_script()
-  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
-endif()
+cod2_plus_script()
+set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
 cod2_cxx_sources(ALL_C ${ALL_C})
 cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
 cod2_cxx_sources(COD2_SND_DED_C ${COD2_SND_DED_C})
@@ -830,7 +801,6 @@ endif()
 if(COD2_PLUS_SERVER)
   if(COD2_PLUS_CLIENT_SERVER)
     # the client runs CoD2rev-Plus's server, game and bgame instead
-    list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
     cod2_plus_server_client()
     set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
     if(COD2_LIBCOD_CLIENT)

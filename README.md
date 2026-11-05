@@ -139,10 +139,7 @@ Copy `SDL2.dll` next to the executable. From WSL, `python3 scripts/build_check.p
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compiles the engine as C++ on Linux and MinGW. `OFF` builds C. |
 | `COD2_CXX_DIRS` | `""` | With `COD2_CXX_ALL=OFF`, the `src/` modules or files still compiled as C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | OpenCoD2-Plus Server's script VM (`src/script`) on Linux and MinGW. `OFF` uses the reconstructed one (`src/PC/script`), as the web build does. |
-| `COD2_PLUS_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and core (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` or `src/win32`) in the dedicated server, on Linux and MinGW; needs `COD2_PLUS_SCRIPT`. `OFF` uses the reconstructed ones (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as the web build still does. |
-| `COD2_PLUS_LIBCOD` | `ON` | OpenCoD2-Plus Server's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_LIBCOD` | `ON` | OpenCoD2-Plus Server's libcod (`src/libcod`) in the dedicated server and the client's local games, with its modules but MySQL; not on the 64-bit Windows client nor the web build. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature switches; `-DCOD2_PATCH_10` builds the 1.0 version. |
 | `COD2_PLUS_PROTOCOL` | `ON` | The 1.3 builds speak CoD2 1.3 Plus (OpenCoD2-Plus Server's `make PLUS=1`): their servers take only the Plus client. `OFF` builds stock 1.3, for servers any 1.3 player can join. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: the client instead of the dedicated server. |

@@ -137,10 +137,7 @@ Copia `SDL2.dll` junto al ejecutable. Desde WSL, `python3 scripts/build_check.py
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compila el motor como C++ en Linux y MinGW. `OFF` compila C. |
 | `COD2_CXX_DIRS` | `""` | Con `COD2_CXX_ALL=OFF`, los módulos o archivos de `src/` que se siguen compilando como C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | La máquina virtual de scripts de OpenCoD2-Plus Server (`src/script`) en Linux y MinGW. `OFF` usa la reconstruida (`src/PC/script`), como la compilación web. |
-| `COD2_PLUS_SERVER` | `ON` | El servidor, el game, el bgame y el núcleo de OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` o `src/win32`) en el servidor dedicado, en Linux y MinGW; necesita `COD2_PLUS_SCRIPT`. `OFF` usa los reconstruidos (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | El servidor, el game, el bgame y la colisión de OpenCoD2-Plus Server para las partidas locales del cliente (Linux, y MinGW con `COD2_WIN32_CLIENT`), sobre el núcleo del motor; necesita `COD2_PLUS_SERVER`. `OFF` deja `src/PC/server_mp`, como todavía hace la compilación web. |
-| `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) en el servidor dedicado y, con `COD2_PLUS_CLIENT_SERVER`, en las partidas locales del cliente, con sus módulos salvo MySQL; necesita `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) en el servidor dedicado y en las partidas locales del cliente, con sus módulos salvo MySQL; no en el cliente de Windows de 64 bits ni en la compilación web. |
 | `COD2_FEATURE_CFLAGS` | `""` | Interruptores de funciones; `-DCOD2_PATCH_10` compila la versión 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | Las compilaciones 1.3 hablan CoD2 1.3 Plus (el `make PLUS=1` de OpenCoD2-Plus Server): sus servidores solo aceptan el cliente Plus. `OFF` compila 1.3 normal, con servidores a los que entra cualquier jugador de 1.3. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: el cliente en vez del servidor dedicado. |

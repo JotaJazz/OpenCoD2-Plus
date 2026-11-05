@@ -9,8 +9,8 @@ but never run.
 
 | Component | Source | Notes |
 |---|---|---|
-| Script VM | `src/script` | `COD2_PLUS_SCRIPT`. Its `VAR_INT64` shifts the object types: `VAR_ENTITY` is 22, not 0x15; `src/headers/scr_vartypes.h` gives the build's values, `src/compat/script_missing.cpp` checks them. |
-| Server | `src/server` | `COD2_PLUS_SERVER`. |
+| Script VM | `src/script` | every build (`COD2_PLUS_SCRIPT`). Its `VAR_INT64` shifts the object types: `VAR_ENTITY` is 22, not 0x15; `src/headers/scr_vartypes.h` gives the build's values, `src/compat/script_missing.cpp` checks them. |
+| Server | `src/server` | every build (`COD2_PLUS_SERVER`, the dedicated server's macro). |
 | Game, bgame | `src/game`, `src/bgame` | bgame comes with the game: the two sides cannot share `level_bgs` (`animation_s` is 104 bytes in the engine, Windows layout via `COD2_WIN_ALIGN8`; 96 in OpenCoD2-Plus Server). |
 | Core and platform | `src/universal`, `src/qcommon`, `src/unix` / `src/win32` | the server starts in OpenCoD2-Plus Server's `main`; brings log rotation (`logfileName`, `logfileRotate`, `logTimestamps`), `sv_logRcon`, `net_strictPort`, `crash.log`. |
 | xanim | `src/xanim` | with it the server's bridge has no imports left. |

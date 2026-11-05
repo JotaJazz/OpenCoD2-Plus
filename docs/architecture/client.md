@@ -7,16 +7,16 @@ on OpenCoD2-Plus Server's server ([ADR 0004](adr/0004-client-local-games-on-cod2
 
 | Item | Detail |
 |---|---|
-| Switch | `COD2_PLUS_CLIENT_SERVER` (ON on Linux and MinGW) |
+| Switch | none: every client (Linux, Windows on MinGW and the MSVC ABI, x64, web) links it; `COD2_PLUS_CLIENT_SERVER` is set when the configure builds a client |
 | What it links | OpenCoD2-Plus Server's server, game, bgame and collision (`src/qcommon/cm_*.cpp`) built with `LISTEN_SERVER`, on the engine's core and xanim |
 | Bridge | `--module client_server`: exports `test/client_server_interface.txt`, imports checked against `test/client_server_abi.txt`; `src/compat/client_server_missing.cpp` has what the engine lacks (libcod's critical sections and threads, `Sys_SleepMSec`, `Com_GetBspLump`, weapon info memory) |
-| Left out of the client | `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/qcommon/cm_*` |
 | Blob guards | `COD2_PLUS_GAME` (server/game/bgame globals), `COD2_PLUS_CM` (`cm`, `cm_world`, `g_traceThreadInfo`); `COD2_PLUS_SERVER` only in the dedicated server |
 | `LISTEN_SERVER` | keeps `DEDICATED` undefined, so OpenCoD2-Plus Server's server builds its client calls (`CL_InitLoad`, `CL_MapLoading`, `CL_ShutdownAll`, `CL_StartLoading`, `CL_Disconnect`) |
 | 1.0 limit | the 1.0 client's core speaks protocol 115 only; libcod's multi-protocol server is not reachable from it |
 
-The ABI files are read from a client built with `-DCOD2_PLUS_CLIENT_SERVER=OFF`
-(the bridge's thunks shadow the engine's functions in gdb).
+The ABI files hold the engine side's 1.3 ABI, kept by hand (format in
+`scripts/engine_abi.py`); they were recorded from a client still built with the
+engine's own server.
 
 ## Two bgames
 

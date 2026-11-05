@@ -137,10 +137,7 @@ Kopiere `SDL2.dll` neben die ausführbare Datei. Unter WSL baut `python3 scripts
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Kompiliert die Engine unter Linux und MinGW als C++. `OFF` baut C. |
 | `COD2_CXX_DIRS` | `""` | Mit `COD2_CXX_ALL=OFF` die Module oder Dateien in `src/`, die weiterhin als C++ kompiliert werden. |
-| `COD2_PLUS_SCRIPT` | `ON` | Die Skript-VM von OpenCoD2-Plus Server (`src/script`) unter Linux und MinGW. `OFF` verwendet die rekonstruierte (`src/PC/script`), wie es der Web-Build tut. |
-| `COD2_PLUS_SERVER` | `ON` | Server, Game, Bgame und Kern von OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` oder `src/win32`) im dedizierten Server, unter Linux und MinGW; braucht `COD2_PLUS_SCRIPT`. `OFF` verwendet die rekonstruierten (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | Server, Game, Bgame und Kollision von OpenCoD2-Plus Server für die lokalen Spiele des Clients (Linux, und MinGW mit `COD2_WIN32_CLIENT`), auf dem Kern der Engine; braucht `COD2_PLUS_SERVER`. `OFF` behält `src/PC/server_mp`, wie es der Web-Build noch tut. |
-| `COD2_PLUS_LIBCOD` | `ON` | Die libcod von OpenCoD2-Plus Server (`src/libcod`) im dedizierten Server und, mit `COD2_PLUS_CLIENT_SERVER`, in den lokalen Spielen des Clients, mit ihren Modulen außer MySQL; braucht `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_LIBCOD` | `ON` | Die libcod von OpenCoD2-Plus Server (`src/libcod`) im dedizierten Server und in den lokalen Spielen des Clients, mit ihren Modulen außer MySQL; nicht im 64-Bit-Windows-Client und nicht im Web-Build. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature-Schalter; `-DCOD2_PATCH_10` baut die Version 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | Die 1.3-Builds sprechen CoD2 1.3 Plus (`make PLUS=1` von OpenCoD2-Plus Server): ihre Server nehmen nur den Plus-Client auf. `OFF` baut normales 1.3, mit Servern, denen jeder 1.3-Spieler beitreten kann. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: der Client statt des dedizierten Servers. |

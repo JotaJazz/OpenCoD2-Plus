@@ -137,10 +137,7 @@ Copia `SDL2.dll` para junto do executável. No WSL, `python3 scripts/build_check
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compila o motor como C++ no Linux e no MinGW. `OFF` compila C. |
 | `COD2_CXX_DIRS` | `""` | Com `COD2_CXX_ALL=OFF`, os módulos ou ficheiros de `src/` que continuam a ser compilados como C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | A VM de scripts do OpenCoD2-Plus Server (`src/script`) no Linux e no MinGW. `OFF` usa a reconstruída (`src/PC/script`), como faz a compilação web. |
-| `COD2_PLUS_SERVER` | `ON` | O servidor, o game, o bgame e o núcleo do OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` ou `src/win32`) no servidor dedicado, no Linux e no MinGW; precisa de `COD2_PLUS_SCRIPT`. `OFF` usa os reconstruídos (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | O servidor, o game, o bgame e a colisão do OpenCoD2-Plus Server para os jogos locais do cliente (Linux, e MinGW com `COD2_WIN32_CLIENT`), sobre o núcleo do motor; precisa de `COD2_PLUS_SERVER`. `OFF` mantém `src/PC/server_mp`, como ainda faz a compilação web. |
-| `COD2_PLUS_LIBCOD` | `ON` | A libcod do OpenCoD2-Plus Server (`src/libcod`) no servidor dedicado e, com `COD2_PLUS_CLIENT_SERVER`, nos jogos locais do cliente, com os seus módulos exceto o MySQL; precisa de `COD2_PLUS_SERVER`. |
+| `COD2_PLUS_LIBCOD` | `ON` | A libcod do OpenCoD2-Plus Server (`src/libcod`) no servidor dedicado e nos jogos locais do cliente, com os seus módulos exceto o MySQL; não no cliente de Windows de 64 bits nem na compilação web. |
 | `COD2_FEATURE_CFLAGS` | `""` | Opções de funcionalidades; `-DCOD2_PATCH_10` compila a versão 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | As compilações 1.3 falam CoD2 1.3 Plus (o `make PLUS=1` do OpenCoD2-Plus Server): os seus servidores só aceitam o cliente Plus. `OFF` compila 1.3 normal, com servidores onde entra qualquer jogador de 1.3. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: o cliente em vez do servidor dedicado. |

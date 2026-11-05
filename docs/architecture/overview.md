@@ -24,17 +24,13 @@ server; the engine's own platform files are listed in `test/plus_replaces.txt`.
 | Target | Engine | OpenCoD2-Plus Server | Bridge modules |
 |---|---|---|---|
 | `cod2_lnxded`, `cod2_win32_ded.exe` (dedicated) | only code it never runs (linked for symbols) + stubs | VM, server, game, bgame, core, xanim, libcod | `script`, `server` |
-| `cod2_linux`, `cod2_win32.exe` (client) | everything | VM, server, game, bgame, collision, libcod (local games, built with `LISTEN_SERVER`) | `script`, `client_server` |
-| MSVC, web, x64 | everything, plus `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` | none | none |
+| `cod2_linux`, `cod2_win32.exe`, `cod2` (web) (client) | everything | VM, server, game, bgame, collision, libcod but on Win64 and the web (local games, built with `LISTEN_SERVER`) | `script`, `client_server` |
 
 ## Main build switches (all options: root README)
 
 | Option | Default | Effect |
 |---|---|---|
 | `COD2_CXX_ALL` | ON | engine C sources built as C++ through `extern "C"` wrappers |
-| `COD2_PLUS_SCRIPT` | ON | OpenCoD2-Plus Server's GSC VM |
-| `COD2_PLUS_SERVER` | ON | dedicated server on OpenCoD2-Plus Server (server, game, bgame, core) |
-| `COD2_PLUS_CLIENT_SERVER` | ON | client's local games on OpenCoD2-Plus Server's server |
 | `COD2_PLUS_LIBCOD` | ON | libcod in the dedicated server and local games |
 | `COD2_WIN32_CLIENT` | OFF | MinGW builds the client instead of the dedicated server |
 | `COD2_WIN32_REAL_D3D9` | ON | Windows client on real Direct3D 9 + d3dx9 HLSL (OFF: GL device) |
