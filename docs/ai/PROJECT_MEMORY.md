@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-05 — review follow-ups of the MSVC-ABI work
+
+- The MSVC pthread shim passed cdecl key destructors to FLS, which calls them stdcall (now an NTAPI trampoline), and kept unjoined threads' slots forever; zlib allocates through the engine as on MinGW (`MY_ZCALLOC`); the link aliases join only data.
+- `build_check.py msvc-client` fails on a global defined both as C and as C++ (two copies the Itanium ABI would join); none today. The Windows scripts no longer prune a folder they did not make nor end the user's own game.
+- Left open: 41 dead `!COD2_PLUS_SCRIPT` branches in the engine and no ABI asserts for the script module (`docs/roadmap/debt.md`).
+
 ## 2026-11-05 — MSVC ABI and web on the bridge; the engine's server is gone
 
 - The MSVC client is now the MinGW branch built by clang for `i686-pc-windows-msvc` with lld-link (ADR 0015): cl.exe could not compile the bridge's `__asm__` labels. The MSVC ABI mangles C++ globals, so 127 `/alternatename` aliases are generated at link; it also exposed a reconstruction bug gcc's frames hid (`r_staticmodelcache.c` called the C color converter as stdcall). `msvc_run_test.py` plays a local game with it on Windows.
