@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-04 — red hurt overlay, shellshock without sepia, water on x64
+
+- The low health overlay returned unless `cg_drawHealth` (0 by default, as 1.3) was on; 1.3's overlay (0x4c5250) never reads it, only the health bar does. Only the breathing sound told the player they were hurt.
+- The shellshock sepia came from the previous stage's fix: 1.3 keeps alpha in the vertex color's top byte, but this engine's `R_ConvertColorToBytes` packs it in byte 0, so the fade landed in blue at alpha 255; the fade is back in byte 0 and the view blurs and recovers.
+- `Material_Marshal32To64` left TS_WATER_MAP water defs NULL, so the Windows x64 client crashed drawing water; the 32-byte file def becomes a water setup as on x86. Verified by the user on Windows.
+
 ## 2026-11-04 — Windows client polish: screenshots, chat, scoreboard, corpses, shellshock
 
 - `cg.clientNum` held the gamestate's message sequence since the initial commit: `CL_InitCGame` passed `CG_Init`'s first and third arguments swapped (1.3 0x402c73), so the scoreboard highlighted another player. Chat drew at scale 1/3 over a 10-unit line step (1.3: 5/24, 0x4c7760); a new corpse cloned its player's anim tree on EF_PRONE instead of EF_BODY_START (0x4df227). `R_SaveJpg` passed Linux i386's `jpeg_compress_struct` size (372) on Win32 (376) and 64-bit (520), so `screenshot` exited the Windows clients.
