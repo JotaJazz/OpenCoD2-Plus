@@ -117,35 +117,12 @@ long _InterlockedCompareExchange(long volatile *, long, long);
 #define strcasecmp  _stricmp
 #define strncasecmp _strnicmp
 
-/* GCC __attribute__((constructor)) functions don't run on MSVC (the attribute
- * no-ops). COD2_CONSTRUCTOR(fn){..} registers fn in the CRT's .CRT$XCU init
- * array so it runs before main, as the GCC constructor would.
- *   usage: COD2_CONSTRUCTOR(init_rune_locale) { ... }   (replaces the attribute) */
-#pragma section(".CRT$XCU", read)   /* declare the CRT init array section once */
-#define COD2_CONSTRUCTOR(fn)                                                 \
-    static void fn(void);                                                   \
-    __declspec(allocate(".CRT$XCU")) static void (*fn##__crtreg)(void) = fn;\
-    static void fn(void)
-
 /* POSIX stat type-test macros MSVC's <sys/stat.h> lacks (else they look like
  * undefined functions -> unresolved _S_ISDIR/_S_ISREG). */
 #ifndef S_ISDIR
 #define S_ISDIR(m) (((m) & 0xF000) == 0x4000)
 #define S_ISREG(m) (((m) & 0xF000) == 0x8000)
 #endif
-
-/* COD2_ALT(lhs, rhs): emit a linker /alternatename directive from UNDECORATED C
- * symbol names. x86 cl prefixes C symbols with one leading '_'; x64 cl uses no
- * prefix. The alias-seam lists (msvc_alias_pragmas.h, msvc_seam_aliases.h,
- * msvc_link_glue.c) pass bare names so this adds the right decoration per arch.
- * (Adjacent string-literal concatenation inside __pragma is well-defined.) */
-#if defined(_M_X64) || defined(_M_ARM64)
-#define COD2_ALT_U_ ""
-#else
-#define COD2_ALT_U_ "_"
-#endif
-#define COD2_ALT(lhs, rhs) \
-    __pragma(comment(linker, "/alternatename:" COD2_ALT_U_ lhs "=" COD2_ALT_U_ rhs))
 
 #endif /* _MSC_VER */
 #endif /* COD2_MSVC_GCC_COMPAT_H */

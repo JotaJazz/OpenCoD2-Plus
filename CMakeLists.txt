@@ -395,7 +395,7 @@ add_custom_command(TARGET cod2 POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${COD2_SRC_DIR}/web/cod2_fs.js ${CMAKE_BINARY_DIR}/cod2_fs.js)
 
 # =============================================================================
-elseif(WIN32 AND MSVC)
+elseif(WIN32 AND MSVC AND NOT COD2_MSVC_ABI)
 # ----------------------------------------------------------------------------
 # WINDOWS / MSVC (cl.exe) -- additive native-Windows client build.
 # Self-contained in cmake/win32-msvc.cmake so the MinGW path below is untouched.
@@ -429,6 +429,12 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:CXX>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:ASM>:$<$<NOT:$<BOOL:${COD2_X64}>>:-m32>>")
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${COD2_SRC_DIR}/win32/shims ${CMAKE_SOURCE_DIR})
+if(COD2_MSVC_ABI)
+  # the MSVC runtime has no POSIX headers (unistd.h, dirent.h, pthread.h): the shims, first
+  include_directories(BEFORE ${COD2_SRC_DIR}/win32/shims-msvc)
+  add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS
+                          _WINSOCK_DEPRECATED_NO_WARNINGS)
+endif()
 
 # PE link: same seam aliases as Linux; PE32 decorates every C symbol with a
 # leading '_', PE x64 does not
@@ -458,10 +464,24 @@ set(COD2_WIN_LINK
   -Wl,--defsym,${COD2_PE_C}g_time=${COD2_PE_C}imp_level_bgs
   -Wl,--defsym,${COD2_PE_C}g_time_ptr=${COD2_PE_C}imp_bgs)
 set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
+if(COD2_MSVC_ABI)
+  # lld-link spells GNU ld's options its own way; the MSVC runtime brings the C++
+  # library, and zlib is compiled from src/PC/zlib below
+  list(FILTER COD2_WIN_LINK EXCLUDE REGEX "__mh_execute_header")   # absolute: src/stubs/link_stubs.c
+  string(REPLACE "-Wl,--defsym," "-Wl,/alternatename:" COD2_WIN_LINK "${COD2_WIN_LINK}")
+  list(REMOVE_ITEM COD2_WIN_LINK -static -static-libgcc -static-libstdc++)
+  list(TRANSFORM COD2_WIN_LINK REPLACE "^-Wl,--allow-multiple-definition$" "-Wl,/FORCE:MULTIPLE")
+  list(TRANSFORM COD2_WIN_LINK REPLACE "^-Wl,--wrap,(.*)$" "-Wl,/wrap:\\1")
+  set(COD2_WIN_LIBS ws2_32 winmm dbghelp)
+endif()
 
 if(COD2_WIN32_CLIENT)
   if(NOT COD2_X64)
-    list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+    if(COD2_MSVC_ABI)
+      list(APPEND COD2_WIN_LINK -Wl,/LARGEADDRESSAWARE)
+    else()
+      list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+    endif()
   endif()
   add_compile_definitions(W32_CLIENT)
   if(COD2_X64)
@@ -469,6 +489,17 @@ if(COD2_WIN32_CLIENT)
     set(COD2_SDL2_WIN64 ${CMAKE_SOURCE_DIR}/third_party/mingw64-sdl2/SDL2-2.30.9/x86_64-w64-mingw32)
     include_directories(${COD2_SDL2_WIN64}/include ${COD2_SDL2_WIN64}/include/SDL2)
     list(APPEND COD2_WIN_LINK -L${COD2_SDL2_WIN64}/lib)
+  elseif(COD2_MSVC_ABI)
+    # SDL's VC development package (SDL2.lib, SDL2.dll), supplied in third_party/
+    file(GLOB COD2_SDL2_VC ${CMAKE_SOURCE_DIR}/third_party/SDL2-*/lib/x86)
+    if(NOT COD2_SDL2_VC)
+      message(FATAL_ERROR "no SDL2 VC package under third_party/SDL2-*/ (SDL2-devel-<version>-VC.zip)")
+    endif()
+    list(GET COD2_SDL2_VC 0 COD2_SDL2_VC)
+    # the package keeps its headers in include/, the engine includes <SDL2/SDL.h>
+    file(COPY ${COD2_SDL2_VC}/../../include/ DESTINATION ${CMAKE_BINARY_DIR}/sdl2/SDL2)
+    include_directories(${CMAKE_BINARY_DIR}/sdl2 ${CMAKE_BINARY_DIR}/sdl2/SDL2)
+    list(APPEND COD2_WIN_LINK -L${COD2_SDL2_VC})
   else()
     include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
     list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
@@ -506,7 +537,12 @@ list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
 # their readdir replaced the C runtime's, whose struct dirent differs, so
 # every file name came 8 bytes short and no .iwd was found
 list(FILTER WIN_C EXCLUDE REGEX "^src/win32/shims-msvc/")
-list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
+if(COD2_MSVC_ABI)
+  # the MSVC runtime has no readdir nor pthreads
+  list(APPEND WIN_C src/win32/shims-msvc/dirent_msvc.c src/win32/shims-msvc/pthread_msvc.c)
+else()
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
+endif()
 list(APPEND WIN_C src/blobs/bss.c src/unix/sysdiff_statehash.c)
 if(COD2_WIN32_CLIENT)
   list(APPEND WIN_C src/unix/linux_input.c)   # pure-SDL2 event pump, works on win32
@@ -535,8 +571,13 @@ endif()
 file(STRINGS ${W32GEN}/cxx_defsyms_c.txt COD2_CXX_DEFSYMS_C)
 file(STRINGS ${W32GEN}/cxx_defsyms_asm.txt COD2_CXX_DEFSYMS_ASM)
 if(NOT COD2_X64)
+  if(COD2_MSVC_ABI)
+    set(COD2_DEFSYM -Wl,/alternatename:)
+  else()
+    set(COD2_DEFSYM -Wl,--defsym,)
+  endif()
   foreach(pair ${COD2_CXX_DEFSYMS_C} ${COD2_CXX_DEFSYMS_ASM})
-    list(APPEND COD2_WIN_LINK -Wl,--defsym,${pair})
+    list(APPEND COD2_WIN_LINK ${COD2_DEFSYM}${pair})
   endforeach()
 endif()
 
@@ -578,7 +619,7 @@ if(COD2_WIN32_CLIENT)
   # is not and a mixer has a deadline. SDL's threads enter with a 4-byte stack.
   file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
   set_source_files_properties(${COD2_SND_SDL_C} PROPERTIES COMPILE_OPTIONS
-    "-O2;-fno-strict-aliasing;-fwrapv;$<$<NOT:$<BOOL:${COD2_X64}>>:-mincoming-stack-boundary=2>")
+    "-O2;-fno-strict-aliasing;-fwrapv;$<$<NOT:$<OR:$<BOOL:${COD2_X64}>,$<BOOL:${COD2_MSVC_ABI}>>>:-mincoming-stack-boundary=2>")
   list(APPEND WIN_C ${COD2_SND_SDL_C})
 endif()
 enable_language(RC)
@@ -596,6 +637,17 @@ endif()
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 target_link_options(${W32_EXE} PRIVATE ${COD2_WIN_LINK})
+if(COD2_MSVC_ABI)
+  # C and C++ globals meet by name only on the Itanium ABI: alias them (cmake/msvc_data_aliases.cmake)
+  get_filename_component(COD2_LLVM_BIN ${CMAKE_CXX_COMPILER} DIRECTORY)
+  add_custom_command(TARGET ${W32_EXE} PRE_LINK
+    COMMAND ${CMAKE_COMMAND} -DNM=${COD2_LLVM_BIN}/llvm-nm.exe -DOBJECT_DIR=${CMAKE_BINARY_DIR}/CMakeFiles
+            -DOUT=${CMAKE_BINARY_DIR}/msvc_data_aliases.rsp -P ${CMAKE_SOURCE_DIR}/cmake/msvc_data_aliases.cmake
+    VERBATIM)
+  # a console program entering at WinMain, as MinGW's runtime does
+  target_link_options(${W32_EXE} PRIVATE -Wl,@${CMAKE_BINARY_DIR}/msvc_data_aliases.rsp -Wl,/MAP
+                      -Wl,/ENTRY:WinMainCRTStartup -Wl,/SAFESEH:NO)   # the assembled blobs carry no SEH tables
+endif()
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} SUFFIX ".exe")

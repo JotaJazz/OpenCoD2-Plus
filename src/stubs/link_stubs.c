@@ -831,8 +831,16 @@ void CDirect3DDevice_CreateAndSetFixedFunctionVAO(void)
 }
 #undef VAO_X16
 
+#if defined(_MSC_VER) && defined(__clang__)
+/* the MSVC ABI has no Itanium exceptions; only the Mac port's Apple events throw */
+void *__cxa_allocate_exception(unsigned int thrown_size) { (void)thrown_size; return 0; }
+void __cxa_throw(void *thrown, void *tinfo, void (*dest)(void *)) { (void)thrown; (void)tinfo; (void)dest; abort(); }
+/* the blobs' Mach-O image base, absolute as GNU ld's --defsym gives it */
+__asm__(".globl ___mh_execute_header\n.set ___mh_execute_header, 0x1000\n");
+#else
 extern void *__cxa_allocate_exception(unsigned int thrown_size);
 extern void __cxa_throw(void *thrown, void *tinfo, void (*dest)(void *));
+#endif
 void *cxa_allocate_exception(unsigned int thrown_size)
 {
     return __cxa_allocate_exception(thrown_size);

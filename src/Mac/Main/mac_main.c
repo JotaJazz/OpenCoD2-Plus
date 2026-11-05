@@ -258,13 +258,8 @@ static void cr_atexit_diag(void)
    logs and CONTINUES (returns an error to the caller) instead of killing the process. */
 #ifdef _WIN32
 typedef void(__cdecl *cr_invh_t)(const void *, const void *, const void *, unsigned int, void *);
-#ifdef __MINGW32__
 #include <stdlib.h>
 #define cr_set_invh(h) _set_invalid_parameter_handler((_invalid_parameter_handler)(h))
-#else
-extern cr_invh_t __cdecl _set_invalid_parameter_handler(cr_invh_t);
-#define cr_set_invh(h) _set_invalid_parameter_handler(h)
-#endif
 static void __cdecl cr_inv_param(const void *e, const void *f, const void *fl, unsigned int line, void *r)
 {
     /* Safety net: a CRT secure-function invalid parameter would otherwise __fastfail (abrupt exit,

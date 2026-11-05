@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
@@ -11,7 +11,9 @@ mingw-client-gl builds it on the Mac port's GL device instead
 (COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. linux-client-x64 builds the
 64-bit Linux client (cod2_linux, -DCOD2_X64=ON), skipped without the amd64 SDL2
 headers scripts/linux_x64_deps.sh unpacks, and mingw-client-x64 the 64-bit
-Windows client, skipped without scripts/mingw64_deps.sh's SDL2. The engine compiles as C++ unless --c is given; with --c,
+Windows client, skipped without scripts/mingw64_deps.sh's SDL2. msvc-client builds the
+Windows client on the MSVC ABI (clang + lld-link) through cmd.exe on a copy of the
+tree on a Windows drive (scripts/msvc_build.py), skipped without cmd.exe. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -30,7 +32,7 @@ with another return or parameter type than its definition's
 (scripts/check_c_decls.py), nor a global declared larger than it is defined
 (scripts/check_var_sizes.py).
 """
-import argparse, os, re, subprocess, sys
+import argparse, os, re, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
@@ -59,6 +61,10 @@ VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON']
 # the 64-bit Windows client: scripts/mingw64_deps.sh's compilers and SDL2
 VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake', '-DCOD2_X64=ON',
                                  '-DCOD2_WIN32_CLIENT=ON', '-DCOD2_WIN32_REAL_D3D9=ON']
+# the Windows client on the MSVC ABI (clang + lld-link), built on Windows through
+# cmd.exe by scripts/msvc_build.py, which passes these flags itself
+VARIANTS['msvc-client'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', '-DCOD2_WIN32_CLIENT=ON',
+                           '-DCOD2_WIN32_REAL_D3D9=ON']
 SDL2_MINGW64 = os.path.join(ROOT, 'third_party', 'mingw64-sdl2', 'SDL2-2.30.9', 'x86_64-w64-mingw32', 'lib', 'libSDL2.a')
 MINGW64_NM = os.path.join(ROOT, 'third_party', 'mingw64', 'usr', 'bin', 'x86_64-w64-mingw32-nm')
 LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
@@ -75,6 +81,16 @@ def is_x64(variant):
 
 def build(variant, extra):
     build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
+    if variant == 'msvc-client':
+        result = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'msvc_build.py'), '--variant', variant, '--']
+                                + [e for e in extra if not e.startswith('-DCOD2_PLUS_SCRIPT=')],
+                                cwd=ROOT, capture_output=True, text=True)
+        if result.returncode == 0:
+            return []
+        log = os.path.join(build_dir, 'msvc_build.log')
+        lines = open(log, encoding='utf-8', errors='replace').read().splitlines() if os.path.exists(log) else []
+        errors = [line for line in lines if 'error' in line.lower() and 'FAILED' not in line]
+        return errors or ['msvc build failed'] + (lines or (result.stdout + result.stderr).splitlines())[-10:]
     source = os.path.join(ROOT, 'cmake', 'lnxded64') if is_x64(variant) else ROOT
     configure = subprocess.run(['cmake', '-S', source, '-B', build_dir] + VARIANTS[variant] + ([] if is_x64(variant) else extra),
                                cwd=ROOT, capture_output=True, text=True)
@@ -285,6 +301,10 @@ def main():
             continue
         if variant == 'linux-client-x64' and not os.path.exists(LINUX_X64_SDL2):
             print(f'skip {variant} (no {os.path.relpath(LINUX_X64_SDL2, ROOT)}: scripts/linux_x64_deps.sh)')
+            skipped = True
+            continue
+        if variant == 'msvc-client' and not shutil.which('cmd.exe'):
+            print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
             continue
         if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):

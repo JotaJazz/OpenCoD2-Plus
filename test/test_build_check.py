@@ -91,6 +91,24 @@ class BuildCheck(unittest.TestCase):
         self.assertEqual(prefixes, {''})
 
 
+    def test_msvc_client_skipped_without_windows(self):
+        """msvc-client builds through cmd.exe: off Windows (no interop) it is a skip."""
+        with mock.patch.object(build_check.shutil, 'which', return_value=None):
+            code, out = self.run_main('msvc-client', '--allow-skip')
+        self.assertEqual(code, 0, out)
+        self.assertIn('skip msvc-client', out)
+
+    def test_msvc_client_builds_through_msvc_build(self):
+        """The variant is the Windows branch with the clang MSVC-ABI toolchain, driven by msvc_build.py."""
+        flags = build_check.VARIANTS['msvc-client']
+        self.assertIn('-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', flags)
+        self.assertIn('-DCOD2_WIN32_CLIENT=ON', flags)
+        calls = []
+        with mock.patch.object(build_check.subprocess, 'run',
+                               side_effect=lambda cmd, **kw: calls.append(cmd) or subprocess.CompletedProcess(cmd, 0, '', '')):
+            build_check.build('msvc-client', [])
+        self.assertTrue(calls[0][1].endswith('msvc_build.py'), calls)
+
     def test_stock_13_variant(self):
         """linux-13 is the 1.3 build without the Plus protocol."""
         self.assertEqual(build_check.VARIANTS['linux-13'], ['-DCOD2_PLUS_PROTOCOL=OFF'])

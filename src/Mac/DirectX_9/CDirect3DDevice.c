@@ -25,7 +25,7 @@ extern float g_scale2;
 extern bool g_InhibitCopy;
 extern bool g_NoTextureID;
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 /* These C names alias the C++ static-member symbols (defined in the data blob /
  * the reconstructed class). cl has no symbol-rename; bind via /alternatename.
  * x86: a C identifier `__ZN..` emits MSVC symbol `___ZN..` (one extra '_'). */
