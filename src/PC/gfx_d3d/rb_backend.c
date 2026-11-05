@@ -3423,10 +3423,11 @@ static void RB_BlendSavedScreenCmd(GfxRenderCommandExecState *execState)
 
     alphaByte = (int)floorf(alphaScaled + 0.5f);
 
-    /* 1.3 (gfx_d3d_mp_x86_s.dll 0x10031180): the fade in the color's alpha byte
-     * (shl 0x18 | 0xffffff) and the whole screen-sized image, 0..1; the low byte
-     * and the Mac port's power-of-two coordinates drew it opaque, flipped, stretched */
-    blendColor = ((D3DCOLOR)(byte)alphaByte << 24) | 0xffffff;
+    /* 1.3 (gfx_d3d_mp_x86_s.dll 0x10031180): the fade as the color's alpha over
+     * white, and the whole screen-sized image, 0..1 (the Mac port's power-of-two
+     * coordinates drew it flipped and stretched). This engine's packed colors keep
+     * alpha in byte 0 (R_ConvertColorToBytes), where 1.3's keep it in byte 3 */
+    blendColor = 0xffffff00 | (byte)alphaByte;
 
     backEnd.currentFeedbackImage = dx.renderTargets[R_RENDERTARGET_SAVED_SCREEN].image;
 
@@ -3864,10 +3865,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
                 float virtualWidth = GetVirtualWidthFromRealWidth(3.0f);
                 D3DCOLOR blurColor = 0xffffffff;
 
-                /* 1.3 (0x10030b70) puts the fade in the alpha byte, not the blue one */
+                /* 1.3 (0x10030b70) puts the fade in the alpha byte: byte 0 here */
                 if (totalBlur > virtualWidth) {
                     int alpha = (int)floorf(totalBlur / virtualWidth * 255.0f + 0.5f);
-                    blurColor = (blurColor & 0x00ffffff) | ((D3DCOLOR)(alpha & 0xff) << 24);
+                    blurColor = (blurColor & 0xffffff00) | (alpha & 0xff);
                 }
 
                 RB_GaussianFilterImage(totalBlur, R_RENDERTARGET_BLURRED_SCREEN);
