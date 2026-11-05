@@ -1129,6 +1129,9 @@ void CG_DrawActive(void)
     CG_TileClear();
 }
 
+/* 1.3 draws chat at 5/24 (0x3e555555, 0x4c7913/0x4c79d2), the 10 units of its line step */
+#define CHAT_TEXT_SCALE 0.20833333f
+
 unsigned int CG_DrawChatMessages(void)
 {
     FontHandle font;
@@ -1163,7 +1166,7 @@ unsigned int CG_DrawChatMessages(void)
         ++cgs->teamLastChatPos;
     }
 
-    font = UI_GetFontHandle(0, 1.0f / 3.0f);
+    font = UI_GetFontHandle(0, CHAT_TEXT_SCALE);
     for (i = cgs->teamChatPos - 1; i >= cgs->teamLastChatPos; --i) {
         index = i % chatHeight;
         timeRemaining = (float)chatTime - (float)(cg->time - cgs->teamChatMsgTimes[index]);
@@ -1194,14 +1197,14 @@ unsigned int CG_DrawChatMessages(void)
         color[3] = backgroundAlpha;
 
         y = (float)(hudChatY - (cgs->teamChatPos - i) * 10);
-        textWidth = UI_TextWidth(msg, 0, font, 1.0f / 3.0f);
+        textWidth = UI_TextWidth(msg, 0, font, CHAT_TEXT_SCALE);
         UI_DrawHandlePic(0.0f, y, (float)(textWidth + 24), 10.0f, 1, 1, color, cgs->media.whiteMaterial);
 
         color[0] = 1.0f;
         color[1] = 1.0f;
         color[2] = 1.0f;
         color[3] = alphaPercent;
-        UI_DrawText(msg, 0x7fffffff, font, (float)hudChatX, y + 9.0f, 1, 1, 1.0f / 3.0f, color, 3);
+        UI_DrawText(msg, 0x7fffffff, font, (float)hudChatX, y + 9.0f, 1, 1, CHAT_TEXT_SCALE, color, 3);
     }
 
     return 0;
