@@ -3835,13 +3835,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
 
                 backEnd.currentFeedbackImage = backEnd.glowImage[glowIndex];
 
-                {
-                    float pw = (float)nextPow2((unsigned int)dxState.renderTargetWidth);
-                    float ph = (float)nextPow2((unsigned int)dxState.renderTargetHeight);
-                    RB_DrawStretchPic(glowMaterial, 0, 0, sw, sh,
-                                      0, sh / ph, sw / pw, 0, 0xffffffff, (GfxPrimStatsTarget)10);
-                    RB_EndSurface();
-                }
+                /* the whole glow image, 0..1, as 1.3 (gfx_d3d_mp_x86_s.dll 0x100309cc) */
+                RB_DrawStretchPic(glowMaterial, 0, 0, sw, sh,
+                                  0, 0, 1.0f, 1.0f, 0xffffffff, (GfxPrimStatsTarget)10);
+                RB_EndSurface();
 
                 glowIndex = 1 - glowIndex;
             }

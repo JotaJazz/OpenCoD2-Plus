@@ -227,7 +227,7 @@ void R_ShutdownRenderTargets(void)
 
     for (renderTargetId = 0; renderTargetId <= 12; renderTargetId++) {
 
-        if (renderTargetId == 1 || renderTargetId == 7) {
+        if (renderTargetId == 1) {
             continue;
         }
 
@@ -370,15 +370,12 @@ void R_InitRenderTargets(void)
     R_InitFullscreenRenderTargetImage(9, 0, backBufferFormat, RENDERTARGET_USAGE_TEXTURE,
                                       &((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_RESOLVED_SCENE]);
 
-    {
-        byte *rt1 = ((byte *)&((DxGlobals *)(dxPtr))->renderTargets[1]);
-        byte *rt7 = ((byte *)&((DxGlobals *)(dxPtr))->renderTargets[7]);
-        *(void **)(rt7 + 0) = *(void **)(rt1 + 0);
-        *(void **)(rt7 + 4) = *(void **)(rt1 + 4);
-        *(void **)(rt7 + 8) = *(void **)(rt1 + 8);
-        *(int *)(rt7 + 12) = *(int *)(rt1 + 12);
-        *(int *)(rt7 + 16) = *(int *)(rt1 + 16);
-    }
+    /* the saved screen its own full-size image, as 1.3 (gfx_d3d_mp_x86_s.dll
+     * 0x100234a9, $savedscreen): an alias of render target 1, it was overwritten
+     * every frame, and a shellshock blended that image back over the view */
+    backBufferFormat = ((DxGlobals *)(dxPtr))->backBufferFormat;
+    R_InitFullscreenRenderTargetImage(10, 0, backBufferFormat, RENDERTARGET_USAGE_TEXTURE,
+                                      &((DxGlobals *)dxPtr)->renderTargets[R_RENDERTARGET_SAVED_SCREEN]);
 
     {
         GfxImage *image;
