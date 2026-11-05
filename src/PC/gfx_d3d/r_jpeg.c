@@ -27,14 +27,31 @@ extern refimport_t ri;
 
 static int hackSize;
 
-#define JPEG_COMPRESS_STRUCT_SIZE 372
+/* jpeg-6 jpeg_compress_struct layout, measured per ABI: Win32 aligns input_gamma (double)
+   to 8 and Linux i386 to 4, so everything after it moves by 4; 64-bit widens the pointers. */
 #define JPEG_C_ERR 0x00
-#define JPEG_C_DEST 0x18
-#define JPEG_C_IMAGE_WIDTH 0x1c
-#define JPEG_C_IMAGE_HEIGHT 0x20
-#define JPEG_C_INPUT_COMPONENTS 0x24
-#define JPEG_C_IN_COLOR_SPACE 0x28
-#define JPEG_C_NEXT_SCANLINE 0xdc
+#if defined(_WIN64) || defined(__x86_64__)
+#    define JPEG_COMPRESS_STRUCT_SIZE 520
+#    define JPEG_C_DEST 0x28
+#    define JPEG_C_IMAGE_WIDTH 0x30
+#    define JPEG_C_IMAGE_HEIGHT 0x34
+#    define JPEG_C_INPUT_COMPONENTS 0x38
+#    define JPEG_C_IN_COLOR_SPACE 0x3c
+#    define JPEG_C_NEXT_SCANLINE 0x130
+#else
+#    define JPEG_C_DEST 0x18
+#    define JPEG_C_IMAGE_WIDTH 0x1c
+#    define JPEG_C_IMAGE_HEIGHT 0x20
+#    define JPEG_C_INPUT_COMPONENTS 0x24
+#    define JPEG_C_IN_COLOR_SPACE 0x28
+#    if defined(_WIN32)
+#        define JPEG_COMPRESS_STRUCT_SIZE 376
+#        define JPEG_C_NEXT_SCANLINE 0xe0
+#    else
+#        define JPEG_COMPRESS_STRUCT_SIZE 372
+#        define JPEG_C_NEXT_SCANLINE 0xdc
+#    endif
+#endif
 
 #if COD2_FEATURE_MODERN_LIBS
 #    define JPEG_D_STRUCT_SIZE 0x1d0
