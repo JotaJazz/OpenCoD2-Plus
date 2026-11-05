@@ -34,9 +34,10 @@
 - **Um servidor dedicado para 1.3 e 1.0**, assente no [OpenCoD2-Plus Server](https://github.com/JotaJazz/OpenCoD2-Plus-Server) (chamado CoD2rev-Plus até novembro de 2026): no Linux passa todo o teste de fumo do OpenCoD2-Plus Server.
 - **Um cliente Linux**, e outro sobre Vulkan (DXVK) que também desenha com os shaders do próprio jogo.
 - **CoD2 1.3 Plus (em desenvolvimento):** com um servidor Plus (o `make PLUS=1` do OpenCoD2-Plus Server) o cliente fala o novo protocolo 1.3 Plus, com snapshots menores, e as suas próprias partidas locais também o usam; os servidores 1.3 normais jogam-se como antes.
-- **Clientes de 64 bits (em desenvolvimento):** os clientes de Linux e Windows também compilam para x86_64 e carregam mapas; ainda não são iguais aos de 32 bits: no Linux já desenham os efeitos e iluminam o mundo como os de 32 bits; o de Windows ainda não foi testado num Windows real.
+- **Clientes de 64 bits (em desenvolvimento):** os clientes de Linux e Windows também compilam para x86_64 e carregam mapas; ainda não são iguais aos de 32 bits: no Linux já desenham os efeitos e iluminam o mundo como os de 32 bits; o de Windows já joga num Windows real.
 - **As melhorias do CoD2x, escritas no motor**: `sensitivity_MG`, opções da bússola, `cl_maxpackets` até 125, `com_writeConfig`, `cl_hideServerIp`, 4096 dvars e um relatório quando o jogo congela (`com_freezeWatch`).
-- **Verificado contra os binários originais da 1.3**: previsão de movimento, efeitos, sons, recuo, menus e muitas correções ([o que mudou](docs/changes.md)).
+- **Um só motor para todas as compilações:** o cliente de Windows compila com o MinGW ou com o clang do Visual Studio (a ABI do MSVC), e todos os clientes e servidores correm o jogo do OpenCoD2-Plus Server pela mesma ponte, com a matemática de float em SSE2 como esse servidor.
+- **Verificado contra os binários originais da 1.3**: previsão de movimento, a mira ao apontar, efeitos, sons, recuo, menus e muitas correções ([o que mudou](docs/changes.md)).
 
 > [!NOTE]
 > **Ainda em desenvolvimento.** Espere falhas e partes em falta, e por favor reporte-as nas [issues](https://github.com/JotaJazz/OpenCoD2-Plus/issues).
