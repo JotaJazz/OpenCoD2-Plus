@@ -1079,7 +1079,8 @@ void CL_InitCGame(void)
         clientConnection_t *clui = CLUI_STATE;
         clui->state = (connstate_t)(6);
         cl->cgameInitCalled = 1;
-        CG_Init(clui->clientNum, clui->lastExecutedServerCommand, clui->serverMessageSequence);
+        /* as the 1.3 binary (0x402c73): clientNum last, it is cg.clientNum (CG_Init 0x4c0e31) */
+        CG_Init(clui->serverMessageSequence, clui->lastExecutedServerCommand, clui->clientNum);
         cl->cgameInitialized = 1;
         clui->state = (connstate_t)(7);
     }
