@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-05 — MSVC ABI and web on the bridge; the engine's server is gone
+
+- The MSVC client is now the MinGW branch built by clang for `i686-pc-windows-msvc` with lld-link (ADR 0015): cl.exe could not compile the bridge's `__asm__` labels. The MSVC ABI mangles C++ globals, so 127 `/alternatename` aliases are generated at link; it also exposed a reconstruction bug gcc's frames hid (`r_staticmodelcache.c` called the C color converter as stdcall). `msvc_run_test.py` plays a local game with it on Windows.
+- The web build compiles and links again (Emscripten 6.0.13) and runs its local games on the bridge, without libcod; wasm traps calls through another signature, so three script exports take 1.3's trailing argument. 65 symbols still link undefined (`CG_Init` among them): no browser check runs it.
+- With no build left on them, `src/PC/server_mp`, `game_mp`, `game`, `script` and `cm_*` were removed; the bridge's engine-side ABI files are kept by hand (1.3's ABI), and the generator refuses a crossing without its line.
+
 ## 2026-11-05 — the MSVC client builds again
 
 - VS 2019 Build Tools (cl 19.29) stopped on two things: `COD2_ALIGNED` expanded to nothing under MSVC, so `GfxCodeMatrix` was 260 bytes instead of 272 and `backEnd` missed 1.3's 0x36e90 (the size assert fired); it is now `__declspec(align)`, placed between `struct` and the name, where gcc takes it too. The bgame files written for C++ used `true`/`false`, which MSVC's C build lacked.
