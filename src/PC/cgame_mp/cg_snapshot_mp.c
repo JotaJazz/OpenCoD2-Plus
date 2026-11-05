@@ -197,7 +197,9 @@ static void CG_ResetEntity(char *cent)
 
         pXAnimTree = ((clientInfo_t *)corpseInfo)->pXAnimTree;
 
-        if (((centity_t *)cent)->nextState.eFlags & 8) {
+        /* EF_BODY_START (0x80000), a body cloned this frame: it takes over its player's
+         * animation tree (1.3 0x4df227); 8 was EF_PRONE */
+        if (((centity_t *)cent)->nextState.eFlags & 0x80000) {
             int attachIndex;
 
             memcpy(corpseInfo, ci, CI_STRIDE);
