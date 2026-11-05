@@ -6,19 +6,22 @@
 # global gets an alias to the other language's definition:
 #   ?name@@3...  (C++ extern) -> _name           (defined in C)
 #   _name        (C extern)   -> ?name@@3...     (defined in C++)
-# Functions are not touched: they cross through the bridge's thunks.
+# Functions are not touched: they cross through the bridge's thunks, and only
+# a data definition (llvm-nm's B, D, R, C) is ever an alias target.
 #
 #   cmake -DNM=llvm-nm -DOBJECT_DIR=<dir with .obj> -DOUT=<rsp> -P msvc_data_aliases.cmake
-#   cmake -DUNDEFINED_FILE=<list> -DDEFINED_FILE=<list> -DOUT=<rsp> -P msvc_data_aliases.cmake
+#   cmake -DUNDEFINED_FILE=<names> -DDEFINED_FILE=<"name type" lines> -DOUT=<rsp> -P msvc_data_aliases.cmake
 # The rsp has one /alternatename option per line, for lld-link's @file.
 
 if(OBJECT_DIR)
   file(GLOB_RECURSE objs "${OBJECT_DIR}/*.obj")
-  list(FILTER objs EXCLUDE REGEX "cod2_cxx_header_check")
+  # the executable's own objects and its OpenCoD2-Plus Server object libraries
+  list(FILTER objs INCLUDE REGEX "/(cod2_win32|cod2_plus_[a-z_]+)\\.dir/")
   string(REPLACE ";" "\n" obj_lines "${objs}")
   file(WRITE "${OUT}.objs" "${obj_lines}\n")
   execute_process(COMMAND "${NM}" -j -g --undefined-only "@${OUT}.objs" OUTPUT_VARIABLE undefined_text RESULT_VARIABLE rc1)
-  execute_process(COMMAND "${NM}" -j -g --defined-only "@${OUT}.objs" OUTPUT_VARIABLE defined_text RESULT_VARIABLE rc2)
+  execute_process(COMMAND "${NM}" -g --defined-only --format=posix --no-sort "@${OUT}.objs"
+                  OUTPUT_VARIABLE defined_text RESULT_VARIABLE rc2)
   if(rc1 OR rc2)
     message(FATAL_ERROR "${NM} failed on ${OBJECT_DIR}")
   endif()
@@ -33,7 +36,12 @@ string(REGEX REPLACE "[\r]" "" defined_text "${defined_text}")
 string(REPLACE "\n" ";" undefined "${undefined_text}")
 string(REPLACE "\n" ";" defined "${defined_text}")
 
-foreach(sym IN LISTS defined)
+foreach(line IN LISTS defined)
+  # "name type ..." (llvm-nm --format=posix); a data type only
+  if(NOT line MATCHES "^([^ ]+) [BDRC]( |$)")
+    continue()
+  endif()
+  set(sym "${CMAKE_MATCH_1}")
   if(sym MATCHES "^\\?([A-Za-z_][A-Za-z0-9_]*)@@3")
     set("cxx_${CMAKE_MATCH_1}" "${sym}")
   elseif(sym MATCHES "^_([A-Za-z_][A-Za-z0-9_]*)$")

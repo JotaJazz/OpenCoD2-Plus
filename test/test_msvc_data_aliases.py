@@ -9,6 +9,7 @@ SCRIPT = os.path.join(ROOT, 'cmake', 'msvc_data_aliases.cmake')
 
 
 def aliases(undefined, defined):
+    """defined: 'name type' lines, type as llvm-nm prints it (B, D, R, C data; T code)."""
     with tempfile.TemporaryDirectory() as tmp:
         files = {}
         for name, lines in (('undefined', undefined), ('defined', defined)):
@@ -25,25 +26,29 @@ def aliases(undefined, defined):
 class MsvcDataAliases(unittest.TestCase):
     def test_cxx_reference_to_c_global(self):
         """C++ code's extern for an engine (C) global: the mangled name resolves to the C one."""
-        self.assertEqual(aliases(['?sv_paused@@3PAUdvar_s@@A'], ['_sv_paused']),
+        self.assertEqual(aliases(['?sv_paused@@3PAUdvar_s@@A'], ['_sv_paused B']),
                          ['/alternatename:?sv_paused@@3PAUdvar_s@@A=_sv_paused'])
 
     def test_c_reference_to_cxx_global(self):
         """The engine's C reference to a global OpenCoD2-Plus Server defines in C++."""
-        self.assertEqual(aliases(['_scr_const'], ['?scr_const@@3Uscr_const_t@@A']),
+        self.assertEqual(aliases(['_scr_const'], ['?scr_const@@3Uscr_const_t@@A D']),
                          ['/alternatename:_scr_const=?scr_const@@3Uscr_const_t@@A'])
 
     def test_no_alias_without_a_definition(self):
         """A symbol defined nowhere stays an undefined-symbol error, as it should."""
-        self.assertEqual(aliases(['_missing', '?gone@@3HA'], ['_other']), [])
+        self.assertEqual(aliases(['_missing', '?gone@@3HA'], ['_other D']), [])
 
     def test_functions_and_members_are_left_alone(self):
         """Functions cross through the bridge's thunks and class members are not globals."""
         self.assertEqual(aliases(['?Com_Printf@@YAXPBDZZ', '?g@UI_Component@@2PAEA'],
-                                 ['_Com_Printf', '_g']), [])
+                                 ['_Com_Printf T', '_g B']), [])
+
+    def test_a_function_is_never_an_alias_target(self):
+        """A C++ global named like a C function must not resolve to its code."""
+        self.assertEqual(aliases(['?Sys_Milliseconds@@3HA'], ['_Sys_Milliseconds T']), [])
 
     def test_import_thunks_are_left_alone(self):
-        self.assertEqual(aliases(['__imp__CreateFileA@28'], ['?_imp__CreateFileA@28@@3HA']), [])
+        self.assertEqual(aliases(['__imp__CreateFileA@28'], ['?_imp__CreateFileA@28@@3HA D']), [])
 
 
 if __name__ == '__main__':

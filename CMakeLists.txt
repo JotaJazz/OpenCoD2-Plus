@@ -75,8 +75,6 @@ set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 # blobs test these macros. The client's local games run on them too, and cgame
 # keeps the engine's bgame, whose globals have their eng_ names
 # (scripts/bgame_names.py). PROTOCOL_VERSION follows the game version.
-set(COD2_PLUS_SCRIPT ON)
-set(COD2_PLUS_SERVER ON)
 add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
 set(COD2_PLUS_CLIENT_SERVER ON)
 if(WIN32 AND NOT COD2_WIN32_CLIENT)
@@ -227,7 +225,7 @@ endfunction()
 
 # cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
 # <list_var> that test/plus_replaces.txt names (a line ending in / names a
-# directory): with COD2_PLUS_SERVER the dedicated server leaves them to
+# directory): the dedicated server leaves them to
 # CoD2rev-Plus's code, and only the client links them.
 function(cod2_plus_replaced list_var out_var)
   file(STRINGS ${CMAKE_SOURCE_DIR}/test/plus_replaces.txt entries REGEX "^[^#]")
@@ -477,17 +475,13 @@ if(COD2_WIN32_CLIENT)
   list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid wininet
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)
-  if(COD2_PLUS_CLIENT_SERVER)
-    # one executable per configure: the blobs leave the game's and the
-    # collision's globals to CoD2rev-Plus's code, as cod2_linux's do
-    add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1)
-  endif()
+  # one executable per configure: the blobs leave the game's and the
+  # collision's globals to CoD2rev-Plus's code, as cod2_linux's do
+  add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1)
 else()
   add_compile_definitions(DEDICATED)
   set(W32_EXE cod2_win32_ded)
-  if(COD2_PLUS_SERVER)
-    add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
-  endif()
+  add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
 endif()
 if(COD2_WIN32_CLIENT AND COD2_WIN32_REAL_D3D9)
   add_compile_definitions(GFX_REAL_D3D9)
@@ -510,6 +504,8 @@ list(FILTER WIN_C EXCLUDE REGEX "^src/win32/shims-msvc/")
 if(COD2_MSVC_ABI)
   # the MSVC runtime has no readdir nor pthreads
   list(APPEND WIN_C src/win32/shims-msvc/dirent_msvc.c src/win32/shims-msvc/pthread_msvc.c)
+  # zlib allocates through the engine (src/stubs/zlib_alloc.c), as on MinGW, where it wins over -lz's
+  set_source_files_properties(src/PC/zlib/zutil.c PROPERTIES COMPILE_DEFINITIONS MY_ZCALLOC)
 else()
   list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
 endif()
@@ -764,20 +760,17 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
-# With COD2_PLUS_SERVER the dedicated server links CoD2rev-Plus's code instead
-# of the sources in test/plus_replaces.txt, which only the client links, and the
-# blobs that define their globals are compiled for each executable, leaving
-# them to CoD2rev-Plus's code in the dedicated.
-set(COD2_SERVER_MP_C "")
-if(COD2_PLUS_SERVER)
-  cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
-  cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
-  list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
-  list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/universal/com_math.c)
-  list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
-  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c
-    src/PC/universal/com_math.c)
-endif()
+# The dedicated server links CoD2rev-Plus's code instead of the sources in
+# test/plus_replaces.txt, which only the client links, and the blobs that
+# define their globals are compiled for each executable, leaving them to
+# CoD2rev-Plus's code in the dedicated.
+cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
+cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
+list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
+list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/universal/com_math.c)
+list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
+list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c
+  src/PC/universal/com_math.c)
 
 # 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat
 # fails with EOVERFLOW on file systems with large inodes (Windows drives under
@@ -792,33 +785,23 @@ cod2_cxx_sources(COD2_SND_DED_C ${COD2_SND_DED_C})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
 add_library(cod2_snd_ded OBJECT ${COD2_SND_DED_C})
 add_library(cod2_snd_sdl OBJECT ${COD2_SND_SDL_C})
-set(COD2_CLIENT_SERVER_OBJS "")
-set(COD2_DED_SERVER_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
-  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
+# the client runs CoD2rev-Plus's server, game and bgame
+cod2_plus_server_client()
+set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
+if(COD2_LIBCOD_CLIENT)
+  list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
 endif()
-if(COD2_PLUS_SERVER)
-  if(COD2_PLUS_CLIENT_SERVER)
-    # the client runs CoD2rev-Plus's server, game and bgame instead
-    cod2_plus_server_client()
-    set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
-    if(COD2_LIBCOD_CLIENT)
-      list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
-    endif()
-  endif()
-  cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
-  add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
-  if(COD2_LIBCOD_CLIENT)
-    # the engine's Com_Frame and Com_EventLoop (common.c, here) work for libcod
-    target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
-  endif()
-  cod2_plus_server()
-  list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
-  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
-  if(COD2_PLUS_LIBCOD)
-    list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
-  endif()
+cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
+add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
+if(COD2_LIBCOD_CLIENT)
+  # the engine's Com_Frame and Com_EventLoop (common.c, here) work for libcod
+  target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
+endif()
+cod2_plus_server()
+list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
+set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+if(COD2_PLUS_LIBCOD)
+  list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
 endif()
 set(COD2_DED_SCRIPT_OBJS ${COD2_SCRIPT_OBJS})
 if(COD2_PLUS_LIBCOD AND NOT COD2_LIBCOD_CLIENT)
@@ -834,8 +817,7 @@ target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
 add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> $<TARGET_OBJECTS:cod2_snd_ded> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
-target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
-  $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)
+target_compile_definitions(cod2_lnxded PRIVATE DEDICATED COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)
 target_compile_definitions(cod2_linux PRIVATE $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_GAME=1>
   $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_CM=1>)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})
