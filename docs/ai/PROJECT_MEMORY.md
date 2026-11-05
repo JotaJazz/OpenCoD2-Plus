@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-04 — Windows client polish: screenshots, chat, scoreboard, corpses, shellshock
+
+- `cg.clientNum` held the gamestate's message sequence since the initial commit: `CL_InitCGame` passed `CG_Init`'s first and third arguments swapped (1.3 0x402c73), so the scoreboard highlighted another player. Chat drew at scale 1/3 over a 10-unit line step (1.3: 5/24, 0x4c7760); a new corpse cloned its player's anim tree on EF_PRONE instead of EF_BODY_START (0x4df227). `R_SaveJpg` passed Linux i386's `jpeg_compress_struct` size (372) on Win32 (376) and 64-bit (520), so `screenshot` exited the Windows clients.
+- Shellshock's saved-screen blend and late blur put the fade in the blue byte with alpha 255 and used the Mac port's power-of-two, flipped texcoords (1.3 gfx_d3d 0x10031180, 0x10030b70: alpha byte, 0..1); the saved screen aliased rt1 instead of its own `$savedscreen` (0x100234a9), and the glow had the same texcoord error. Ghosting and streaks are gone.
+- Left open: under shellshock the view turns sepia and darkens on Linux vulkan and on Windows alike (the 2D quad's vertex alpha reaches the blue channel somewhere); the red damage overlay does not show; frame-rate drops not investigated.
+
 ## 2026-11-03 — the 64-bit client draws effects and lights the world as 32-bit
 
 - Effects were skipped on x64; they failed on 1.3's 4-byte types, not on the vtables the skip blamed: `Effect`'s vptr, `UInt32`/`SInt32`/`UINT4`/GL integers as `long` (8 bytes on LP64, so `irand` ran a 64-bit LCG), x86 offsets into `PrimitiveTemplate`, `Particle`, `GfxEntity`, `trace_t` and `ScheduledEffect`, `int` effect pointers in `cg_view_mp.c` and `g_missile_mp.c`, `fx_freeze` read at byte 8, and blobs sized for 4-byte pointers (`effectListArray*`, `s_backEndData`, `modelDObjBuf`). `fx_test.py` passes on x64 under ASan; each rename kept the 32-bit code identical (objdump) except where a type change reorders registers.
