@@ -9,7 +9,7 @@ Normative. A change that breaks a rule here needs an ADR first
 |---|---|
 | B1 | Vendored files (`test/vendored_files.txt`) are never edited here. A fix goes to OpenCoD2-Plus Server first and comes back with `git am` ([../development/vendored.md](../development/vendored.md)). |
 | B2 | The engine and OpenCoD2-Plus Server never call each other directly: every crossing goes through the bridge in `src/compat`. |
-| B3 | Every bridge crossing is type-checked: return types are `decltype` of OpenCoD2-Plus Server's declarations; the `server` and `client_server` modules are also checked against the engine's ABI (`test/server_abi.txt`, `test/client_server_abi.txt`, written by `scripts/engine_abi.py`). No crossing function is `regparm`. |
+| B3 | Every bridge crossing is type-checked: return types are `decltype` of OpenCoD2-Plus Server's declarations; the `server` and `client_server` modules are also checked against the engine's ABI (`test/server_abi.txt`, `test/client_server_abi.txt`, the engine side's 1.3 ABI, kept by hand; format in `scripts/engine_abi.py`). No crossing function is `regparm`. |
 | B4 | One copy of each state per executable. Engine sources whose state OpenCoD2-Plus Server also holds are listed in `test/plus_replaces.txt` and left out of the dedicated server; `scripts/check_single_impl.py` enforces it. |
 | B5 | No C name defined by both sides in one target; `scripts/check_duplicates.py` enforces it (MinGW links with `--allow-multiple-definition`, so a duplicate would win silently). |
 | B6 | The engine's bgame globals that OpenCoD2-Plus Server's bgame also defines carry the `eng_` prefix (`test/engine_bgame_names.txt`, `scripts/bgame_names.py`); `bg_itemlist`, `bg_numItems`, `scr_const` stay shared. |

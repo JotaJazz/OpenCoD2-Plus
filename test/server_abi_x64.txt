@@ -1,4 +1,4 @@
-# Written by scripts/engine_abi.py --module server --arch x64 from ../../../tmp/claude-1000/-home-jota-opencod2-plus/d9b27aef-1a19-4bb0-b3ac-db2196c5bc68/scratchpad/abi64/cod2_linux; see its docstring for the format.
+# The engine side's 1.3 ABI (x64) of the server module's crossings, kept by hand; format in scripts/engine_abi.py.
 BG_AddPredictableEventToPlayerstate v0 4,4,8
 BG_AmmoForWeapon i4 4
 BG_CalculateViewAngles v0 8,8

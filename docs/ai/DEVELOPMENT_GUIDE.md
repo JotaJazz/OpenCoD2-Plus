@@ -41,7 +41,7 @@ Rules for contributors and AI agents. Tooling details:
 | Task | Steps |
 |---|---|
 | Fix an engine bug | reproduce → locate the original function → compare → fix with the address in a comment → test → note in the subsystem doc if it explains how something works |
-| Add an engine ↔ OpenCoD2-Plus Server crossing | add it to the interface list in `test/` → regenerate with `scripts/gen_script_bridge.py` → refresh the ABI file if needed (`scripts/engine_abi.py`) → `build_check.py` |
+| Add an engine ↔ OpenCoD2-Plus Server crossing | add it to the interface list in `test/` → regenerate with `scripts/gen_script_bridge.py` → add its line to `test/<module>_abi.txt` and `_abi_x64.txt` from the engine's declaration (format in `scripts/engine_abi.py`; the generator refuses a crossing without one) → `build_check.py` |
 | Add a test script | `scripts/<name>_test.py` with a usage docstring, exit 0 on pass, skipped without a CD key if it needs a real client → add to `docs/development/testing.md` |
 | Add an ADR | copy the template in `docs/architecture/adr/README.md`, next number, add to the index |
 

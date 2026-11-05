@@ -114,7 +114,6 @@ Build all three first, or the MinGW link may miss imports.
 | Task | Command |
 |---|---|
 | Regenerate a bridge module | `python3 scripts/gen_script_bridge.py --module script\|server\|client_server` |
-| Record the engine's ABI (needs gdb and a build with the engine's server) | `python3 scripts/engine_abi.py --module server` |
 | Regenerate the `eng_` names header | `python3 scripts/bgame_names.py` |
 
 The client's ABI is read from a client built with

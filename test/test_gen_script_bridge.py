@@ -77,6 +77,13 @@ class Abi(unittest.TestCase):
         self.assertIsNone(abi['SV_Gone'])
         self.assertEqual(abi['NET_Port'], ('i', 2, [], False))
 
+    def test_abi_gaps(self):
+        """A crossing with no line in one architecture's file would get no asserts there."""
+        abi32 = engine_abi.parse('A v0 4\nB missing\nC i4 -\n')
+        abi64 = engine_abi.parse('A v0 8\nB missing\n')
+        self.assertEqual(g.abi_gaps(['A', 'B', 'C', 'D'], abi32, abi64), ['C (x64)', 'D (x86, x64)'])
+        self.assertEqual(g.abi_gaps(['A'], {}, {}), [])   # a module without ABI files is not checked
+
     def test_import_asserts(self):
         code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=('v', 0, [4, 4], False))
         self.assertIn("cod2_abi_class<decltype(MSG_WriteByte(std::declval<msg_t*>(), std::declval<int>()))>() == 'v'", code)

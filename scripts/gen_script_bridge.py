@@ -18,7 +18,7 @@ with it on (COD2_PLUS_SCRIPT, COD2_PLUS_SERVER), this writes:
 
 Return types come from decltype on the real CoD2rev-Plus declarations, so the
 compiler checks every thunk against them. When test/<module>_abi.txt exists
-(scripts/engine_abi.py), each thunk also asserts that the return class and
+(format in scripts/engine_abi.py), each thunk also asserts that the return class and
 size and the stack slot of every parameter match the engine's definition,
 and widens an integer return the two sides give different sizes.
 --names prints the imports and exports instead, one per line.
@@ -705,6 +705,20 @@ def group_names(module, builds):
     return out
 
 
+def abi_gaps(names, abi32, abi64):
+    """The crossing names a module's ABI files leave out, with the architectures
+    they lack: their thunks would get no asserts there. A module without the
+    files (abi32 empty) has none."""
+    if not abi32:
+        return []
+    gaps = []
+    for name in sorted(names):
+        lacking = [arch for arch, abi in (('x86', abi32), ('x64', abi64)) if name not in abi]
+        if lacking:
+            gaps.append(f'{name} ({", ".join(lacking)})')
+    return gaps
+
+
 def crossing_names(module, build):
     """(import names, export names) of a module, for scripts/engine_abi.py."""
     _, exports, imports, interface = read_module(module, build)
@@ -736,6 +750,10 @@ def main():
     import engine_abi
     abi32, abi64 = engine_abi.load(args.module), engine_abi.load(args.module, 'x64')
     abi = {n: ArchAbi(abi32.get(n), abi64.get(n)) for n in set(abi32) | set(abi64)} if abi64 else abi32
+    gaps = abi_gaps(set(imports) | set(crossing_names(args.module, args.build)[1]), abi32, abi64)
+    if gaps:
+        print(f'no line in test/{args.module}_abi*.txt (the engine side\'s 1.3 ABI, kept by hand) for: ' + ', '.join(gaps))
+        return 1
 
     out = [cfg['header']]
     missing = []
