@@ -202,7 +202,7 @@ python3 -m unittest discover -s test
 
 | Path | Contents |
 | --- | --- |
-| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), server (`server_mp`), game (`game_mp`, `bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`), animations (`xanim`) and the reconstructed script VM (`script`). On Linux and in the MinGW dedicated server, `server_mp`, `game_mp`, `game` and the core OpenCoD2-Plus Server replaces are left out (`test/plus_replaces.txt`); the MinGW client leaves out `server_mp`, `game_mp`, `game` and the collision. |
+| `src/PC` | The reconstructed engine: client (`client_mp`, `cgame_mp`, `ui_mp`), cgame's bgame (`bgame`), renderer (`gfx_d3d`), shared code (`qcommon`, `universal`) and animations (`xanim`). The server, game, script VM and collision are OpenCoD2-Plus Server's in every build; the dedicated servers also leave out the core it replaces (`test/plus_replaces.txt`). |
 | `src/Mac` | The Mac port's platform layer that the reconstruction came from: OpenGL behind a Direct3D interface, and input. |
 | `src/snd_sdl` | Our own sound engine on SDL2, behind Miles' `AIL_*` calls: the sound of both clients, without `mss32.dll`. |
 | `src/script` | OpenCoD2-Plus Server's script VM, copied unchanged, with the headers it needs in `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` and `src/libcod`. |

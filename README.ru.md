@@ -200,7 +200,7 @@ python3 -m unittest discover -s test
 
 | Путь | Содержимое |
 | --- | --- |
-| `src/PC` | Реконструированный движок: клиент (`client_mp`, `cgame_mp`, `ui_mp`), сервер (`server_mp`), игра (`game_mp`, `bgame`), рендерер (`gfx_d3d`), общий код (`qcommon`, `universal`), анимации (`xanim`) и реконструированная виртуальная машина скриптов (`script`). В Linux и в выделенном сервере MinGW `server_mp`, `game_mp`, `game` и ядро, которое заменяет OpenCoD2-Plus Server, не используются (`test/plus_replaces.txt`); клиент MinGW не использует `server_mp`, `game_mp`, `game` и столкновения движка. |
+| `src/PC` | Реконструированный движок: клиент (`client_mp`, `cgame_mp`, `ui_mp`), bgame для cgame (`bgame`), рендерер (`gfx_d3d`), общий код (`qcommon`, `universal`) и анимации (`xanim`). Сервер, игра, виртуальная машина скриптов и столкновения во всех сборках — из OpenCoD2-Plus Server; выделенные серверы также не используют ядро, которое он заменяет (`test/plus_replaces.txt`). |
 | `src/Mac` | Платформенный слой порта для Mac, из которого получена реконструкция: OpenGL за интерфейсом Direct3D и ввод. |
 | `src/snd_sdl` | Наш собственный звуковой движок на SDL2 за вызовами `AIL_*` из Miles: звук обоих клиентов, без `mss32.dll`. |
 | `src/script` | Виртуальная машина скриптов OpenCoD2-Plus Server, скопированная без изменений, с нужными ей заголовками в `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` и `src/libcod`. |

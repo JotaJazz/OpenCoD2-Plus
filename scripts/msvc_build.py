@@ -24,18 +24,30 @@ def win_path(path):
     return subprocess.run(['wslpath', '-w', path], check=True, capture_output=True, text=True).stdout.strip()
 
 
+MARKER = '.cod2_msvc_mirror'
+
+
+def claim_mirror(src):
+    """src is this script's copy: new or empty (then marked), or marked before. Anything
+    else (a mistyped --src: a game folder, a drive) stops the build before sync prunes it."""
+    if os.path.isdir(src) and os.listdir(src) and not os.path.exists(os.path.join(src, MARKER)):
+        sys.exit(f'{src} is not a copy msvc_build.py made (no {MARKER}): refusing to mirror into it')
+    os.makedirs(src, exist_ok=True)
+    open(os.path.join(src, MARKER), 'a').close()
+
+
 def sync(src):
     """Mirrors the working tree (tracked and untracked, not ignored) to src; files gone here go there too."""
     files = subprocess.run(['git', 'ls-files', '-co', '--exclude-standard', '-z'], cwd=ROOT, check=True,
                            capture_output=True).stdout.decode().split('\0')
     files = [f for f in files if f and os.path.exists(os.path.join(ROOT, f))]
-    os.makedirs(src, exist_ok=True)
+    claim_mirror(src)
     # --checksum: the Windows drive's mtimes are not reliable through drvfs
     subprocess.run(['rsync', '-a', '--checksum', '--from0', '--files-from=-', ROOT + '/', src + '/'],
                    input='\0'.join(files).encode(), check=True)
     # what the tree no longer has goes from the copy, but for its own build/ and
     # third_party/ (the SDL2 VC package)
-    wanted = set(files)
+    wanted = set(files) | {MARKER}
     for top in os.listdir(src):
         if top in ('build', 'third_party'):
             continue

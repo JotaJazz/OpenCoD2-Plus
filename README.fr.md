@@ -200,7 +200,7 @@ python3 -m unittest discover -s test
 
 | Chemin | Contenu |
 | --- | --- |
-| `src/PC` | Le moteur reconstruit : client (`client_mp`, `cgame_mp`, `ui_mp`), serveur (`server_mp`), jeu (`game_mp`, `bgame`), moteur de rendu (`gfx_d3d`), code commun (`qcommon`, `universal`), animations (`xanim`) et la machine virtuelle de scripts reconstruite (`script`). Sous Linux et dans le serveur dédié MinGW, `server_mp`, `game_mp`, `game` et le noyau que remplace OpenCoD2-Plus Server sont laissés de côté (`test/plus_replaces.txt`) ; le client MinGW laisse de côté `server_mp`, `game_mp`, `game` et la collision. |
+| `src/PC` | Le moteur reconstruit : client (`client_mp`, `cgame_mp`, `ui_mp`), le bgame de cgame (`bgame`), moteur de rendu (`gfx_d3d`), code commun (`qcommon`, `universal`) et animations (`xanim`). Le serveur, le jeu, la machine virtuelle de scripts et la collision sont ceux d'OpenCoD2-Plus Server dans toutes les compilations ; les serveurs dédiés laissent aussi de côté le noyau qu'il remplace (`test/plus_replaces.txt`). |
 | `src/Mac` | La couche de plateforme du portage Mac dont provient la reconstruction : OpenGL derrière une interface Direct3D, et entrées. |
 | `src/snd_sdl` | Notre propre moteur audio sur SDL2, derrière les appels `AIL_*` de Miles : le son des deux clients, sans `mss32.dll`. |
 | `src/script` | La machine virtuelle de scripts de OpenCoD2-Plus Server, copiée sans modification, avec les en-têtes dont elle a besoin dans `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` et `src/libcod`. |

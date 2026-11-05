@@ -34,6 +34,12 @@ def missing(log):
     return out
 
 
+def kill_command(win_exe):
+    """Ends the copy under test only: the user may be playing another cod2_win32.exe."""
+    return ['powershell.exe', '-NoProfile', '-Command',
+            f"Get-Process | Where-Object {{ $_.Path -eq '{win_exe}' }} | Stop-Process -Force"]
+
+
 def win(path):
     return subprocess.run(['wslpath', '-w', path], check=True, capture_output=True, text=True).stdout.strip()
 
@@ -74,7 +80,7 @@ def main():
             if proc.poll() is not None:
                 gone = [f'the game kept running {args.linger} s in the map (it exited with {proc.returncode})']
     finally:
-        subprocess.run(['taskkill.exe', '/IM', os.path.basename(exe), '/F'], capture_output=True)
+        subprocess.run(kill_command(win(os.path.join(run_dir, os.path.basename(exe)))), capture_output=True)
         proc.wait(timeout=30)
     crashes = glob.glob(os.path.join(run_dir, 'cod2_crash_*.txt'))
     if crashes and not gone:

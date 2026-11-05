@@ -38,7 +38,7 @@ cod2rad/             upstream tool (not built by default)
 | `cod2_linux_vk` | Linux, `-DCOD2_LINUX_DXVK=ON` | works; real Direct3D 9 on DXVK native and vkd3d-shader (the game's shaders) |
 | `cod2_win32.exe` | MinGW | works; real Direct3D 9; plays on public 1.3 servers |
 | `cod2_win32.exe` | MSVC ABI (clang, lld-link) | builds (`build_check.py msvc-client`); plays a local game on Windows (`msvc_run_test.py`); the bridge and libcod as MinGW's |
-| `cod2` (web) | Emscripten | upstream state |
+| `cod2` (web) | Emscripten (`third_party/emsdk`) | builds on the bridge (`build_check.py web`, no libcod); 65 symbols link undefined, `CG_Init` among them; not run in a browser |
 
 ## Subsystems
 

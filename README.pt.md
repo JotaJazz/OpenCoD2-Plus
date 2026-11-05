@@ -200,7 +200,7 @@ python3 -m unittest discover -s test
 
 | Caminho | Conteúdo |
 | --- | --- |
-| `src/PC` | O motor reconstruído: cliente (`client_mp`, `cgame_mp`, `ui_mp`), servidor (`server_mp`), jogo (`game_mp`, `bgame`), renderizador (`gfx_d3d`), código comum (`qcommon`, `universal`), animações (`xanim`) e a VM de scripts reconstruída (`script`). No Linux e no servidor dedicado MinGW ficam de fora `server_mp`, `game_mp`, `game` e o núcleo que o OpenCoD2-Plus Server substitui (`test/plus_replaces.txt`); o cliente MinGW deixa de fora `server_mp`, `game_mp`, `game` e a colisão. |
+| `src/PC` | O motor reconstruído: cliente (`client_mp`, `cgame_mp`, `ui_mp`), o bgame do cgame (`bgame`), renderizador (`gfx_d3d`), código comum (`qcommon`, `universal`) e animações (`xanim`). O servidor, o jogo, a VM de scripts e a colisão são os do OpenCoD2-Plus Server em todas as compilações; os servidores dedicados deixam de fora também o núcleo que ele substitui (`test/plus_replaces.txt`). |
 | `src/Mac` | A camada de plataforma do port para Mac de onde veio a reconstrução: OpenGL por trás de uma interface Direct3D, e entrada. |
 | `src/snd_sdl` | O nosso motor de som sobre SDL2, por trás das chamadas `AIL_*` do Miles: o som dos dois clientes, sem `mss32.dll`. |
 | `src/script` | A VM de scripts do OpenCoD2-Plus Server, copiada sem alterações, com os cabeçalhos de que precisa em `src/qcommon`, `src/universal`, `src/game`, `src/bgame`, `src/server`, `src/xanim`, `src/zlib`, `src/misc` e `src/libcod`. |
