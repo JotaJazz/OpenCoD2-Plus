@@ -11,7 +11,7 @@ Stable identity of the project. Changes rarely; live state is in
 | What | reconstruction of Call of Duty 2 multiplayer (versions 1.3 and 1.0): client and dedicated server |
 | Fork of | opencod2/opencod2 (engine reconstruction) |
 | Integrates | OpenCoD2-Plus Server (server, script VM, game, core, xanim, libcod), vendored unchanged |
-| Platforms | Linux (32-bit x86), Windows (MinGW cross-compiled; MSVC native), web (Emscripten), x64 (in progress) |
+| Platforms | Linux (32-bit x86), Windows (MinGW cross-compiled; MSVC ABI with clang), web (Emscripten), x64 (in progress) |
 | Languages | C sources compiled as C++ (gnu++17), OpenCoD2-Plus Server C++, Python 3 scripts, CMake |
 | Game data | not included; users supply their own Call of Duty 2 |
 

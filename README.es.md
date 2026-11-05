@@ -116,21 +116,17 @@ cmake --build build-win32 -j
 Añade `-DCOD2_WIN32_CLIENT=ON` para el cliente, que dibuja con Direct3D 9 y los shaders del juego (`-DCOD2_WIN32_REAL_D3D9=OFF`: el dispositivo GL) (pon las bibliotecas estáticas de SDL2 en `src/win32/sdl2/lib/`; el servidor dedicado no necesita ninguna). Como el cliente de Linux, corre sus partidas locales sobre el servidor, el game y el bgame de OpenCoD2-Plus Server, y traza con su colisión. Sin Windows, `scripts/portable_wine.sh DIR` instala un Wine de 32 bits sin root (Debian o Ubuntu con i386 habilitado) y escribe `DIR/wine.sh` para correrlo; `COD2_CONSOLE_STDOUT=1` copia la consola a stdout, y `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` hace que cree una partida a la que se une el cliente de Linux.
 
 <details>
-<summary><b>Windows (MSVC, nativo)</b></summary>
+<summary><b>Windows (ABI de MSVC, nativo)</b></summary>
 
-Una compilación nativa del cliente SDL2/GL completo con Visual Studio 2022 o más nuevo y su toolset **x86**. Configura y compila desde un "x86 Native Tools for VS" command prompt:
+El cliente en la ABI de MSVC: clang para `i686-pc-windows-msvc`, lld-link, el runtime de MSVC y el SDK de Windows, por la misma rama de CMake que MinGW (con el puente, OpenCoD2-Plus Server y libcod). Necesita Visual Studio Build Tools 2019 o posterior con el toolset x86 y el componente "C++ Clang tools" (o cualquier clang reciente con lld-link: `-DCOD2_CLANG_DIR=<su bin>`), y el paquete de desarrollo VC de SDL (`SDL2-devel-<versión>-VC.zip`) en `third_party/SDL2-<versión>/`. Desde un símbolo del sistema "x86 Native Tools for VS":
 
 ```bat
 cmake --preset msvc-client
-cmake --build build/msvc --target cod2_win32
-:: -> build/msvc/cod2_win32.exe
-
-cmake --preset msvc-client-release
-cmake --build build/msvc-release --target cod2_win32
-:: -> build/msvc-release/cod2_win32.exe   (/O2)
+cmake --build --preset msvc-client
+:: -> build/msvc/cod2_win32.exe + third_party/SDL2-<version>/lib/x86/SDL2.dll
 ```
 
-Esta compilación todavía compila C y usa la máquina virtual de scripts reconstruida (`src/PC/script`). SDL2 lo pones tú: deja el paquete de desarrollo de SDL2 para MSVC de 32 bits en `third_party/SDL2-<versión>/` y copia `SDL2.dll` junto al ejecutable. Con `-DCOD2_SDL2_STATIC=ON` enlaza un SDL2 estático compilado por ti (`SDL2-static.lib`, en la misma configuración que el motor) y el runtime de C estático, en un solo ejecutable que no necesita ninguna DLL; compila SDL2 con `-DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_RENDER=OFF -DSDL_FORCE_STATIC_VCRT=ON`. Release aplica `/O2` a código fiel al descompilador que está menos probado que la compilación Debug: si algo falla solo en Release, sospecha del optimizador.
+Copia `SDL2.dll` junto al ejecutable. Desde WSL, `python3 scripts/build_check.py msvc-client` lo compila en una copia del árbol en una unidad de Windows (`scripts/msvc_build.py`), y `python3 scripts/msvc_run_test.py --exe <exe>` juega una partida local con él.
 
 </details>
 
@@ -141,16 +137,15 @@ Esta compilación todavía compila C y usa la máquina virtual de scripts recons
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compila el motor como C++ en Linux y MinGW. `OFF` compila C. |
 | `COD2_CXX_DIRS` | `""` | Con `COD2_CXX_ALL=OFF`, los módulos o archivos de `src/` que se siguen compilando como C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | La máquina virtual de scripts de OpenCoD2-Plus Server (`src/script`) en Linux y MinGW. `OFF` usa la reconstruida (`src/PC/script`), como MSVC, la compilación web y x64. |
+| `COD2_PLUS_SCRIPT` | `ON` | La máquina virtual de scripts de OpenCoD2-Plus Server (`src/script`) en Linux y MinGW. `OFF` usa la reconstruida (`src/PC/script`), como la compilación web. |
 | `COD2_PLUS_SERVER` | `ON` | El servidor, el game, el bgame y el núcleo de OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` o `src/win32`) en el servidor dedicado, en Linux y MinGW; necesita `COD2_PLUS_SCRIPT`. `OFF` usa los reconstruidos (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | El servidor, el game, el bgame y la colisión de OpenCoD2-Plus Server para las partidas locales del cliente (Linux, y MinGW con `COD2_WIN32_CLIENT`), sobre el núcleo del motor; necesita `COD2_PLUS_SERVER`. `OFF` deja `src/PC/server_mp`, como todavía hacen MSVC, la compilación web y x64. |
+| `COD2_PLUS_CLIENT_SERVER` | `ON` | El servidor, el game, el bgame y la colisión de OpenCoD2-Plus Server para las partidas locales del cliente (Linux, y MinGW con `COD2_WIN32_CLIENT`), sobre el núcleo del motor; necesita `COD2_PLUS_SERVER`. `OFF` deja `src/PC/server_mp`, como todavía hace la compilación web. |
 | `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) en el servidor dedicado y, con `COD2_PLUS_CLIENT_SERVER`, en las partidas locales del cliente, con sus módulos salvo MySQL; necesita `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Interruptores de funciones; `-DCOD2_PATCH_10` compila la versión 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | Las compilaciones 1.3 hablan CoD2 1.3 Plus (el `make PLUS=1` de OpenCoD2-Plus Server): sus servidores solo aceptan el cliente Plus. `OFF` compila 1.3 normal, con servidores a los que entra cualquier jugador de 1.3. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: el cliente en vez del servidor dedicado. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | Cliente MinGW: Direct3D 9 real y los shaders del juego (d3dx9 del sistema); `OFF` mantiene el dispositivo GL. |
-| `COD2_WIN_MSVC` | `OFF` | Compilación nativa con MSVC (la activan los presets `msvc-client`). |
-| `COD2_SDL2_STATIC` | `OFF` | MSVC: un solo ejecutable independiente con SDL2 y runtime de C estáticos. |
+| `COD2_MSVC_ABI` | `OFF` | Lo fija `cmake/toolchain-msvc-clang.cmake`: la rama de Windows en la ABI de MSVC. |
 | `COD2_DEBUG` | `OFF` | `-O0` y sin endurecimiento, para depurar. |
 | `COD2_X64` | `OFF` | Objetivo x86_64: el cliente Linux (antes `scripts/linux_x64_deps.sh`) y el de Windows (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) cargan mapas; todavía no son iguales a los de 32 bits. |
 

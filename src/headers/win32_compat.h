@@ -18,7 +18,7 @@ extern "C" {
 #include <io.h>
 #include <direct.h>
 
-#if defined(_MSC_VER) && defined(__clang__) && !defined(__PRFCHWINTRIN_H)
+#if defined(_MSC_VER) && !defined(__PRFCHWINTRIN_H)
 #define __PRFCHWINTRIN_H   /* SDL 2.30's SDL_endian.h defines _m_prefetch behind this guard; recent clang has it built in */
 #endif
 
@@ -38,25 +38,13 @@ extern "C" {
 #define popen _popen
 #define pclose _pclose
 
-/* cl ignores GCC's __attribute__((constructor)). COD2_CONSTRUCTOR(fn){..} registers fn in the CRT's .CRT$XCU init
- * array so it runs before main, as the GCC constructor would.
- *   usage: COD2_CONSTRUCTOR(init_rune_locale) { ... }   (replaces the attribute) */
-#ifdef __clang__
-/* clang drops the unused static below; its own constructor attribute registers fn */
+/* COD2_CONSTRUCTOR(fn) { ... }: fn runs before main (the engine's MSVC-ABI
+ * spelling of __attribute__((constructor))). */
 #define COD2_CONSTRUCTOR(fn) static void __attribute__((constructor)) fn(void)
-#else
-#pragma section(".CRT$XCU", read)   /* declare the CRT init array section once */
-#define COD2_CONSTRUCTOR(fn)                                                 \
-    static void fn(void);                                                   \
-    __declspec(allocate(".CRT$XCU")) static void (*fn##__crtreg)(void) = fn;\
-    static void fn(void)
-#endif
 
-/* COD2_ALT(lhs, rhs): emit a linker /alternatename directive from UNDECORATED C
- * symbol names. x86 cl prefixes C symbols with one leading '_'; x64 cl uses no
- * prefix. The alias-seam lists (msvc_alias_pragmas.h, msvc_seam_aliases.h,
- * msvc_link_glue.c) pass bare names so this adds the right decoration per arch.
- * (Adjacent string-literal concatenation inside __pragma is well-defined.) */
+/* COD2_ALT(lhs, rhs): lld-link's /alternatename from undecorated C names (x86
+ * prefixes C symbols with '_', x64 does not): the MSVC-ABI form of the GAS
+ * .set aliases, which COFF cannot point at another object's symbol. */
 #if defined(_M_X64) || defined(_M_ARM64)
 #define COD2_ALT_U_ ""
 #else

@@ -116,21 +116,17 @@ cmake --build build-win32 -j
 Ajoutez `-DCOD2_WIN32_CLIENT=ON` pour le client, qui dessine avec Direct3D 9 et les shaders du jeu (`-DCOD2_WIN32_REAL_D3D9=OFF` : le périphérique GL) (fournissez les bibliothèques statiques de SDL2 dans `src/win32/sdl2/lib/` ; le serveur dédié n'en a pas besoin). Comme le client Linux, il fait tourner ses parties locales sur le serveur, le game et le bgame de OpenCoD2-Plus Server, et trace avec sa collision. Sans Windows, `scripts/portable_wine.sh DIR` installe un Wine 32 bits sans root (Debian ou Ubuntu avec i386 activé) et écrit `DIR/wine.sh` pour le lancer ; `COD2_CONSOLE_STDOUT=1` copie la console sur stdout, et `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` lui fait héberger une partie que rejoint le client Linux.
 
 <details>
-<summary><b>Windows (MSVC, natif)</b></summary>
+<summary><b>Windows (ABI MSVC, natif)</b></summary>
 
-Une compilation native du client SDL2/GL complet avec Visual Studio 2022 ou plus récent et son jeu d'outils **x86**. Configurez et compilez depuis une invite de commandes « x86 Native Tools for VS » :
+Le client sur l'ABI MSVC : clang pour `i686-pc-windows-msvc`, lld-link, le runtime MSVC et le SDK Windows, par la même branche CMake que MinGW (avec le pont, OpenCoD2-Plus Server et libcod). Il faut Visual Studio Build Tools 2019 ou plus récent avec le toolset x86 et le composant "C++ Clang tools" (ou tout clang récent avec lld-link : `-DCOD2_CLANG_DIR=<son bin>`), et le paquet de développement VC de SDL (`SDL2-devel-<version>-VC.zip`) dans `third_party/SDL2-<version>/`. Depuis une invite "x86 Native Tools for VS" :
 
 ```bat
 cmake --preset msvc-client
-cmake --build build/msvc --target cod2_win32
-:: -> build/msvc/cod2_win32.exe
-
-cmake --preset msvc-client-release
-cmake --build build/msvc-release --target cod2_win32
-:: -> build/msvc-release/cod2_win32.exe   (/O2)
+cmake --build --preset msvc-client
+:: -> build/msvc/cod2_win32.exe + third_party/SDL2-<version>/lib/x86/SDL2.dll
 ```
 
-Cette compilation compile encore en C et utilise la machine virtuelle de scripts reconstruite (`src/PC/script`). SDL2 est à fournir par vous : placez le paquet de développement SDL2 MSVC 32 bits dans `third_party/SDL2-<version>/` et copiez `SDL2.dll` à côté de l'exécutable. Avec `-DCOD2_SDL2_STATIC=ON`, elle lie une SDL2 statique que vous compilez vous-même (`SDL2-static.lib`, même configuration que le moteur) et le runtime C statique, en un seul exécutable qui n'a besoin d'aucune DLL ; compilez SDL2 avec `-DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_RENDER=OFF -DSDL_FORCE_STATIC_VCRT=ON`. Release applique `/O2` à du code fidèle au décompilateur et moins testé que la compilation Debug : si quelque chose ne se comporte mal qu'en Release, soupçonnez l'optimiseur.
+Copie `SDL2.dll` à côté de l'exécutable. Sous WSL, `python3 scripts/build_check.py msvc-client` le compile sur une copie de l'arborescence sur un disque Windows (`scripts/msvc_build.py`), et `python3 scripts/msvc_run_test.py --exe <exe>` y joue une partie locale.
 
 </details>
 
@@ -141,16 +137,15 @@ Cette compilation compile encore en C et utilise la machine virtuelle de scripts
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compile le moteur en C++ sous Linux et MinGW. `OFF` compile en C. |
 | `COD2_CXX_DIRS` | `""` | Avec `COD2_CXX_ALL=OFF`, les modules ou fichiers de `src/` encore compilés en C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | La machine virtuelle de scripts de OpenCoD2-Plus Server (`src/script`) sous Linux et MinGW. `OFF` utilise celle reconstruite (`src/PC/script`), comme le font MSVC, la compilation web et x64. |
+| `COD2_PLUS_SCRIPT` | `ON` | La machine virtuelle de scripts de OpenCoD2-Plus Server (`src/script`) sous Linux et MinGW. `OFF` utilise celle reconstruite (`src/PC/script`), comme le fait la compilation web. |
 | `COD2_PLUS_SERVER` | `ON` | Le serveur, le game, le bgame et le noyau de OpenCoD2-Plus Server (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` ou `src/win32`) dans le serveur dédié, sous Linux et MinGW ; nécessite `COD2_PLUS_SCRIPT`. `OFF` utilise ceux reconstruits (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | Le serveur, le game, le bgame et la collision de OpenCoD2-Plus Server pour les parties locales du client (Linux, et MinGW avec `COD2_WIN32_CLIENT`), sur le noyau du moteur ; nécessite `COD2_PLUS_SERVER`. `OFF` garde `src/PC/server_mp`, comme le font encore MSVC, la version web et x64. |
+| `COD2_PLUS_CLIENT_SERVER` | `ON` | Le serveur, le game, le bgame et la collision de OpenCoD2-Plus Server pour les parties locales du client (Linux, et MinGW avec `COD2_WIN32_CLIENT`), sur le noyau du moteur ; nécessite `COD2_PLUS_SERVER`. `OFF` garde `src/PC/server_mp`, comme le fait encore la version web. |
 | `COD2_PLUS_LIBCOD` | `ON` | La libcod de OpenCoD2-Plus Server (`src/libcod`) dans le serveur dédié et, avec `COD2_PLUS_CLIENT_SERVER`, dans les parties locales du client, avec ses modules sauf MySQL ; nécessite `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Options de fonctionnalités ; `-DCOD2_PATCH_10` compile la version 1.0. |
 | `COD2_PLUS_PROTOCOL` | `ON` | Les compilations 1.3 parlent CoD2 1.3 Plus (le `make PLUS=1` d'OpenCoD2-Plus Server) : leurs serveurs n'acceptent que le client Plus. `OFF` compile la 1.3 standard, avec des serveurs que tout joueur 1.3 peut rejoindre. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW : le client au lieu du serveur dédié. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | Client MinGW : vrai Direct3D 9 et les shaders du jeu (d3dx9 du système) ; `OFF` garde le périphérique GL. |
-| `COD2_WIN_MSVC` | `OFF` | Compilation MSVC native (activée par les presets `msvc-client`). |
-| `COD2_SDL2_STATIC` | `OFF` | MSVC : un seul exécutable autonome avec SDL2 et le runtime C statiques. |
+| `COD2_MSVC_ABI` | `OFF` | Défini par `cmake/toolchain-msvc-clang.cmake` : la branche Windows sur l'ABI MSVC. |
 | `COD2_DEBUG` | `OFF` | `-O0` et sans durcissement, pour le débogage. |
 | `COD2_X64` | `OFF` | Cible x86_64 : le client Linux (d'abord `scripts/linux_x64_deps.sh`) et le client Windows (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) chargent les cartes ; pas encore identiques aux clients 32 bits. |
 

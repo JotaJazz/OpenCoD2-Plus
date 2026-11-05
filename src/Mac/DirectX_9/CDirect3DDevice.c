@@ -25,17 +25,6 @@ extern float g_scale2;
 extern bool g_InhibitCopy;
 extern bool g_NoTextureID;
 
-#if defined(_MSC_VER) && !defined(__clang__)
-/* These C names alias the C++ static-member symbols (defined in the data blob /
- * the reconstructed class). cl has no symbol-rename; bind via /alternatename.
- * x86: a C identifier `__ZN..` emits MSVC symbol `___ZN..` (one extra '_'). */
-extern bool CDirect3DDevice_mNeedsVertexShaderValidation;
-extern bool CDirect3DDevice_mNeedsTransformationValidation;
-extern bool CDirect3DDevice_mNeedsRasterizationValidation;
-COD2_ALT("CDirect3DDevice_mNeedsVertexShaderValidation", "__ZN15CDirect3DDevice28mNeedsVertexShaderValidationE")
-COD2_ALT("CDirect3DDevice_mNeedsTransformationValidation", "__ZN15CDirect3DDevice30mNeedsTransformationValidationE")
-COD2_ALT("CDirect3DDevice_mNeedsRasterizationValidation", "__ZN15CDirect3DDevice29mNeedsRasterizationValidationE")
-#else
 #if defined(_WIN32) && !defined(_WIN64)  /* PE32 decorates C names; PE x64 does not */
 #define COD2_COFF_ASM_PREFIX "_"
 #else
@@ -45,7 +34,6 @@ extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsVertexS
 extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsTransformationValidation __asm__(COD2_COFF_ASM_PREFIX "__ZN15CDirect3DDevice30mNeedsTransformationValidationE");
 extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsRasterizationValidation __asm__(COD2_COFF_ASM_PREFIX "__ZN15CDirect3DDevice29mNeedsRasterizationValidationE");
 #undef COD2_COFF_ASM_PREFIX
-#endif
 
 static const float GaussianBlurWeights[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 static float sPointScale[3] = { 0.0f, 0.0f, 0.0f };

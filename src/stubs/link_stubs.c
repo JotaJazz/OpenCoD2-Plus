@@ -831,7 +831,7 @@ void CDirect3DDevice_CreateAndSetFixedFunctionVAO(void)
 }
 #undef VAO_X16
 
-#if defined(_MSC_VER) && defined(__clang__)
+#if defined(_MSC_VER)
 /* the MSVC ABI has no Itanium exceptions; only the Mac port's Apple events throw */
 void *__cxa_allocate_exception(unsigned int thrown_size) { (void)thrown_size; return 0; }
 void __cxa_throw(void *thrown, void *tinfo, void (*dest)(void *)) { (void)thrown; (void)tinfo; (void)dest; abort(); }

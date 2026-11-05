@@ -7,8 +7,8 @@ a line wrong.
 
 ```
 AGENTS.md            entry point for agents
-CMakeLists.txt       every build (Linux, MinGW, MSVC, web, x64)
-cmake/               MinGW toolchain, MSVC settings
+CMakeLists.txt       every build (Linux, MinGW, MSVC ABI, web, x64)
+cmake/               MinGW and MSVC-ABI (clang) toolchains
 docs/                documentation (this layer: docs/ai/)
 mods/bots/           libcod bots mod (vendored)
 scripts/             build checks, generators, tests (Python)
@@ -22,7 +22,7 @@ src/headers/         shared headers, layout pins
 src/snd_sdl/         our sound engine on SDL2, behind the AIL_* calls
 src/Mac/, src/stubs/ GL device and platform glue
 test/                interface/ABI lists, allowlists, expected failures, unit tests
-third_party/         SDL2 for MSVC (user supplied)
+third_party/         dependencies fetched by scripts, SDL2's VC package (user supplied)
 cod2rad/             upstream tool (not built by default)
 ```
 
@@ -37,7 +37,7 @@ cod2rad/             upstream tool (not built by default)
 | `cod2_win32.exe` (x86_64) | MinGW-w64, `cmake/toolchain-mingw64.cmake` | loads a map under a 64-bit Wine; real Direct3D 9; no libcod; not yet equal to the 32-bit client |
 | `cod2_linux_vk` | Linux, `-DCOD2_LINUX_DXVK=ON` | works; real Direct3D 9 on DXVK native and vkd3d-shader (the game's shaders) |
 | `cod2_win32.exe` | MinGW | works; real Direct3D 9; plays on public 1.3 servers |
-| `cod2_win32.exe` | MSVC | builds; not checked by scripts |
+| `cod2_win32.exe` | MSVC ABI (clang, lld-link) | builds (`build_check.py msvc-client`); plays a local game on Windows (`msvc_run_test.py`); the bridge and libcod as MinGW's |
 | `cod2` (web) | Emscripten | upstream state |
 
 ## Subsystems

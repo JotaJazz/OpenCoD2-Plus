@@ -19,11 +19,6 @@
 # =============================================================================
 cmake_minimum_required(VERSION 3.16)
 
-# Native-Windows MSVC client build (cl.exe). Set by the msvc-client preset;
-# selects the cmake/win32-msvc.cmake path and suppresses the GCC-only -m32 seed
-# and the global GAS ASM language (MSVC's blobs become C, not MASM).
-option(COD2_WIN_MSVC "Native Windows build with MSVC/cl instead of MinGW" OFF)
-
 # x86_64 (LP64) target. OFF (default) = the original ILP32/x86 reconstruction
 # (4-byte pointers, the committed 32-bit data blobs). ON is an IN-PROGRESS port:
 # it suppresses the -m32 seed and the 32-bit-only asserts/lib paths so an x64
@@ -34,20 +29,15 @@ option(COD2_X64 "Target x86_64/LP64 instead of the original ILP32/x86 (port in p
 
 # -m32 must be in effect when the native compiler is probed (multilib link
 # tests). Seed it ONLY for the plain native 32-bit build — the MinGW (i686) and
-# Emscripten toolchains are 32-bit/wasm already and must not see -m32, MSVC
-# rejects it outright, and the x64 port wants the native 64-bit ABI.
-if(NOT CMAKE_TOOLCHAIN_FILE AND NOT COD2_WIN_MSVC AND NOT COD2_X64)
+# Emscripten toolchains are 32-bit/wasm already and must not see -m32, and the
+# x64 port wants the native 64-bit ABI.
+if(NOT CMAKE_TOOLCHAIN_FILE AND NOT COD2_X64)
   set(CMAKE_C_FLAGS_INIT   "-m32")
   set(CMAKE_CXX_FLAGS_INIT "-m32")
   set(CMAKE_ASM_FLAGS_INIT "-m32")
 endif()
 
-# The GAS .S blobs are a GNU-toolchain concern; the MSVC path uses C data.
-if(COD2_WIN_MSVC)
-  project(cod2 LANGUAGES C CXX)
-else()
-  project(cod2 LANGUAGES C CXX ASM)
-endif()
+project(cod2 LANGUAGES C CXX ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
@@ -76,16 +66,15 @@ set(COD2_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 # stay C.
 set(COD2_CXX_DIRS "" CACHE STRING "With COD2_CXX_ALL=OFF: src/ subdirectories or files still compiled as C++, e.g. PC/qcommon;PC/snd.c")
 # Linux and MinGW compile the engine as C++ (Phase 0 of the unification plan);
-# OFF goes back to C, where COD2_CXX_DIRS can still pick single modules. The
-# MSVC path (cmake/win32-msvc.cmake) has its own source list and stays C.
+# OFF goes back to C, where COD2_CXX_DIRS can still pick single modules.
 option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
 # CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on the Linux and MinGW builds (32 and 64-bit); MSVC
-# and the web build keep src/PC/script for now. PROTOCOL_VERSION follows the game version.
+# reconstruction in src/PC/script, on the Linux and Windows builds (32 and 64-bit); the
+# web build keeps src/PC/script for now. PROTOCOL_VERSION follows the game version.
 option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(COD2_WIN_MSVC OR EMSCRIPTEN)
+if(EMSCRIPTEN)
   set(COD2_PLUS_SCRIPT OFF)
 endif()
 if(COD2_PLUS_SCRIPT)
@@ -151,8 +140,8 @@ option(COD2_PLUS_PROTOCOL "1.3 builds speak CoD2 1.3 Plus (OFF: stock 1.3)" ON)
 if(COD2_PROTOCOL EQUAL 118 AND COD2_PLUS_PROTOCOL)
   add_compile_definitions(COD2_PLUS)
 endif()
-if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))
-  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web and MSVC builds")
+if(COD2_FEATURE_CFLAGS AND EMSCRIPTEN)
+  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web build")
 endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
@@ -395,14 +384,6 @@ add_custom_command(TARGET cod2 POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${COD2_SRC_DIR}/web/cod2_fs.js ${CMAKE_BINARY_DIR}/cod2_fs.js)
 
 # =============================================================================
-elseif(WIN32 AND MSVC AND NOT COD2_MSVC_ABI)
-# ----------------------------------------------------------------------------
-# WINDOWS / MSVC (cl.exe) -- additive native-Windows client build.
-# Self-contained in cmake/win32-msvc.cmake so the MinGW path below is untouched.
-# ----------------------------------------------------------------------------
-include(${CMAKE_SOURCE_DIR}/cmake/win32-msvc.cmake)
-
-# =============================================================================
 elseif(WIN32)
 # ----------------------------------------------------------------------------
 # WINDOWS (MinGW cross-compile: cod2_win32_ded.exe / cod2_win32.exe)
@@ -533,7 +514,7 @@ file(GLOB_RECURSE W_WIN_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${CO
 file(GLOB         W_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WIN_C ${W_PC_C} ${W_MAC_C} ${W_STUBS_C} ${W_WIN_C} ${W_ROOT_C})
 list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
-# the MSVC build's shims (its own dirent, SDL2 stubs, link glue): with MinGW
+# the MSVC-ABI build's POSIX shims (its own dirent, pthreads): with MinGW
 # their readdir replaced the C runtime's, whose struct dirent differs, so
 # every file name came 8 bytes short and no .iwd was found
 list(FILTER WIN_C EXCLUDE REGEX "^src/win32/shims-msvc/")

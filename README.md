@@ -118,21 +118,17 @@ cmake --build build-win32 -j
 Add `-DCOD2_WIN32_CLIENT=ON` for the client, which draws with Direct3D 9 and the game's shaders (`-DCOD2_WIN32_REAL_D3D9=OFF`: the GL device) (supply the static SDL2 libraries under `src/win32/sdl2/lib/`; the dedicated server needs none). Like the Linux client, it runs its local games on OpenCoD2-Plus Server's server, game and bgame, and traces with its collision. Without Windows, `scripts/portable_wine.sh DIR` sets up a 32-bit Wine without root (Debian or Ubuntu with i386 enabled) and writes `DIR/wine.sh` to run it with (`DIR 64`: a 64-bit Wine, for the 64-bit client); `COD2_CONSOLE_STDOUT=1` copies the console to stdout, and `scripts/listen_test.py --host-binary cod2_win32.exe --host-wine DIR/wine.sh` has it host a game the Linux client joins.
 
 <details>
-<summary><b>Windows (MSVC, native)</b></summary>
+<summary><b>Windows (MSVC ABI, native)</b></summary>
 
-A native build of the full SDL2/GL client with Visual Studio 2022 or newer and its **x86** toolset. Configure and build from an "x86 Native Tools for VS" command prompt:
+The client on the MSVC ABI: clang targeting `i686-pc-windows-msvc`, lld-link, the MSVC runtime and the Windows SDK, through the same CMake branch as MinGW (the bridge, OpenCoD2-Plus Server and libcod included). It needs Visual Studio Build Tools 2019 or newer with the x86 toolset and the "C++ Clang tools" component (or any recent clang with lld-link: `-DCOD2_CLANG_DIR=<its bin>`), and SDL's VC development package (`SDL2-devel-<version>-VC.zip`) under `third_party/SDL2-<version>/`. From an "x86 Native Tools for VS" command prompt:
 
 ```bat
 cmake --preset msvc-client
-cmake --build build/msvc --target cod2_win32
-:: -> build/msvc/cod2_win32.exe
-
-cmake --preset msvc-client-release
-cmake --build build/msvc-release --target cod2_win32
-:: -> build/msvc-release/cod2_win32.exe   (/O2)
+cmake --build --preset msvc-client
+:: -> build/msvc/cod2_win32.exe + third_party/SDL2-<version>/lib/x86/SDL2.dll
 ```
 
-This build still compiles C and uses the reconstructed script VM (`src/PC/script`). SDL2 is supplied by you: put the 32-bit MSVC SDL2 development package under `third_party/SDL2-<version>/` and copy `SDL2.dll` next to the executable. With `-DCOD2_SDL2_STATIC=ON` it links a static SDL2 you build yourself (`SDL2-static.lib`, same configuration as the engine) and the static C runtime, into one executable that needs no DLL; build SDL2 with `-DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_RENDER=OFF -DSDL_FORCE_STATIC_VCRT=ON`. Release applies `/O2` to decompiler-faithful code that is less tested than the Debug build: if something misbehaves only in Release, suspect the optimizer.
+Copy `SDL2.dll` next to the executable. From WSL, `python3 scripts/build_check.py msvc-client` builds it on a copy of the tree on a Windows drive (`scripts/msvc_build.py`), and `python3 scripts/msvc_run_test.py --exe <exe>` plays a local game with it.
 
 </details>
 
@@ -143,16 +139,15 @@ This build still compiles C and uses the reconstructed script VM (`src/PC/script
 | --- | --- | --- |
 | `COD2_CXX_ALL` | `ON` | Compiles the engine as C++ on Linux and MinGW. `OFF` builds C. |
 | `COD2_CXX_DIRS` | `""` | With `COD2_CXX_ALL=OFF`, the `src/` modules or files still compiled as C++. |
-| `COD2_PLUS_SCRIPT` | `ON` | OpenCoD2-Plus Server's script VM (`src/script`) on Linux and MinGW. `OFF` uses the reconstructed one (`src/PC/script`), as MSVC, the web build and x64 do. |
+| `COD2_PLUS_SCRIPT` | `ON` | OpenCoD2-Plus Server's script VM (`src/script`) on Linux and MinGW. `OFF` uses the reconstructed one (`src/PC/script`), as the web build does. |
 | `COD2_PLUS_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and core (`src/server`, `src/game`, `src/bgame`, `src/universal`, `src/qcommon`, `src/xanim`, `src/unix` or `src/win32`) in the dedicated server, on Linux and MinGW; needs `COD2_PLUS_SCRIPT`. `OFF` uses the reconstructed ones (`src/PC/server_mp`, `src/PC/game_mp`, `src/PC/bgame`). |
-| `COD2_PLUS_CLIENT_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as MSVC, the web build and x64 still do. |
+| `COD2_PLUS_CLIENT_SERVER` | `ON` | OpenCoD2-Plus Server's server, game, bgame and collision for the client's local games (Linux, and MinGW with `COD2_WIN32_CLIENT`), on the engine's core; needs `COD2_PLUS_SERVER`. `OFF` keeps `src/PC/server_mp`, as the web build still does. |
 | `COD2_PLUS_LIBCOD` | `ON` | OpenCoD2-Plus Server's libcod (`src/libcod`) in the dedicated server and, with `COD2_PLUS_CLIENT_SERVER`, in the client's local games, with its modules but MySQL; needs `COD2_PLUS_SERVER`. |
 | `COD2_FEATURE_CFLAGS` | `""` | Feature switches; `-DCOD2_PATCH_10` builds the 1.0 version. |
 | `COD2_PLUS_PROTOCOL` | `ON` | The 1.3 builds speak CoD2 1.3 Plus (OpenCoD2-Plus Server's `make PLUS=1`): their servers take only the Plus client. `OFF` builds stock 1.3, for servers any 1.3 player can join. |
 | `COD2_WIN32_CLIENT` | `OFF` | MinGW: the client instead of the dedicated server. |
 | `COD2_WIN32_REAL_D3D9` | `ON` | MinGW client: real Direct3D 9 and the game's shaders (system d3dx9); `OFF` keeps the GL device. |
-| `COD2_WIN_MSVC` | `OFF` | Native MSVC build (set by the `msvc-client` presets). |
-| `COD2_SDL2_STATIC` | `OFF` | MSVC: one standalone executable with static SDL2 and C runtime. |
+| `COD2_MSVC_ABI` | `OFF` | Set by `cmake/toolchain-msvc-clang.cmake`: the Windows branch on the MSVC ABI. |
 | `COD2_DEBUG` | `OFF` | `-O0` and no hardening, for debugging. |
 | `COD2_X64` | `OFF` | x86_64 target: the Linux client (`scripts/linux_x64_deps.sh` first) and the Windows client (`scripts/mingw64_deps.sh`, `cmake/toolchain-mingw64.cmake`) load maps; not yet equal to the 32-bit ones. |
 

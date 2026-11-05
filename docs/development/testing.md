@@ -29,6 +29,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/hud_options_test.py` | `cg_drawCompass 0` takes the compass away, `cg_hudCompassOffsetX`/`Y` move it, found by comparing screenshots; `com_writeConfig 0` leaves no `config_mp.cfg`; an objective appears on its side of the compass, with its own icon | yes |
 | `scripts/stability_test.py` | a client archives 3000 dvars and reads them back from a config over 64 KB, and past the pool's end `set` only prints; with `--wine CMD --binary cod2_win32.exe`, `com_freezeWatch` reports the `freeze` command's stall, the client goes on, and 0 turns it off | yes |
 | `scripts/fx_test.py` | effects change the picture; none fails to load | yes |
+| `scripts/msvc_run_test.py --exe EXE` | from WSL, a Windows client (MinGW or MSVC ABI) on Windows loads mp_toujane in a local game, its cgame starts, the gametype script talks to it, frames are drawn, and it keeps running `--linger` s with no crash report | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (OpenCoD2-Plus Server's test, `mods/bots`) | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |

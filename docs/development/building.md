@@ -15,7 +15,7 @@ top of it.
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
 | Windows client on Vulkan | `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE`, then Options > Graphics or `+set r_gfxApi vulkan` ([ADR 0011](../architecture/adr/0011-graphics-apis-behind-direct3d-9.md)) | `dxvk/d3d9.dll` |
-| MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
+| Windows client, MSVC ABI | from vcvars32: `cmake --preset msvc-client` (`cmake/toolchain-msvc-clang.cmake`: clang for `i686-pc-windows-msvc`, lld-link; SDL's VC package in `third_party/SDL2-<version>/`); from WSL `build_check.py msvc-client` ([ADR 0015](../architecture/adr/0015-msvc-abi-client-on-the-bridge.md)) | `cod2_win32.exe` on the MSVC runtime, same sources and bridge as MinGW's; needs `SDL2.dll` |
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
 | Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, OpenCoD2-Plus Server's sources only, no multilib needed |
 | Linux 64-bit client | `scripts/linux_x64_deps.sh` (amd64 SDL2 headers, no root), then `-DCOD2_X64=ON` | `cod2_linux` for x86_64, on OpenCoD2-Plus Server's VM and server like the 32-bit client; loads maps, not yet equal to it ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |

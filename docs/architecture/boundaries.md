@@ -42,7 +42,8 @@ Hand-written parts: `*_missing.cpp` (what one side lacks), `server_data.cpp`,
 
 | Exception | Why | Where decided |
 |---|---|---|
-| MSVC and web keep `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision | those builds do not link OpenCoD2-Plus Server | [ADR 0003](adr/0003-keep-server-mp-for-msvc-web-x64.md) |
+| The web build keeps `src/PC/server_mp`, `src/PC/game_mp`, `src/PC/game`, `src/PC/script` and the engine collision | it does not link OpenCoD2-Plus Server | [ADR 0003](adr/0003-keep-server-mp-for-msvc-web-x64.md), [ADR 0015](adr/0015-msvc-abi-client-on-the-bridge.md) |
+| On the MSVC ABI, C and C++ globals are joined by `/alternatename` aliases generated at link (`cmake/msvc_data_aliases.cmake`) | the MSVC ABI mangles C++ variables, Itanium does not; functions still cross only through the bridge | [ADR 0015](adr/0015-msvc-abi-client-on-the-bridge.md) |
 | The client keeps the engine's bgame for cgame (prediction) next to OpenCoD2-Plus Server's for the local server | cgame reaches its state through `bgs`; OpenCoD2-Plus Server uses `level_bgs` and another `animation_s` | [client.md](client.md) |
 | Functions only code the dedicated server never runs needs, which OpenCoD2-Plus Server lacks, stop the server with their name (`test/server_fatal.txt`) | linked for symbols, never called | [server.md](server.md) |
 

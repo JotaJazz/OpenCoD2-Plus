@@ -25,13 +25,25 @@ def win_path(path):
 
 
 def sync(src):
+    """Mirrors the working tree (tracked and untracked, not ignored) to src; files gone here go there too."""
     files = subprocess.run(['git', 'ls-files', '-co', '--exclude-standard', '-z'], cwd=ROOT, check=True,
-                           capture_output=True).stdout
-    files = b'\0'.join(f for f in files.split(b'\0') if f and os.path.exists(os.path.join(ROOT, f.decode())))
+                           capture_output=True).stdout.decode().split('\0')
+    files = [f for f in files if f and os.path.exists(os.path.join(ROOT, f))]
     os.makedirs(src, exist_ok=True)
     # --checksum: the Windows drive's mtimes are not reliable through drvfs
     subprocess.run(['rsync', '-a', '--checksum', '--from0', '--files-from=-', ROOT + '/', src + '/'],
-                   input=files, check=True)
+                   input='\0'.join(files).encode(), check=True)
+    # what the tree no longer has goes from the copy, but for its own build/ and
+    # third_party/ (the SDL2 VC package)
+    wanted = set(files)
+    for top in os.listdir(src):
+        if top in ('build', 'third_party'):
+            continue
+        for dirpath, _, names in os.walk(os.path.join(src, top)) if os.path.isdir(os.path.join(src, top)) else [(src, [], [top])]:
+            for name in names:
+                path = os.path.join(dirpath, name)
+                if os.path.relpath(path, src) not in wanted:
+                    os.remove(path)
 
 
 def main():
