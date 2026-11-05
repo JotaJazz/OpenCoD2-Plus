@@ -45,7 +45,7 @@ def main():
     sync(args.src)
     build = 'build\\check-' + args.variant
     defines = ' '.join(['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', '-DCOD2_WIN32_CLIENT=ON',
-                        '-DCOD2_WIN32_REAL_D3D9=ON', '-DCMAKE_BUILD_TYPE=RelWithDebInfo'] + args.defines)
+                        '-DCOD2_WIN32_REAL_D3D9=ON'] + args.defines)
     bat = '\r\n'.join([
         '@echo off',
         f'call "{VCVARS}" >nul || exit /b 1',

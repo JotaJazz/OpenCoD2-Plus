@@ -41,11 +41,16 @@ extern "C" {
 /* cl ignores GCC's __attribute__((constructor)). COD2_CONSTRUCTOR(fn){..} registers fn in the CRT's .CRT$XCU init
  * array so it runs before main, as the GCC constructor would.
  *   usage: COD2_CONSTRUCTOR(init_rune_locale) { ... }   (replaces the attribute) */
+#ifdef __clang__
+/* clang drops the unused static below; its own constructor attribute registers fn */
+#define COD2_CONSTRUCTOR(fn) static void __attribute__((constructor)) fn(void)
+#else
 #pragma section(".CRT$XCU", read)   /* declare the CRT init array section once */
 #define COD2_CONSTRUCTOR(fn)                                                 \
     static void fn(void);                                                   \
     __declspec(allocate(".CRT$XCU")) static void (*fn##__crtreg)(void) = fn;\
     static void fn(void)
+#endif
 
 /* COD2_ALT(lhs, rhs): emit a linker /alternatename directive from UNDECORATED C
  * symbol names. x86 cl prefixes C symbols with one leading '_'; x64 cl uses no

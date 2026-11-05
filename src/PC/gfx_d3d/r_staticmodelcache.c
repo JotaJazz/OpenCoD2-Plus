@@ -843,7 +843,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
 
                     {
                         void **ccvt = *(void ***)colorConverter;
-                        ((void(D3DVTCC *)(void *, void *, void *))ccvt[0])(colorConverter,
+                        ((void (*)(void *, void *, void *))ccvt[0])(colorConverter,   /* a C function, not COM: cdecl */
                                                                            dst2 + 0x18, src2 + 0x18);
                     }
 
@@ -998,7 +998,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
 
                     {
                         void **ccvt = *(void ***)colorConverter;
-                        ((void(D3DVTCC *)(void *, void *, void *))ccvt[0])(colorConverter,
+                        ((void (*)(void *, void *, void *))ccvt[0])(colorConverter,   /* a C function, not COM: cdecl */
                                                                            pDst + 0xc, pSrc + 0xc);
                     }
 

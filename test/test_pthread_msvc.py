@@ -1,4 +1,4 @@
-"""The MSVC-ABI pthread shim (src/win32/shims-msvc), built with clang for i686-pc-windows-msvc and run on Windows."""
+"""The MSVC-ABI shims (src/win32/shims-msvc, win32_compat.h), built with clang for i686-pc-windows-msvc and run on Windows."""
 import os
 import shutil
 import subprocess
@@ -16,15 +16,13 @@ def win(path):
 
 @unittest.skipUnless(shutil.which('cmd.exe') and os.path.exists(CLANG), 'needs Windows (cmd.exe) and VS clang')
 class PthreadMsvc(unittest.TestCase):
-    def test_selftest(self):
-        with tempfile.TemporaryDirectory(dir='/mnt/c/Users/Public') as tmp:
-            exe = os.path.join(tmp, 'pthread_selftest.exe')
-            sources = [win(os.path.join(ROOT, 'test', 'pthread_msvc_selftest.c')),
-                       win(os.path.join(ROOT, 'src', 'win32', 'shims-msvc', 'pthread_msvc.c'))]
-            clang = win(CLANG)
-            cmd = (f'call "{VCVARS}" >nul && "{clang}" --target=i686-pc-windows-msvc -fuse-ld=lld -O1 '
+    def build_and_run(self, sources, flags=''):
+        with tempfile.TemporaryDirectory(dir='/mnt/c/Users/Public', ignore_cleanup_errors=True) as tmp:   # Windows may still hold the exe
+            exe = os.path.join(tmp, 'selftest.exe')
+            driver = win(CLANG.replace('clang.exe', 'clang++.exe' if sources[0].endswith('.cpp') else 'clang.exe'))
+            cmd = (f'call "{VCVARS}" >nul && "{driver}" --target=i686-pc-windows-msvc -fuse-ld=lld -O2 {flags} '
                    f'-I"{win(os.path.join(ROOT, "src", "win32", "shims-msvc"))}" '
-                   + ' '.join(f'"{s}"' for s in sources) + f' -o "{win(exe)}"')
+                   + ' '.join(f'"{win(os.path.join(ROOT, s))}"' for s in sources) + f' -o "{win(exe)}"')
             bat = os.path.join(tmp, 'build.bat')
             with open(bat, 'w', newline='') as f:
                 f.write('@echo off\r\n' + cmd + '\r\n')
@@ -33,6 +31,13 @@ class PthreadMsvc(unittest.TestCase):
             run = subprocess.run([exe], capture_output=True, text=True, timeout=60)
             self.assertEqual(run.stdout.strip(), 'ok', run.stdout + run.stderr)
 
+    def test_selftest(self):
+        self.build_and_run(['test/pthread_msvc_selftest.c', 'src/win32/shims-msvc/pthread_msvc.c'])
+
+    def test_constructor_runs(self):
+        """COD2_CONSTRUCTOR's function runs before main, also when the optimizer may drop unused statics."""
+        self.build_and_run(['test/msvc_constructor_selftest.cpp'],
+                           f'-include "{win(os.path.join(ROOT, "src", "headers", "win32_compat.h"))}"')
 
 if __name__ == '__main__':
     unittest.main()

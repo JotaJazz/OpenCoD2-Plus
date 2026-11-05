@@ -10,8 +10,7 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain-msvc-clang.cmake",
         "COD2_WIN32_CLIENT": "ON",
-        "COD2_WIN32_REAL_D3D9": "ON",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "COD2_WIN32_REAL_D3D9": "ON"
       }
     }
   ],

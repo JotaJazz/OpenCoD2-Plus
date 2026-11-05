@@ -646,7 +646,9 @@ if(COD2_MSVC_ABI)
     VERBATIM)
   # a console program entering at WinMain, as MinGW's runtime does
   target_link_options(${W32_EXE} PRIVATE -Wl,@${CMAKE_BINARY_DIR}/msvc_data_aliases.rsp -Wl,/MAP
-                      -Wl,/ENTRY:WinMainCRTStartup -Wl,/SAFESEH:NO)   # the assembled blobs carry no SEH tables
+                      -Wl,/ENTRY:WinMainCRTStartup -Wl,/SAFESEH:NO   # the assembled blobs carry no SEH tables
+                      -Wl,/STACK:0x200000   # GNU ld's 2 MB, the stack every map and script ran with on MinGW
+                      -Wl,/DEBUG)   # a .pdb, so the crash reporter names functions
 endif()
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
