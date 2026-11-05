@@ -554,7 +554,7 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
     r = ret_type(target, params)
     guard = '' if name in cfg['struct_return_ok'] else \
         f'static_assert(cod2_bridge_returns_scalar<{r}>::value, "{name} returns a struct");\n'
-    guard += abi_asserts(name, params, abi, r, 'src/PC/server_mp')
+    guard += abi_asserts(name, params, abi, r, "the engine's 1.3 ABI")
     w = widened(abi, r)
     if '...' in params:
         # the engine's arguments are formatted here and passed on as "%s", as

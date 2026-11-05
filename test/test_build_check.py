@@ -109,6 +109,14 @@ class BuildCheck(unittest.TestCase):
             build_check.build('msvc-client', [])
         self.assertTrue(calls[0][1].endswith('msvc_build.py'), calls)
 
+    def test_msvc_two_copies(self):
+        """An external global defined as C (_x) and as C++ (?x@@3...): two copies nobody joins.
+        A static (nm -g omits it) or a function is no copy of a variable."""
+        nm = ("bss.c.obj:\n00000010 B _cm\n00000000 T _CM_Init\n"
+              "cm_load.cpp.obj:\n00000020 B ?cm@@3UclipMap_t@@A\n00000000 T ?CM_Init@@YAXXZ\n"
+              "sv_init.cpp.obj:\n00000000 B ?sv@@3Userver_t@@A\n")
+        self.assertEqual(build_check.msvc_two_copies(nm), ['cm: _cm (bss.c.obj), ?cm@@3UclipMap_t@@A (cm_load.cpp.obj)'])
+
     def test_web_skipped_without_emcc(self):
         with mock.patch.object(build_check, 'EMSDK_ENV', '/no/such/emsdk_env.sh'):
             code, out = self.run_main('web', '--allow-skip')

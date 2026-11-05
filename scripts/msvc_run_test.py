@@ -15,6 +15,7 @@ import argparse, glob, os, re, shutil, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_ROOT = '/mnt/e/opencod2-msvc-test'
+MSVC_SRC = os.environ.get('COD2_MSVC_SRC', '/mnt/e/opencod2-msvc-src')   # as msvc_build.py
 GAME = r'E:\Servers\COD2'
 MAP = 'mp_toujane'
 MARKERS = [
@@ -32,6 +33,11 @@ def missing(log):
     if not DRAW.search(log):
         out.append('frames are drawn')
     return out
+
+
+def verdict(gone, crashes):
+    """What failed: the lines that never showed, then any crash report."""
+    return list(gone) + (['no crash report (' + ', '.join(os.path.basename(c) for c in crashes) + ')'] if crashes else [])
 
 
 def kill_command(win_exe):
@@ -56,7 +62,7 @@ def main():
     os.makedirs(run_dir, exist_ok=True)
     shutil.copy(exe, run_dir)
     # the MSVC-ABI build links SDL2.dll; the MinGW one has SDL2 inside
-    for dll in glob.glob('/mnt/e/opencod2-msvc-src/third_party/SDL2-*/lib/x86/SDL2.dll')[-1:]:
+    for dll in sorted(glob.glob(os.path.join(MSVC_SRC, 'third_party', 'SDL2-*', 'lib', 'x86', 'SDL2.dll')))[-1:]:
         shutil.copy(dll, run_dir)
     for old in glob.glob(os.path.join(run_dir, 'cod2_crash_*.txt')):
         os.remove(old)
@@ -82,9 +88,7 @@ def main():
     finally:
         subprocess.run(kill_command(win(os.path.join(run_dir, os.path.basename(exe)))), capture_output=True)
         proc.wait(timeout=30)
-    crashes = glob.glob(os.path.join(run_dir, 'cod2_crash_*.txt'))
-    if crashes and not gone:
-        gone = ['no crash report (' + ', '.join(os.path.basename(c) for c in crashes) + ')']
+    gone = verdict(gone or [], glob.glob(os.path.join(run_dir, 'cod2_crash_*.txt')))
     if gone:
         print(f'FAIL {args.exe}: ' + '; '.join(gone) + f' (log: {log_path})')
         return 1

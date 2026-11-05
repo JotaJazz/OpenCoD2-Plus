@@ -91,6 +91,12 @@ class Abi(unittest.TestCase):
         self.assertEqual(g.abi_gaps(['A', 'B', 'C', 'D'], abi32, abi64), ['C (x64)', 'D (x86, x64)'])
         self.assertEqual(g.abi_gaps(['A'], {}, {}), [])   # a module without ABI files is not checked
 
+    def test_export_asserts_name_the_abi_file(self):
+        """The engine's server is gone: an export's asserts point at what they check, its 1.3 ABI."""
+        code = g.export_thunk('SV_Frame', ['int'], abi=('v', 0, [4], False))
+        self.assertIn('differs from the engine\'s 1.3 ABI', code)
+        self.assertNotIn('src/PC/server_mp', code)
+
     def test_import_asserts(self):
         code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=('v', 0, [4, 4], False))
         self.assertIn("cod2_abi_class<decltype(MSG_WriteByte(std::declval<msg_t*>(), std::declval<int>()))>() == 'v'", code)

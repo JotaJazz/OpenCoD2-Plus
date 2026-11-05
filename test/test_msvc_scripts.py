@@ -25,6 +25,14 @@ class Mirror(unittest.TestCase):
             msvc_build.claim_mirror(new)   # its own copy again: fine
 
 
+class Verdict(unittest.TestCase):
+    def test_crash_report_named_with_missing_markers(self):
+        """A crash that kept the map from loading must be in the message, not only the missing lines."""
+        self.assertEqual(msvc_run_test.verdict(['the map loads'], ['cod2_crash_7.txt']),
+                         ['the map loads', 'no crash report (cod2_crash_7.txt)'])
+        self.assertEqual(msvc_run_test.verdict([], []), [])
+
+
 class Kill(unittest.TestCase):
     def test_kills_only_the_tested_copy(self):
         """Another cod2_win32.exe (the user's game) must survive the test."""

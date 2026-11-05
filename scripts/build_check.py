@@ -34,7 +34,7 @@ with another return or parameter type than its definition's
 (scripts/check_c_decls.py), nor a global declared larger than it is defined
 (scripts/check_var_sizes.py).
 """
-import argparse, os, re, shutil, subprocess, sys
+import argparse, glob, os, re, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
@@ -65,6 +65,7 @@ VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.
                                  '-DCOD2_WIN32_CLIENT=ON', '-DCOD2_WIN32_REAL_D3D9=ON']
 # the Windows client on the MSVC ABI (clang + lld-link), built on Windows through
 # cmd.exe by scripts/msvc_build.py, which passes these flags itself
+MSVC_SRC = os.environ.get('COD2_MSVC_SRC', '/mnt/e/opencod2-msvc-src')
 VARIANTS['msvc-client'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', '-DCOD2_WIN32_CLIENT=ON',
                            '-DCOD2_WIN32_REAL_D3D9=ON']
 # the web build (Emscripten), with the SDK in third_party/emsdk; its link tolerates
@@ -84,6 +85,27 @@ SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
 
 def is_x64(variant):
     return variant.startswith('linux-x64')
+
+
+def msvc_two_copies(nm_text):
+    """The external globals the MSVC-ABI objects define both as C (_x) and as C++ (?x@@3...):
+    two copies of one variable, which the Itanium ABI would have joined and no alias joins
+    (msvc_data_aliases.cmake aliases only an undefined one). nm_text is nm -g --defined-only
+    of the objects, with 'file:' headers."""
+    c, cxx = {}, {}
+    obj = ''
+    for line in nm_text.splitlines():
+        if line.endswith(':'):
+            obj = os.path.basename(line[:-1])
+            continue
+        parts = line.split()
+        if len(parts) != 3 or parts[1] not in 'BDRC':
+            continue
+        name = parts[2]
+        m = re.fullmatch(r'_([A-Za-z_]\w*)', name) or re.fullmatch(r'\?([A-Za-z_]\w*)@@3.*', name)
+        if m:
+            (c if name.startswith('_') else cxx)[m.group(1)] = f'{name} ({obj})'
+    return [f'{base}: {c[base]}, {cxx[base]}' for base in sorted(set(c) & set(cxx))]
 
 
 def web_undefined_new(log, allowed):
@@ -116,10 +138,14 @@ def build(variant, extra):
                                 + extra,
                                 cwd=ROOT, capture_output=True, text=True)
         if result.returncode == 0:
-            return []
+            objs = [o for d in glob.glob(os.path.join(MSVC_SRC, 'build', 'check-' + variant, 'CMakeFiles', '*.dir'))
+                    if re.search(r'/(cod2_win32|cod2_plus_\w+)\.dir$', d)
+                    for o in glob.glob(os.path.join(d, '**', '*.obj'), recursive=True)]
+            nm = subprocess.run(['i686-w64-mingw32-nm', '-g', '--defined-only'] + objs, capture_output=True, text=True)
+            return [f'two copies of {line}' for line in msvc_two_copies(nm.stdout)]
         log = os.path.join(build_dir, 'msvc_build.log')
         lines = open(log, encoding='utf-8', errors='replace').read().splitlines() if os.path.exists(log) else []
-        errors = [line for line in lines if 'error' in line.lower() and 'FAILED' not in line]
+        errors = [line for line in lines if re.search(r'error[: ]|error$', line) and 'warning' not in line]
         return errors or ['msvc build failed'] + (lines or (result.stdout + result.stderr).splitlines())[-10:]
     source = os.path.join(ROOT, 'cmake', 'lnxded64') if is_x64(variant) else ROOT
     configure = subprocess.run(['cmake', '-S', source, '-B', build_dir] + VARIANTS[variant] + ([] if is_x64(variant) else extra),
