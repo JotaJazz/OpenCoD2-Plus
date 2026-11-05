@@ -6,6 +6,8 @@ top of it.
 
 ## Builds
 
+Every x86 and x64 build computes float math on SSE2 (`-msse2 -mfpmath=sse`, [ADR 0016](../architecture/adr/0016-sse2-float-math.md)), as OpenCoD2-Plus Server: the 32-bit builds need an SSE2 CPU.
+
 | Build | Configure | Outputs |
 |---|---|---|
 | Linux 1.3 | `cmake -S . -B build/check-linux` | `cod2_linux`, `cod2_lnxded`, speaking CoD2 1.3 Plus (`COD2_PLUS`, OpenCoD2-Plus Server's `make PLUS=1`): the servers take only the Plus client |

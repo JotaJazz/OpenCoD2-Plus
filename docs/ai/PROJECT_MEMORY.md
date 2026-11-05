@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-05 — SSE2 float math; OpenCoD2-Plus Server ae1c84a
+
+- Every x86 and x64 build computes float math with `-msse2 -mfpmath=sse` (ADR 0016), as the server's ADR 0017: the 1.3 client ran x87 at 24 bits, which single-precision SSE matches, while our 32-bit builds ran it at 64 and the MSVC-ABI one already on SSE2. x87 is left in the i386 float return, `long double` code and the static libraries.
+- The vendored server came up 40 commits (72c9f3e to ae1c84a: ADS for linked players, signed challenges, a faster VM, Huffman from ioquake3). Its bound on the Huffman output (e103ff1) gave `MSG_WriteBitsCompress` a fourth parameter: the engine's takes it too and its client drops a command or skips a demo message that would overrun its buffer.
+
 ## 2026-11-05 — the sight no longer shakes as it moves in and out
 
 - Aiming down the sight shook every weapon, the Bren most: the engine's weapon loader timed the sight with fireTime and rechamberTime instead of adsTransInTime and adsTransOutTime (1.3 0x51b580, +0x2c0/+0x2c4), so the client predicted it faster than the server's bgame and was pulled back each snapshot. Found playing a local game with `COD2_TRACE_PREDDIFF=all`, a mode that prints any playerstate field predicted otherwise.

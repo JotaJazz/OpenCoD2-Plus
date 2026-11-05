@@ -23,6 +23,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0013](0013-miles-retired-from-the-windows-client.md) | Miles retired from the Windows client | Accepted | 2026-11-01 |
 | [0014](0014-name-1-3-plus.md) | The player-facing name is "1.3 Plus" | Accepted | 2026-11-02 |
 | [0015](0015-msvc-abi-client-on-the-bridge.md) | The MSVC-ABI client is built with clang on the bridge | Accepted | 2026-11-05 |
+| [0016](0016-sse2-float-math.md) | Float math on SSE2, not x87 | Accepted | 2026-11-05 |
 
 ## Template
 

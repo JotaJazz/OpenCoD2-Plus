@@ -388,11 +388,11 @@ add_compile_options(${COD2_FEATURE_LIST})
 # win32 C flags (mirror Makefile.win32 WCFLAGS); -fcommon is essential (tentative
 # BSS defs in both bss.c and the reconstructed .c rely on the pre-GCC-10 merge).
 add_compile_options(
-  "$<$<COMPILE_LANGUAGE:C>:-w;-g;-msse;-fcommon;-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:C>:-w;-g;-msse2;-mfpmath=sse;-fcommon;-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
-  "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse;-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse2;-mfpmath=sse;-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:ASM>:$<$<NOT:$<BOOL:${COD2_X64}>>:-m32>>")
@@ -679,14 +679,14 @@ endif()
 separate_arguments(COD2_FEATURE_LIST UNIX_COMMAND "${COD2_FEATURE_CFLAGS}")
 
 add_compile_options(
-  "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse2;-mfpmath=sse;-fno-omit-frame-pointer>"
   "$<$<COMPILE_LANGUAGE:C>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:${SDL2_CFLAGS_OTHER}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_OPT_FLAGS}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_HARDEN_CFLAGS}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_FEATURE_LIST}>"
-  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse2;-mfpmath=sse;-fno-omit-frame-pointer>"
   "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:${SDL2_CFLAGS_OTHER}>"

@@ -14,7 +14,7 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "this project builds 64-bit only")
 endif()
 
-set(common -fno-pie -O1 -fno-omit-frame-pointer -mfpmath=387 -m64 -Wformat -Wno-unused-result
+set(common -fno-pie -O1 -fno-omit-frame-pointer -msse2 -mfpmath=sse -m64 -Wformat -Wno-unused-result
   -fstack-protector-strong -fno-strict-aliasing -fwrapv)
 add_compile_options(${common} "$<$<COMPILE_LANGUAGE:CXX>:-include;${SRC}/headers/glibc_compat.h>")
 add_compile_definitions(NDEBUG PROTOCOL_VERSION=${COD2_PROTOCOL} _FORTIFY_SOURCE=2 _FILE_OFFSET_BITS=64)
