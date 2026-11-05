@@ -189,7 +189,8 @@ static void fill(SndStream *s)
 
 /* shortcut: an MP3's seek is proportional to bytes and its length comes from the first frame's
    bitrate, which is right for CBR and off for VBR: stock 073.mp3 by up to 51%. Miles estimates from a
-   bitrate too (0x211118dd, taken once at open, 0x21110815). A Xing header would fix the length. */
+   bitrate too (0x211118dd, taken once at open, 0x21110815), so resume points match 1.3. A Xing header
+   would fix the length, but only once parity with Miles stops mattering. */
 static long long seek_to(SndStream *s, long ms)
 {
     long long frame = (long long)ms * s->rate / 1000, pos;

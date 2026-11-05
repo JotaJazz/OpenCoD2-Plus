@@ -798,7 +798,7 @@ void *AIL_open_stream(void *d, const char *filename, int flags)
         snprintf(lastError, sizeof lastError, "no file name");
         return NULL;
     }
-    if (!files.open) {   /* shortcut: no fopen fallback for mss_q3fs 0, as iwds would stay out of reach anyway */
+    if (!files.open) {   /* shortcut: no fopen fallback for mss_q3fs 0 (iwds stay out of reach anyway), add one if loose files play silent with it */
         snprintf(lastError, sizeof lastError, "no file callbacks");
         return NULL;
     }
