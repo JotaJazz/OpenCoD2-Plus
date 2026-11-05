@@ -353,7 +353,7 @@ target_compile_definitions(cod2 PRIVATE WEB_BUILD=1 SDL_DISABLE_IMMINTRIN_H)
 target_include_directories(cod2 PRIVATE
   ${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR}/PC/zlib ${COD2_SRC_DIR}
   ${COD2_SRC_DIR}/headers ${CMAKE_SOURCE_DIR})
-target_compile_options(cod2 PRIVATE -w -O0 -gsource-map -flto ${COD2_WNO})
+target_compile_options(cod2 PRIVATE -w -O0 -gsource-map -flto -sUSE_SDL=2 ${COD2_WNO})   # the SDL2 port's headers
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 

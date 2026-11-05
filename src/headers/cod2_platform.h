@@ -102,12 +102,11 @@ extern "C" {
 #define COD2_STDCALL
 #define COD2_FASTCALL
 #define COD2_FORCE_ALIGN_ARG_POINTER
-#if defined(COD2_X64) && defined(__GNUC__)
-#define COD2_ALIGNED(n) __attribute__((aligned(n)))  /* a layout, not a calling convention: x64 keeps it */
-#elif defined(_MSC_VER)
-#define COD2_ALIGNED(n) __declspec(align(n))  /* goes between struct and the name, as gcc's does too */
+/* a layout, not a calling convention: every compiler keeps it (x64, wasm, the MSVC ABI) */
+#if defined(__GNUC__)
+#define COD2_ALIGNED(n) __attribute__((aligned(n)))
 #else
-#define COD2_ALIGNED(n)
+#define COD2_ALIGNED(n) __declspec(align(n))  /* goes between struct and the name, as gcc's does too */
 #endif
 #endif
 

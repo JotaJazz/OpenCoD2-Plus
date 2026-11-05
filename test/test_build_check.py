@@ -109,6 +109,17 @@ class BuildCheck(unittest.TestCase):
             build_check.build('msvc-client', [])
         self.assertTrue(calls[0][1].endswith('msvc_build.py'), calls)
 
+    def test_web_skipped_without_emcc(self):
+        with mock.patch.object(build_check, 'EMSDK_ENV', '/no/such/emsdk_env.sh'):
+            code, out = self.run_main('web', '--allow-skip')
+        self.assertEqual(code, 0, out)
+        self.assertIn('skip web', out)
+
+    def test_web_undefined_symbols_may_only_shrink(self):
+        """The web link tolerates undefined symbols (as upstream); a new one is a failure."""
+        log = 'warning: undefined symbol: CG_Init (referenced by root reference)\nwarning: undefined symbol: Brand_New (x)\n'
+        self.assertEqual(build_check.web_undefined_new(log, {'CG_Init', 'Old_Gone'}), ['Brand_New'])
+
     def test_stock_13_variant(self):
         """linux-13 is the 1.3 build without the Plus protocol."""
         self.assertEqual(build_check.VARIANTS['linux-13'], ['-DCOD2_PLUS_PROTOCOL=OFF'])

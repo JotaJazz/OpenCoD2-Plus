@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|web|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
@@ -13,7 +13,9 @@ mingw-client-gl builds it on the Mac port's GL device instead
 headers scripts/linux_x64_deps.sh unpacks, and mingw-client-x64 the 64-bit
 Windows client, skipped without scripts/mingw64_deps.sh's SDL2. msvc-client builds the
 Windows client on the MSVC ABI (clang + lld-link) through cmd.exe on a copy of the
-tree on a Windows drive (scripts/msvc_build.py), skipped without cmd.exe. The engine compiles as C++ unless --c is given; with --c,
+tree on a Windows drive (scripts/msvc_build.py), skipped without cmd.exe. web builds
+the Emscripten client (third_party/emsdk), whose link may leave undefined only the
+symbols test/web_undefined.txt lists. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -65,6 +67,11 @@ VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.
 # cmd.exe by scripts/msvc_build.py, which passes these flags itself
 VARIANTS['msvc-client'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', '-DCOD2_WIN32_CLIENT=ON',
                            '-DCOD2_WIN32_REAL_D3D9=ON']
+# the web build (Emscripten), with the SDK in third_party/emsdk; its link tolerates
+# undefined symbols as upstream's did, but only those test/web_undefined.txt lists
+VARIANTS['web'] = []
+EMSDK_ENV = os.path.join(ROOT, 'third_party', 'emsdk', 'emsdk_env.sh')
+WEB_UNDEFINED = os.path.join(ROOT, 'test', 'web_undefined.txt')
 SDL2_MINGW64 = os.path.join(ROOT, 'third_party', 'mingw64-sdl2', 'SDL2-2.30.9', 'x86_64-w64-mingw32', 'lib', 'libSDL2.a')
 MINGW64_NM = os.path.join(ROOT, 'third_party', 'mingw64', 'usr', 'bin', 'x86_64-w64-mingw32-nm')
 LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
@@ -79,8 +86,31 @@ def is_x64(variant):
     return variant.startswith('linux-x64')
 
 
+def web_undefined_new(log, allowed):
+    """The symbols a web link reports undefined that the allowed set does not have."""
+    found = re.findall(r'warning: undefined symbol: (\S+)', log)
+    return sorted(set(found) - set(allowed))
+
+
+def build_web(build_dir):
+    script = (f'source {EMSDK_ENV} >/dev/null 2>&1 && emcmake cmake -S {ROOT} -B {build_dir} >/dev/null && '
+              f'cmake --build {build_dir} -j {os.cpu_count() or 4} -- -k')
+    result = subprocess.run(['bash', '-c', script], cwd=ROOT, capture_output=True, text=True)
+    output = result.stdout + result.stderr
+    errors = [line for line in output.splitlines() if 'error:' in line]
+    if result.returncode != 0 and not errors:
+        errors = ['build failed'] + output.splitlines()[-10:]
+    if not errors:
+        with open(WEB_UNDEFINED) as f:
+            allowed = {line.strip() for line in f if line.strip() and not line.startswith('#')}
+        errors = [f'newly undefined: {name}' for name in web_undefined_new(output, allowed)]
+    return errors
+
+
 def build(variant, extra):
     build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
+    if variant == 'web':
+        return build_web(build_dir)
     if variant == 'msvc-client':
         result = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'msvc_build.py'), '--variant', variant, '--']
                                 + [e for e in extra if not e.startswith('-DCOD2_PLUS_SCRIPT=')],
@@ -303,6 +333,10 @@ def main():
             print(f'skip {variant} (no {os.path.relpath(LINUX_X64_SDL2, ROOT)}: scripts/linux_x64_deps.sh)')
             skipped = True
             continue
+        if variant == 'web' and not os.path.exists(EMSDK_ENV):
+            print(f'skip {variant} (no {os.path.relpath(EMSDK_ENV, ROOT)}: the Emscripten SDK)')
+            skipped = True
+            continue
         if variant == 'msvc-client' and not shutil.which('cmd.exe'):
             print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
@@ -315,7 +349,7 @@ def main():
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
-        if not errors and not is_x64(variant):
+        if not errors and not is_x64(variant) and variant != 'web':
             errors = duplicates(variant, build_dir)
         if not errors and variant.startswith('linux') and not is_x64(variant) and variant != 'linux-client-x64':
             errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir) + var_sizes(build_dir)
