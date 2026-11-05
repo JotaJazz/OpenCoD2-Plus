@@ -1228,6 +1228,10 @@ typedef int bb;
 typedef int blens;
 #if !defined(__cplusplus) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L)
 typedef _Bool bool; /* 1 byte, like C++ bool and the original binary's bool */
+#ifndef true
+#define true 1   /* the C build (MSVC) compiles code written for C++ */
+#define false 0
+#endif
 #endif
 
 typedef int boolean;
@@ -6888,10 +6892,10 @@ struct _D3DMATRIX {
     union { struct { float _11; float _12; float _13; float _14; float _21; float _22; float _23; float _24; float _31; float _32; float _33; float _34; float _41; float _42; float _43; float _44; }; float m[4][4]; };
 };
 
-struct GfxCodeMatrix {
+struct COD2_ALIGNED(16) GfxCodeMatrix {
     D3DMATRIX matrix[4];
     Bool valid[4];
-} COD2_ALIGNED(16);
+};
 
 struct GfxCodeMatrices {
     float worldScale;

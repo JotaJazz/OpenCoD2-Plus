@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-05 — the MSVC client builds again
+
+- VS 2019 Build Tools (cl 19.29) stopped on two things: `COD2_ALIGNED` expanded to nothing under MSVC, so `GfxCodeMatrix` was 260 bytes instead of 272 and `backEnd` missed 1.3's 0x36e90 (the size assert fired); it is now `__declspec(align)`, placed between `struct` and the name, where gcc takes it too. The bgame files written for C++ used `true`/`false`, which MSVC's C build lacked.
+- With the official SDL2 2.30.9 VC package in `third_party/`, `cod2_win32.exe` links and reaches the main menu on Windows (silent, as the Mac stubs). VS 2019's CMake 3.20 cannot read the v3 presets: configure with the preset's cache variables by hand. Still unchecked by the scripts.
+
 ## 2026-11-05 — JPEG loading per ABI
 
 - `R_LoadJpg` passed libjpeg 0x1b4 as `jpeg_decompress_struct`'s size; the vendored jpeg-6 wants 464 on both 32-bit ABIs and 632 on 64-bit, so loading a raw `.jpg` material hit "JPEG parameter struct mismatch". Its field offsets, `FS_ReadFile` and the temp alloc were also read at x86 offsets; the dead allocator hooks at +0x18/+0x1c are gone.
