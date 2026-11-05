@@ -3397,8 +3397,6 @@ static void RB_BlendSavedScreenCmd(GfxRenderCommandExecState *execState)
     int alphaByte;
     D3DCOLOR blendColor;
     const Material *blendMaterial;
-    float screenWidth, screenHeight;
-    float pow2Width, pow2Height;
 
     cmd = (byte *)execState->cmd;
 
@@ -3425,32 +3423,18 @@ static void RB_BlendSavedScreenCmd(GfxRenderCommandExecState *execState)
 
     alphaByte = (int)floorf(alphaScaled + 0.5f);
 
-    {
-        byte colorBytes[4];
-        colorBytes[0] = (byte)alphaByte;
-        colorBytes[1] = 0xFF;
-        colorBytes[2] = 0xFF;
-        colorBytes[3] = 0xFF;
-        blendColor = *(D3DCOLOR *)colorBytes;
-    }
+    /* 1.3 (gfx_d3d_mp_x86_s.dll 0x10031180): the fade in the color's alpha byte
+     * (shl 0x18 | 0xffffff) and the whole screen-sized image, 0..1; the low byte
+     * and the Mac port's power-of-two coordinates drew it opaque, flipped, stretched */
+    blendColor = ((D3DCOLOR)(byte)alphaByte << 24) | 0xffffff;
 
     backEnd.currentFeedbackImage = dx.renderTargets[R_RENDERTARGET_SAVED_SCREEN].image;
 
     blendMaterial = ((r_global_permanent_t *)rgp)->shellShockMaterial;
 
-    {
-        unsigned int sw = (unsigned int)dxState.renderTargetWidth;
-        unsigned int sh = (unsigned int)dxState.renderTargetHeight;
-        screenWidth = (float)sw;
-        screenHeight = (float)sh;
-        pow2Width = (float)nextPow2(sw);
-        pow2Height = (float)nextPow2(sh);
-    }
-
     RB_DrawStretchPic(blendMaterial,
-                      0.0f, 0.0f, screenWidth, screenHeight,
-                      0.0f, screenHeight / pow2Height,
-                      screenWidth / pow2Width, 0.0f,
+                      0.0f, 0.0f, (float)dxState.renderTargetWidth, (float)dxState.renderTargetHeight,
+                      0.0f, 0.0f, 1.0f, 1.0f,
                       blendColor, (GfxPrimStatsTarget)10);
 
 advance:
@@ -3883,9 +3867,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
                 float virtualWidth = GetVirtualWidthFromRealWidth(3.0f);
                 D3DCOLOR blurColor = 0xffffffff;
 
+                /* 1.3 (0x10030b70) puts the fade in the alpha byte, not the blue one */
                 if (totalBlur > virtualWidth) {
                     int alpha = (int)floorf(totalBlur / virtualWidth * 255.0f + 0.5f);
-                    blurColor = (blurColor & 0xffffff00) | (alpha & 0xff);
+                    blurColor = (blurColor & 0x00ffffff) | ((D3DCOLOR)(alpha & 0xff) << 24);
                 }
 
                 RB_GaussianFilterImage(totalBlur, R_RENDERTARGET_BLURRED_SCREEN);
@@ -3898,11 +3883,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
                         const Material *blurMaterial = ((r_global_permanent_t *)rgp)->feedbackBlendMaterial;
                         float sw = (float)dxState.renderTargetWidth;
                         float sh = (float)dxState.renderTargetHeight;
-                        float pw = (float)nextPow2((unsigned int)dxState.renderTargetWidth);
-                        float ph = (float)nextPow2((unsigned int)dxState.renderTargetHeight);
 
+                        /* the screen-sized blurred image whole, 0..1, as 1.3 (0x10030c26) */
                         RB_DrawStretchPic(blurMaterial, 0, 0, sw, sh,
-                                          0, sh / ph, sw / pw, 0, blurColor, (GfxPrimStatsTarget)10);
+                                          0, 0, 1.0f, 1.0f, blurColor, (GfxPrimStatsTarget)10);
                         RB_EndSurface();
                     }
                 }
