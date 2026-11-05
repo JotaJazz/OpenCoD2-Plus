@@ -2684,9 +2684,31 @@ static Material *Material_Marshal32To64(byte *blob, int imageTrack)
             dt[i].unused_1     = 0;
             dt[i].u.image      = (GfxImage *)0;
             if (sem == 5) {
-                /* TS_WATER_MAP: world water setup not yet marshaled on x64 (the UI
-                 * never references water). Leave NULL; revisit with world rendering. */
-                dt[i].u.water = (MaterialWaterDef *)0;
+                /* TS_WATER_MAP: the file's 32-byte water def (u16 width, Lx, Lz, amplitude,
+                 * wind speed, wind dir[2], map) into a water_t setup, as the x86 path */
+                const byte *wd = blob + st[i].image;
+                MaterialWaterDef *water = (MaterialWaterDef *)Material_Alloc((int)sizeof(MaterialWaterDef));
+                water_t setup;
+
+                memset(&setup, 0, sizeof(setup));
+                water->textureWidth = *(const unsigned short *)wd;
+                memcpy(&water->horizontalWorldLength, wd + 4, 4);
+                memcpy(&water->verticalWorldLength, wd + 8, 4);
+                memcpy(&water->amplitude, wd + 12, 4);
+                memcpy(&water->windSpeed, wd + 16, 4);
+                memcpy(water->windDirection, wd + 20, 8);
+                setup.M = setup.N = water->textureWidth;
+                setup.Lx = water->horizontalWorldLength;
+                setup.Lz = water->verticalWorldLength;
+                setup.gravity = 800.0f;
+                setup.windvel = water->windSpeed;
+                setup.winddir[0] = water->windDirection[0];
+                setup.winddir[1] = water->windDirection[1];
+                setup.amplitude = water->amplitude;
+                water->map = R_LoadWaterSetup(&setup);
+                if (!water->map)
+                    return (Material *)0;
+                dt[i].u.water = water;
             } else {
                 int isDx7 = (r_rendererInUse->current.integer == 2);
                 if (isDx7 && (unsigned)(sem - 3) <= 1) {
