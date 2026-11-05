@@ -239,7 +239,8 @@ static void CG_PredDiffCompare(const playerState_t *server)
     d = fabsf(((const playerState_t *)a)->origin[0] - server->origin[0]) +
         fabsf(((const playerState_t *)a)->origin[1] - server->origin[1]) +
         fabsf(((const playerState_t *)a)->origin[2] - server->origin[2]);
-    if (d == 0.0f)
+    /* COD2_TRACE_PREDDIFF=all: any field predicted otherwise, not only a moved origin */
+    if (d == 0.0f && (getenv("COD2_TRACE_PREDDIFF")[0] != 'a' || !memcmp(a, b, 0x26a8)))
         return;
     Com_Printf("PredDiff t=%d origin %.5f\n", server->commandTime, (double)d);
     for (i = 0; i < cg_numSolidEntities; i++) {

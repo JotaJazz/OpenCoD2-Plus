@@ -387,14 +387,16 @@ WeaponDef *BG_LoadWeaponDefInternal(const char *folder, const char *name)
         return weapDef;
     }
 
-    if (weapDef->iFireTime > 0) {
-        weapDef->fOOPosAnimLength[0] = 1.0f / (float)weapDef->iFireTime;
+    /* 1.3 (0x51b580): the sight moves in and out over adsTransInTime and adsTransOutTime (+0x2c0,
+     * +0x2c4), as the server's bgame; fireTime and rechamberTime made the client predict it faster */
+    if (weapDef->iAdsTransInTime > 0) {
+        weapDef->fOOPosAnimLength[0] = 1.0f / (float)weapDef->iAdsTransInTime;
     } else {
         weapDef->fOOPosAnimLength[0] = BM_I2F(0x3b5a740e); /* was 0x1.b4e81cp-9f (C99 hex float) */
     }
 
-    if (weapDef->iRechamberTime > 0) {
-        weapDef->fOOPosAnimLength[1] = 1.0f / (float)weapDef->iRechamberTime;
+    if (weapDef->iAdsTransOutTime > 0) {
+        weapDef->fOOPosAnimLength[1] = 1.0f / (float)weapDef->iAdsTransOutTime;
     } else {
         weapDef->fOOPosAnimLength[1] = BM_I2F(0x3b03126f); /* was 0x1.0624dep-9f (C99 hex float) */
     }

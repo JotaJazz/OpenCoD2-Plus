@@ -8,7 +8,7 @@ client as its target, and a real client (cod2_linux, held at 20 fps) as the
 second player, which the mod puts in front of a ledge (--spot, by rcon) and a
 config file drives: it mantles onto the ledge, turns away from the target,
 walks forward, back and to both sides, crouches, goes prone, stands, jumps
-and fires its rifle. It keeps away from the target: the client clips against
+and fires its rifle, then aims down its sight and back twice. It keeps away from the target: the client clips against
 other players with a box one unit smaller on each side than the server's (as
 the original does), so running into one misses by design.
 
@@ -27,7 +27,9 @@ predict, not from its animation script (scripts/anim_script_test.py
 compares that with the server's): the weapon the mod gives at spawn, and the
 MOVETYPE condition the landing event reads, which lives outside the
 playerstate and is not set back when the moves are predicted again (3 or 4
-per run, all with no origin miss). --delay MS puts a UDP relay between the
+per run, all with no origin miss). With COD2_TRACE_PREDDIFF=all the client
+prints every playerstate field it predicted otherwise than the server; the
+sight's fraction (fWeaponPosFrac) must match it (--max-ads-misses, 0). --delay MS puts a UDP relay between the
 client and the server that holds each packet MS milliseconds each way (a
 ping of twice that, as online); --maxfps sets the client's com_maxfps
 (default 20). --wine CMD runs a Windows client given with --binary, our
@@ -70,6 +72,8 @@ gostand; wait 30
 +attack; wait 5; -attack; wait 30
 +attack; wait 5; -attack; wait 30
 +moveright; wait 40; -moveright
+toggleads; wait 40; toggleads; wait 40
+toggleads; wait 40; toggleads; wait 40
 wait 30
 '''
 MOVES_SECONDS = 100
@@ -155,6 +159,8 @@ def main():
     ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
     ap.add_argument('--max-anim-misses', type=int, default=MAX_ANIM_MISSES,
                     help=f'fail above this many legs/torso animation misses (default {MAX_ANIM_MISSES})')
+    ap.add_argument('--max-ads-misses', type=int, default=0,
+                    help='fail above this many predicted sight fractions the server disagrees with (default 0)')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
     ap.add_argument('--spot', default=SPOT, help="'x y z yaw' to put the client at when it joins (the mod's spot phase); "
                     "'' leaves it where it spawns")
@@ -239,7 +245,8 @@ def main():
                                                '+set', 'net_port', str(port + 1), '+connect', f'127.0.0.1:{connect_port}',
                                                '+exec', 'moves.cfg'],
                                               stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                              cwd=client_home, env=dict(os.environ, COD2_TRACE_PREDANIM='1'))
+                                              cwd=client_home, env=dict(os.environ, COD2_TRACE_PREDANIM='1',
+                                                                         COD2_TRACE_PREDDIFF='all'))
                 procs.append(client)
                 end = time.time() + 120
                 while time.time() < end and client.poll() is None and 'contact mover' not in game_log(home):
@@ -297,6 +304,14 @@ def main():
             print(f'  anim miss: {line}')
         print(f'anim misses: {len(anim)}')
         check(f'at most {args.max_anim_misses} animation misses', len(anim) <= args.max_anim_misses, f'{len(anim)}')
+        # COD2_TRACE_PREDDIFF=all: the sight's fraction (fWeaponPosFrac, +0xdc) the client predicted
+        # against the server's, as the aim moves in and out
+        # (a server built for x87 truncates a 0.3 s transition to 299 ms where the engine's float gets 300:
+        # 0.0006 a frame, below what a sight shows, so a miss is a larger difference)
+        ads = [(c, s) for c, s in re.findall(r'^  \+0x00dc client \S+ (\S+) server \S+ (\S+)', text, re.M)
+               if abs(float(c) - float(s)) > 0.002]
+        print(f'sight misses: {len(ads)}' + ''.join(f'\n  predicted {c}, server {s}' for c, s in ads[:5]))
+        check(f'at most {args.max_ads_misses} sight misses', len(ads) <= args.max_ads_misses, f'{len(ads)}')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
 

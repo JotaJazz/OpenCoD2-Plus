@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-05 — the sight no longer shakes as it moves in and out
+
+- Aiming down the sight shook every weapon, the Bren most: the engine's weapon loader timed the sight with fireTime and rechamberTime instead of adsTransInTime and adsTransOutTime (1.3 0x51b580, +0x2c0/+0x2c4), so the client predicted it faster than the server's bgame and was pulled back each snapshot. Found playing a local game with `COD2_TRACE_PREDDIFF=all`, a mode that prints any playerstate field predicted otherwise.
+- `prediction_test.py` aims down the sight and back twice and fails on a sight fraction the server disagrees with; a 0.3 s transition is 300 ms in the engine and 299 in a server built for x87 (0.0006 a frame), which it tolerates.
+
 ## 2026-11-05 — review follow-ups of the MSVC-ABI work
 
 - The MSVC pthread shim passed cdecl key destructors to FLS, which calls them stdcall (now an NTAPI trampoline), and kept unjoined threads' slots forever; zlib allocates through the engine as on MinGW (`MY_ZCALLOC`); the link aliases join only data.
