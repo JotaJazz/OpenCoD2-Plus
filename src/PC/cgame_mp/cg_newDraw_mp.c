@@ -1565,21 +1565,26 @@ static inline __attribute__((always_inline)) void CG_DrawLowHealthOverlay(const 
     float alpha;
     int elapsed;
 
-    if (!CG_DrawHealthEnabled()) {
-        return;
-    }
-
+    /* 1.3 (0x4c5250) draws it whatever cg_drawHealth (default 0) says: that
+     * dvar only gates the health bar (0x4c4a70, 0x4c4d40) */
     if (!cg) {
         return;
     }
 
     health = CG_CalcPlayerHealth();
+    if (health == 0.0f) {
+        return;
+    }
     CG_PulseLowHealthOverlay(health);
 
+    /* 0x4c4fb0: the fade from the pulse's start, a clock behind it counting 0 */
     alpha = cg->healthOverlayToAlpha;
     if (cg->healthOverlayPulseDuration > 0) {
         elapsed = cg->time - cg->healthOverlayPulseTime;
-        if (elapsed >= 0 && elapsed < cg->healthOverlayPulseDuration) {
+        if (elapsed < 0) {
+            elapsed = 0;
+        }
+        if (elapsed < cg->healthOverlayPulseDuration) {
             float frac = (float)elapsed / (float)cg->healthOverlayPulseDuration;
             alpha = cg->healthOverlayFromAlpha + (cg->healthOverlayToAlpha - cg->healthOverlayFromAlpha) * frac;
         }
