@@ -48,7 +48,7 @@ template<> struct cod2_abi_uint<2> { typedef unsigned short type; };
 template<> struct cod2_abi_uint<4> { typedef unsigned int type; };
 template<> struct cod2_abi_uint<8> { typedef unsigned long long type; };
 template<class T, unsigned N> using cod2_abi_int =
-	typename std::conditional<sizeof(T) == N, T, typename cod2_abi_uint<N>::type>::type;
+	typename std::conditional<cod2_abi_size<T>() == N, T, typename cod2_abi_uint<N>::type>::type;
 
 /* The assembler name of a C symbol: MinGW (i686) prefixes an underscore. */
 #define COD2_SYM_STR2(x) #x

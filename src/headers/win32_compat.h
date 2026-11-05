@@ -7,6 +7,10 @@ extern "C" {
 
 #ifdef _WIN32
 
+#ifndef __LONG32
+#define __LONG32 long   /* MinGW's _mingw.h macro; OpenCoD2-Plus Server's hexrays_defs.h types DWORD/LONG with it */
+#endif
+
 #include <io.h>
 #include <direct.h>
 

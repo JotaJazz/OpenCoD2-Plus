@@ -1,5 +1,5 @@
 /* MSVC-only <sys/time.h> shim: gettimeofday backed by the CRT _ftime64
- * (sys/timeb.h) -- no <windows.h>, no <winsock2.h>. MSVC-build include dir only. */
+ * (sys/timeb.h); struct timeval from <winsock2.h>. MSVC-build include dir only. */
 #ifndef COD2_MSVC_SYS_TIME_H
 #define COD2_MSVC_SYS_TIME_H
 
@@ -11,11 +11,7 @@ extern "C" {
 #include <sys/timeb.h>
 #include <time.h>
 
-/* struct timeval may already come from <winsock2.h>; guard against redefinition. */
-#ifndef _TIMEVAL_DEFINED
-#define _TIMEVAL_DEFINED
-struct timeval { long tv_sec; long tv_usec; };
-#endif
+#include <winsock2.h>   /* struct timeval: MSVC's winsock defines it unguarded */
 struct timezone { int tz_minuteswest; int tz_dsttime; };
 
 static __inline int gettimeofday(struct timeval *tv, void *tz)
