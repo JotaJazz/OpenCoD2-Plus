@@ -485,7 +485,11 @@ void SVC_Info( netadr_t from )
 	char infosend[MAX_INFO_STRING];
 
 #if LIBCOD_COMPILE_RATELIMITER == 1
-	extern leakyBucket_t outboundLeakyBucket;
+	// New: getinfo has a global limit of its own, 100 short replies a second,
+	// and the masters skip it: a few addresses at the shared 10 a second
+	// hid the server from browsers and from the masters' checks
+	static leakyBucket_t infoBucket;
+
 	// Prevent using getinfo as an amplifier
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
@@ -496,7 +500,7 @@ void SVC_Info( netadr_t from )
 
 	// Allow getinfo to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( !SV_IsMasterAddress( from ) && SVC_RateLimit( &infoBucket, 100, 10 ) )
 	{
 		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
 		return;
@@ -650,7 +654,7 @@ and all connected players.  Used for getting detailed information after
 the simple info query.
 ================
 */
-void SVC_Status( netadr_t from )
+void SVC_Status( netadr_t from, bool toMaster )
 {
 	int i;
 	char infostring[8192];
@@ -664,9 +668,13 @@ void SVC_Status( netadr_t from )
 	int count;
 
 #if LIBCOD_COMPILE_RATELIMITER == 1
+	// New: getstatus keeps 10 replies a second, as they are large, but no
+	// longer shares them with getinfo; the masters skip it, and the status
+	// this server sends them on its own skips both limits
 	extern leakyBucket_t outboundLeakyBucket;
+
 	// Prevent using getstatus as an amplifier
-	if ( SVC_RateLimitAddress( from, 10, 1000 ) )
+	if ( !toMaster && SVC_RateLimitAddress( from, 10, 1000 ) )
 	{
 		if ( !Libcod_SpamCallback( "STATUS:ADDRESS", from ) )
 			Com_DPrintf( "SVC_Status: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
@@ -675,7 +683,7 @@ void SVC_Status( netadr_t from )
 
 	// Allow getstatus to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
+	if ( !toMaster && !SV_IsMasterAddress( from ) && SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) )
 	{
 		Com_DPrintf( "SVC_Status: rate limit exceeded, dropping request\n" );
 		return;
@@ -972,7 +980,8 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 
 			if ( cl->messageAcknowledge < 0 )
 			{
-				Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
+				if ( SV_ReportBadPacket() )
+					Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
 				return;
 			}
 
@@ -987,8 +996,9 @@ void SV_PacketEvent( netadr_t from, msg_t *msg )
 			// New: Fix for invalid reliableAcknowledge exploit, see https://github.com/callofduty4x/CoD4x_Server/pull/407
 			if ( ( cl->reliableSequence - cl->reliableAcknowledge ) > ( MAX_RELIABLE_COMMANDS - 1 ) || cl->reliableAcknowledge < 0 || ( cl->reliableSequence - cl->reliableAcknowledge ) < 0 )
 			{
-				Com_Printf("Out of range reliableAcknowledge message from %s - cl->reliableSequence is %i, reliableAcknowledge is %i\n",
-				           cl->name, cl->reliableSequence, cl->reliableAcknowledge);
+				if ( SV_ReportBadPacket() )
+					Com_Printf("Out of range reliableAcknowledge message from %s - cl->reliableSequence is %i, reliableAcknowledge is %i\n",
+					           cl->name, cl->reliableSequence, cl->reliableAcknowledge);
 				cl->reliableAcknowledge = cl->reliableSequence;
 				return;
 			}

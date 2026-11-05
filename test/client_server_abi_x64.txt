@@ -198,7 +198,7 @@ MSG_WriteBigString v0 8,8,8,4,4,4
 MSG_WriteBit0 v0 8
 MSG_WriteBit1 v0 8
 MSG_WriteBits v0 8,4,4
-MSG_WriteBitsCompress i4 8,8,4
+MSG_WriteBitsCompress i4 8,8,4,4
 MSG_WriteByte v0 8,4
 MSG_WriteData v0 8,8,4
 MSG_WriteDeltaArchivedEntity v0 8,8,8,4

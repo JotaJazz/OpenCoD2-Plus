@@ -452,7 +452,7 @@ unsigned int G_GetNonPVSFriendlyInfo( gentity_t *pSelf, vec3_t vPosition, int iL
 	}
 
 	return ((pEnt->s.number & 0xFFFF803F) | ((((unsigned short)((iPos[0] + 2) / 4) + 255) & 0x1FF) << 6)) & 0x7FFF | ((((unsigned short)((iPos[1] + 2) / 4)
-	        + 255) & 0x1FF) << 15) & 0xFFFFFF | ((unsigned char)(int)(g_entities[iNum - (iNext >> 6 << 6)].r.currentAngles[1] * 0.71111113) << 24);
+	        + 255) & 0x1FF) << 15) & 0xFFFFFF | ((unsigned char)(int)(g_entities[iNum - (iNext >> 6 << 6)].r.currentAngles[1] * 0.71111113f) << 24);
 }
 
 /*

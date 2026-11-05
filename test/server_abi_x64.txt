@@ -233,7 +233,7 @@ MSG_ReadStringLine i8 8
 MSG_SetDefaultUserCmd v0 8,8
 MSG_WriteBigString v0 8,8,8,4,4,4
 MSG_WriteBits v0 8,4,4
-MSG_WriteBitsCompress i4 8,8,4
+MSG_WriteBitsCompress i4 8,8,4,4
 MSG_WriteByte v0 8,4
 MSG_WriteData v0 8,8,4
 MSG_WriteDeltaEntity v0 8,8,8,4

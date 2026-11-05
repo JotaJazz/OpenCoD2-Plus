@@ -309,7 +309,7 @@ void MSG_WriteBit0(msg_t *msg);
 void MSG_WriteBit1(msg_t *msg);
 int MSG_ReadBits(msg_t *msg, int bits);
 int MSG_ReadBit(msg_t *msg);
-int MSG_WriteBitsCompress(byte *from, byte *to, int size);
+int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize);
 int MSG_ReadBitsCompress(byte *from, byte *to, int size);
 int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern void Com_Error(int level, const char *fmt, ...);
@@ -525,11 +525,14 @@ int MSG_ReadBit(msg_t *msg)
     return MSG_ReadBit_core(msg);
 }
 
-extern void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset);
+extern void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset, int maxoffset);
 extern void Huff_offsetReceive(nodetype *node, int *ch, byte *fin, int *offset);
-int MSG_WriteBitsCompress(byte *from, byte *to, int size)
+/* toSize bounds the output (not in 1.3, as OpenCoD2-Plus Server's e103ff1): -1 when the
+ * message would not fit in it */
+int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize)
 {
     int bit = 0;
+    int maxBits = toSize * 8;
     byte *p;
     byte *end;
 
@@ -537,11 +540,13 @@ int MSG_WriteBitsCompress(byte *from, byte *to, int size)
         p = from;
         end = from + size;
         do {
-            Huff_offsetTransmit((huff_t *)&msgHuff, *p, to, &bit);
+            Huff_offsetTransmit((huff_t *)&msgHuff, *p, to, &bit, maxBits);
             p++;
         } while (p != end);
     }
 
+    if (bit > maxBits)
+        return -1;
     return (bit + 7) >> 3;
 }
 

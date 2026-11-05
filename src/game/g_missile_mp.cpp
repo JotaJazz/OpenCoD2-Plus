@@ -432,7 +432,7 @@ void G_MissileLandAngles( gentity_t *ent, trace_t *trace, vec3_t vAngles, qboole
 	hitTime = level.previousTime + ( level.time - level.previousTime ) * trace->fraction;
 	BG_EvaluateTrajectory(&ent->s.apos, hitTime, vAngles);
 
-	if ( trace->normal[2] <= 0.1 )
+	if ( trace->normal[2] <= 0.1f )
 	{
 		if ( !bForceAlign )
 		{

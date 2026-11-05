@@ -14,7 +14,7 @@ master servers; a second run in internet mode (dedicated 2) heartbeats to a fake
 master on 127.0.0.1 instead of the real ones. Exits with 0 when every check
 passes.
 """
-import argparse, os, random, re, secrets, signal, socket, string, subprocess, sys, tempfile, time, zipfile
+import argparse, os, random, re, secrets, signal, socket, string, subprocess, sys, tempfile, threading, time, zipfile
 
 import cod2client
 
@@ -400,6 +400,290 @@ def check_console_log(path, check):
     check('sv_logRcon 0 hides rcon commands', 'Rcon from' in text and 'smokehidden' not in text)
 
 
+def check_vote_limit(port, protocol, password, check):
+    """A player calls at most three votes a map. Each vote kicks a client of
+    its own, so they pass at once and the voter stays."""
+    server_id = int(re.search(r'"sv_serverid" is: ?"(-?\d+)', rcon(port, password, 'sv_serverid')).group(1))
+    voter = cod2client.Client(port)
+    targets = []
+    try:
+        if voter.connect(protocol, 'smokevoter') is not None or not voter.request_gamestate(server_id):
+            check('a player calls at most three votes', False, 'voter did not join')
+            return
+        voter.enter_game(server_id, 1.0)
+        # join a team: spectators cannot call votes
+        menus = {name: i for i, name in ((i, voter.state.configstrings.get(1246 + i)) for i in range(32)) if name}
+        team = next(name for name in menus if name.startswith('team_'))
+        voter.command(server_id, f'mr {server_id} {menus[team]} autoassign')
+        voter.read_frames(1.0)
+        weapons = {'american': 'm1garand_mp', 'british': 'enfield_mp', 'russian': 'mosin_nagant_mp', 'german': 'kar98k_mp'}
+        for name, index in menus.items():
+            if name.startswith('weapon_') and name[7:] in weapons:
+                voter.command(server_id, f'mr {server_id} {index} {weapons[name[7:]]}')
+                voter.read_frames(1.0)  # flood protection: one command each 800 ms
+        for n in range(4):
+            target = cod2client.Client(port)
+            targets.append(target)
+            target.connect(protocol, f'smoketarget{n}')
+            target.request_gamestate(server_id)
+            target.enter_game(server_id, 0.3)
+        status = rcon(port, password, 'status')
+        nums = [int(m.group(1)) for m in re.finditer(r'^\s*(\d+)\s+\S+\s+\S+\s+\S+\s+smoketarget', status, re.M)]
+        replies = []
+        for num in nums:
+            voter.command(server_id, f'callvote clientkick {num}')
+            # wait for the answer and, for a vote called, for it to pass, so
+            # the next one does not find it in progress
+            reply, deadline = '', time.time() + 4.0
+            while time.time() < deadline:
+                seen = [c for f in voter.read_frames(0.3) for c in f['commands'] if 'GAME_' in c]
+                reply = reply or next((c for c in seen if 'GAME_CALLEDAVOTE' in c or 'GAME_MAXVOTES' in c
+                                       or 'GAME_VOTEALREADY' in c or 'GAME_NOSPECTATOR' in c), '')
+                if 'GAME_CALLEDAVOTE' not in reply and reply or any('GAME_VOTEPASSED' in c for c in seen):
+                    break
+            replies.append(reply)
+            time.sleep(0.9)  # flood protection: one command each 800 ms
+        called = sum('GAME_CALLEDAVOTE' in r for r in replies)
+        check('a player calls at most three votes', len(nums) == 4 and called == 3 and 'GAME_MAXVOTESCALLED' in replies[3],
+              f'{called} called, then {replies[3][:30] if len(replies) == 4 else replies}' if called == 3
+              else f'{len(nums)} targets, replies {[r[:30] for r in replies]}')
+    finally:
+        voter.close()
+        for target in targets:
+            target.close()
+
+
+def check_client_noise(port, protocol, password, console_log, check):
+    """A client cannot flood the menu commands, which skip flood protection,
+    nor the log with malformed packets. developer 1 puts the debug prints of
+    the commands ignored in the console log."""
+    server_id = int(re.search(r'"sv_serverid" is: ?"(-?\d+)', rcon(port, password, 'sv_serverid')).group(1))
+    rcon(port, password, 'developer 1')
+    client = cod2client.Client(port)
+    try:
+        if client.connect(protocol, 'smokenoise') is not None or not client.request_gamestate(server_id):
+            check('menu commands are limited', False, 'client did not join')
+            return
+        client.enter_game(server_id, 1.0)
+        before = len([l for l in log_lines(console_log) if 'menu command ignored' in l])
+        for _ in range(3):
+            client.commands(server_id, [f'mr {server_id} 0 smokenoise'] * 30)
+        client.read_frames(1.0)
+        ignored = len([l for l in log_lines(console_log) if 'menu command ignored' in l]) - before
+        check('menu commands are limited', ignored >= 50, f'{ignored} of 90 ignored')
+
+        before = len([l for l in log_lines(console_log) if 'bad command byte' in l])
+        for _ in range(40):
+            payload = cod2client.MsgWriter()
+            payload.bits(5, 3)  # no such client message
+            client._send(server_id, payload)
+        client.read_frames(1.0)
+        printed = len([l for l in log_lines(console_log) if 'bad command byte' in l]) - before
+        check('bad packets are not printed each time', 1 <= printed <= 15, f'{printed} of 40 printed')
+
+        # the client starts its chat with 0x15; 0x14 there would make the
+        # text one of the game's localized messages
+        client.read_frames(1.0)  # flood protection: one command each 800 ms
+        client.command(server_id, 'say "\x14GAME_VOTEPASSED"')
+        chat = [c for f in client.read_frames(1.0) for c in f['commands'] if 'GAME_VOTEPASSED' in c]
+        check('chat cannot show the game\'s messages', chat and all(': ^7.GAME_VOTEPASSED' in c for c in chat),
+              repr(chat[:1]))
+    finally:
+        client.close()
+        rcon(port, password, 'developer 0')
+
+
+def check_signed_challenge(port, protocol, password, check):
+    """A challenge is signed for its address, so a client whose challenge a
+    flood of other addresses pushed out of the 1024-slot table still joins.
+    With net_lanauthorize 1 and a fake authorize server, that client also has
+    to wait for the authorize reply, which a connect asks for again."""
+    authorize = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    authorize.bind(('127.0.0.1', 0))
+    authorize.settimeout(0.2)
+    rcon(port, password, f'sv_authorizeServer 127.0.0.1')
+    rcon(port, password, f'sv_authorizePort {authorize.getsockname()[1]}')
+    rcon(port, password, 'net_lanauthorize 1')
+    asked = []
+
+    def answer_authorize(seconds):
+        """Accepts the requests for 127.0.0.1; the flood's are left unanswered."""
+        deadline = time.time() + seconds
+        while time.time() < deadline:
+            try:
+                data, addr = authorize.recvfrom(65535)
+            except OSError:
+                continue
+            parts = data[len(PREFIX):].decode('latin-1').split()
+            if parts[:1] == ['getIpAuthorize'] and parts[2] == '127.0.0.1':
+                asked.append(int(parts[1]))
+                authorize.sendto(PREFIX + f'ipAuthorize {parts[1]} accept KEY_IS_GOOD 4242'.encode(), addr)
+
+    client = cod2client.Client(port)
+    flood = []
+    try:
+        client.sock.sendto(PREFIX + b'getchallenge', client.addr)
+        answer_authorize(1.0)
+        line = client._oob('getchallenge', 'challengeResponse')
+        challenge = int(line.split()[1]) if line.startswith('challengeResponse') else None
+        check('an authorized client gets a challenge', challenge is not None and asked, line.strip())
+        if challenge is None:
+            return
+
+        # push it out of the table: 1100 other addresses, under the global
+        # limit of 100 a second
+        for n in range(1100):
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.bind(('127.0.0.3', 0))
+            s.sendto(PREFIX + b'getchallenge', ('127.0.0.1', port))
+            flood.append(s)
+            if n % 9 == 8:
+                time.sleep(0.1)
+        time.sleep(0.5)
+
+        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokesigned\\rate\\25000\\snaps\\20\\plus\\122'
+                    % (protocol, challenge, client.qport))
+        connect = PREFIX + f'connect "{userinfo}"'.encode('latin-1')
+        client.sock.sendto(connect, client.addr)
+        client.sock.settimeout(1.0)
+        try:
+            first = client.sock.recvfrom(65535)[0][len(PREFIX):].decode('latin-1')
+        except OSError:
+            first = None
+        asked_before = len(asked)
+        answer_authorize(1.0)
+        check('a signed challenge out of the table waits for authorize',
+              first is None and len(asked) > asked_before and asked[-1] == challenge, repr(first))
+        client.protocol = protocol
+        reply = client._oob(f'connect "{userinfo}"', 'connectResponse')
+        check('a signed challenge out of the table joins', reply.startswith('connectResponse'), reply.strip())
+    except OSError as e:
+        check('a signed challenge out of the table joins', False, str(e))
+    finally:
+        for s in flood:
+            s.close()
+        client.close()
+        authorize.close()
+        rcon(port, password, 'net_lanauthorize 0')
+
+
+def check_stateless_challenge(port, protocol, password, check):
+    """With sv_challengeStateless 1 getchallenge answers at once with the signed
+    challenge, takes no slot and has no global limit, so a burst from other
+    addresses doesn't keep a player out; the connect asks the authorize server."""
+    authorize = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    authorize.bind(('127.0.0.1', 0))
+    authorize.settimeout(0.2)
+    rcon(port, password, 'sv_authorizeServer 127.0.0.1')
+    rcon(port, password, f'sv_authorizePort {authorize.getsockname()[1]}')
+    rcon(port, password, 'net_lanauthorize 1')
+    rcon(port, password, 'sv_challengeStateless 1')
+    asked = []
+
+    def answer_authorize(seconds):
+        deadline = time.time() + seconds
+        while time.time() < deadline:
+            try:
+                data, addr = authorize.recvfrom(65535)
+            except OSError:
+                continue
+            parts = data[len(PREFIX):].decode('latin-1').split()
+            if parts[:1] == ['getIpAuthorize'] and parts[2] == '127.0.0.1':
+                asked.append(int(parts[1]))
+                authorize.sendto(PREFIX + f'ipAuthorize {parts[1]} accept KEY_IS_GOOD 4243'.encode(), addr)
+
+    client = cod2client.Client(port)
+    try:
+        # a flood of 400 a second, over what the stateful path lets through,
+        # while the client asks as a real one does, again until answered
+        stop = threading.Event()
+
+        def flood():
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.bind(('127.0.0.3', 0))
+                while not stop.is_set():
+                    for _ in range(20):
+                        s.sendto(PREFIX + b'getchallenge', ('127.0.0.1', port))
+                    time.sleep(0.05)
+
+        flooder = threading.Thread(target=flood)
+        flooder.start()
+        time.sleep(1.0)
+        client.sock.settimeout(1.0)
+        line = 'no reply'
+        try:
+            for _ in range(3):
+                try:
+                    line = client._oob('getchallenge', 'challengeResponse')
+                    break
+                except OSError:
+                    pass
+        finally:
+            stop.set()
+            flooder.join()
+        answer_authorize(0.3)
+        challenge = int(line.split()[1]) if line.startswith('challengeResponse') else None
+        check('a stateless challenge comes through a flood, before authorize',
+              challenge is not None and not asked, line.strip())
+        if challenge is None:
+            return
+
+        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokestateless\\rate\\25000\\snaps\\20\\plus\\122'
+                    % (protocol, challenge, client.qport))
+        client.sock.sendto(PREFIX + f'connect "{userinfo}"'.encode('latin-1'), client.addr)
+        try:
+            first = client.sock.recvfrom(65535)[0][len(PREFIX):].decode('latin-1')
+        except OSError:
+            first = None
+        answer_authorize(1.0)
+        check('a stateless connect waits for authorize', first is None and asked == [challenge], f'{first!r} {asked}')
+        client.protocol = protocol
+        reply = client._oob(f'connect "{userinfo}"', 'connectResponse')
+        check('a stateless connect joins after authorize', reply.startswith('connectResponse'), reply.strip())
+    except OSError as e:
+        check('a stateless connect joins after authorize', False, str(e))
+    finally:
+        client.close()
+        authorize.close()
+        rcon(port, password, 'sv_challengeStateless 0')
+        rcon(port, password, 'net_lanauthorize 0')
+
+
+def check_query_limits(port, check):
+    """getinfo and getstatus have global limits of their own: a burst of
+    getstatus must not silence getinfo, which browsers use, and getinfo has
+    room for 100 a second. 127.0.0.1 has no per-address limit."""
+    time.sleep(1.5)  # both buckets refill
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.settimeout(0.5)
+        for _ in range(40):
+            s.sendto(PREFIX + b'getstatus x', ('127.0.0.1', port))
+        s.sendto(PREFIX + b'getinfo afterstatus', ('127.0.0.1', port))
+        statuses, info = 0, False
+        try:
+            while True:
+                data, _ = s.recvfrom(65535)
+                statuses += data[len(PREFIX):].startswith(b'statusResponse')
+                info = info or data[len(PREFIX):].startswith(b'infoResponse')
+        except OSError:
+            pass
+    check('getinfo answers right after a getstatus burst', info, f'{statuses} of 40 getstatus answered')
+
+    time.sleep(1.5)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.settimeout(0.5)
+        for _ in range(50):
+            s.sendto(PREFIX + b'getinfo x', ('127.0.0.1', port))
+        infos = 0
+        try:
+            while True:
+                s.recvfrom(65535)
+                infos += 1
+        except OSError:
+            pass
+    check('getinfo has room for a burst', infos >= 45, f'{infos} of 50')
+
+
 def check_challenge_during_queries(port, check):
     """A burst of queries, which share a low global limit, must not stop a player joining."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -610,7 +894,12 @@ def main():
 
                 if protocol.isdigit():
                     check_client(port, int(protocol), args.plus, password, os.path.join(home, 'main', 'games_mp.log'), check)
+                    check_vote_limit(port, int(protocol), password, check)
+                    check_client_noise(port, int(protocol), password, console_log, check)
                     check_connect_limit(port, int(protocol), args.plus, check)
+                    check_query_limits(port, check)
+                    check_signed_challenge(port, int(protocol), password, check)
+                    check_stateless_challenge(port, int(protocol), password, check)
                     check_challenge_during_queries(port, check)
 
                 # manymaps must not take a map name that leaves its library

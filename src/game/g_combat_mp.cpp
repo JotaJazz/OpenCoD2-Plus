@@ -655,7 +655,7 @@ qboolean G_RadiusDamage( const vec3_t origin, gentity_t *inflictor, gentity_t *a
 		radius = 1;
 	}
 
-	boxradius = 1.4142135 * radius; // radius * sqrt(2) for bounding box enlargement --
+	boxradius = 1.4142135f * radius; // radius * sqrt(2) for bounding box enlargement --
 	// bounding box was checking against radius / sqrt(2) if collision is along box plane
 	for ( i = 0 ; i < 3 ; i++ )
 	{

@@ -48,7 +48,8 @@ extern void MSG_WriteByte(msg_t *msg, int c);
 extern void MSG_WriteData(msg_t *buf, const void *data, int length);
 extern void MSG_WriteLong(msg_t *msg, int c);
 extern void MSG_WriteBits(msg_t *msg, int value, int bits);
-extern int MSG_WriteBitsCompress(byte *from, byte *to, int size);
+extern int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize);
+extern void Com_Error(errorParm_t code, const char *fmt, ...);
 extern void MSG_SetDefaultUserCmd(playerState_t *from, usercmd_t *to);
 extern void MSG_WriteDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to);
 extern int Com_HashKey(char *string, int maxlen);
@@ -977,7 +978,10 @@ write_footer:
     {
         byte *msgData = buf.data;
         memcpy(compressedBuf, msgData, 9);
-        compressedSize = 9 + MSG_WriteBitsCompress(msgData + 9, compressedBuf + 9, buf.cursize - 9);
+        compressedSize = MSG_WriteBitsCompress(msgData + 9, compressedBuf + 9, buf.cursize - 9, sizeof(compressedBuf) - 9);
+        if (compressedSize < 0)   /* a command that compresses past the buffer would overrun the stack */
+            Com_Error(ERR_DROP, "EXE_SERVERMESSAGEOVERFLOW");
+        compressedSize += 9;
     }
 
     {

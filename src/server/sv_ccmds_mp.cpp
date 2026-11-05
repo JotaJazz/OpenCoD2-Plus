@@ -681,6 +681,17 @@ static void SV_Status_f( void )
 		Com_Printf( "%7i ", svs.time - cl->lastPacketTime );
 
 		s = NET_AdrToString( cl->netchan.remoteAddress );
+#if LIBCOD_COMPILE_PLAYER == 1 // proxy support
+		// a local proxy's player shows the address it reported, with the proxy's port
+		extern char proxy_realip[MAX_CLIENTS][16];
+		netadr_t realIP;
+
+		if ( proxy_realip[i][0] && NET_StringToAdr( proxy_realip[i], &realIP ) )
+		{
+			realIP.port = cl->netchan.remoteAddress.port;
+			s = NET_AdrToString( realIP );
+		}
+#endif
 		Com_Printf( "%s", s );
 		l = 22 - strlen( s );
 		for ( j = 0 ; j < l ; j++ )

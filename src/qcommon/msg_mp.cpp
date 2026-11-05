@@ -1283,19 +1283,27 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *
 MSG_WriteBitsCompress
 ==============
 */
-int MSG_WriteBitsCompress( byte *from, byte *to, int fromSizeBytes )
+int MSG_WriteBitsCompress( byte *from, byte *to, int fromSizeBytes, int toSizeBytes )
 {
 	int bit;
 	int data;
+	int maxBits;
 
 	bit = 0;
 	data = fromSizeBytes;
+	// a rare byte takes up to 11 bits, so the output can outgrow the input
+	maxBits = toSizeBytes * 8;
 
 	while ( data )
 	{
-		Huff_offsetTransmit(&msgHuff.compressor, *from, to, &bit);
+		Huff_offsetTransmit(&msgHuff.compressor, *from, to, &bit, maxBits);
 		--data;
 		++from;
+	}
+
+	if ( bit > maxBits )
+	{
+		return -1;
 	}
 
 	return (bit + 7) >> 3;

@@ -1066,12 +1066,13 @@ static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteBits: parameter 2 differs fro
 extern "C" decltype(MSG_WriteBits(std::declval<msg_t*>(), std::declval<int>(), std::declval<int>())) cod2c_MSG_WriteBits(msg_t* a0, int a1, int a2) __asm__(COD2_SYM("MSG_WriteBits"));
 decltype(MSG_WriteBits(std::declval<msg_t*>(), std::declval<int>(), std::declval<int>())) MSG_WriteBits(msg_t* a0, int a1, int a2) { return cod2c_MSG_WriteBits(a0, a1, a2); }
 
-static_assert(cod2_abi_class<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>()))>() == 'v', "MSG_WriteBitsCompress: return class differs from the engine");
+static_assert(cod2_abi_class<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "MSG_WriteBitsCompress: return class differs from the engine");
 static_assert(cod2_abi_slot<unsigned char*>() == COD2_ABI_PICK(4, 8), "MSG_WriteBitsCompress: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<unsigned char*>() == COD2_ABI_PICK(4, 8), "MSG_WriteBitsCompress: parameter 1 differs from the engine");
 static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteBitsCompress: parameter 2 differs from the engine");
-extern "C" cod2_abi_int<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>())), 4> cod2c_MSG_WriteBitsCompress(unsigned char* a0, unsigned char* a1, int a2) __asm__(COD2_SYM("MSG_WriteBitsCompress"));
-decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>())) MSG_WriteBitsCompress(unsigned char* a0, unsigned char* a1, int a2) { return (decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>())))cod2c_MSG_WriteBitsCompress(a0, a1, a2); }
+static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteBitsCompress: parameter 3 differs from the engine");
+extern "C" cod2_abi_int<decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>(), std::declval<int>())), 4> cod2c_MSG_WriteBitsCompress(unsigned char* a0, unsigned char* a1, int a2, int a3) __asm__(COD2_SYM("MSG_WriteBitsCompress"));
+decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>(), std::declval<int>())) MSG_WriteBitsCompress(unsigned char* a0, unsigned char* a1, int a2, int a3) { return (decltype(MSG_WriteBitsCompress(std::declval<unsigned char*>(), std::declval<unsigned char*>(), std::declval<int>(), std::declval<int>())))cod2c_MSG_WriteBitsCompress(a0, a1, a2, a3); }
 
 static_assert(cod2_abi_class<decltype(MSG_WriteByte(std::declval<msg_t*>(), std::declval<int>()))>() == 'v', "MSG_WriteByte: return class differs from the engine");
 static_assert(cod2_abi_slot<msg_t*>() == COD2_ABI_PICK(4, 8), "MSG_WriteByte: parameter 0 differs from the engine");

@@ -919,9 +919,9 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 		VectorScale( tr->trDelta, phase, result );
 		break;
 	case TR_GRAVITY:
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		VectorCopy( tr->trDelta, result );
-		result[2] -= DEFAULT_GRAVITY * deltaTime;       // FIXME: local gravity...
+		result[2] = tr->trDelta[2] + deltaTime * -DEFAULT_GRAVITY;      // in float, as 1.3
 		break;
 	// RF, acceleration
 	case TR_ACCELERATE: // trDelta is eventual speed
@@ -930,7 +930,7 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 			VectorClear( result );
 			return;
 		}
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		phase = deltaTime / (float)tr->trDuration;
 		VectorScale( tr->trDelta, deltaTime * deltaTime, result );
 		break;
@@ -940,7 +940,7 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 			VectorClear( result );
 			return;
 		}
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		VectorScale( tr->trDelta, deltaTime, result );
 		break;
 	default:
@@ -968,7 +968,7 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result )
 		VectorCopy( tr->trBase, result );
 		break;
 	case TR_LINEAR:
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 		break;
 	case TR_LINEAR_STOP:
@@ -976,7 +976,7 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result )
 		{
 			atTime = tr->trTime + tr->trDuration;
 		}
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		if ( deltaTime < 0 )
 		{
 			deltaTime = 0;
@@ -989,9 +989,12 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result )
 		VectorMA( tr->trBase, phase, tr->trDelta, result );
 		break;
 	case TR_GRAVITY:
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
-		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
-		result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;     // FIXME: local gravity...
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
+		// New: in float and in this order, as 1.3; the double sum after
+		// VectorMA rounded otherwise
+		result[0] = tr->trBase[0] + tr->trDelta[0] * deltaTime;
+		result[1] = tr->trBase[1] + tr->trDelta[1] * deltaTime;
+		result[2] = tr->trBase[2] + tr->trDelta[2] * deltaTime + -0.5f * DEFAULT_GRAVITY * deltaTime * deltaTime;
 		break;
 	// RF, acceleration
 	case TR_ACCELERATE:     // trDelta is the ultimate speed
@@ -999,28 +1002,26 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result )
 		{
 			atTime = tr->trTime + tr->trDuration;
 		}
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		// phase is the acceleration constant
-		phase = VectorLength( tr->trDelta ) / ( tr->trDuration * 0.001 );
 		// trDelta at least gives us the acceleration direction
-		Vec3NormalizeTo( tr->trDelta, result );
+		phase = Vec3NormalizeTo( tr->trDelta, result ) / ( (float)tr->trDuration * 0.001f );
 		// get distance travelled at current time
-		VectorMA( tr->trBase, phase * 0.5 * deltaTime * deltaTime, result, result );
+		VectorMA( tr->trBase, 0.5f * phase * deltaTime * deltaTime, result, result );
 		break;
 	case TR_DECCELERATE:    // trDelta is the starting speed
 		if ( atTime > tr->trTime + tr->trDuration )
 		{
 			atTime = tr->trTime + tr->trDuration;
 		}
-		deltaTime = ( atTime - tr->trTime ) * 0.001;    // milliseconds to seconds
+		deltaTime = (float)( atTime - tr->trTime ) * 0.001f;    // milliseconds to seconds
 		// phase is the breaking constant
-		phase = VectorLength( tr->trDelta ) / ( tr->trDuration * 0.001 );
 		// trDelta at least gives us the acceleration direction
-		Vec3NormalizeTo( tr->trDelta, result );
+		phase = Vec3NormalizeTo( tr->trDelta, result ) / ( (float)tr->trDuration * 0.001f );
 		// get distance travelled at current time (without breaking)
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, v );
 		// subtract breaking force
-		VectorMA( v, -phase * 0.5 * deltaTime * deltaTime, result, result );
+		VectorMA( v, -0.5f * phase * deltaTime * deltaTime, result, result );
 		break;
 	default:
 		Com_Error( ERR_DROP, "BG_EvaluateTrajectory: unknown trType: %i", tr->trType );

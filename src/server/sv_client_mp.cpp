@@ -402,6 +402,99 @@ static bool SV_ChallengeIsRetry( netadr_t from )
 
 /*
 =================
+SV_ResolveAuthorizeServer
+
+Returns false when the authorize server's address can't be resolved
+=================
+*/
+static bool SV_ResolveAuthorizeServer()
+{
+	// a changed authorize server is resolved again
+	if ( sv_authorizeServer->modified || sv_authorizePort->modified )
+	{
+		memset( &svs.authorizeAddress, 0, sizeof( svs.authorizeAddress ) );
+		sv_authorizeServer->modified = false;
+		sv_authorizePort->modified = false;
+	}
+
+	// look up the authorize server's IP
+	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD )
+	{
+		Com_Printf( "Resolving %s\n", sv_authorizeServer->current.string );
+		if ( !NET_StringToAdr( sv_authorizeServer->current.string, &svs.authorizeAddress ) )
+		{
+			Com_Printf( "Couldn't resolve address\n" );
+			return false;
+		}
+		svs.authorizeAddress.port = BigShort( sv_authorizePort->current.integer );
+		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", sv_authorizeServer->current.string,
+		            svs.authorizeAddress.ip[0], svs.authorizeAddress.ip[1],
+		            svs.authorizeAddress.ip[2], svs.authorizeAddress.ip[3],
+		            (unsigned short)BigShort( svs.authorizeAddress.port ) );
+	}
+
+	return true;
+}
+
+#ifdef LIBCOD
+// LAN addresses (unless net_lanauthorize) and sv_noAuthorize skip the authorize server
+static bool SV_NeedsAuthorize( netadr_t from )
+{
+	return !sv_noAuthorize->current.boolean && ( net_lanauthorize->current.boolean || !Sys_IsLANAddress( from ) );
+}
+
+/*
+=================
+SV_ChallengeFromCookie
+
+New: a connect whose challenge left the table, as a flood of made-up
+addresses turns it over, but which is signed for this address, gets a slot
+again. If the address needs authorizing, the authorize server is asked and the
+client is left to send connect again, which it does every 3 seconds
+=================
+*/
+static int SV_ChallengeFromCookie( netadr_t from, int value )
+{
+	challenge_t *challenge;
+	int i, oldest = 0, oldestTime = 0x7fffffff;
+
+	// no slot until the authorize server is known: the key must be checked
+	if ( SV_NeedsAuthorize( from ) && !SV_ResolveAuthorizeServer() )
+	{
+		return MAX_CHALLENGES;
+	}
+
+	for ( i = 0, challenge = svs.challenges; i < MAX_CHALLENGES; i++, challenge++ )
+	{
+		if ( challenge->time < oldestTime )
+		{
+			oldestTime = challenge->time;
+			oldest = i;
+		}
+	}
+
+	challenge = &svs.challenges[oldest];
+	memset( challenge, 0, sizeof( *challenge ) );
+	challenge->challenge = value;
+	challenge->adr = from;
+	challenge->firstTime = svs.time;
+	challenge->time = svs.time;
+	challenge->pingTime = svs.time;
+	challenge->pingUnknown = true;
+	Libcod_SetAuthorizationState( oldest, "" );
+
+	if ( SV_NeedsAuthorize( from ) )
+	{
+		challenge->authorizePending = true;
+		SV_AuthorizeRequest( from, value );
+	}
+
+	return oldest;
+}
+#endif
+
+/*
+=================
 SV_GetChallenge
 A "getchallenge" OOB command has been received
 Returns a challenge number that can be used
@@ -430,6 +523,16 @@ void SV_GetChallenge( netadr_t from )
 	{
 		if ( !Libcod_SpamCallback( "CHALLENGE:ADDRESS", from ) )
 			Com_DPrintf( "SV_GetChallenge: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
+		return;
+	}
+
+	// New: without the authorize server, or with sv_challengeStateless, the
+	// reply is the signed challenge alone: no slot is taken, so no global
+	// limit is needed, and the connect, which proves the address, takes the
+	// slot and asks the authorize server (the client sends it again after 3 s)
+	if ( !SV_NeedsAuthorize( from ) || sv_challengeStateless->current.boolean )
+	{
+		NET_OutOfBandPrint( NS_SERVER, from, va( "challengeResponse %i", SV_ChallengeCookie( from ) ) );
 		return;
 	}
 
@@ -470,7 +573,11 @@ void SV_GetChallenge( netadr_t from )
 		// this is the first time this client has asked for a challenge
 		challenge = &svs.challenges[oldest];
 
+#ifdef LIBCOD
+		challenge->challenge = SV_ChallengeCookie( from );
+#else
 		challenge->challenge = ( ( (unsigned int)rand() << 16 ) ^ rand() ) ^ svs.time;
+#endif
 		challenge->adr = from;
 		challenge->firstTime = svs.time;
 		challenge->firstPing = 0;
@@ -495,28 +602,9 @@ void SV_GetChallenge( netadr_t from )
 		return;
 	}
 
-	// a changed authorize server is resolved again
-	if ( sv_authorizeServer->modified || sv_authorizePort->modified )
+	if ( !SV_ResolveAuthorizeServer() )
 	{
-		memset( &svs.authorizeAddress, 0, sizeof( svs.authorizeAddress ) );
-		sv_authorizeServer->modified = false;
-		sv_authorizePort->modified = false;
-	}
-
-	// look up the authorize server's IP
-	if ( !svs.authorizeAddress.ip[0] && svs.authorizeAddress.type != NA_BAD )
-	{
-		Com_Printf( "Resolving %s\n", sv_authorizeServer->current.string );
-		if ( !NET_StringToAdr( sv_authorizeServer->current.string, &svs.authorizeAddress ) )
-		{
-			Com_Printf( "Couldn't resolve address\n" );
-			return;
-		}
-		svs.authorizeAddress.port = BigShort( sv_authorizePort->current.integer );
-		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", sv_authorizeServer->current.string,
-		            svs.authorizeAddress.ip[0], svs.authorizeAddress.ip[1],
-		            svs.authorizeAddress.ip[2], svs.authorizeAddress.ip[3],
-		            (unsigned short)BigShort( svs.authorizeAddress.port ) );
+		return;
 	}
 
 	// if they have been challenging for a long time and we
@@ -732,7 +820,27 @@ static const char *SV_ConnectBanMessage( netadr_t adr, int guid )
 #if LIBCOD_COMPILE_RATELIMITER == 1
 static leakyBucket_t gamestateBuckets[MAX_CLIENTS];
 static bool gamestatePending[MAX_CLIENTS];
+static leakyBucket_t menuBuckets[MAX_CLIENTS];
 #endif
+
+/*
+==================
+SV_ReportBadPacket
+
+New: a client's malformed packets printed a line each, so one client could
+flood the console and the log. Past 10 a second they are dropped unreported
+==================
+*/
+bool SV_ReportBadPacket()
+{
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	static leakyBucket_t bucket;
+
+	return !SVC_RateLimit( &bucket, 10, 100 );
+#else
+	return true;
+#endif
+}
 
 void SV_DirectConnect( netadr_t from )
 {
@@ -827,11 +935,41 @@ void SV_DirectConnect( netadr_t from )
 				}
 			}
 		}
+#ifdef LIBCOD
+		if ( i == MAX_CHALLENGES && SV_ChallengeCookieValid( from, challenge ) )
+		{
+			i = SV_ChallengeFromCookie( from, challenge );
+
+			// the authorize server can't be resolved: no reply, as SV_GetChallenge
+			if ( i == MAX_CHALLENGES )
+			{
+				return;
+			}
+
+			authorizationChallenge = i;
+		}
+#endif
 		if ( i == MAX_CHALLENGES )
 		{
 			NET_OutOfBandPrint( NS_SERVER, from, "error\nEXE_BAD_CHALLENGE" );
 			return;
 		}
+
+#ifdef LIBCOD
+		// no reply until the authorize server answers, or doesn't in time,
+		// as SV_GetChallenge does before it sends the challenge
+		if ( svs.challenges[i].authorizePending )
+		{
+			if ( svs.time - svs.challenges[i].firstTime <= sv_authorizeTimeout->current.integer )
+			{
+				return;
+			}
+
+			svs.challenges[i].authorizePending = false;
+		}
+
+		guid = svs.challenges[i].guid;
+#endif
 
 		// the authorize reply isn't always there to check this: a kicked
 		// client can resend its old challenge, and LAN addresses and
@@ -873,7 +1011,11 @@ void SV_DirectConnect( netadr_t from )
 		svs.challenges[i].connected = qtrue;
 
 		// never reject a LAN client based on ping
+#ifdef LIBCOD
+		if ( !Sys_IsLANAddress( from ) && !svs.challenges[i].pingUnknown )
+#else
 		if ( !Sys_IsLANAddress( from ) )
+#endif
 		{
 			if ( sv_minPing->current.integer && ping < sv_minPing->current.integer )
 			{
@@ -1018,6 +1160,7 @@ gotnewcl:
 #if LIBCOD_COMPILE_RATELIMITER == 1
 	memset( &gamestateBuckets[clientNum], 0, sizeof( gamestateBuckets[clientNum] ) );
 	gamestatePending[clientNum] = false;
+	memset( &menuBuckets[clientNum], 0, sizeof( menuBuckets[clientNum] ) );
 #endif
 
 	SV_UserinfoChanged( newcl );
@@ -1176,6 +1319,7 @@ void SV_AuthorizeIpPacket( netadr_t from )
 			// any address, and a reconnect with the same challenge takes
 			// this GUID
 			svs.challenges[i].guid = guid;
+			svs.challenges[i].authorizePending = false;
 			NET_OutOfBandPrint( NS_SERVER, svs.challenges[i].adr,
 			                    va("challengeResponse %i", svs.challenges[i].challenge) );
 			return;
@@ -1625,13 +1769,15 @@ void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta )
 
 	if ( cmdCount < 1 )
 	{
-		Com_Printf( "cmdCount < 1\n" );
+		if ( SV_ReportBadPacket() )
+			Com_Printf( "cmdCount < 1\n" );
 		return;
 	}
 
 	if ( cmdCount > MAX_PACKET_USERCMDS )
 	{
-		Com_Printf( "cmdCount > MAX_PACKET_USERCMDS\n" );
+		if ( SV_ReportBadPacket() )
+			Com_Printf( "cmdCount > MAX_PACKET_USERCMDS\n" );
 		return;
 	}
 
@@ -2179,7 +2325,8 @@ static void SV_MutePlayer_f( client_t *cl )
 
 	if ( muteClient < 0 || muteClient >= MAX_CLIENTS )
 	{
-		Com_Printf("Invalid mute client %i\n", muteClient);
+		if ( SV_ReportBadPacket() )
+			Com_Printf("Invalid mute client %i\n", muteClient);
 		return;
 	}
 
@@ -2197,7 +2344,8 @@ static void SV_UnmutePlayer_f( client_t *cl )
 
 	if ( muteClient < 0 || muteClient >= MAX_CLIENTS )
 	{
-		Com_Printf("Invalid unmute client %i\n", muteClient);
+		if ( SV_ReportBadPacket() )
+			Com_Printf("Invalid unmute client %i\n", muteClient);
 		return;
 	}
 
@@ -2532,6 +2680,18 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg, int *executed )
 		floodprotect = qfalse;
 	}
 
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	// New: mr and score skip flood protection, which would break menus, but
+	// each mr notifies menuresponse and runs the gametype's scripts: a burst
+	// of 20, then 20 a second, is far more than menus and the scoreboard send
+	if ( cl->state >= CS_ACTIVE && ( !Q_strncmp( "mr ", s, 3 ) || !Q_strncmp( "score ", s, 6 ) )
+	        && SVC_RateLimit( &menuBuckets[cl - svs.clients], 20, 50 ) )
+	{
+		clientOk = qfalse;
+		Com_DPrintf( "client menu command ignored for %s: %s\n", cl->name, s );
+	}
+#endif
+
 	// malicious users may try using too many string commands
 	// to lag other players.  If we decide that we want to stall
 	// the command, we will stop processing the rest of the packet,
@@ -2681,6 +2841,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg )
 	}
 	else if ( c != clc_EOF )
 	{
-		Com_Printf( "WARNING: bad command byte %i for client %i\n", c, cl - svs.clients );
+		if ( SV_ReportBadPacket() )
+			Com_Printf( "WARNING: bad command byte %i for client %i\n", c, cl - svs.clients );
 	}
 }

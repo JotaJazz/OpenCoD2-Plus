@@ -3261,7 +3261,7 @@ static void PM_CrashLand( playerState_t *ps, pml_t *pml )
 				if ( stunTime >= 1500 )
 					fSpeedMult = 0.2;
 				else
-					fSpeedMult = 0.5 - ((stunTime - 500.0) / 1000.0) * 0.3f;
+					fSpeedMult = 0.5f - ((stunTime - 500.0f) / 1000.0f) * 0.3f;
 			}
 
 			ps->pm_time = stunTime;
@@ -3897,7 +3897,7 @@ void PM_LadderMove( pmove_t *pm, pml_t *pml )
 
 	if ( pm->cmd.rightmove )
 	{
-		VectorMA(wishvel, scale * 0.2 * pm->cmd.rightmove, pml->right, wishvel);
+		VectorMA(wishvel, scale * 0.2f * pm->cmd.rightmove, pml->right, wishvel);
 	}
 
 	wishspeed = Vec3NormalizeTo(wishvel, wishdir);
@@ -4026,7 +4026,7 @@ void PM_WalkMove( pmove_t *pm, pml_t *pml )
 	scale = PM_CmdScale_Walk(pm, &cmd);
 
 	scale *= PM_DamageScale_Walk(ps->damageTimer);
-	ps->damageTimer -= (int)(pml->frametime * 1000.0);
+	ps->damageTimer -= (int)(pml->frametime * 1000.0f);
 
 	if ( ps->damageTimer <= 0 )
 	{

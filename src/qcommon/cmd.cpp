@@ -58,7 +58,10 @@ const char *Cmd_Argv( int arg )
 Cmd_ReplaceControlChars
 
 Clients can put any byte in a quoted argument, and a line break there would
-start a fake line in the game log. A leading chat marker on argument 1 is kept.
+start a fake line in the game log. The client starts its chat with 0x15, the
+mark for literal text, so that byte is kept at the start of argument 1; 0x14
+there made the rest a localized string, and a player could show any of the
+game's messages (a passed vote, a kick) after their name.
 ============
 */
 void Cmd_ReplaceControlChars( void )
@@ -70,7 +73,7 @@ void Cmd_ReplaceControlChars( void )
 	{
 		s = cmd_argv[i];
 
-		if ( i == 1 && *s >= 0x14 && *s <= 0x16 )
+		if ( i == 1 && *s == 0x15 )
 			s++;
 
 		for ( ; *s; s++ )

@@ -1,6 +1,7 @@
 #include "gsc.hpp"
 
 #include "mbedtls/entropy.h"
+#include "mbedtls/md.h"
 
 #ifdef LIBCOD
 
@@ -21,6 +22,7 @@ dvar_t *g_spectateBots;
 dvar_t *g_logPickup;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_noAuthorize;
+dvar_t *sv_challengeStateless;
 dvar_t *sv_authorizeTimeout;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_isLookingAtOnDemand;
@@ -142,6 +144,7 @@ void RegisterLibcodDvars()
 	g_logPickup = Dvar_RegisterBool("g_logPickup", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_noAuthorize = Dvar_RegisterBool("sv_noAuthorize", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_challengeStateless = Dvar_RegisterBool("sv_challengeStateless", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", AUTHORIZE_TIMEOUT, 0, 1200000, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
@@ -619,6 +622,60 @@ static uint32_t SVC_HashSeed()
 	}
 
 	return seed;
+}
+
+/*
+=================
+SV_ChallengeCookie
+
+New: a challenge is an HMAC of the address and a 30-second window under a key
+chosen at startup, so a client that got one can always show it, even after a
+flood of made-up addresses turned the 1024-slot table over. Only the address
+it was sent to can know it
+=================
+*/
+#define CHALLENGE_WINDOW_MSEC 30000
+
+static int SV_ChallengeCookieAt( netadr_t adr, uint64_t window )
+{
+	static unsigned char key[32];
+	static bool keyed;
+	unsigned char data[14], mac[32];
+	int challenge;
+
+	if ( !keyed )
+	{
+		mbedtls_entropy_context entropy;
+		mbedtls_entropy_init( &entropy );
+		if ( mbedtls_entropy_func( &entropy, key, sizeof( key ) ) != 0 )
+		{
+			for ( size_t i = 0; i < sizeof( key ); i++ )
+				key[i] = (unsigned char)( rand() ^ Sys_Milliseconds() >> ( i & 7 ) );
+		}
+		mbedtls_entropy_free( &entropy );
+		keyed = true;
+	}
+
+	memcpy( data, adr.ip, 4 );
+	memcpy( data + 4, &adr.port, 2 );
+	memcpy( data + 6, &window, 8 );
+	mbedtls_md_hmac( mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ), key, sizeof( key ), data, sizeof( data ), mac );
+	memcpy( &challenge, mac, sizeof( challenge ) );
+
+	// 0 is a cleared slot
+	return challenge ? challenge : 1;
+}
+
+int SV_ChallengeCookie( netadr_t adr )
+{
+	return SV_ChallengeCookieAt( adr, Sys_Milliseconds64() / CHALLENGE_WINDOW_MSEC );
+}
+
+bool SV_ChallengeCookieValid( netadr_t adr, int challenge )
+{
+	uint64_t window = Sys_Milliseconds64() / CHALLENGE_WINDOW_MSEC;
+
+	return challenge && ( challenge == SV_ChallengeCookieAt( adr, window ) || challenge == SV_ChallengeCookieAt( adr, window - 1 ) );
 }
 
 static long SVC_HashForAddress( netadr_t address )
@@ -1252,9 +1309,25 @@ static bool SV_ResolveMaster_libcod( int index, netadr_t *adr )
 	return true;
 }
 
+static netadr_t masterAdr[MAX_MASTER_SERVERS];
+
+// The resolved masters: queries from them skip the global query limits
+bool SV_IsMasterAddress( netadr_t from )
+{
+	for ( int i = 0 ; i < MAX_MASTER_SERVERS ; i++ )
+	{
+		if ( masterAdr[i].type == NA_IP && from.type == NA_IP && memcmp( masterAdr[i].ip, from.ip, 4 ) == 0 )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void SV_MasterHeartbeat_libcod(const char *hbname)
 {
-	static netadr_t	adr[MAX_MASTER_SERVERS];
+	netadr_t *adr = masterAdr;
 	netadr_t alt;
 	int	i;
 
@@ -1300,11 +1373,11 @@ void SV_MasterHeartbeat_libcod(const char *hbname)
 				continue;
 			}
 
-			SVC_Status( adr[i] );
+			SVC_Status( adr[i], true );
 
 			alt = adr[i];
 			alt.altPort = 1;
-			SVC_Status( alt );
+			SVC_Status( alt, true );
 		}
 	}
 }

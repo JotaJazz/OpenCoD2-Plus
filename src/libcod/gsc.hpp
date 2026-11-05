@@ -162,6 +162,7 @@ extern dvar_t *g_spectateBots;
 extern dvar_t *g_logPickup;
 extern dvar_t *sv_botKickMessages;
 extern dvar_t *sv_noAuthorize;
+extern dvar_t *sv_challengeStateless;
 extern dvar_t *sv_authorizeTimeout;
 extern dvar_t *sv_limitLocalRcon;
 extern dvar_t *sv_isLookingAtOnDemand;

@@ -379,7 +379,7 @@ void P_DamageFeedback( gentity_t *player )
 		client->ps.aimSpreadScale = 255;
 	}
 
-	kick = count * 0.2;
+	kick = count * 0.2f;
 
 	if ( kick < 5.0 )
 	{

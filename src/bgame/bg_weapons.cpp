@@ -773,7 +773,8 @@ float BG_GetHorizontalBobFactor( const playerState_t *ps, float cycle, float spe
 		amplitude = maxAmp;
 	}
 
-	return sin(cycle) * amplitude;
+	// in float, as 1.3
+	return amplitude * sinf(cycle);
 }
 
 /*
@@ -804,7 +805,11 @@ float BG_GetVerticalBobFactor( const playerState_t *ps, float cycle, float speed
 		amplitude = maxAmp;
 	}
 
-	return (0.75 * (sin(cycle * 4.0 + asin(1)) * 0.2 + sin(cycle + cycle))) * amplitude;
+	// New: in float and in this order, as 1.3; the double expression
+	// rounded once at the end
+	float bob = sinf(cycle + cycle);
+	bob += (float)sin((double)(cycle * 4.0f) + M_PI / 2) * 0.2f;
+	return amplitude * (bob * 0.75f);
 }
 
 /*
@@ -1106,7 +1111,7 @@ void PM_AdjustAimSpreadScale( pmove_t *pm, pml_t *pml )
 			{
 				for ( i = 0; i < 2; i++ )
 				{
-					viewchange = viewchange + 1.28;
+					viewchange = viewchange + 1.28f;
 				}
 			}
 
@@ -2371,9 +2376,9 @@ void BG_CalculateWeaponPosition_BasePosition_angles( weaponState_t *ws, vec3_t a
 
 		if ( targetAngles[i] > ws->vLastMoveAng[i] )
 		{
-			if ( ws->frametime * 0.1 > speedFrac )
+			if ( ws->frametime * 0.1f > speedFrac )
 			{
-				speedFrac = ws->frametime * 0.1;
+				speedFrac = ws->frametime * 0.1f;
 			}
 
 			ws->vLastMoveAng[i] = ws->vLastMoveAng[i] + speedFrac;
@@ -2385,9 +2390,9 @@ void BG_CalculateWeaponPosition_BasePosition_angles( weaponState_t *ws, vec3_t a
 		}
 		else
 		{
-			if ( speedFrac > ws->frametime * -0.1 )
+			if ( speedFrac > ws->frametime * -0.1f )
 			{
-				speedFrac = ws->frametime * -0.1;
+				speedFrac = ws->frametime * -0.1f;
 			}
 
 			ws->vLastMoveAng[i] = ws->vLastMoveAng[i] + speedFrac;
@@ -2823,7 +2828,7 @@ bool PM_IsAdsAllowed( playerState_t *ps, pml_t *pml )
 		}
 	}
 
-	if ( ps->pm_type >= PM_NORMAL_LINKED && ps->pm_type <= PM_DEAD_LINKED )
+	if ( ps->pm_type != PM_NORMAL && ps->pm_type != PM_NORMAL_LINKED )
 	{
 		return false;
 	}

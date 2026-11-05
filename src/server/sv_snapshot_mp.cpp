@@ -762,7 +762,17 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 	assert(msg->cursize >= SV_ENCODE_START);
 
 	memcpy(svCompressBuf, msg->data, SV_ENCODE_START);
-	compressedSize = MSG_WriteBitsCompress(msg->data + SV_ENCODE_START, svCompressBuf + SV_ENCODE_START, msg->cursize - SV_ENCODE_START) + SV_ENCODE_START;
+	compressedSize = MSG_WriteBitsCompress(msg->data + SV_ENCODE_START, svCompressBuf + SV_ENCODE_START, msg->cursize - SV_ENCODE_START, sizeof(svCompressBuf) - SV_ENCODE_START);
+
+	if ( compressedSize < 0 )
+	{
+		// a message that compresses past the buffer would overrun the stack
+		Com_Printf("WARNING: client disconnected for msg overflow: %s\n", client->name);
+		SV_DropClient(client, "EXE_SERVERMESSAGEOVERFLOW");
+		return;
+	}
+
+	compressedSize += SV_ENCODE_START;
 
 	if ( client->dropReason )
 	{

@@ -179,7 +179,7 @@ extern int MSG_ReadLong(msg_t *msg);
 extern char *MSG_ReadStringLine(msg_t *msg);
 extern char *MSG_ReadBigString(msg_t *msg);
 extern void MSG_BeginReading(msg_t *msg);
-extern int MSG_WriteBitsCompress(byte *src, byte *dst, int len);
+extern int MSG_WriteBitsCompress(byte *src, byte *dst, int len, int dstLen);
 extern void CL_SetServerInfoByAddress(netadr_t from, const char *info, int ping);
 extern void Netchan_Setup(netsrc_t sock, netchan_t *chan, netadr_t adr, int qport);
 extern int Netchan_Process(netchan_t *chan, msg_t *msg);
@@ -1462,7 +1462,10 @@ void CL_Record_f(void)
     MSG_WriteByte(&buf, 7);
 
     *(int *)compressedBuf = *(int *)buf.data;
-    compressedSize = MSG_WriteBitsCompress(buf.data + 4, compressedBuf + 4, buf.cursize - 4) + 4;
+    compressedSize = MSG_WriteBitsCompress(buf.data + 4, compressedBuf + 4, buf.cursize - 4, sizeof(compressedBuf) - 4);
+    if (compressedSize < 0)   /* past the buffer: the demo's first message is left out */
+        return;
+    compressedSize += 4;
 
     len = conn->serverMessageSequence;
     FS_Write(&len, 4, conn->demofile);

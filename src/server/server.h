@@ -96,6 +96,8 @@ typedef struct
 	int guid;
 	char PBguid[33];
 	char clientPBguid[33];
+	bool authorizePending; // made from a signed challenge: waits for the authorize reply
+	bool pingUnknown;      // made from a signed challenge: no ping was measured
 } challenge_t;
 
 typedef struct
@@ -410,6 +412,10 @@ void SVC_RemoteCommand( netadr_t from, msg_t *msg );
 
 bool SVC_RateLimit( leakyBucket_t *bucket, int burst, int period );
 bool SVC_RateLimitAddress( netadr_t from, int burst, int period, bool limitLAN = false );
+bool SV_IsMasterAddress( netadr_t from );
+bool SV_ReportBadPacket();
+int SV_ChallengeCookie( netadr_t adr );
+bool SV_ChallengeCookieValid( netadr_t adr, int challenge );
 
 void SV_SendClientSnapshot(client_s *client);
 void SV_ExecuteClientMessage(client_s *cl, msg_t *msg);
@@ -484,7 +490,7 @@ int SV_GetClientPing(int clientNum);
 void SV_GameSendServerCommand(int clientnum, int svscmd_type, const char *text);
 void SV_GetChallenge( netadr_t from );
 void SVC_Info( netadr_t from );
-void SVC_Status( netadr_t from );
+void SVC_Status( netadr_t from, bool toMaster = false );
 void SV_ConnectionlessPacket( netadr_t from, msg_t *msg );
 void SV_UserinfoChanged( client_t *cl );
 void SV_AuthorizeRequest(netadr_t from, int challenge);

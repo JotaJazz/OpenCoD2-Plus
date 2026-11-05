@@ -1138,6 +1138,10 @@ void Cmd_CallVote_f( gentity_t *ent )
 
 	SV_GameSendServerCommand(-1, SV_CMD_CAN_IGNORE, va("%c \"GAME_CALLEDAVOTE\x15%s\"", 101, ent->client->sess.cs.name));
 
+	// New: count the votes a player calls, as the check above expects;
+	// 1.3 never counted them, so one player could call votes without end
+	ent->client->sess.teamVoteCount++;
+
 	// start the voting, the caller autoamtically votes yes
 	level.voteTime = level.time + 30000;
 	level.voteYes = 1;

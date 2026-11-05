@@ -244,7 +244,7 @@ qboolean FS_CompareIwds(char *needediwds, int len, qboolean dlstring);
 void Huff_offsetReceive(node_t *node, int *ch, byte *fin, int *offset);
 void huffman_send(node_t *node, node_t *child, byte *fout);
 void Huff_addRef(huff_t *huff, int ch, msg_t *mbuf, int offset);
-void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset);
+void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset, int maxoffset);
 void Huff_Init(huffman_t *huff);
 
 void MD4Update(MD4_CTX *context, const unsigned char *input, unsigned int inputLen);
@@ -258,7 +258,7 @@ void MSG_WriteBit0(msg_t *msg);
 void MSG_WriteBit1(msg_t *msg);
 int MSG_ReadBits(msg_t *msg, int bits);
 int MSG_ReadBit(msg_t *msg);
-int MSG_WriteBitsCompress(byte *from, byte *to, int size);
+int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize);
 int MSG_ReadBitsCompress(byte *from, byte *to, int size);
 void MSG_WriteByte(msg_t *msg, int c);
 void MSG_WriteData(msg_t *buf, const void *data, int length);
