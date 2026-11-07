@@ -14,6 +14,10 @@ scripted usercmds and reads its playerstate from the snapshots:
   the two shots may be shorter than with no switch, give or take a command
   (50 ms, how closely the snapshots time a shot). The shotgun gains about
   that much on a stock build, so only the rifles show the bug there.
+- prone peek: crouched and leaning, it goes prone, crouches and goes prone
+  again, to each side. The lean, which halves going prone, may come back no
+  faster than when the lean key is let go (0.5 in 280 ms): it used to halve
+  in one frame.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the checks fail: that is how they catch the bugs.
@@ -26,7 +30,8 @@ import cod2client, smoke_test
 from cod2client import CLC_MOVE_NO_DELTA, hash_key
 
 RCON = 'plusrules'
-BUTTON_ATTACK, BUTTON_RELOAD = 1, 16  # q_shared.h
+BUTTON_ATTACK, BUTTON_RELOAD, BUTTON_LEANLEFT, BUTTON_LEANRIGHT = 1, 16, 64, 128  # q_shared.h
+PRONE, CROUCH = 256, 512  # BUTTON_PRONE, BUTTON_CROUCH: the stance held
 WEAPON_READY, WEAPON_FIRING = 0, 3     # bg_public.h weaponstate_t
 OTHER = 'thompson_mp'
 # zPAM's list of the weapons fast reload works with
@@ -208,7 +213,26 @@ def check_fast_reload(port, player, other, check):
         settle(player, index)
 
 
-CHECKS = {'fast_reload': check_fast_reload}
+def check_prone_peek(port, player, other, check):
+    # prone, crouch and back to prone while leaning, as a peek over cover
+    for side, lean in (('right', BUTTON_LEANRIGHT), ('left', BUTTON_LEANLEFT)):
+        settle(player, other)
+        held = [CROUCH | lean] * 30 + [PRONE | lean] * 20 + [CROUCH | lean] * 6 + [PRONE | lean] * 20
+        player.script = tuple((b, other) for b in held + [CROUCH] * 30)
+        states = frames_until(player, lambda s: not player.script, len(player.script) * 0.05 + 5)
+        fastest, leaned = 0.0, 0.0
+        for a, b in zip(states, states[1:]):
+            dt = b.get('commandTime', 0) - a.get('commandTime', 0)
+            leaned = max(leaned, abs(b.get('leanf', 0)))
+            if dt > 0:
+                fastest = max(fastest, (abs(a.get('leanf', 0)) - abs(b.get('leanf', 0))) / dt)
+        # letting go of a lean brings 0.5 back in 280 ms (PM_UpdateLean)
+        check(f'prone peek: going prone leaning {side}, the lean comes back no faster than let go',
+              leaned >= 0.45 and fastest <= 0.5 / 280 * 1.01,
+              f'leaned up to {leaned:.2f}, back at up to {fastest * 280:.2f} per 280 ms')
+
+
+CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek}
 
 
 def main():

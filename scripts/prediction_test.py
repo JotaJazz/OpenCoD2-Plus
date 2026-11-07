@@ -7,9 +7,11 @@ Runs the dedicated server with scripts/contact_test.py's mod and a minimal
 client as its target, and a real client (cod2_linux, held at 20 fps) as the
 second player, which the mod puts in front of a ledge (--spot, by rcon) and a
 config file drives: it mantles onto the ledge, turns away from the target,
-walks forward, back and to both sides, crouches, goes prone, stands, jumps
+walks forward, crouches and goes prone twice leaning right, walks back and to
+both sides, crouches, goes prone, stands, jumps
 and fires its rifle, fires, reloads and switches to its thompson and back
-during the drop, then aims down its sight and back twice. It keeps away from the target: the client clips against
+during the drop, then aims down its sight and back twice. It keeps away from
+the target: the client clips against
 other players with a box one unit smaller on each side than the server's (as
 the original does), so running into one misses by design.
 
@@ -34,7 +36,8 @@ sight's fraction (fWeaponPosFrac) must match it (--max-ads-misses, 0), and so mu
 the weapon's state (weaponTime, weaponDelay, weapon, weaponstate) through a
 fast reload, a shot cut by a reload and a switch to its thompson and back
 during the drop, which a Plus server plays by its own rules (--max-weapon-misses,
-1: the weapon the mod gives at spawn). --delay MS puts a UDP relay between the
+1: the weapon the mod gives at spawn), and its lean going prone while leaning
+(--max-lean-misses, 0). --delay MS puts a UDP relay between the
 client and the server that holds each packet MS milliseconds each way (a
 ping of twice that, as online); --maxfps sets the client's com_maxfps
 (default 20). --wine CMD runs a Windows client given with --binary, our
@@ -62,6 +65,7 @@ MOVES = '''wait 300
 wait 20
 cl_yawspeed 180; +right; wait 20; -right
 +forward; wait 60; -forward
++leanright; gocrouch; wait 30; goprone; wait 20; gocrouch; wait 6; goprone; wait 20; -leanright; gostand; wait 40
 +back; wait 30; -back
 +moveleft; wait 45; -moveleft
 +moveright; wait 45; -moveright
@@ -168,6 +172,8 @@ def main():
     ap.add_argument('--max-weapon-misses', type=int, default=1,
                     help='snapshots whose weapon state the client predicted otherwise (COD2_TRACE_PREDDIFF=all); '
                     'one is the weapon the mod gives at spawn')
+    ap.add_argument('--max-lean-misses', type=int, default=0,
+                    help='snapshots whose lean the client predicted otherwise (COD2_TRACE_PREDDIFF=all)')
     ap.add_argument('--max-ads-misses', type=int, default=0,
                     help='fail above this many predicted sight fractions the server disagrees with (default 0)')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
@@ -329,6 +335,10 @@ def main():
         print(f'weapon misses: {len(weapon)}' + ''.join(f'\n  t={t}: ' + '; '.join(l.strip() for l in lines)
                                                          for t, lines in weapon[:5]))
         check(f'at most {args.max_weapon_misses} weapon misses', len(weapon) <= args.max_weapon_misses, f'{len(weapon)}')
+        # and the lean (leanf, +0x4c) going prone leaning, which a Plus server brings back gradually
+        lean = re.findall(r'^  \+0x004c client .*', text, re.M)
+        print(f'lean misses: {len(lean)}' + ''.join(f'\n  {l.strip()}' for l in lean[:5]))
+        check(f'at most {args.max_lean_misses} lean misses', len(lean) <= args.max_lean_misses, f'{len(lean)}')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
 

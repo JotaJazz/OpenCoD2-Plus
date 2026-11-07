@@ -491,6 +491,9 @@ void PM_ClipVelocity( const vec3_t in, const vec3_t normal, vec3_t out )
 	VectorMA(in, -change, normal, out);
 }
 
+/* PmoveSingle's pm->plusRules, for PM_UpdateLean, which gets no pmove */
+static int pm_plusRules;
+
 /*
 ==================
 PM_UpdateLean
@@ -556,7 +559,12 @@ void PM_UpdateLean( playerState_t *ps, float msec, usercmd_t *cmd,
 
 			if ( leanofs > fLeanMax )
 			{
-				leanofs = fLeanMax;
+				// Plus: going prone leaning, the lean comes back as it does when
+				// let go, as the Plus server does (src/bgame/bg_pmove.cpp)
+				if ( pm_plusRules && ps->leanf > fLeanMax )
+					leanofs = I_fmax(ps->leanf - msec / 280.0 * fLeanMax, fLeanMax);
+				else
+					leanofs = fLeanMax;
 			}
 		}
 		else
@@ -568,7 +576,10 @@ void PM_UpdateLean( playerState_t *ps, float msec, usercmd_t *cmd,
 
 			if ( -fLeanMax > leanofs )
 			{
-				leanofs = -fLeanMax;
+				if ( pm_plusRules && ps->leanf < -fLeanMax )
+					leanofs = I_fmin(ps->leanf + msec / 280.0 * fLeanMax, -fLeanMax);
+				else
+					leanofs = -fLeanMax;
 			}
 		}
 	}
@@ -4204,6 +4215,8 @@ void PmoveSingle( pmove_t *pm )
 
 	ps = pm->ps;
 	assert(ps);
+
+	pm_plusRules = pm->plusRules;
 
 	// RF, update conditional values for anim system
 	BG_AnimUpdatePlayerStateConditions(pm);
