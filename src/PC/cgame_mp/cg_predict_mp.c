@@ -258,6 +258,17 @@ static void CG_PredDiffCompare(const playerState_t *server)
     }
 }
 
+/* Plus: a linked player's origin is the server's (Pmove leaves it); lerp it
+   between snapshots like its parent entity, when linked in both */
+static qboolean CG_LerpLinkedOrigin(void)
+{
+    int a = cg->snap->ps.pm_type;
+    int b = cg->nextSnap->ps.pm_type;
+
+    return cl_plusRules && cg->nextSnap->serverTime > cg->snap->serverTime &&
+           (a == 1 || a == 7) && (b == 1 || b == 7); /* PM_NORMAL_LINKED, PM_DEAD_LINKED */
+}
+
 void CG_PredictPlayerState(void)
 {
     byte ll[32];
@@ -269,6 +280,7 @@ void CG_PredictPlayerState(void)
     qboolean moved;
     WeaponDef *weapDef;
     int cg_time;
+    qboolean lerpLinked;
 
     LargeLocal_LargeLocal(ll, REAL_PS_SIZE);
     oldPlayerState = (byte *)LargeLocal_GetBuf((const LargeLocal *)ll);
@@ -329,6 +341,7 @@ void CG_PredictPlayerState(void)
     CG_PredDiffCompare(&nextSnap->ps);
 
     cg->physicsTime = nextSnap->serverTime;
+    lerpLinked = CG_LerpLinkedOrigin();
 
     ps->oldVelocity[0] = ((playerState_t *)oldPlayerState)->oldVelocity[0];
     ps->oldVelocity[1] = ((playerState_t *)oldPlayerState)->oldVelocity[1];
@@ -351,7 +364,8 @@ void CG_PredictPlayerState(void)
         if (!CL_GetUserCmd(oldest - 1, &cg_pmove[0].oldcmd))
             continue;
 
-        if (ps->commandTime == ((playerState_t *)oldPlayerState)->commandTime) {
+        /* a lerped origin is no prediction; it would count as a miss each frame */
+        if (!lerpLinked && ps->commandTime == ((playerState_t *)oldPlayerState)->commandTime) {
             vec3_t oldOrigin;
             vec3_t deltaAngles;
             vec3_t delta;
@@ -495,6 +509,13 @@ postPredict:
 
         if (cg_showmiss->current.integer)
             Com_Printf("no prediction run\n");
+    }
+
+    if (lerpLinked) {
+        int i;
+        for (i = 0; i < 3; i++)
+            ps->origin[i] = cg->snap->ps.origin[i] +
+                            (cg->nextSnap->ps.origin[i] - cg->snap->ps.origin[i]) * cg->frameInterpolation;
     }
 
     CG_TransitionPlayerState(ps, (playerState_t *)oldPlayerState);

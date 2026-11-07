@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — Plus 123: a linked player's view lerped
+
+- On a Plus server, cg_predict_mp.c lerps the predicted origin of a player linked in both `snap` and `nextSnap` (`PM_NORMAL_LINKED`/`PM_DEAD_LINKED`) with `frameInterpolation`, after Pmove and before `CG_TransitionPlayerState`, so weapon prediction and events stay. Pmove leaves a linked origin, so the view jumped by a snapshot's travel (a plane at 40 Hz). The lerped view is a snapshot behind `nextSnap` but matches the parent entity, which is lerped the same way; the old view ran ahead of it.
+- The miss check is skipped while lerping: it would count the lerp as a miss each frame and add it to the view. `CG_InterpolatePlayerState(1)` was rejected, as it skips the weapon prediction. Client only; the Plus version stays 123, and the server's plus-protocol.md was left unchanged.
+- Left open: the first frame of a link and of an unlink still step once (not linked in both snapshots). No runtime test: it was checked by building only, and needs a flight in the vehicles mod.
+
 ## 2026-11-07 — a language with no files of its own
 
 - For zPAM Plus's translations (`localizedstrings/zpam.str`): on an English install, `loc_language` 1–4 (French to Spanish) now keeps the `localized_english` files in use instead of falling back to English. Sounds stay English, and the chosen language's `.str` lines apply; the stock `.str` files already carry Spanish. A real localized install is unchanged. `language_test.py` fails on the old client.
