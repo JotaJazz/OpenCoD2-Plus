@@ -52,6 +52,9 @@ extern dvar_t *sv_authorizeServer;
 extern dvar_t *sv_authorizePort;
 extern dvar_t *g_forceRate;
 extern dvar_t *g_forceSnaps;
+#ifdef COD2_PLUS
+extern dvar_t *sv_lanForceRate;
+#endif
 extern dvar_t *sv_kickMessages;
 extern dvar_t *sv_timeoutMessages;
 extern dvar_t *sv_timeout;

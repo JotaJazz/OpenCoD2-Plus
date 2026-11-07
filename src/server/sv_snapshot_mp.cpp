@@ -709,6 +709,35 @@ TTimo - use sv_maxRate or sv_dl_maxRate depending on regular or downloading clie
 ====================
 */
 #define HEADER_RATE_BYTES   48      // include our header, IP header, and some overhead
+
+#ifdef COD2_PLUS
+/*
+====================
+SV_PlusRate
+
+The server sets a Plus client's rate and snapshots, not the client's rate
+and snaps: a snapshot every frame, and 1,000 bytes a second per Hz but no
+less than 25,000, unless g_forceSnaps or g_forceRate say otherwise. Read
+for each message, so a change by rcon takes effect at once
+(docs/architecture/plus-protocol.md#tick-rate)
+====================
+*/
+static void SV_PlusRate( client_t *client )
+{
+	int frameMsec = 1000 / sv_fps->current.integer;
+
+	if ( g_forceSnaps->current.integer )
+		client->snapshotMsec = 1000 / g_forceSnaps->current.integer;
+	else
+		client->snapshotMsec = frameMsec;
+
+	if ( g_forceRate->current.integer )
+		client->rate = g_forceRate->current.integer < 1000 ? 1000 : g_forceRate->current.integer;
+	else
+		client->rate = 1000 * 1000 / frameMsec < 25000 ? 25000 : 1000 * 1000 / frameMsec;
+}
+#endif
+
 static int SV_RateMsec( client_t *client, int messageSize )
 {
 	int rate;
@@ -723,7 +752,12 @@ static int SV_RateMsec( client_t *client, int messageSize )
 	rate = client->rate;
 
 	// low watermark for sv_maxRate, never 0 < sv_maxRate < 1000 (0 is no limitation)
+#ifdef COD2_PLUS
+	// Plus: the server set this rate itself, and sv_maxRate stops at 25000
+	if ( sv_maxRate->current.integer && client->plusVersion != PLUS_VERSION )
+#else
 	if ( sv_maxRate->current.integer )
+#endif
 	{
 		if ( sv_maxRate->current.integer < 1000 )
 		{
@@ -794,7 +828,11 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 	// local clients get snapshots every frame
 	// TTimo - show_bug.cgi?id=491
 	// added sv_lanForceRate check
+#ifdef COD2_PLUS
+	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || ( sv_lanForceRate->current.boolean && Sys_IsLANAddress( client->netchan.remoteAddress ) ) )
+#else
 	if ( client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress( client->netchan.remoteAddress ) )
+#endif
 	{
 		client->nextSnapshotTime = svs.time - 1;
 		return;
@@ -808,6 +846,11 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 		client->nextSnapshotTime = svs.time - 1;
 		return;
 	}
+#endif
+
+#ifdef COD2_PLUS
+	if ( client->plusVersion == PLUS_VERSION )
+		SV_PlusRate(client);
 #endif
 
 	// normal rate / snapshotMsec calculation

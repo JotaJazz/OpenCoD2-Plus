@@ -31,6 +31,10 @@ scripted usercmds and reads its playerstate from the snapshots:
   every 50 ms (mg42's fireTime), timed from the first to the last; left, the
   turret turns back at 200 degrees a second. With --fps N the server runs at
   that sv_fps, with a snapshot every frame; other builds fail above 20 Hz.
+- snapshot rate: with sv_lanForceRate 0, so the test client counts as one on
+  the internet, it gets a snapshot every frame and a rate of 1,000 bytes a
+  second per Hz (25,000 at least), and g_forceSnaps 10 set by rcon gives it 10
+  snapshots a second at once. Other builds have no sv_lanForceRate.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the other checks fail: that is how they catch the bugs.
@@ -425,10 +429,41 @@ def check_mg_rate(port, player, other, check):
           abs(fastest - TURRET_RETURN_SPEED) <= TURRET_RETURN_SPEED * 0.1, f'{fastest:.0f} degrees a second')
 
 
+def snapshots_per_second(player, seconds=3):
+    frames = player.read_frames(seconds, False)
+    span = frames[-1]['server_time'] - frames[0]['server_time'] if len(frames) > 1 else 0
+    return (len(frames) - 1) * 1000 / span if span else 0
+
+
+def check_snapshot_rate(port, player, other, check):
+    """With sv_lanForceRate 0 the test client gets an internet client's rate:
+    on a Plus server, a snapshot every frame and 1,000 bytes a second per Hz
+    (25,000 at least), whatever its snaps and rate; g_forceSnaps and
+    g_forceRate set by rcon take effect at once."""
+    frame = 1000 // player.fps
+    hz = 1000 / frame
+    for command in ('set sv_lanForceRate 0', 'set g_forceSnaps 0', 'set g_forceRate 0'):
+        smoke_test.rcon(port, RCON, command)
+    player.read_frames(1, False)
+    got = snapshots_per_second(player)
+    check(f'snapshot rate: a snapshot every frame at sv_fps {player.fps}', abs(got - hz) <= hz * 0.1,
+          f'{got:.1f} a second, {hz:.1f} expected')
+    rate = re.search(r'plustest\S*\s.*\s(\d+)\s*$', smoke_test.rcon(port, RCON, 'status'), re.M)
+    expected = max(25000, 1000 * 1000 // frame)
+    check(f'snapshot rate: the rate is {expected} at sv_fps {player.fps}', rate is not None and int(rate.group(1)) == expected,
+          rate.group(1) if rate else 'no status line')
+    smoke_test.rcon(port, RCON, 'set g_forceSnaps 10')
+    player.read_frames(1, False)
+    got = snapshots_per_second(player)
+    check('snapshot rate: g_forceSnaps 10 by rcon takes effect at once', abs(got - 10) <= 1.5, f'{got:.1f} a second')
+    for command in ('set g_forceSnaps 0', 'set sv_lanForceRate 1'):
+        smoke_test.rcon(port, RCON, command)
+
+
 # in this order: the turret mg_clip spawns stays in front of the player, and
 # shotgun_spread's pellets would hit it
 CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
-          'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate}
+          'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate}
 
 
 def main():

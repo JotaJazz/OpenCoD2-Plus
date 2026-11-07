@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — OpenCoD2-Plus Server 6156d66: the server sets the rate
+
+- Brought the vendored files up to 6156d66: `SV_PlusRate` gives Plus clients a snapshot every frame and 1,000 bytes a second per Hz, read per message, and `sv_lanForceRate` (Plus only) lets a LAN client count as one on the internet. No client change: its `rate` and `snaps` are ignored by a Plus server, and the Plus version stays 123.
+- Done in a separate worktree on `dev`, as another session had `client-language-fallback` checked out; `scripts/vendor_check.py` passes, the builds but msvc-client (a shared folder) and the unit tests were run.
+
 ## 2026-11-07 — OpenCoD2-Plus Server 107f574: turrets at any sv_fps
 
 - Brought the vendored files up to 107f574: in the Plus build, turrets and `trigger_hurt` step by `level.frameTime` (a manned MG fired twice as fast at 40 Hz), and `plus_rules_test.py --fps`/`bots_test.py --fps`. Server code only; the Plus version stays 123 and the client predicts nothing new.

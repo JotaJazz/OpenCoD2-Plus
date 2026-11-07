@@ -38,6 +38,9 @@ dvar_t *sv_authorizeServer;
 dvar_t *sv_authorizePort;
 dvar_t *g_forceRate;
 dvar_t *g_forceSnaps;
+#ifdef COD2_PLUS
+dvar_t *sv_lanForceRate;
+#endif
 dvar_t *sv_kickMessages;
 dvar_t *sv_timeoutMessages;
 dvar_t *sv_privatePassword;
@@ -130,6 +133,8 @@ void SV_InitDvar()
 #ifdef COD2_PLUS
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 1000000, DVAR_CHANGEABLE_RESET);
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 1000, DVAR_CHANGEABLE_RESET);
+	// ioquake3's name: 0 gives LAN clients the rate and snapshots of the internet
+	sv_lanForceRate = Dvar_RegisterBool("sv_lanForceRate", true, DVAR_CHANGEABLE_RESET);
 #else
 	g_forceRate = Dvar_RegisterInt("g_forceRate", 0, 0, 25000, DVAR_CHANGEABLE_RESET);
 	g_forceSnaps = Dvar_RegisterInt("g_forceSnaps", 0, 0, 30, DVAR_CHANGEABLE_RESET);

@@ -1,5 +1,5 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: 107f574
+# revision: 6156d66
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
