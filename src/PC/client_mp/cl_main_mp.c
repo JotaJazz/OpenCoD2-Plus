@@ -238,6 +238,8 @@ extern const dvar_t *cl_freelook;
 extern const dvar_t *cl_mouseAccel;
 extern const dvar_t *cl_showMouseRate;
 extern const dvar_t *m_pitch;
+/* a vehicle mod sets it while a player flies, without touching the archived m_pitch */
+const dvar_t *cl_vehicleInvertPitch;
 extern const dvar_t *m_yaw;
 extern const dvar_t *m_forward;
 extern const dvar_t *m_side;
@@ -1083,6 +1085,7 @@ void CL_InitOnceForAllClients(void)
     cl_bypassMouseInput = Dvar_RegisterBool_mac("cl_bypassMouseInput", 0, 0);
 
     m_pitch = Dvar_RegisterFloat("m_pitch", 0.022f, -1.0f, 1.0f, 0x1001);
+    cl_vehicleInvertPitch = Dvar_RegisterBool_mac("cl_vehicleInvertPitch", 0, 0);
     m_yaw = Dvar_RegisterFloat("m_yaw", 0.022f, -1.0f, 1.0f, 0x1001);
     m_forward = Dvar_RegisterFloat("m_forward", 0.25f, -1.0f, 1.0f, 0x1001);
     m_side = Dvar_RegisterFloat("m_side", 0.25f, -1.0f, 1.0f, 0x1001);

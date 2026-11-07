@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — cl_vehicleInvertPitch
+
+- For the vehicles mod (OCOD2PV), which sets it with `setClientCvar` while a player pilots a plane: 1 negates the mouse's pitch in `CL_MouseMove`. Setting `m_pitch` from the server was rejected: it is archived and would stay inverted after a disconnect in flight. The dvar has no flags, so `NetHardening_ServerMaySetCvar` lets a server set it.
+- `CL_InitCGame` (new map, server or demo) and `CG_MapRestart` set it back to 0, since a map's end kills the script that would. Pitch keys are not inverted, as they are bound for walking; an already inverted `m_pitch` flies the other way.
+
 ## 2026-11-07 — Plus 123: a linked player's view lerped
 
 - On a Plus server, cg_predict_mp.c lerps the predicted origin of a player linked in both `snap` and `nextSnap` (`PM_NORMAL_LINKED`/`PM_DEAD_LINKED`) with `frameInterpolation`, after Pmove and before `CG_TransitionPlayerState`, so weapon prediction and events stay. Pmove leaves a linked origin, so the view jumped by a snapshot's travel (a plane at 40 Hz). The lerped view is a snapshot behind `nextSnap` but matches the parent entity, which is lerped the same way; the old view ran ahead of it.

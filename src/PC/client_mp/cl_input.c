@@ -30,6 +30,7 @@ extern const dvar_t *cl_sensitivity;
 extern const dvar_t *cl_mouseAccel;
 extern const dvar_t *cl_showMouseRate;
 extern const dvar_t *m_pitch;
+extern const dvar_t *cl_vehicleInvertPitch;
 extern const dvar_t *m_yaw;
 extern const dvar_t *m_forward;
 extern const dvar_t *m_side;
@@ -1300,6 +1301,8 @@ void CL_MouseMove(usercmd_t *cmd)
 
     if ((KB_AT(13)->active || cl_freelook->current.enabled) && !KB_AT(8)->active) {
         pitchDelta = my * CL_FiniteOrDefault(m_pitch->current.value, 0.022f);
+        if (cl_vehicleInvertPitch->current.enabled)
+            pitchDelta = -pitchDelta;
         pitchDelta = CL_ClampMouseAxisDelta(pitchDelta, CL_FiniteOrDefault(cl->cgameMaxPitchSpeed, 0.0f));
         cl->viewangles[0] += pitchDelta;
     } else {

@@ -10,6 +10,7 @@
 extern const dvar_t *cg_chatHeight;
 extern const dvar_t *cg_chatTime;
 extern const dvar_t *cg_thirdPerson;
+extern const dvar_t *cl_vehicleInvertPitch;
 
 
 extern const char *CL_GetConfigString(int index);
@@ -685,6 +686,7 @@ void CG_MapRestart(qboolean savepersist)
     cg->iWeapSelectLastDrawTime = 0;
 
     Dvar_SetBool( (void *)(cg_thirdPerson), 0);
+    Dvar_SetBool( (void *)(cl_vehicleInvertPitch), 0);
 
     cgui = CGUI_PTR;
     *(int *)(cgui + 8) = 0;

@@ -12,6 +12,7 @@ extern const dvar_t *cl_showServerCommands;
 extern const dvar_t *cl_showTimeDelta;
 extern const dvar_t *com_statmon;
 extern const dvar_t *com_sv_running;
+extern const dvar_t *cl_vehicleInvertPitch;
 
 
 extern refexport_t re;
@@ -88,6 +89,7 @@ extern void R_AddCmdDrawQuadPic(vec2_t *verts, const vec_t *color, MaterialHandl
 extern void Cbuf_AddText(const char *text);
 extern void Dvar_SetString(const dvar_t *dvar, const char *value);
 extern void Dvar_SetInt(const dvar_t *dvar, int value);
+extern void Dvar_SetBool(const dvar_t *dvar, int value);
 extern int Dvar_GetInt(const char *name);
 extern void Dvar_GetUnpackedColorByName(const char *name, float *color);
 extern void CalcScreenPlacement(float *x, float *y, float *w, float *h, int horzAlign, int vertAlign);
@@ -1057,6 +1059,8 @@ void CL_InitCGame(void)
 
     t1 = Sys_Milliseconds();
     Con_Close();
+    /* a server's flight leaves no inverted mouse on the next map or server */
+    Dvar_SetBool(cl_vehicleInvertPitch, 0);
 
     cl = CL_LOCAL;
     {
