@@ -111,6 +111,7 @@ void FS_CheckFileSystemStarted(void);
 int FS_LoadStack(void);
 qboolean FS_UseSearchPath(const searchpath_t *pSearch);
 qboolean FS_LanguageHasAssets(int iLanguage);
+qboolean FS_LocalizedLanguageInUse(int iLanguage);
 long int FS_HashFileName(const char *fname, int hashSize);
 fileHandle_t FS_HandleForFile(qboolean streamThread);
 FILE *FS_FileForHandle(fileHandle_t f);
@@ -191,10 +192,7 @@ qboolean FS_UseSearchPath(const searchpath_t *pSearch)
     if (fs_ignoreLocalized->current.enabled)
         return 0;
 
-    if (pSearch->language != SEH_GetCurrentLanguage())
-        return 0;
-
-    return 1;
+    return FS_LocalizedLanguageInUse(pSearch->language);
 }
 
 qboolean FS_LanguageHasAssets(int iLanguage)
@@ -205,6 +203,18 @@ qboolean FS_LanguageHasAssets(int iLanguage)
             return 1;
     }
     return 0;
+}
+
+/* Plus: a language with no localized assets of its own (an English install set
+ * to Spanish) uses the english ones, so sounds and .str files stay; the .str
+ * parser then keeps that language's lines. A real localized install is as 1.3. */
+qboolean FS_LocalizedLanguageInUse(int iLanguage)
+{
+    int current = SEH_GetCurrentLanguage();
+
+    if (iLanguage == current)
+        return 1;
+    return iLanguage == 0 && !FS_LanguageHasAssets(current);
 }
 
 extern int ___tolower(int c);
@@ -912,7 +922,7 @@ const char *FS_ShortOSFilePath(const char *filename)
             if (fs_ignoreLocalized->current.enabled) {
                 continue;
             }
-            if (search->language != SEH_GetCurrentLanguage()) {
+            if (!FS_LocalizedLanguageInUse(search->language)) {
                 continue;
             }
         }
@@ -2895,7 +2905,7 @@ static const webIwdFile_t *FS_WebFindIwdFile(const char *qpath)
             if (fs_ignoreLocalized && fs_ignoreLocalized->current.enabled) {
                 continue;
             }
-            if (iwd->language != SEH_GetCurrentLanguage()) {
+            if (!FS_LocalizedLanguageInUse(iwd->language)) {
                 continue;
             }
         }
@@ -3423,7 +3433,7 @@ static void FS_WebAppendIwdList(char **items, int *count, const char *path, cons
             if (fs_ignoreLocalized && fs_ignoreLocalized->current.enabled) {
                 continue;
             }
-            if (iwd->language != SEH_GetCurrentLanguage()) {
+            if (!FS_LocalizedLanguageInUse(iwd->language)) {
                 continue;
             }
         }

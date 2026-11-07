@@ -35,6 +35,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/climb_sound_test.py GAME` | a real client (`COD2_TRACE_SOUND`: each alias it plays) hears `weap_raise` from a minimal Plus client that mantles, as the climber does (Plus 123; the climber's cgame played it alone) | yes |
 | `scripts/plus_rules_test.py GAME --binary B` | the Plus 123 rules (OpenCoD2-Plus Server's test, vendored) against a minimal Plus client: fast reload, prone peek, MG clip; 1.3 Plus builds only | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
+| `scripts/language_test.py GAME --protocol P` | on an English-only install, `loc_language 4` stays Spanish and keeps the english localized `.str` files (1.3 falls back to English); 6 (Russian) still falls back | yes |
 | `scripts/sound_test.py` | what the client sends to the device, through SDL's disk driver: the menu's MP3 stream, `playLocalSound`, left and right of a `script_origin`, `map_restart`, `vid_restart`, `disconnect` and `quit` with sounds playing, no device, `snd_khz 22`, the callback's cost with bots fighting; `--cases a,b`; `--wine CMD --binary cod2_win32.exe` runs the Windows client | yes |
 
 `P` is 118 (1.3, `build/check-linux`) or 115 (1.0, `build/check-linux-10`);

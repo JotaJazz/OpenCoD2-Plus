@@ -216,7 +216,9 @@ void SEH_UpdateLanguageInfo(void)
 
     iNumLanguages = 0;
     for (i = 0; i < 14; i++) {
-        if (FS_LanguageHasAssets(i)) {
+        /* Plus: French..Spanish can run on english assets (FS_LocalizedLanguageInUse);
+         * the stock fonts are Windows-1252, so not Russian, Polish or Asian. */
+        if (FS_LanguageHasAssets(i) || (i >= 1 && i <= 4 && FS_LanguageHasAssets(0))) {
             g_languages[i].bPresent = 1;
             iNumLanguages++;
         } else {
