@@ -1340,8 +1340,15 @@ int SND_PlaySoundAliasAsMaster(const snd_alias_t *pAlias, int entnum, const vec_
 
 int SND_PlaySoundAlias(const snd_alias_t *pAlias, int entnum, const vec_t *org, int timeshift, snd_alias_system_t system)
 {
+    static int trace = -1;
+
     if (!pAlias)
         return 0;
+    /* COD2_TRACE_SOUND: each alias played and its entity (scripts/climb_sound_test.py) */
+    if (trace < 0)
+        trace = getenv("COD2_TRACE_SOUND") != NULL;
+    if (trace)
+        Com_Printf("SoundTrace: %s ent %d\n", pAlias->pszAliasName, entnum);
     return SND_PlaySoundAlias_Internal(pAlias, pAlias, 0.0f, entnum, org, NULL, timeshift, 0, system);
 }
 

@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — Plus 123: the climbing sound for everyone
+
+- The maintainer chose that everyone hears it: on a Plus server cg_event_mp.c plays `weap_raise` for an `EV_RAISE_WEAPON` of weapon 0, which is what the climber's own cgame plays with its old weapon. It is a client-only change, with no pmove or server change. `climb_sound_test.py` (with the new `COD2_TRACE_SOUND`) fails without the change. The silent climb that zPAM describes (weapon held down) was not checked.
+- Review follow-ups (OpenCoD2-Plus Server 1aa8f15): the switch rule is limited to bolt-actions, the turret check uses a standing box, and `prediction_test.py` leaves out the spawn's miss by its shape, so it allows none.
+
 ## 2026-11-07 — Plus 123: zPAM's gameplay fixes in the engine
 
 - zPAM Plus fixed fast reload, prone peek and MG clip from GSC, against the client's prediction or with a client dvar. OpenCoD2-Plus Server (b6c6816, 27c1045, d991a33) now applies the fixes in bgame and game code to Plus clients only, and the engine predicts the first two with `pmove_t.plusRules`. The client sets that field from the snapshot's message byte, so it predicts stock against stock servers and in demos. Plus version 123; zPAM turns its fixes off at `sv_plus >= 123`.

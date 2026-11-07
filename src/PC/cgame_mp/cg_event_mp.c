@@ -20,6 +20,8 @@ extern int BG_WeaponIsClipOnly(int weapon);
 extern int CG_PlayEntitySoundAlias(int entitynum, snd_alias_list_t *aliasList);   /* param 2 is a sound-alias ptr, not int (callers pass cgs->media.* which are snd_alias_list_t*) */
 extern int CG_PlaySoundAlias(int entNum, const vec_t *origin, snd_alias_list_t *aliasList);
 extern int CG_PlaySoundAliasByName(int entNum, const vec_t *origin, const char *aliasName);
+extern snd_alias_list_t *Com_FindSoundAlias(const char *name);
+extern int cl_plusRules;
 extern int CG_PlaySoundAliasAsMasterByName(int entNum, const vec_t *origin, const char *aliasName);
 extern void CG_FireWeapon(centity_t *cent, int weaponId, int hand);
 extern void CG_EjectWeaponBrass(entityState_t *es, int weaponId);
@@ -985,6 +987,11 @@ void CG_EntityEvent(centity_t *cent, int event)
             char *wepDefs = CG_WeaponInfoBase();
             char *wepData = wepDefs + wepOff * 4;
             snd_alias_list_t *alias = ((weaponInfo_t *)wepData)->raiseSound;
+            /* Plus: going onto a ladder or into a mantle raises no weapon, and
+               the climber's own cgame plays that with the weapon it held, so
+               only it heard the climb; on a Plus server everyone hears it */
+            if (!weapon && cl_plusRules)
+                alias = Com_FindSoundAlias("weap_raise");
             if (alias) {
 
                 CG_PlayEntitySoundAlias(es->number, alias);

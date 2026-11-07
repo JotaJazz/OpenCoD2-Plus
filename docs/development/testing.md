@@ -32,6 +32,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/msvc_run_test.py --exe EXE` | from WSL, a Windows client (MinGW or MSVC ABI) on Windows loads mp_toujane in a local game, its cgame starts, the gametype script talks to it, frames are drawn, and it keeps running `--linger` s with no crash report | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (OpenCoD2-Plus Server's test, `mods/bots`) | no |
+| `scripts/climb_sound_test.py GAME` | a real client (`COD2_TRACE_SOUND`: each alias it plays) hears `weap_raise` from a minimal Plus client that mantles, as the climber does (Plus 123; the climber's cgame played it alone) | yes |
 | `scripts/plus_rules_test.py GAME --binary B` | the Plus 123 rules (OpenCoD2-Plus Server's test, vendored) against a minimal Plus client: fast reload, prone peek, MG clip; 1.3 Plus builds only | no |
 | `scripts/http_test.py --binary B` | libcod `httpFetch`, `webSocket*` (needs `openssl`) | no |
 | `scripts/sound_test.py` | what the client sends to the device, through SDL's disk driver: the menu's MP3 stream, `playLocalSound`, left and right of a `script_origin`, `map_restart`, `vid_restart`, `disconnect` and `quit` with sounds playing, no device, `snd_khz 22`, the callback's cost with bots fighting; `--cases a,b`; `--wine CMD --binary cod2_win32.exe` runs the Windows client | yes |
@@ -75,7 +76,7 @@ plus:
 3. For P in 118 and 115: `opencod2_smoke.py`, `two_players`, `map_reload`,
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
-   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`, `sound`.
+   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`, `sound`, `climb_sound` (118 only).
    `hostile_server_test.py` (118 only: a fake server sends malformed messages).
    `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py`, `http_test.py` and `plus_rules_test.py` with `--binary build/check-linux/cod2_lnxded`.
