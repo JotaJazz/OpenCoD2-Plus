@@ -23,11 +23,15 @@ scripted usercmds and reads its playerstate from the snapshots:
   held it: the stock game takes it back to where it stood when it took the
   turret, behind cover if it stood there. Leaving adds no playerstate event
   but the one that restores the stance.
+- shotgun spread: turned to a wall the whole spread meets, with
+  g_shotgun_spread_fix 1, the distances of a shot's 8 impacts from the aim
+  must be one of the two patterns', whatever the turn, and both must come;
+  with 0 they must not. This is not a Plus rule: it passes on every build.
 
 Exits with 0 when every check passes. On a build without the rules (any
-build but make PLUS=1) the checks fail: that is how they catch the bugs.
+build but make PLUS=1) the other checks fail: that is how they catch the bugs.
 """
-import argparse, os, re, subprocess, sys, tempfile, time
+import argparse, math, os, re, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -70,6 +74,7 @@ Callback_StartGameType()
 	precacheModel("xmodel/weapon_mg42");
 	setCvar("plustest_weapon", "");
 	setCvar("plustest_turret", "");
+	setCvar("plustest_aim", "");
 }
 
 Callback_PlayerConnect()
@@ -123,6 +128,26 @@ weapons()
 			self setOrigin(self.origin - maps\\mp\\_utility::vectorScale(anglesToRight(self.angles), 20));
 			wait 0.2;
 			logPrint("plustest turret " + self useTurret(self.turret) + "\\n");
+		}
+		// plustest_aim (rcon) turns the player level to a wall that the whole
+		// shotgun spread (6 degrees) meets within the pellets' 800 units
+		if(getCvar("plustest_aim") == "1")
+		{
+			setCvar("plustest_aim", "");
+			for(yaw = 0; yaw < 360; yaw += 5)
+			{
+				near = true;
+				for(i = 0; i < 9 && near; i++)
+				{
+					end = self getEye() + maps\\mp\\_utility::vectorScale(anglesToForward((i %% 3 * 7 - 7, yaw + int(i / 3) * 7 - 7, 0)), 800);
+					fraction = bulletTrace(self getEye(), end, false, self)["fraction"];
+					near = fraction > 0.4 && fraction < 0.9;
+				}
+				if(near)
+					break;
+			}
+			self setPlayerAngles((0, yaw, 0));
+			logPrint("plustest aim " + yaw + "\\n");
 		}
 		wait 0.05;
 	}
@@ -276,7 +301,66 @@ def check_mg_clip(port, player, other, check):
     check('mg clip: leaving the turret adds no event but the stance one', new <= STANCE_EVENTS, f'events {sorted(new)}')
 
 
-CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'mg_clip': check_mg_clip}
+ET_EVENTS, EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT = 10, 181, 183  # g_shared.h
+# g_shotgun_spread_fix's patterns (g_weapon_mp.cpp): each pellet's distance
+# from the aim, as a fraction of the farthest one's
+SPREAD_PATTERNS = [sorted(x for x in (0, .4, .4, .4, .4, .8, .72 ** .5, .72 ** .5)),
+                   [.1, .1, .5, .5, 1, 1, 1, 1]]
+SPREAD_PATTERNS = [[r / p[-1] for r in p] for p in SPREAD_PATTERNS]
+
+
+def shotgun_pellets(player, index):
+    """Fires the shotgun once; its pellets' distances from the aim, as above,
+    from the impacts the server sends, or the count of impacts if not 8."""
+    settle(player, index)
+    ps = frames_until(player, lambda s: s, 2)[-1]
+    eye = [ps.get('origin[0]', 0), ps.get('origin[1]', 0), ps.get('origin[2]', 0) + ps.get('viewHeightCurrent', 0)]
+    pitch, yaw = (math.radians(ps.get(f'viewangles[{i}]', 0)) for i in (0, 1))
+    forward = [math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), -math.sin(pitch)]
+    right = [math.sin(yaw), -math.cos(yaw), 0]
+    up = [right[1] * forward[2] - right[2] * forward[1], right[2] * forward[0] - right[0] * forward[2],
+          right[0] * forward[1] - right[1] * forward[0]]
+    player.script = ((BUTTON_ATTACK, index), (0, index))
+    hits = {}
+    for frame in player.read_frames(1.5, False):
+        for n, e in frame['entities'].items():
+            if e.get('eType', 0) - ET_EVENTS in range(EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT + 1):
+                hits[n] = e['pos.trBase']
+    if len(hits) != 8:
+        return len(hits)
+    radii = []
+    for hit in hits.values():
+        v = [h - o for h, o in zip(hit, eye)]
+        depth = sum(a * b for a, b in zip(v, forward))
+        radii.append(math.hypot(sum(a * b for a, b in zip(v, right)), sum(a * b for a, b in zip(v, up))) / depth)
+    radii.sort()
+    return [r / radii[-1] for r in radii]
+
+
+def check_shotgun_spread(port, player, other, check):
+    index = other + RIFLES.index('shotgun_mp') + 1
+    smoke_test.rcon(port, RCON, 'set plustest_weapon shotgun_mp')
+    smoke_test.rcon(port, RCON, 'set g_shotgun_spread_fix 1')
+    smoke_test.rcon(port, RCON, 'set plustest_aim 1')
+    # a pellet that meets nothing within its 800 units sends no impact: those
+    # shots are left out, though the aim at a wall should leave none
+    shots = [r for r in (shotgun_pellets(player, index) for _ in range(12)) if isinstance(r, list)]
+    smoke_test.rcon(port, RCON, 'set g_shotgun_spread_fix 0')
+    # the impacts are whole units, 320 to 720 units away; the patterns differ by .37 or more
+    which = lambda r: [i for i, p in enumerate(SPREAD_PATTERNS) if max(abs(a - b) for a, b in zip(r, p)) < .08]
+    fit = lambda r: bool(which(r))
+    # each pattern is picked at random: 12 shots miss one with odds of 1 in 2000
+    seen = {i for r in shots for i in which(r)}
+    check('shotgun spread: with g_shotgun_spread_fix every shot is one of the patterns, and both come',
+          len(shots) >= 10 and all(fit(r) for r in shots) and seen == {0, 1},
+          f'{len(shots)} shots with 8 impacts, patterns {sorted(seen)}')
+    stock = [r for r in (shotgun_pellets(player, index) for _ in range(4)) if isinstance(r, list)]
+    check('shotgun spread: without it the pellets are random', stock and not any(fit(r) for r in stock),
+          f'{len(stock)} shots')
+
+
+CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'mg_clip': check_mg_clip,
+          'shotgun_spread': check_shotgun_spread}
 
 
 def main():

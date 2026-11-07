@@ -44,6 +44,7 @@ bool libcod_precaching;
 dvar_t *jump_bounceEnable;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_fixedWeaponSpreads;
+dvar_t *g_shotgun_spread_fix;
 dvar_t *g_dropGrenadeOnDeath;
 dvar_t *sv_botUseTriggerUse;
 dvar_t *g_bulletDrop;
@@ -164,6 +165,8 @@ void RegisterLibcodDvars()
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", true, DVAR_CHANGEABLE_RESET);
 
 	g_fixedWeaponSpreads = Dvar_RegisterBool("g_fixedWeaponSpreads", false, DVAR_CHANGEABLE_RESET);
+	// CoD2x's name, which zPAM 4.x sets
+	g_shotgun_spread_fix = Dvar_RegisterBool("g_shotgun_spread_fix", false, DVAR_CHANGEABLE_RESET);
 	g_dropGrenadeOnDeath = Dvar_RegisterBool("g_dropGrenadeOnDeath", true, DVAR_CHANGEABLE_RESET);
 	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", false, DVAR_CHANGEABLE_RESET);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);

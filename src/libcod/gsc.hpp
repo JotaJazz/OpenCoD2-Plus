@@ -153,6 +153,7 @@ extern dvar_t *sv_kickbots;
 extern dvar_t *jump_bounceEnable;
 extern dvar_t *g_mantleBlockEnable;
 extern dvar_t *g_fixedWeaponSpreads;
+extern dvar_t *g_shotgun_spread_fix;
 extern dvar_t *g_dropGrenadeOnDeath;
 extern dvar_t *g_safePrecache;
 extern dvar_t *g_reservedModels;

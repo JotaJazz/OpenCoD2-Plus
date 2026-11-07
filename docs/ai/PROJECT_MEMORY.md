@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — OpenCoD2-Plus Server ebb8ee0: fixed shotgun spread
+
+- Brought the vendored files up to ebb8ee0: `g_shotgun_spread_fix` (ae124d3) in `G_BulletFireSpread`, and `plus_rules_test.py`'s check for it. The cgame traces no pellets, so only the local server has something to run; the Plus version stays 123.
+- `scripts/vendor_check.py` passes; the build and unit tests were run. The check itself ran against the dedicated server only.
+
 ## 2026-11-07 — Plus 123: the climbing sound for everyone
 
 - The maintainer chose that everyone hears it: on a Plus server cg_event_mp.c plays `weap_raise` for an `EV_RAISE_WEAPON` of weapon 0, which is what the climber's own cgame plays with its old weapon. It is a client-only change, with no pmove or server change. `climb_sound_test.py` (with the new `COD2_TRACE_SOUND`) fails without the change. The silent climb that zPAM describes (weapon held down) was not checked.

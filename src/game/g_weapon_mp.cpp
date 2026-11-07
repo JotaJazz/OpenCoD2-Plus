@@ -118,6 +118,15 @@ vec2_t fixed_spread_grid[] =
 	{ -1.0, -1.0 },
 };
 
+#ifdef LIBCOD
+// g_shotgun_spread_fix: CoD2x's two 8-pellet patterns, as fractions of the spread
+static const vec2_t shotgun_spread_patterns[2][8] =
+{
+	{ { 0.0, -0.8 }, { 0.0, 0.0 }, { 0.0, 0.4 }, { 0.0, -0.4 }, { -0.4, 0.0 }, { 0.4, 0.0 }, { -0.6, 0.6 }, { 0.6, 0.6 } },
+	{ { -0.1, 0.0 }, { 0.1, 0.0 }, { 0.0, 0.5 }, { 0.0, -0.5 }, { -0.8, 0.6 }, { 0.8, 0.6 }, { -0.8, -0.6 }, { 0.8, -0.6 } },
+};
+#endif
+
 /*
 ===============
 Bullet_Endpos
@@ -949,6 +958,31 @@ void G_BulletFireSpread( const gentity_t *weaponEnt, gentity_t *attacker, const 
 #ifdef LIBCOD
 	if ( attacker->client )
 		range *= libcodClients[attacker->s.number].fireRangeScale;
+#endif
+
+#ifdef LIBCOD
+	// every pellet on one of two fixed patterns, turned at random per shot, so
+	// the same shot does not kill or miss by chance
+	if ( g_shotgun_spread_fix->current.boolean && wp->weapDef->shotCount == 8 )
+	{
+		const vec2_t *pattern = shotgun_spread_patterns[randomf() < 0.5];
+		float aimOffset = tan( spread * DEG_TO_RAD ) * range;
+		float s, c;
+
+		FastSinCos(randomf() * 2 * M_PI, &s, &c);
+
+		for ( int i = 0; i < 8; i++ )
+		{
+			float right = (pattern[i][0] * c - pattern[i][1] * s) * aimOffset;
+			float up = (pattern[i][0] * s + pattern[i][1] * c) * aimOffset;
+
+			VectorMA(wp->muzzleTrace, range, wp->forward, end);
+			VectorMA(end, right, wp->right, end);
+			VectorMA(end, up, wp->up, end);
+			Bullet_Fire_Extended(weaponEnt, attacker, start, end, 1.0, 0, wp, weaponEnt, gameTime);
+		}
+		return;
+	}
 #endif
 
 	for ( int i = 0; i < shotCount; i++ )
