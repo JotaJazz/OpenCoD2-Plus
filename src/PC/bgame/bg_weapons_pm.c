@@ -1947,9 +1947,9 @@ void PM_Weapon_FinishWeaponChange( pmove_t *pm )
 
 	//BG_GetWeaponDef(ps->weapon);
 
-	// Plus: a switch taken back during the drop raises the weapon again, as the
-	// Plus server does (src/bgame/bg_weapons.cpp, plus-protocol.md version 123)
-	if ( oldweapon == newweapon && !(pm->plusRules && newweapon) )
+	// Plus: a bolt-action's switch taken back during the drop raises it again,
+	// as the Plus server does (src/bgame/bg_weapons.cpp, plus-protocol.md 123)
+	if ( oldweapon == newweapon && !(pm->plusRules && newweapon && BG_GetWeaponDef(newweapon)->bBoltAction) )
 	{
 		ps->weaponstate = WEAPON_READY;
 		PM_StartWeaponAnim(ps, WEAP_IDLE);

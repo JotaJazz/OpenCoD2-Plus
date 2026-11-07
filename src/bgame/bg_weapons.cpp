@@ -3811,9 +3811,10 @@ void PM_Weapon_FinishWeaponChange( pmove_t *pm )
 
 	//BG_GetWeaponDef(ps->weapon);
 
-	// Plus: a switch taken back during the drop raises the weapon again, or
-	// switching away and back would cut a rechamber or a reload short
-	if ( oldweapon == newweapon && !(pm->plusRules && newweapon) )
+	// Plus: a bolt-action's switch taken back during the drop raises it
+	// again, or switching away and back would cut its rechamber or reload
+	// short; drops for a ladder or a mantle that end in time come back too
+	if ( oldweapon == newweapon && !(pm->plusRules && newweapon && BG_GetWeaponDef(newweapon)->boltAction) )
 	{
 		ps->weaponstate = WEAPON_READY;
 		PM_StartWeaponAnim(ps, WEAP_IDLE);

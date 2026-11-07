@@ -251,13 +251,14 @@ void G_ClientStopUsingTurret( gentity_t *self )
 #ifdef COD2_PLUS
 	// Plus: a Plus client leaves the turret where using it put them, behind
 	// the gun, if their box fits there. Going back to where they stood when
-	// they took it let them peek from behind cover (zPAM's MG clip).
+	// they took it let them peek from behind cover (zPAM's MG clip). The box
+	// is the standing one, the largest the stance they get back can take.
 	trace_t trace;
 	trace.startsolid = qtrue;
 
 	if ( svs.clients[owner->s.number].plusVersion == PLUS_VERSION )
 	{
-		G_TraceCapsule(&trace, owner->client->ps.origin, owner->r.mins, owner->r.maxs, owner->client->ps.origin, owner->s.number, MASK_PLAYERSOLID);
+		G_TraceCapsule(&trace, owner->client->ps.origin, owner->client->ps.mins, owner->client->ps.maxs, owner->client->ps.origin, owner->s.number, MASK_PLAYERSOLID);
 	}
 
 	if ( trace.startsolid || trace.allsolid )

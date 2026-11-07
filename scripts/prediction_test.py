@@ -36,7 +36,7 @@ sight's fraction (fWeaponPosFrac) must match it (--max-ads-misses, 0), and so mu
 the weapon's state (weaponTime, weaponDelay, weapon, weaponstate) through a
 fast reload, a shot cut by a reload and a switch to its thompson and back
 during the drop, which a Plus server plays by its own rules (--max-weapon-misses,
-1: the weapon the mod gives at spawn), and its lean going prone while leaning
+0, leaving out the weapon the mod gives at spawn), and its lean going prone while leaning
 (--max-lean-misses, 0). --delay MS puts a UDP relay between the
 client and the server that holds each packet MS milliseconds each way (a
 ping of twice that, as online); --maxfps sets the client's com_maxfps
@@ -169,9 +169,9 @@ def main():
     ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
     ap.add_argument('--max-anim-misses', type=int, default=MAX_ANIM_MISSES,
                     help=f'fail above this many legs/torso animation misses (default {MAX_ANIM_MISSES})')
-    ap.add_argument('--max-weapon-misses', type=int, default=1,
-                    help='snapshots whose weapon state the client predicted otherwise (COD2_TRACE_PREDDIFF=all); '
-                    'one is the weapon the mod gives at spawn')
+    ap.add_argument('--max-weapon-misses', type=int, default=0,
+                    help='snapshots whose weapon state the client predicted otherwise (COD2_TRACE_PREDDIFF=all), '
+                    'but for the weapon the mod gives at spawn')
     ap.add_argument('--max-lean-misses', type=int, default=0,
                     help='snapshots whose lean the client predicted otherwise (COD2_TRACE_PREDDIFF=all)')
     ap.add_argument('--max-ads-misses', type=int, default=0,
@@ -331,7 +331,9 @@ def main():
         # firing, reloading and switching away and back during the drop change (Plus rules on a Plus server)
         weapon = [(t, re.findall(r'^  \+0x00(?:34|38|d4|d8) client.*', body, re.M))
                   for t, body in re.findall(r'^PredDiff t=(\d+).*\n((?:  .*\n)*)', text, re.M)]
-        weapon = [(t, lines) for t, lines in weapon if lines]
+        # the weapon the mod gives at spawn, which the client cannot predict
+        spawn = re.compile(r'^\+0x00d4 client 00000000 ')
+        weapon = [(t, lines) for t, lines in weapon if lines and not (len(lines) == 1 and spawn.match(lines[0].strip()))]
         print(f'weapon misses: {len(weapon)}' + ''.join(f'\n  t={t}: ' + '; '.join(l.strip() for l in lines)
                                                          for t, lines in weapon[:5]))
         check(f'at most {args.max_weapon_misses} weapon misses', len(weapon) <= args.max_weapon_misses, f'{len(weapon)}')
