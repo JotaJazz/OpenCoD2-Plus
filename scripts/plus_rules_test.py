@@ -2,7 +2,7 @@
 """Checks the rules a Plus server plays by with a Plus client (Plus version 123,
 docs/architecture/plus-protocol.md#version-123).
 
-    python3 scripts/plus_rules_test.py /path/to/CoD2 [--binary bin/cod2rev_lnxded] [--only NAME,...]
+    python3 scripts/plus_rules_test.py /path/to/CoD2 [--binary bin/cod2rev_lnxded] [--only NAME,...] [--fps N]
 
 Runs the server with a mod whose dm gametype spawns the player with
 thompson_mp and a bolt-action, and a minimal client (cod2client) that sends
@@ -27,6 +27,10 @@ scripted usercmds and reads its playerstate from the snapshots:
   g_shotgun_spread_fix 1, the distances of a shot's 8 impacts from the aim
   must be one of the two patterns', whatever the turn, and both must come;
   with 0 they must not. This is not a Plus rule: it passes on every build.
+- mg rate: on the turret, aimed at the ground, it holds fire: one impact
+  every 50 ms (mg42's fireTime), timed from the first to the last; left, the
+  turret turns back at 200 degrees a second. With --fps N the server runs at
+  that sv_fps, with a snapshot every frame; other builds fail above 20 Hz.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the other checks fail: that is how they catch the bugs.
@@ -75,6 +79,7 @@ Callback_StartGameType()
 	setCvar("plustest_weapon", "");
 	setCvar("plustest_turret", "");
 	setCvar("plustest_aim", "");
+	setCvar("plustest_pitch", "");
 }
 
 Callback_PlayerConnect()
@@ -120,14 +125,25 @@ weapons()
 			self setWeaponSlotClipAmmo("primary", 2);
 		// plustest_turret (rcon) puts a turret in front and has the player
 		// take it from 20 units to its left, where it moves them behind it
-		if(getCvar("plustest_turret") == "1" && !isdefined(self.turret))
+		// takes it again from where leaving it put them
+		if(getCvar("plustest_turret") == "1")
 		{
-			self.turret = spawnTurret("misc_turret", self.origin + maps\\mp\\_utility::vectorScale(anglesToForward(self.angles), 60) + (0, 0, 30), "mg42_bipod_stand_mp");
-			self.turret.angles = self.angles;
-			self.turret setModel("xmodel/weapon_mg42");
-			self setOrigin(self.origin - maps\\mp\\_utility::vectorScale(anglesToRight(self.angles), 20));
-			wait 0.2;
+			setCvar("plustest_turret", "");
+			if(!isdefined(self.turret))
+			{
+				self.turret = spawnTurret("misc_turret", self.origin + maps\\mp\\_utility::vectorScale(anglesToForward(self.angles), 60) + (0, 0, 30), "mg42_bipod_stand_mp");
+				self.turret.angles = self.angles;
+				self.turret setModel("xmodel/weapon_mg42");
+				self setOrigin(self.origin - maps\\mp\\_utility::vectorScale(anglesToRight(self.angles), 20));
+				wait 0.2;
+			}
 			logPrint("plustest turret " + self useTurret(self.turret) + "\\n");
+		}
+		// plustest_pitch (rcon) sets the player's pitch, on a turret too
+		if(getCvar("plustest_pitch") != "")
+		{
+			self setPlayerAngles((getCvarFloat("plustest_pitch"), self.angles[1], 0));
+			setCvar("plustest_pitch", "");
 		}
 		// plustest_aim (rcon) turns the player level to a wall that the whole
 		// shotgun spread (6 degrees) meets within the pellets' 800 units
@@ -301,7 +317,7 @@ def check_mg_clip(port, player, other, check):
     check('mg clip: leaving the turret adds no event but the stance one', new <= STANCE_EVENTS, f'events {sorted(new)}')
 
 
-ET_EVENTS, EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT = 10, 181, 183  # g_shared.h
+ET_TURRET, ET_EVENTS, EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT = 9, 10, 181, 183  # g_shared.h
 # g_shotgun_spread_fix's patterns (g_weapon_mp.cpp): each pellet's distance
 # from the aim, as a fraction of the farthest one's
 SPREAD_PATTERNS = [sorted(x for x in (0, .4, .4, .4, .4, .8, .72 ** .5, .72 ** .5)),
@@ -359,8 +375,60 @@ def check_shotgun_spread(port, player, other, check):
           f'{len(stock)} shots')
 
 
-CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'mg_clip': check_mg_clip,
-          'shotgun_spread': check_shotgun_spread}
+MG42_FIRE_TIME = 50  # mg42_bipod_stand_mp's fireTime, ms
+TURRET_RETURN_SPEED = 200  # degrees a second, turret_UpdateTargetAngles unmanned
+
+
+def check_mg_rate(port, player, other, check):
+    """Manned, the MG fires once a fireTime at any sv_fps; left, it turns back
+    to its rest at the same speed."""
+    settle(player, other)
+    smoke_test.rcon(port, RCON, 'set plustest_turret 1')
+    on = frames_until(player, lambda s: s and s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+    if not on or not on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE:
+        check('mg rate: the player takes the turret', False)
+        return
+    # aimed at the ground, every bullet sends an impact
+    smoke_test.rcon(port, RCON, 'set plustest_pitch 15')
+    frames_until(player, lambda s: len(s) >= 10, 2)
+    hold = 60
+    player.script = tuple([(BUTTON_ATTACK, other)] * hold)
+    times, last = [], {}
+    for frame in player.read_frames(hold * 0.05 + 1.5, False):
+        # an impact lasts several snapshots: count it when it appears
+        now = {n: tuple(e['pos.trBase']) for n, e in frame['entities'].items()
+               if e.get('eType', 0) - ET_EVENTS in range(EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT + 1)}
+        times += [frame['server_time']] * sum(1 for n, o in now.items() if last.get(n) != o)
+        last = now
+    # how long the server holds the button is not known here: the rate is
+    # timed from the first impact to the last
+    interval = (times[-1] - times[0]) / (len(times) - 1) if len(times) > 20 else 0
+    check(f'mg rate: a manned MG fires once a fireTime at sv_fps {player.fps}',
+          abs(interval - MG42_FIRE_TIME) <= MG42_FIRE_TIME * 0.05,
+          f'{len(times)} shots, one each {interval:.1f} ms, {MG42_FIRE_TIME} expected')
+    turret = next((n for n, e in frame['entities'].items() if e.get('eType') == ET_TURRET), None)
+    player.script = tuple([(BUTTON_USE, other)] * 2)
+    angles = []
+    for frame in player.read_frames(3, False):
+        e = frame['entities'].get(turret)
+        if e:
+            angles.append((frame['server_time'], e['angles2'][0]))
+    # the fastest it turns over a quarter of a second, which holds whole steps
+    # of a 50 ms think as of a frame
+    rates = []
+    for i, a in enumerate(angles):
+        b = next((b for b in angles[i:] if b[0] - a[0] >= 250), None)
+        if b:
+            rates.append(abs(b[1] - a[1]) * 1000 / (b[0] - a[0]))
+    fastest = max(rates, default=0)
+    check(f'mg rate: a turret left turns back at {TURRET_RETURN_SPEED} degrees a second at sv_fps {player.fps}',
+          abs(fastest - TURRET_RETURN_SPEED) <= TURRET_RETURN_SPEED * 0.1, f'{fastest:.0f} degrees a second')
+
+
+# in this order: the turret mg_clip spawns stays in front of the player, and
+# shotgun_spread's pellets would hit it
+CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
+          'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate}
 
 
 def main():
@@ -369,8 +437,9 @@ def main():
     ap.add_argument('--binary', default=os.path.join(ROOT, 'bin', 'cod2rev_lnxded'))
     ap.add_argument('--only', help='comma-separated checks: ' + ', '.join(CHECKS))
     ap.add_argument('--map', default='mp_toujane')
+    ap.add_argument('--fps', type=int, default=20, help='sv_fps (mg_rate checks the rate at it)')
     args = ap.parse_args()
-    only = args.only.split(',') if args.only else list(CHECKS)
+    only = [name for name in CHECKS if not args.only or name in args.only.split(',')]
     port = smoke_test.free_port()
     failures = []
 
@@ -388,7 +457,11 @@ def main():
                    '+set', 'fs_homepath', home, '+set', 'fs_game', 'plustest', '+set', 'net_port', str(port),
                    '+set', 'sv_cracked', '1', '+set', 'rcon_password', RCON, '+set', 'g_gametype', 'dm',
                    '+set', 'g_log', 'games_mp.log', '+set', 'g_logSync', '1', '+set', 'dedicated', '1',
-                   '+set', 'sv_maxclients', '8', '+map', args.map]
+                   '+set', 'sv_maxclients', '8', '+set', 'sv_fps', str(args.fps)]
+        if args.fps > 20:
+            # the settings for that rate (plus-protocol.md, Tick rate): a snapshot every frame
+            command += ['+set', 'g_forceSnaps', str(args.fps), '+set', 'g_forceRate', str(args.fps * 1000), '+set', 'sv_maxRate', '0']
+        command += ['+map', args.map]
         log_path = os.path.join(home, 'out.log')
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=home)
@@ -399,6 +472,7 @@ def main():
             if not failures:
                 m = re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(port, RCON, 'sv_serverid'))
                 player = Player(port)
+                player.fps = args.fps
                 refused = player.connect(118, 'plustest')
                 ok = refused is None and m is not None and player.request_gamestate(int(m.group(1)))
                 check('a Plus client joins', ok, refused or '')

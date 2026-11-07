@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — OpenCoD2-Plus Server 107f574: turrets at any sv_fps
+
+- Brought the vendored files up to 107f574: in the Plus build, turrets and `trigger_hurt` step by `level.frameTime` (a manned MG fired twice as fast at 40 Hz), and `plus_rules_test.py --fps`/`bots_test.py --fps`. Server code only; the Plus version stays 123 and the client predicts nothing new.
+- `scripts/vendor_check.py` passes; the build and unit tests were run.
+
 ## 2026-11-07 — OpenCoD2-Plus Server ebb8ee0: fixed shotgun spread
 
 - Brought the vendored files up to ebb8ee0: `g_shotgun_spread_fix` (ae124d3) in `G_BulletFireSpread`, and `plus_rules_test.py`'s check for it. The cgame traces no pellets, so only the local server has something to run; the Plus version stays 123.
