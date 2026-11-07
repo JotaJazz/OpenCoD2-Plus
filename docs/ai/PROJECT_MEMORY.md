@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — Plus 123: zPAM's gameplay fixes in the engine
+
+- zPAM Plus fixed fast reload, prone peek and MG clip from GSC, against the client's prediction or with a client dvar. OpenCoD2-Plus Server (b6c6816, 27c1045, d991a33) now applies the fixes in bgame and game code to Plus clients only, and the engine predicts the first two with `pmove_t.plusRules`. The client sets that field from the snapshot's message byte, so it predicts stock against stock servers and in demos. Plus version 123; zPAM turns its fixes off at `sv_plus >= 123`.
+- `prediction_test.py` fails on predicted weapon state or lean that the server's disagrees with. Each check was run against a client with its rule turned off, to see it fail. `plus_rules_test.py` (vendored) fails on every build without the rules.
+- Left open: the climbing sound. Stock weapon files leave `raiseSound` empty, so the cgame plays `weap_raise` for `EV_RAISE_WEAPON`. Going onto a ladder or a mantle raises `WP_NONE`: the climber's cgame plays that event with its old weapon and hears `weap_raise`, while others get weapon 0 and hear nothing. `anim_script_test.py` also fails on `dev` (9 animations 1 ms shorter in the engine since the SSE2 change).
+
 ## 2026-11-05 — SSE2 float math; OpenCoD2-Plus Server ae1c84a
 
 - Every x86 and x64 build computes float math with `-msse2 -mfpmath=sse` (ADR 0016), as the server's ADR 0017: the 1.3 client ran x87 at 24 bits, which single-precision SSE matches, while our 32-bit builds ran it at 64 and the MSVC-ABI one already on SSE2. x87 is left in the i386 float return, `long double` code and the static libraries.
