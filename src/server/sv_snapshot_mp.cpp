@@ -1995,18 +1995,23 @@ cachedSnapshot_t* SV_GetCachedSnapshot( int *pArchiveTime )
 		return NULL;
 	}
 
-	archivedFrame = svs.nextArchivedSnapshotFrames - sv_fps->current.integer * *pArchiveTime / 1000;
+	// a frame lasts 1000 / sv_fps whole milliseconds: counting sv_fps frames
+	// a second came up short where that does not divide 1000 (62.5 Hz at
+	// sv_fps 60), so the antilag and the killcam took a later frame
+	int frameMsec = 1000 / sv_fps->current.integer;
+
+	archivedFrame = svs.nextArchivedSnapshotFrames - *pArchiveTime / frameMsec;
 
 	if ( archivedFrame < svs.nextArchivedSnapshotFrames - NUM_ARCHIVED_FRAMES )
 	{
 		archivedFrame = svs.nextArchivedSnapshotFrames - NUM_ARCHIVED_FRAMES;
-		*pArchiveTime = 1000 * (svs.nextArchivedSnapshotFrames - archivedFrame) / sv_fps->current.integer;
+		*pArchiveTime = frameMsec * (svs.nextArchivedSnapshotFrames - archivedFrame);
 	}
 
 	if ( archivedFrame < 0 )
 	{
 		archivedFrame = 0;
-		*pArchiveTime = 1000 * svs.nextArchivedSnapshotFrames / sv_fps->current.integer;
+		*pArchiveTime = frameMsec * svs.nextArchivedSnapshotFrames;
 	}
 
 	for ( ; archivedFrame < svs.nextArchivedSnapshotFrames; archivedFrame++ )

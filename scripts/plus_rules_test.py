@@ -35,6 +35,10 @@ scripted usercmds and reads its playerstate from the snapshots:
   the internet, it gets a snapshot every frame and a rate of 1,000 bytes a
   second per Hz (25,000 at least), and g_forceSnaps 10 set by rcon gives it 10
   snapshots a second at once. Other builds have no sv_lanForceRate.
+- archive time: a bot moves 100 units a second, and the player follows it a
+  second back, as a killcam: the bot's origin must be from the newest frame
+  at least a second old. Stock counted sv_fps frames a second, 960 ms at
+  sv_fps 60.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the other checks fail: that is how they catch the bugs.
@@ -68,6 +72,19 @@ GAMETYPE = '''main()
 	level.callbackPlayerKilled = ::Callback_Nothing;
 }
 
+// moves along x at 100 units a second, set every frame, so where it is
+// tells when it was there; plustest_move holds the start time and x
+plustest_move(base)
+{
+	t0 = getTime();
+	setCvar("plustest_move", t0 + " " + base[0]);
+	for(;;)
+	{
+		self setOrigin(base + ((getTime() - t0) * 0.1, 0, 0));
+		wait 1 / getCvarInt("sv_fps");
+	}
+}
+
 Callback_Nothing(a, b, c, d, e, f, g, h, i, j)
 {
 }
@@ -80,10 +97,13 @@ Callback_StartGameType()
 %(precache)s
 	precacheTurret("mg42_bipod_stand_mp");
 	precacheModel("xmodel/weapon_mg42");
+	// the frame archive, which the antilag and the killcam read, as stock gametypes
+	setArchive(true);
 	setCvar("plustest_weapon", "");
 	setCvar("plustest_turret", "");
 	setCvar("plustest_aim", "");
 	setCvar("plustest_pitch", "");
+	setCvar("plustest_killcam", "");
 }
 
 Callback_PlayerConnect()
@@ -142,6 +162,23 @@ weapons()
 				wait 0.2;
 			}
 			logPrint("plustest turret " + self useTurret(self.turret) + "\\n");
+		}
+		// plustest_killcam (rcon): a bot joins, and the player follows it that
+		// many seconds back, as a killcam does; only the test client (entity 0)
+		if(getCvar("plustest_killcam") != "" && self getEntityNumber() == 0)
+		{
+			archive = getCvarFloat("plustest_killcam");
+			setCvar("plustest_killcam", "");
+			// the bot needs more than that many seconds in the archive
+			bot = addtestclient();
+			wait 0.5;
+			bot thread plustest_move(self.origin);
+			wait archive + 2;
+			self.sessionstate = "spectator";
+			self.spectatorclient = bot getEntityNumber();
+			self.archivetime = archive;
+			self.psoffsettime = 0;
+			logPrint("plustest killcam " + self.spectatorclient + "\\n");
 		}
 		// plustest_pitch (rcon) sets the player's pitch, on a turret too
 		if(getCvar("plustest_pitch") != "")
@@ -460,10 +497,35 @@ def check_snapshot_rate(port, player, other, check):
         smoke_test.rcon(port, RCON, command)
 
 
+def check_archive_time(port, player, other, check):
+    """Following a bot a second back, as a killcam, the player gets the bot's
+    playerstate from the last frame at least a second old: the bot moves at
+    100 units a second, so its origin tells how far back that was. The
+    antilag finds its frames the same way. (The archived commandTime is moved
+    to the present, so it cannot tell.)"""
+    frame = 1000 // player.fps
+    smoke_test.rcon(port, RCON, 'set plustest_killcam 1')
+    player.read_frames(4.5, False)
+    m = re.search(r'"plustest_move" is: ?"(\d+) (-?[\d.]+)', smoke_test.rcon(port, RCON, 'plustest_move'))
+    behind = []
+    if m:
+        t0, base = int(m.group(1)), float(m.group(2))
+        for f in player.read_frames(2, False):
+            if f['ps'].get('clientNum') == 1:
+                behind.append(f['server_time'] - (t0 + (f['ps'].get('origin[0]', 0) - base) / 0.1))
+    behind.sort()
+    middle = behind[len(behind) // 2] if behind else None
+    # the frame found is the newest that old: at most a frame short of it
+    check(f'archive time: a second back is a second back at sv_fps {player.fps}',
+          middle is not None and 1000 - frame - 1 <= middle <= 1001,
+          f'{middle if middle is None else round(middle)} ms back, {1000 - frame} to 1000 expected')
+
+
 # in this order: the turret mg_clip spawns stays in front of the player, and
 # shotgun_spread's pellets would hit it
 CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
-          'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate}
+          'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate,
+          'archive_time': check_archive_time}
 
 
 def main():
