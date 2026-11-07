@@ -119,6 +119,11 @@ extern void FS_SV_Rename(const char *from, const char *to);
 extern int FS_Write(const void *buffer, int len, fileHandle_t h);
 extern void FS_FCloseFile(fileHandle_t h);
 
+/* the server sends Plus snapshots, so it plays by the Plus rules (pmove_t's
+   plusRules, docs/architecture/plus-protocol.md's version 123 in
+   OpenCoD2-Plus Server), and the prediction follows them */
+int cl_plusRules;
+
 static int CL_ShowNetValue(void)
 {
     return cl_shownet ? cl_shownet->current.integer : 0;
@@ -1096,10 +1101,12 @@ void CL_ParseServerMessage(msg_t *msg)
         case 6:
 
             CL_ParseSnapshot(&msgCompressed, 0);
+            cl_plusRules = 0;
             break;
 #if COD2_IS_PATCH_13 && defined(COD2_PLUS)
         case 8: /* the message says its format, so demos need nothing more */
             CL_ParseSnapshot(&msgCompressed, 1);
+            cl_plusRules = 1;
             msg_plusSnapshotTime = 0; /* the local server writes with it too */
             break;
 #endif

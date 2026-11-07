@@ -53,6 +53,7 @@ Callback_StartGameType()
 {
 	character\\mp_american_normandy_braeburn::precache();
 	precacheItem("%(weapon)s");
+	precacheItem("thompson_mp");
 	precacheItem("frag_grenade_american_mp");
 	setcvar("contact_phase", "");
 }
@@ -99,12 +100,14 @@ Callback_PlayerConnect()
 	}
 }
 
-// a rifle and frag grenades
+// a rifle, a second weapon to switch to and frag grenades
 arm()
 {
 	self giveWeapon("%(weapon)s");
 	self giveMaxAmmo("%(weapon)s");
 	self setSpawnWeapon("%(weapon)s");
+	self giveWeapon("thompson_mp");
+	self giveMaxAmmo("thompson_mp");
 	self giveWeapon("frag_grenade_american_mp");
 	self setWeaponClipAmmo("frag_grenade_american_mp", 3);
 	self switchToOffhand("frag_grenade_american_mp");

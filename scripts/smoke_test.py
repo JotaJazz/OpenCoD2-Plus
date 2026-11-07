@@ -553,7 +553,7 @@ def check_signed_challenge(port, protocol, password, check):
                 time.sleep(0.1)
         time.sleep(0.5)
 
-        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokesigned\\rate\\25000\\snaps\\20\\plus\\122'
+        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokesigned\\rate\\25000\\snaps\\20\\plus\\123'
                     % (protocol, challenge, client.qport))
         connect = PREFIX + f'connect "{userinfo}"'.encode('latin-1')
         client.sock.sendto(connect, client.addr)
@@ -640,7 +640,7 @@ def check_stateless_challenge(port, protocol, password, check):
         if challenge is None:
             return
 
-        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokestateless\\rate\\25000\\snaps\\20\\plus\\122'
+        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\smokestateless\\rate\\25000\\snaps\\20\\plus\\123'
                     % (protocol, challenge, client.qport))
         client.sock.sendto(PREFIX + f'connect "{userinfo}"'.encode('latin-1'), client.addr)
         try:
@@ -753,7 +753,7 @@ def check_connect_limit(port, protocol, plus, check):
             refused = old.connect(protocol, 'old', plus=120)
             check('another Plus version is told to update', refused is not None and 'OpenCoD2-Plus' in refused, str(refused))
             refused = current.connect(protocol, 'plus')
-            check('a Plus client is told the version', refused is None and current.connect_reply.split()[1:] == ['122'],
+            check('a Plus client is told the version', refused is None and current.connect_reply.split()[1:] == ['123'],
                   refused or current.connect_reply)
         finally:
             plain.close()

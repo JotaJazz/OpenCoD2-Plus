@@ -346,7 +346,7 @@ void CL_RequestAuthorization(void);
 void CL_CheckForResend(void);
 
 /* CoD2rev-Plus's PLUS_VERSION: docs/architecture/plus-protocol.md, on its plus branch */
-#define COD2_PLUS_VERSION 122
+#define COD2_PLUS_VERSION 123
 void CL_LocalServers_f(void);
 void CL_PlayLogo_f(void);
 qboolean CL_UpdateDirtyPings_f(int source);

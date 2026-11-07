@@ -1168,6 +1168,7 @@ struct pmove_t
 	bool mantleStarted;
 	vec3_t mantleEndPos;
 	int mantleDuration;
+	int plusRules; // Plus server and Plus client: docs/architecture/plus-protocol.md
 };
 
 struct pml_t

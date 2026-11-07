@@ -3811,7 +3811,9 @@ void PM_Weapon_FinishWeaponChange( pmove_t *pm )
 
 	//BG_GetWeaponDef(ps->weapon);
 
-	if ( oldweapon == newweapon )
+	// Plus: a switch taken back during the drop raises the weapon again, or
+	// switching away and back would cut a rechamber or a reload short
+	if ( oldweapon == newweapon && !(pm->plusRules && newweapon) )
 	{
 		ps->weaponstate = WEAPON_READY;
 		PM_StartWeaponAnim(ps, WEAP_IDLE);
@@ -4797,7 +4799,26 @@ void PM_Weapon_CheckForReload( pmove_t *pm )
 
 	if ( doReload )
 	{
+		// Plus: a reload that cuts a bolt-action's shot keeps the shot's time
+		// left, or it would work the bolt before that time is over
+		int shotLeft = 0;
+
+		if ( pm->plusRules && ps->weaponstate == WEAPON_FIRING && weapDef->boltAction && Com_BitCheck(ps->weaponrechamber, ps->weapon) )
+		{
+			shotLeft = ps->weaponTime;
+		}
+
 		PM_BeginWeaponReload(ps);
+
+		if ( shotLeft && ps->weaponstate != WEAPON_FIRING )
+		{
+			ps->weaponTime += shotLeft;
+
+			if ( ps->weaponDelay )
+			{
+				ps->weaponDelay += shotLeft;
+			}
+		}
 	}
 }
 

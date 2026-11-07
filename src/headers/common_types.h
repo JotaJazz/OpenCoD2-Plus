@@ -15921,6 +15921,7 @@ struct pmove_t {
     Bool mantleStarted;
     vec3_t mantleEndPos;
     int mantleDuration;
+    int plusRules; /* the Plus server's rules: cl_plusRules */
 };
 
 struct va_info_t {

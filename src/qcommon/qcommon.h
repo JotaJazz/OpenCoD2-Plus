@@ -153,7 +153,7 @@ typedef struct
 
 // What net_altPort announces, as the 1.0 build also plays with 1.3 clients
 #define ALT_PORT_PROTOCOL 118
-#define PLUS_VERSION 122 // docs/architecture/plus-protocol.md
+#define PLUS_VERSION 123 // docs/architecture/plus-protocol.md
 #define ALT_PORT_VERSION "1.3"
 
 void NET_Init( void );

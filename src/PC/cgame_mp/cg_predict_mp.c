@@ -24,6 +24,7 @@ extern qboolean CL_GetUserCmd(int cmdNumber, usercmd_t *ucmd);
 extern void PM_UpdateViewAngles(playerState_t *ps, float msec, usercmd_t *cmd, byte handler);
 extern const float LerpAngle(const float from, const float to, const float frac);
 extern void Pmove(pmove_t *pm);
+extern int cl_plusRules;
 extern void CG_TransitionPlayerState(playerState_t *ps, playerState_t *ops);
 extern void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *es, int, int);
 extern void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec_t *result);
@@ -291,6 +292,7 @@ void CG_PredictPlayerState(void)
 
     cg_pmove[0].ps = ps;
     cg_pmove[0].handler = 0;
+    cg_pmove[0].plusRules = cl_plusRules;
 
     {
         int mask;

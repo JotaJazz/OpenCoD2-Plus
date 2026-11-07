@@ -1,4 +1,5 @@
 #include "../qcommon/qcommon.h"
+#include "../server/server.h"
 #include "g_shared.h"
 
 /*
@@ -1062,6 +1063,10 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 		pm.tracemask = MASK_PLAYERSOLID;
 
 	pm.handler = PMOVE_HANDLER_SERVER;
+#ifdef COD2_PLUS
+	// the same test that sends it Plus snapshots, so its prediction knows
+	pm.plusRules = svs.clients[ent->s.number].plusVersion == PLUS_VERSION;
+#endif
 
 	VectorCopy(client->ps.origin, client->oldOrigin);
 

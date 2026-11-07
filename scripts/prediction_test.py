@@ -8,7 +8,8 @@ client as its target, and a real client (cod2_linux, held at 20 fps) as the
 second player, which the mod puts in front of a ledge (--spot, by rcon) and a
 config file drives: it mantles onto the ledge, turns away from the target,
 walks forward, back and to both sides, crouches, goes prone, stands, jumps
-and fires its rifle, then aims down its sight and back twice. It keeps away from the target: the client clips against
+and fires its rifle, fires, reloads and switches to its thompson and back
+during the drop, then aims down its sight and back twice. It keeps away from the target: the client clips against
 other players with a box one unit smaller on each side than the server's (as
 the original does), so running into one misses by design.
 
@@ -29,7 +30,11 @@ MOVETYPE condition the landing event reads, which lives outside the
 playerstate and is not set back when the moves are predicted again (3 or 4
 per run, all with no origin miss). With COD2_TRACE_PREDDIFF=all the client
 prints every playerstate field it predicted otherwise than the server; the
-sight's fraction (fWeaponPosFrac) must match it (--max-ads-misses, 0). --delay MS puts a UDP relay between the
+sight's fraction (fWeaponPosFrac) must match it (--max-ads-misses, 0), and so must
+the weapon's state (weaponTime, weaponDelay, weapon, weaponstate) through a
+fast reload, a shot cut by a reload and a switch to its thompson and back
+during the drop, which a Plus server plays by its own rules (--max-weapon-misses,
+1: the weapon the mod gives at spawn). --delay MS puts a UDP relay between the
 client and the server that holds each packet MS milliseconds each way (a
 ping of twice that, as online); --maxfps sets the client's com_maxfps
 (default 20). --wine CMD runs a Windows client given with --binary, our
@@ -71,6 +76,7 @@ gostand; wait 30
 +forward; +gostand; wait 5; -gostand; wait 30; -forward
 +attack; wait 5; -attack; wait 30
 +attack; wait 5; -attack; wait 30
++attack; wait 2; -attack; wait 2; +reload; wait 2; -reload; wait 13; weapnext; wait 1; weapnext; wait 60
 +moveright; wait 40; -moveright
 toggleads; wait 40; toggleads; wait 40
 toggleads; wait 40; toggleads; wait 40
@@ -159,6 +165,9 @@ def main():
     ap.add_argument('--max-misses', type=int, default=MAX_MISSES, help=f'fail above this many misses (default {MAX_MISSES})')
     ap.add_argument('--max-anim-misses', type=int, default=MAX_ANIM_MISSES,
                     help=f'fail above this many legs/torso animation misses (default {MAX_ANIM_MISSES})')
+    ap.add_argument('--max-weapon-misses', type=int, default=1,
+                    help='snapshots whose weapon state the client predicted otherwise (COD2_TRACE_PREDDIFF=all); '
+                    'one is the weapon the mod gives at spawn')
     ap.add_argument('--max-ads-misses', type=int, default=0,
                     help='fail above this many predicted sight fractions the server disagrees with (default 0)')
     ap.add_argument('--moves', help='a config file of moves instead of the built-in one')
@@ -312,6 +321,14 @@ def main():
                if abs(float(c) - float(s)) > 0.002]
         print(f'sight misses: {len(ads)}' + ''.join(f'\n  predicted {c}, server {s}' for c, s in ads[:5]))
         check(f'at most {args.max_ads_misses} sight misses', len(ads) <= args.max_ads_misses, f'{len(ads)}')
+        # and the weapon's state (weaponTime +0x34, weaponDelay +0x38, weapon +0xd4, weaponstate +0xd8), which
+        # firing, reloading and switching away and back during the drop change (Plus rules on a Plus server)
+        weapon = [(t, re.findall(r'^  \+0x00(?:34|38|d4|d8) client.*', body, re.M))
+                  for t, body in re.findall(r'^PredDiff t=(\d+).*\n((?:  .*\n)*)', text, re.M)]
+        weapon = [(t, lines) for t, lines in weapon if lines]
+        print(f'weapon misses: {len(weapon)}' + ''.join(f'\n  t={t}: ' + '; '.join(l.strip() for l in lines)
+                                                         for t, lines in weapon[:5]))
+        check(f'at most {args.max_weapon_misses} weapon misses', len(weapon) <= args.max_weapon_misses, f'{len(weapon)}')
     print('\n' + ('FAILED: ' + ', '.join(failures) if failures else 'All checks passed'))
     return 1 if failures else 0
 
