@@ -18,6 +18,11 @@ scripted usercmds and reads its playerstate from the snapshots:
   again, to each side. The lean, which halves going prone, may come back no
   faster than when the lean key is let go (0.5 in 280 ms): it used to halve
   in one frame.
+- mg clip: it takes a turret from 20 units to its side, which moves it behind
+  the gun, and leaves it with the use button. It must stay where the turret
+  held it: the stock game takes it back to where it stood when it took the
+  turret, behind cover if it stood there. Leaving adds no playerstate event
+  but the one that restores the stance.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the checks fail: that is how they catch the bugs.
@@ -32,6 +37,9 @@ from cod2client import CLC_MOVE_NO_DELTA, hash_key
 RCON = 'plusrules'
 BUTTON_ATTACK, BUTTON_RELOAD, BUTTON_LEANLEFT, BUTTON_LEANRIGHT = 1, 16, 64, 128  # q_shared.h
 PRONE, CROUCH = 256, 512  # BUTTON_PRONE, BUTTON_CROUCH: the stance held
+BUTTON_USE = 8
+EF_TURRET_ACTIVE = 0x300  # bg_public.h
+STANCE_EVENTS = {140, 141, 142}  # EV_STANCE_FORCE_STAND, _CROUCH, _PRONE
 WEAPON_READY, WEAPON_FIRING = 0, 3     # bg_public.h weaponstate_t
 OTHER = 'thompson_mp'
 # zPAM's list of the weapons fast reload works with
@@ -58,7 +66,10 @@ Callback_StartGameType()
 	// in this order the rifles take the indexes after the thompson's
 	precacheItem("%(other)s");
 %(precache)s
+	precacheTurret("mg42_bipod_stand_mp");
+	precacheModel("xmodel/weapon_mg42");
 	setCvar("plustest_weapon", "");
+	setCvar("plustest_turret", "");
 }
 
 Callback_PlayerConnect()
@@ -71,8 +82,9 @@ Callback_PlayerConnect()
 	self.statusicon = "";
 	self.maxhealth = 100000;
 	self.health = self.maxhealth;
+	// mp_toujane's second spawn point is level: a turret can be used there
 	spawnpoints = getentarray("mp_dm_spawn", "classname");
-	self spawn(spawnpoints[0].origin, spawnpoints[0].angles);
+	self spawn(spawnpoints[1].origin, spawnpoints[1].angles);
 	self character\\mp_american_normandy_braeburn::main();
 	self giveWeapon("%(other)s");
 	self giveMaxAmmo("%(other)s");
@@ -101,6 +113,17 @@ weapons()
 		}
 		if(last != "" && self getWeaponSlotClipAmmo("primary") < 2)
 			self setWeaponSlotClipAmmo("primary", 2);
+		// plustest_turret (rcon) puts a turret in front and has the player
+		// take it from 20 units to its left, where it moves them behind it
+		if(getCvar("plustest_turret") == "1" && !isdefined(self.turret))
+		{
+			self.turret = spawnTurret("misc_turret", self.origin + maps\\mp\\_utility::vectorScale(anglesToForward(self.angles), 60) + (0, 0, 30), "mg42_bipod_stand_mp");
+			self.turret.angles = self.angles;
+			self.turret setModel("xmodel/weapon_mg42");
+			self setOrigin(self.origin - maps\\mp\\_utility::vectorScale(anglesToRight(self.angles), 20));
+			wait 0.2;
+			logPrint("plustest turret " + self useTurret(self.turret) + "\\n");
+		}
 		wait 0.05;
 	}
 }
@@ -232,7 +255,28 @@ def check_prone_peek(port, player, other, check):
               f'leaned up to {leaned:.2f}, back at up to {fastest * 280:.2f} per 280 ms')
 
 
-CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek}
+def check_mg_clip(port, player, other, check):
+    settle(player, other)
+    smoke_test.rcon(port, RCON, 'set plustest_turret 1')
+    on = frames_until(player, lambda s: s and s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+    check('mg clip: the player takes the turret', bool(on) and on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE)
+    if not on or not on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE:
+        return
+    on += frames_until(player, lambda s: len(s) >= 10, 2)
+    held = [on[-1].get(f'origin[{i}]', 0) for i in range(3)]
+    events = {on[-1].get(f'events[{i}]') for i in range(4)}
+    # the use button leaves it
+    player.script = tuple([(BUTTON_USE, other)] * 2)
+    off = frames_until(player, lambda s: len(s) >= 20 and not s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+    left = [off[-1].get(f'origin[{i}]', 0) for i in range(3)] if off else held
+    moved = sum((a - b) ** 2 for a, b in zip(held, left)) ** 0.5
+    check('mg clip: leaving the turret keeps the player where it held them, behind it', moved < 2,
+          f'{moved:.1f} units from there')
+    new = {p.get(f'events[{i}]') for p in off for i in range(4)} - events - {None, 0}
+    check('mg clip: leaving the turret adds no event but the stance one', new <= STANCE_EVENTS, f'events {sorted(new)}')
+
+
+CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'mg_clip': check_mg_clip}
 
 
 def main():

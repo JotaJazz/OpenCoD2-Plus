@@ -1,4 +1,5 @@
 #include "../qcommon/qcommon.h"
+#include "../server/server.h"
 #include "g_shared.h"
 
 turretInfo_s turretInfoStore[MAX_TURRETS];
@@ -247,6 +248,20 @@ void G_ClientStopUsingTurret( gentity_t *self )
 		pTurretInfo->prevStance = TURRET_STANCE_INVALID;
 	}
 
+#ifdef COD2_PLUS
+	// Plus: a Plus client leaves the turret where using it put them, behind
+	// the gun, if their box fits there. Going back to where they stood when
+	// they took it let them peek from behind cover (zPAM's MG clip).
+	trace_t trace;
+	trace.startsolid = qtrue;
+
+	if ( svs.clients[owner->s.number].plusVersion == PLUS_VERSION )
+	{
+		G_TraceCapsule(&trace, owner->client->ps.origin, owner->r.mins, owner->r.maxs, owner->client->ps.origin, owner->s.number, MASK_PLAYERSOLID);
+	}
+
+	if ( trace.startsolid || trace.allsolid )
+#endif
 	TeleportPlayer(owner, pTurretInfo->userOrigin, owner->r.currentAngles);
 
 	owner->client->ps.eFlags &= ~EF_TURRET_ACTIVE;
