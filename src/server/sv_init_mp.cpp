@@ -121,6 +121,8 @@ void SV_InitDvar()
 	sv_rconWhitelist = Dvar_RegisterString("sv_rconWhitelist", "", DVAR_CHANGEABLE_RESET);
 #ifdef COD2_PLUS
 	sv_plusNotice = Dvar_RegisterString("sv_plusNotice", "", DVAR_CHANGEABLE_RESET);
+	// lets mods require this build; not in serverinfo, the handshake carries the version
+	Dvar_RegisterInt("sv_plus", PLUS_VERSION, PLUS_VERSION, PLUS_VERSION, DVAR_ROM | DVAR_CHANGEABLE_RESET);
 #endif
 	sv_logRcon = Dvar_RegisterBool("sv_logRcon", true, DVAR_CHANGEABLE_RESET);
 	sv_authorizeServer = Dvar_RegisterString("sv_authorizeServer", AUTHORIZE_SERVER_NAME, DVAR_CHANGEABLE_RESET);

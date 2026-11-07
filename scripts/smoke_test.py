@@ -20,6 +20,18 @@ import cod2client
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFIX = b'\xff\xff\xff\xff'
+SMOKE_GAMETYPE = r"""main()
+{
+	origin = getentarray("mp_tdm_spawn", "classname")[0].origin;
+	precacheModel("xmodel/prop_barrel_benzin");
+	model = spawn("script_model", origin);
+	model setModel("xmodel/prop_barrel_benzin");
+	trace = bulletTrace(origin + (0, 0, 100), origin - (0, 0, 10), false, undefined);
+	if (isDefined(trace["entity"]) && trace["entity"] == model)
+		setCvar("smoke_trace", "hit");
+	maps\mp\gametypes\tdm::main();
+}
+"""
 
 
 def log_lines(path, timed=False):
@@ -830,6 +842,10 @@ def main():
         for name in ('zz_svr_smoke.iwd', 'zz_smoke_download.iwd'):
             with zipfile.ZipFile(os.path.join(home, 'main', name), 'w') as z:
                 z.writestr('smoke/%s.txt' % name, 'cod2rev smoke test\n')
+        # a gametype that traces into a model before the first frame, when the
+        # skeleton memory used to be unset and the server crashed
+        with zipfile.ZipFile(os.path.join(home, 'main', 'zz_svr_smoke.iwd'), 'a') as z:
+            z.writestr('maps/mp/gametypes/smoke.gsc', SMOKE_GAMETYPE)
         # an older console log, which logfileRotate must keep as .1
         console_log = os.path.join(home, 'main', 'smoke_console.log')
         with open(console_log, 'w') as f:
@@ -849,7 +865,7 @@ def main():
                  '+set', 'sv_cracked', '1',
                  '+set', 'sv_hostname', hostname,
                  '+set', 'rcon_password', password,
-                 '+set', 'g_gametype', 'tdm',
+                 '+set', 'g_gametype', 'smoke',
                  '+set', 'g_logSync', '1',
                  '+set', 'logfile', '2',
                  '+set', 'logfileName', 'smoke_console.log',
@@ -878,6 +894,8 @@ def main():
                   f'{args.map} on port {port}' if info else f'exit code {server.poll()}')
             if info:
                 header, values = info
+                check('bulletTrace into a model at the map start',
+                      re.search(r'"smoke_trace" is: ?"hit', rcon(port, password, 'smoke_trace')) is not None)
                 check('getinfo reply', header == 'infoResponse' and values.get('challenge') == 'smoke')
                 check('over-long getinfo challenge ignored', query(port, 'getinfo ' + 'x' * 1000, 1.0) is None)
                 check('hostname', values.get('hostname') == hostname, values.get('hostname', ''))
