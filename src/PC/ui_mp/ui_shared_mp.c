@@ -5698,9 +5698,12 @@ count_visible:;
             visCount++;
     }
 
-    if (visCount > 0) {
+    /* the UI lets go of the keys only when no menu is left visible, as 1.3
+       (0x53e786); a click that opens a menu (open main) keeps them */
+    if (visCount == 0)
         UI_Pause(0);
 
+    {
         openCount = (((displayContextDef_s*)(d))->openMenuCount);
         for (i = openCount - 1; i >= 0; i--) {
             byte *openMenu = *(byte **)((char *)&((displayContextDef_s *)d)->menuStack[i]);
@@ -5730,8 +5733,6 @@ count_visible:;
                     CIN_StopCinematic(-((itemDef_t *)item)->window.ownerDraw);
             }
         }
-    } else {
-        UI_Pause(0);
     }
 }
 

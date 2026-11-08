@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — a click outside a menu keeps the UI's keys
+
+- `Menus_HandleOOBClick` ended with `UI_Pause(0)` both when menus were left visible and when none were; 1.3 (0x53e786) lets go of the keys only when none is. A click whose action opens a menu from outside the focused menu's rect (zPAM's in-game bar, "Main Menu": close all, open main) left the fullscreen `main` open without `keyCatchers & 8`: nothing was drawn and the mouse did nothing until Escape. 32- and 64-bit alike, there since the reconstruction.
+- Found with a diagnostic client that logged menu opens and closes and `Key_SetCatcher` (not kept). No runtime test: it needs a mod menu and a click.
+
 ## 2026-11-07 — x64: key bindings and enum lists in menus
 
 - `Item_Bind_HandleKey` walked `g_bindings` at x86's 20-byte stride with `bind1`/`bind2` at +12/+16; on x64 `bind_t` is 24 bytes, so binding a key in the controls menu read command names mid-entry and wrote keys over other fields, and some binds did not take. It now indexes `g_bindings[i]`, as the other bind functions already did.
