@@ -122,6 +122,7 @@ void glVertexPointer(void) {}
 void glViewport(void) {}
 void sdl_gl_height(void) {}
 void sdl_gl_width(void) {}
+void sdl_gl_fullscreen(void) {}
 void sdl_gl_window(void) {}
 #endif
 int ioctl(int fd, unsigned long request, void *arg) { (void)fd; (void)request; (void)arg; return -1; }

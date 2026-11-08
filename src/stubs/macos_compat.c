@@ -227,6 +227,8 @@ __attribute__((constructor)) static void init_display_list(void)
 SDL_Window *sdl_gl_window = NULL;
 int sdl_gl_width = 640;
 int sdl_gl_height = 480;
+/* r_fullscreen when the GL device is made (R_BeginRegistration_impl) */
+int sdl_gl_fullscreen = 0;
 
 /* The display's modes, at least 640x480, each width and height once, from
  * the smallest: what the original's renderer lists in r_mode from the
@@ -667,6 +669,32 @@ void SDL_GL_SwapWindowDirect(void)
 #    endif
 }
 
+/* r_fullscreen on the GL device, as 1.3's device is made full screen
+ * (r_fullscreen read only, 0x2040, so always): the display takes r_mode's
+ * size, the window covers it, and the GL drawable is r_mode's size, which the
+ * renderer draws to. A mode SDL cannot set leaves the window as it was. */
+static void Sys_ApplyGLFullscreen(void)
+{
+#    ifndef __EMSCRIPTEN__
+    if (sdl_gl_fullscreen) {
+        SDL_DisplayMode want, mode;
+
+        memset(&want, 0, sizeof want);
+        want.w = sdl_gl_width;
+        want.h = sdl_gl_height;
+        if (!SDL_GetClosestDisplayMode(SDL_GetWindowDisplayIndex(sdl_gl_window), &want, &mode) ||
+            mode.w != sdl_gl_width || mode.h != sdl_gl_height ||
+            SDL_SetWindowDisplayMode(sdl_gl_window, &mode) != 0 ||
+            SDL_SetWindowFullscreen(sdl_gl_window, SDL_WINDOW_FULLSCREEN) != 0) {
+            fprintf(stderr, "Full screen at %dx%d failed: %s\n", sdl_gl_width, sdl_gl_height,
+                    SDL_GetError());
+            return;
+        }
+        fprintf(stderr, "Game window full screen: %dx%d@%d\n", mode.w, mode.h, mode.refresh_rate);
+    }
+#    endif
+}
+
 typedef void *ContextRef;
 typedef int Boolean;
 
@@ -776,6 +804,8 @@ ContextRef MacDisplay_CreateScreenContext(int inDepthSize, int inUseStencil,
         }
     }
 
+    Sys_ApplyGLFullscreen();
+
     sdl_gl_context = SDL_GL_CreateContext(sdl_gl_window);
     if (!sdl_gl_context)
         return (ContextRef)0;
@@ -798,6 +828,11 @@ ContextRef MacDisplay_CreateScreenContext(int inDepthSize, int inUseStencil,
                 got_depth, got_stencil, got_db);
         Com_Printf("GL_VERSION=%s GL_RENDERER=%s\n",
                 glver ? glver : "(null)", glrend ? glrend : "(null)");
+        {
+            int dw = 0, dh = 0;
+            SDL_GL_GetDrawableSize(sdl_gl_window, &dw, &dh);
+            Com_Printf("GL drawable: %dx%d\n", dw, dh);
+        }
         if (got_depth > 0 && got_depth < 24)
             Com_Printf("WARNING: depth buffer is only %d bits -- expect z-fighting\n",
                     got_depth);

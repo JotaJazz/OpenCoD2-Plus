@@ -13,6 +13,12 @@ into the client (no separate DLL: [ADR 0007](adr/0007-remove-the-renderer-dll-va
 
 Decisions: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md), [ADR 0009](adr/0009-linux-client-on-dxvk.md).
 
+The GL device's window (`MacDisplay_CreateScreenContext`, `src/stubs/macos_compat.c`)
+is full screen with `r_fullscreen`, read only and so always 1 as in 1.3: the
+display switches to `r_mode`'s size (`SDL_WINDOW_FULLSCREEN`), as 1.3's
+full-screen device does, since the GL layer draws straight to a drawable of
+that size. A mode the display does not list leaves a window.
+
 ## Real Direct3D 9 path
 
 | Item | Detail |
@@ -22,7 +28,7 @@ Decisions: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md), [ADR 0009]
 | Aspect | `r_aspectRatio` (`0x10011610`): 4:3, 16:10, 16:9; auto rounds the window's shape, or the monitor's when full screen |
 | Screenshots | `GetRenderTargetData` of the back buffer before `Present` |
 | COM calls | through `D3DVTCC` (stdcall on a real device, empty for the GL device) |
-| Picmip | by texture memory, as `0x1000d6a0`; Windows system info from `GlobalMemoryStatusEx`, the processor's registry key and the primary display device |
+| Picmip | by texture memory, as `0x1000d6a0`; Windows system info from `GlobalMemoryStatusEx`, the processor's registry key and the primary display device; Linux's CPU speed is cpufreq's rated maximum (`cpuinfo_max_freq`), not `/proc/cpuinfo`'s current clock, which moved past the 10% `Sys_HasInfoChanged` allows and reset the profile's settings (`r_mode` among them) every start |
 | `vid_restart` | refused while a local server runs ("Listen server cannot video restart"), as the original |
 
 ## Linux real Direct3D 9 path

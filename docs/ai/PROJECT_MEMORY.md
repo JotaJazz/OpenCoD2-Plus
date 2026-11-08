@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — cod2_linux full screen, settings kept
+
+- The GL client (`cod2_linux`) always opened in a window: its device ignored `r_fullscreen`. It now switches the display to `r_mode` and covers it, as 1.3 (`r_fullscreen` read only, `0x2040`) and the real Direct3D 9 path do.
+- Every start reset the profile's settings to the recommended ones (`r_mode` back to 640x480): the CPU speed came from `/proc/cpuinfo`'s current clock (0.8 and 1.6 GHz in two runs), past `Sys_HasInfoChanged`'s 10%. It is now cpufreq's `cpuinfo_max_freq`, steady as Windows' `~MHz` (`test/test_cpu_speed.py`).
+- Rejected: `SDL_WINDOW_FULLSCREEN_DESKTOP` for the GL client, since a smaller `r_mode` would draw into a corner of the desktop-sized drawable.
+
 ## 2026-11-07 — a click outside a menu keeps the UI's keys; the controls menu shows its keys
 
 - `Menus_HandleOOBClick` ended with `UI_Pause(0)` both when menus were left visible and when none were; 1.3 (0x53e786) lets go of the keys only when none is. A click whose action opens a menu from outside the focused menu's rect (zPAM's in-game bar, "Main Menu": close all, open main) left the fullscreen `main` open without `keyCatchers & 8`: nothing was drawn and the mouse did nothing until Escape. 32- and 64-bit alike, there since the reconstruction.

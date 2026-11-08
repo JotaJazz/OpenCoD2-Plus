@@ -107,6 +107,9 @@ int SDL_GetWindowDisplayIndex(void) { return 0; }
 int SDL_GetDesktopDisplayMode(void) { return -1; }
 int SDL_GetNumDisplayModes(void) { return 0; }
 int SDL_GetDisplayMode(void) { return -1; }
+void *SDL_GetClosestDisplayMode(void) { return 0; }
+int SDL_SetWindowDisplayMode(void) { return -1; }
+void SDL_GL_GetDrawableSize(void) {}
 int SDL_InitSubSystem(void) { return -1; }  /* no video: r_mode keeps its fixed list */
 int SDL_WasInit(void) { return 0; }
 int SDL_IsTextInputActive(void) { return 0; }

@@ -827,8 +827,14 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             int d3dpp[14];
             int width, height;
 
+            extern const dvar_t *r_fullscreen;
+            extern int sdl_gl_fullscreen;
+
             /* the mode r_mode names, not 640x480 always */
             R_GetModeSize(&width, &height);
+            /* full screen as the real device's path; the window is made in
+             * MacDisplay_CreateScreenContext */
+            sdl_gl_fullscreen = r_fullscreen->current.enabled;
 
             memset(d3dpp, 0, sizeof(d3dpp));
             d3dpp[0] = width;
@@ -844,7 +850,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             vidConfig.width = width;
             vidConfig.height = height;
             vidConfig.displayFrequency = 60;
-            vidConfig.isFullscreen = 0;
+            vidConfig.isFullscreen = sdl_gl_fullscreen;
             vidConfig.aspectRatioWindow = R_WindowAspectRatio(width, height);
             vidConfig.aspectRatioPixel = (float)height * vidConfig.aspectRatioWindow / (float)width;
 
