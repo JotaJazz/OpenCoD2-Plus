@@ -3021,10 +3021,9 @@ void Item_Bind_Paint(displayContextDef_t *dc, itemDef_t *item)
     int maxChars;
     int i;
 
+    /* a bind with no maxPaintChars (the stock ones) is drawn whole, as 1.3 (0x5409c2) */
     editFieldDef_t *editPtr = Item_GetEditFieldDef(item);
-    if (!editPtr || !editPtr->maxPaintChars)
-        return;
-    maxChars = editPtr->maxPaintChars;
+    maxChars = editPtr && editPtr->maxPaintChars ? editPtr->maxPaintChars : 0x7fffffff;
 
     bindName = item->dvar;
     if (!bindName || !bindName[0])

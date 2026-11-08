@@ -5,10 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
-## 2026-11-07 — a click outside a menu keeps the UI's keys
+## 2026-11-07 — a click outside a menu keeps the UI's keys; the controls menu shows its keys
 
 - `Menus_HandleOOBClick` ended with `UI_Pause(0)` both when menus were left visible and when none were; 1.3 (0x53e786) lets go of the keys only when none is. A click whose action opens a menu from outside the focused menu's rect (zPAM's in-game bar, "Main Menu": close all, open main) left the fullscreen `main` open without `keyCatchers & 8`: nothing was drawn and the mouse did nothing until Escape. 32- and 64-bit alike, there since the reconstruction.
 - Found with a diagnostic client that logged menu opens and closes and `Key_SetCatcher` (not kept). No runtime test: it needs a mod menu and a click.
+- `Item_Bind_Paint` returned without drawing when the bind had no `maxPaintChars`, which the stock controls menus never set, so no key showed next to an action; 1.3 (0x5409c2) draws it whole. Left as it was: while waiting for a key ours draws `EXE_KEYWAIT` where 1.3 draws the bound keys in red.
 
 ## 2026-11-07 — x64: key bindings and enum lists in menus
 
