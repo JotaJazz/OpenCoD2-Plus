@@ -14,6 +14,7 @@ import argparse, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_duplicates import PLUS_TARGETS, link_objects, strong_globals
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

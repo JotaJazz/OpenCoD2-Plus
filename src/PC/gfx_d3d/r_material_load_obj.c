@@ -789,6 +789,13 @@ static Bool MATERIAL_REGPARM3_ABI Material_SetPassShaderArguments_impl(const cha
             dest = Material_FallbackSamplerDest(tok);
             if (!Com_MatchToken(text, "=", 1))
                 goto fail;
+            /* without a constant table only colorMapSampler has a destination;
+             * the rest (constant.materialColor in color_channel_mixer.tech, which
+             * the sampler parser rejects) is skipped as an unused constant */
+            if (dest < 0) {
+                Com_SkipRestOfLine(text);
+                continue;
+            }
 
             memset(&arg, 0, sizeof(arg));
             if (!Material_ParseSamplerSource_impl(text, &arg))
@@ -796,14 +803,12 @@ static Bool MATERIAL_REGPARM3_ABI Material_SetPassShaderArguments_impl(const cha
             if (!Com_MatchToken(text, ";", 1))
                 goto fail;
 
-            if (dest >= 0) {
-                if (fallbackCount >= 16) {
-                    Com_ScriptWarning("More than %i fallback sampler mappings\n", 16);
-                    goto fail;
-                }
-                arg.dest = (unsigned short)dest;
-                fallbackArgs[fallbackCount++] = arg;
+            if (fallbackCount >= 16) {
+                Com_ScriptWarning("More than %i fallback sampler mappings\n", 16);
+                goto fail;
             }
+            arg.dest = (unsigned short)dest;
+            fallbackArgs[fallbackCount++] = arg;
         }
 
         *argCount = (unsigned short)fallbackCount;

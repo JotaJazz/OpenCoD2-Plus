@@ -55,7 +55,14 @@ endif()
 # Common warning-demotions used on every toolchain (reconstructed C trips these).
 set(COD2_WNO
   -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration
-  -Wno-error=implicit-int -Wno-error=int-conversion -Wno-error=return-mismatch)
+  -Wno-error=implicit-int -Wno-error=int-conversion)
+# GCC 14 made a return's type mismatch an error and named it; GCC 13 (Ubuntu's
+# MinGW) only warns and rejects -Wno-error= of a warning it does not know.
+include(CheckCCompilerFlag)
+check_c_compiler_flag(-Wreturn-mismatch COD2_HAS_WRETURN_MISMATCH)
+if(COD2_HAS_WRETURN_MISMATCH)
+  list(APPEND COD2_WNO -Wno-error=return-mismatch)
+endif()
 
 set(COD2_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
@@ -680,6 +687,7 @@ separate_arguments(COD2_FEATURE_LIST UNIX_COMMAND "${COD2_FEATURE_CFLAGS}")
 
 add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse2;-mfpmath=sse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:${SDL2_CFLAGS_OTHER}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_OPT_FLAGS}>"

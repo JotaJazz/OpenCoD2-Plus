@@ -18,6 +18,7 @@ MANGLED = re.compile(r'^_{1,2}Z')
 CMAKE_PROBE = re.compile(r'CMakeFiles/\d')
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from check_duplicates import PLUS_TARGETS as CXX_TARGETS  # CoD2rev-Plus's targets
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 
 def objects(build_dir):

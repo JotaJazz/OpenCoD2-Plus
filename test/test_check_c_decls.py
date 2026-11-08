@@ -63,3 +63,29 @@ class Differs(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+PARSE = r'''
+import sys
+sys.path.insert(0, sys.argv[1])
+import check_c_decls as c
+print(sorted(name for name, is_decl, sig in c.parse('readelf', sys.argv[2])))
+'''
+
+
+class Locale(unittest.TestCase):
+    """readelf translates its DWARF dump ("Número de Abrev" in Spanish); the
+    script reads it in the C locale whatever the user's is."""
+
+    def test_parse_in_a_translated_locale(self):
+        import subprocess, tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            src = os.path.join(tmp, 't.c')
+            obj = os.path.join(tmp, 't.o')
+            with open(src, 'w') as f:
+                f.write('int f(int a) { return a; }\n')
+            subprocess.run(['gcc', '-g', '-c', src, '-o', obj], check=True)
+            env = dict(os.environ, LC_ALL='es_CL.UTF-8', LANG='es_CL.UTF-8', LANGUAGE='es')
+            out = subprocess.run([sys.executable, '-c', PARSE, os.path.dirname(c.__file__), obj],
+                                 env=env, capture_output=True, text=True, check=True).stdout
+        self.assertEqual(out.strip(), "['f']")

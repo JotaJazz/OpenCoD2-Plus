@@ -24,6 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from check_duplicates import PLUS_TARGETS as CXX_TARGETS  # CoD2rev-Plus's targets
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 DIE = re.compile(r'^\s*<(\d+)><([0-9a-f]+)>: Abbrev Number: \d+ \((DW_TAG_\w+)\)')
 ATTR = re.compile(r'^\s*<[0-9a-f]+>\s+(DW_AT_\w+)\s*:\s*(.*)$')
 

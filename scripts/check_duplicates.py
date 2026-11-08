@@ -13,6 +13,7 @@ or the .o/.obj files in its link.txt) and exits with 0 when no unmangled global
 is defined both by a CoD2rev-Plus object and by another one.
 """
 import argparse, glob, os, re, subprocess, sys
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 # the OBJECT libraries with CoD2rev-Plus's code (CMakeLists.txt)
 PLUS_TARGETS = ('cod2_plus_script.dir', 'cod2_plus_script_game.dir', 'cod2_plus_script_core.dir',

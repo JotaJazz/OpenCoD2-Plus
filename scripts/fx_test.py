@@ -13,9 +13,10 @@ front of the player (fxSetTestPosition). Counts the pixels of a shot that
 differ from the one before it by more than DIFF in some channel. Exits with 0
 when every effect changes over MIN_PIXELS pixels more than the picture does
 by itself, every effect loads (an effect that fails plays the placeholder
-instead), and the client still runs and leaves no crash report. --keep copies
-the screenshots, the log and any crash report to DIR. The client opens a window and needs a CD
-key in ~/.cod2/preferences; without one the test is skipped (exit 0).
+instead), every material loads, and the client still runs and leaves no
+crash report. --keep copies the screenshots, the log and any crash report to
+DIR. The client opens a window and needs a CD key in ~/.cod2/preferences;
+without one the test is skipped (exit 0).
 """
 import argparse, glob, os, shutil, struct, subprocess, sys, tempfile
 
@@ -169,6 +170,8 @@ def main():
         failed = [l.strip() for l in text.splitlines() if ('FX Error' in l or 'Effect file load failed' in l)
                   and not any(m in l for m in MISSING)]
         check('every effect loads', not failed, '; '.join(failed[:3]))
+        broken = [l.strip() for l in text.splitlines() if 'FinishLoadingInstance failed' in l]
+        check('every material loads', not broken, '; '.join(broken[:3]))
         shot = lambda name: os.path.join(shots, f'{name}.tga')
         for n, fx in enumerate(effects):
             names = (f'fx_{n}_none', f'fx_{n}_still', f'fx_{n}')

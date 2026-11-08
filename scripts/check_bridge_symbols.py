@@ -10,7 +10,8 @@ pointer in q_shared.c, whose blob defines the data symbol), the call links and
 jumps into data. For each label, the executable's symbol must be code (T, t or
 W). Exits with 0 when all are.
 """
-import argparse, re, subprocess, sys
+import argparse, os, re, subprocess, sys
+os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 LABEL = re.compile(r'__asm__\(COD2_SYM\("(\w+)"\)\)')
 
