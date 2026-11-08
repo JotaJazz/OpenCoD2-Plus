@@ -488,7 +488,7 @@ void CL_ParseWWWDownload(msg_t *msg)
 
 #    if COD2_FEATURE_NET_HARDENING && COD2_FEATURE_WWW_DOWNLOAD
 
-#        if defined(COD2_PLUS)
+#        if COD2_IS_PATCH_13 && defined(COD2_PLUS)
     /* not in 1.3, which uses the URL it reads (0x413ed2) as is: a Plus server
      * serves the file itself, over HTTP on the game port it is reached on;
      * from any other server "plus:" fails the http(s) check below */
