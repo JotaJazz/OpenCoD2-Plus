@@ -1355,7 +1355,8 @@ void Item_Text_AutoWrapped_Paint(itemDef_t *item, const char *textPtr, vec_t *co
                 if (alignment == 1) {
                     newTextRect[0] = (((itemDef_s*)(it))->textalignx) - (float)(newLineWidth / 2);
                 } else if (alignment == 2) {
-                    newTextRect[0] = (((itemDef_s*)(it))->textalignx) + (((rectDef_t*)(textRect))->w) - (float)newLineWidth;
+                    /* each line ends at textalignx, as 1.3's 0x53f657; textRect.w is the whole text's width */
+                    newTextRect[0] = (((itemDef_s*)(it))->textalignx) - (float)newLineWidth;
                 } else {
                     newTextRect[0] = (((itemDef_s*)(it))->textalignx);
                 }

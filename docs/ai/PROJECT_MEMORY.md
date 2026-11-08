@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — right-aligned autowrapped menu text
+
+- `Item_Text_AutoWrapped_Paint` ended each right-aligned line at `textalignx` plus `textRect.w`, the whole text's width, so zPAM's server info titles (`ITEM_ALIGN_RIGHT`, ending at their origin) ran over the values beside them. 1.3 (0x53f657) ends the line at `textalignx`. The term came from the initial reconstruction, so the 32-bit and 64-bit clients both had it.
+- Checked against 1.3's disassembly only; no runtime test was added, as a menu check needs a mod menu and a screenshot like `hud_align_test.py`.
+
 ## 2026-11-07 — cl_vehicleInvertPitch
 
 - For the vehicles mod (OCOD2PV), which sets it with `setClientCvar` while a player pilots a plane: 1 negates the mouse's pitch in `CL_MouseMove`. Setting `m_pitch` from the server was rejected: it is archived and would stay inverted after a disconnect in flight. The dvar has no flags, so `NetHardening_ServerMaySetCvar` lets a server set it.
