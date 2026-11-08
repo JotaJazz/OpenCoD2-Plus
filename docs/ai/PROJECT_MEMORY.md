@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — review of the DXVK default
+
+- From the review: `scripts/headless.sh` exits with the command's status, says why when KWin dies, and tolerates a missing `/tmp/.X11-unix`; `build_check.py` and CMake require all three files of `scripts/build_linux_vk_deps.sh`; the configure prints which client it set up, as an old build directory keeps `COD2_LINUX_DXVK=OFF` cached.
+- Left as they are: two `headless.sh` runs started together may swap displays (noted in the script), and ADR 0009 stays superseded although its dependency script and `dlopen` still stand.
+
 ## 2026-11-08 — DXVK is the default Linux client
 
 - `cod2_linux` is the DXVK client (`COD2_LINUX_DXVK` on by default, off for x64; [ADR 0017](../architecture/adr/0017-dxvk-is-the-default-linux-client.md)): `build_check.py`'s `linux`, `linux-10` and `linux-13` build it, `linux-gl` the GL one, so the runtime tests run it unchanged. Configuring without `scripts/build_linux_vk_deps.sh`'s libraries stops instead of falling back to GL. Renaming the GL client was dropped: the build directory tells them apart.

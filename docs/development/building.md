@@ -23,6 +23,13 @@ Every x86 and x64 build computes float math on SSE2 (`-msse2 -mfpmath=sse`, [ADR
 | Linux 64-bit client | `scripts/linux_x64_deps.sh` (amd64 SDL2 headers, no root), then `-DCOD2_X64=ON` | `cod2_linux` for x86_64, on OpenCoD2-Plus Server's VM and server like the 32-bit client; loads maps, not yet equal to it ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 | Windows 64-bit client | `scripts/mingw64_deps.sh` (MinGW-w64 x86_64 and SDL2's x86_64 libraries, no root), then `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake -DCOD2_X64=ON -DCOD2_WIN32_CLIENT=ON` | `cod2_win32.exe` for x86_64, real Direct3D 9, on OpenCoD2-Plus Server's VM and server; loads maps under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`), not yet equal to the 32-bit one; no libcod (it keeps pointers in `long`, 4 bytes on Win64) |
 
+The configure prints which client it set up (`cod2_linux: DXVK (Vulkan)` or
+`cod2_linux: GL device`). A build directory configured before DXVK became the
+default keeps `COD2_LINUX_DXVK=OFF` in its cache, and so a GL client: pass
+`-DCOD2_LINUX_DXVK=ON` or start a new directory. A dedicated server alone
+needs no client libraries in `cmake/lnxded64` (64-bit) or with
+`-DCOD2_LINUX_DXVK=OFF`.
+
 The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
 `src/stubs`) links into `cod2_linux` and `cod2_win32`, where
 those files alone are `-O2`, as a mixer has a deadline. MP3 comes from

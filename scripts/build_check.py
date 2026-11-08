@@ -82,7 +82,9 @@ SDL2_MINGW64 = os.path.join(ROOT, 'third_party', 'mingw64-sdl2', 'SDL2-2.30.9', 
 MINGW64_NM = os.path.join(ROOT, 'third_party', 'mingw64', 'usr', 'bin', 'x86_64-w64-mingw32-nm')
 LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
                               '_real_SDL_config.h')
-LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
+# what CMake needs of scripts/build_linux_vk_deps.sh's output for the DXVK client
+LINUX_VK_DEPS = tuple(os.path.join(ROOT, 'third_party', 'linux-vk', f) for f in
+                      ('lib/libdxvk_d3d9.so.0', 'lib/libvkd3d-shader.so.1', 'include/vkd3d_shader.h'))
 # the MinGW client links the static SDL2 the user supplies
 LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
@@ -368,8 +370,9 @@ def main():
             print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
             continue
-        if variant in DXVK_VARIANTS and not os.path.exists(LINUX_VK_DXVK):
-            print(f'skip {variant} (no {os.path.relpath(LINUX_VK_DXVK, ROOT)}: scripts/build_linux_vk_deps.sh)')
+        missing = [f for f in LINUX_VK_DEPS if not os.path.exists(f)] if variant in DXVK_VARIANTS else []
+        if missing:
+            print(f'skip {variant} (no {os.path.relpath(missing[0], ROOT)}: scripts/build_linux_vk_deps.sh)')
             skipped = True
             continue
         errors = build(variant, extra)

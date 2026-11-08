@@ -40,6 +40,18 @@ class BuildCheck(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn('skip linux-client-x64', out)
 
+    def test_dxvk_variants_skipped_without_its_libraries(self):
+        """linux, linux-10 and linux-13 need every file of scripts/build_linux_vk_deps.sh CMake reads."""
+        with tempfile.TemporaryDirectory() as tmp:
+            present = os.path.join(tmp, 'libdxvk_d3d9.so.0')
+            open(present, 'w').close()
+            with mock.patch.object(build_check, 'LINUX_VK_DEPS', (present, os.path.join(tmp, 'vkd3d_shader.h'))):
+                code, out = self.run_main('linux', 'linux-10', 'linux-13', '--allow-skip')
+        self.assertEqual(code, 0, out)
+        for variant in build_check.DXVK_VARIANTS:
+            self.assertIn(f'skip {variant} (no ', out)
+        self.assertIn('vkd3d_shader.h', out)
+
     def test_client_x64_builds_the_64_bit_client(self):
         """The 64-bit client is the engine's build, not the dedicated server's project."""
         self.assertIn('-DCOD2_X64=ON', build_check.VARIANTS['linux-client-x64'])

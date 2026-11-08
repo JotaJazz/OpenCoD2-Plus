@@ -635,12 +635,17 @@ endif()
 option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader); OFF: the GL device" ${COD2_LINUX_DXVK_DEFAULT})
 set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk)
 if(COD2_LINUX_DXVK)
-  if(NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libdxvk_d3d9.so.0 OR NOT EXISTS ${COD2_LINUX_VK_DIR}/include/vkd3d_shader.h)
+  if(NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libdxvk_d3d9.so.0 OR NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libvkd3d-shader.so.1
+     OR NOT EXISTS ${COD2_LINUX_VK_DIR}/include/vkd3d_shader.h)
     message(FATAL_ERROR "The Linux client draws on DXVK: run scripts/build_linux_vk_deps.sh first, "
                         "or configure with -DCOD2_LINUX_DXVK=OFF for the GL device")
   endif()
   add_compile_definitions(GFX_REAL_D3D9)
   include_directories(${COD2_LINUX_VK_DIR}/include)
+  message(STATUS "cod2_linux: DXVK (Vulkan)")
+else()
+  # a build directory configured before DXVK became the default keeps OFF cached
+  message(STATUS "cod2_linux: GL device (COD2_LINUX_DXVK=OFF)")
 endif()
 set(COD2_FEATURE_CFLAGS "" CACHE STRING "Pass-through feature gates, e.g. -DCOD2_PATCH_13=1")
 set(COD2_WWWDL_LIBS "-l:libcurl.so.4" CACHE STRING "1.3 redirected-download backend lib")
