@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-07 — x64: key bindings and enum lists in menus
+
+- `Item_Bind_HandleKey` walked `g_bindings` at x86's 20-byte stride with `bind1`/`bind2` at +12/+16; on x64 `bind_t` is 24 bytes, so binding a key in the controls menu read command names mid-entry and wrote keys over other fields, and some binds did not take. It now indexes `g_bindings[i]`, as the other bind functions already did.
+- The same leftover in `Item_HandleKey`'s `ITEM_TYPE_DVARENUM` (`dv + 0x14`, x86's `domain.enumeration.stringCount`) read inside `current` on x64: the graphics menu's mode and refresh lists did not cycle. The 32-bit clients were right. Checked by building only; no menu test exists.
+
 ## 2026-11-07 — right-aligned autowrapped menu text
 
 - `Item_Text_AutoWrapped_Paint` ended each right-aligned line at `textalignx` plus `textRect.w`, the whole text's width, so zPAM's server info titles (`ITEM_ALIGN_RIGHT`, ending at their origin) ran over the values beside them. 1.3 (0x53f657) ends the line at `textalignx`. The term came from the initial reconstruction, so the 32-bit and 64-bit clients both had it.

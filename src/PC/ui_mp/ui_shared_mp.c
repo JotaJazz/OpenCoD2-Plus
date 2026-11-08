@@ -4101,21 +4101,20 @@ qboolean Item_Bind_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, 
         const char *dvarName = item->dvar;
 
         for (i = 0; i < 0x38; i++) {
-            if (I_stricmp(dvarName, *(const char **)((byte *)g_bindings + i * 0x14)) == 0)
+            if (I_stricmp(dvarName, g_bindings[i].command) == 0)
                 break;
         }
         if (i < 0x38) {
 
-            int idx = i * 0x14;
-            int key1 = *(int *)((byte *)g_bindings + idx + 12);
+            int key1 = g_bindings[i].bind1;
             if (key1 != -1) {
                 Key_SetBinding(key1, "");
-                *(int *)((byte *)g_bindings + idx + 12) = -1;
+                g_bindings[i].bind1 = -1;
             }
-            int key2 = *(int *)((byte *)g_bindings + idx + 16);
+            int key2 = g_bindings[i].bind2;
             if (key2 != -1) {
                 Key_SetBinding(key2, "");
-                *(int *)((byte *)g_bindings + idx + 16) = -1;
+                g_bindings[i].bind2 = -1;
             }
         }
         Controls_SetConfig(0);
@@ -4132,36 +4131,30 @@ qboolean Item_Bind_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, 
 
     if (key != -1) {
 
-        byte *entry = (byte *)g_bindings;
-        while (entry != (byte *)g_bindings + 56 * 0x14) {
-            if ((((bind_t*)(entry))->bind2) == key) {
-                (((bind_t*)(entry))->bind2) = -1;
+        for (i = 0; i < 56; i++) {
+            if (g_bindings[i].bind2 == key)
+                g_bindings[i].bind2 = -1;
+            if (g_bindings[i].bind1 == key) {
+                g_bindings[i].bind1 = g_bindings[i].bind2;
+                g_bindings[i].bind2 = -1;
             }
-            if ((((bind_t*)(entry))->bind1) == key) {
-
-                (((bind_t*)(entry))->bind1) = (((bind_t*)(entry))->bind2);
-                (((bind_t*)(entry))->bind2) = -1;
-            }
-            entry += 0x14;
         }
     }
 
     const char *bindName = item->dvar;
     int bindIdx = -1;
     for (i = 0; i < 0x38; i++) {
-        if (I_stricmp(bindName, *(const char **)((byte *)g_bindings + i * 0x14)) == 0) {
+        if (I_stricmp(bindName, g_bindings[i].command) == 0) {
             bindIdx = i;
             break;
         }
     }
 
     if (bindIdx >= 0 && key != -1) {
-        int offset = bindIdx * 0x14;
-        if (*(int *)((byte *)g_bindings + offset + 12) == -1) {
-            *(int *)((byte *)g_bindings + offset + 12) = key;
-        } else {
-            *(int *)((byte *)g_bindings + offset + 16) = key;
-        }
+        if (g_bindings[bindIdx].bind1 == -1)
+            g_bindings[bindIdx].bind1 = key;
+        else
+            g_bindings[bindIdx].bind2 = key;
     }
 
     Controls_SetConfig(0);
@@ -4396,7 +4389,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
         struct dvar_s *dv = Dvar_FindVar((*(const char **)&((itemDef_t *)it)->typeData.listBox));
         int totalCount;
         if (dv->type == 6)
-            totalCount = *(int *)((byte *)dv + 0x14);
+            totalCount = dv->domain.enumeration.stringCount;   /* x86's dv + 0x14; x64 moves it */
         else
             totalCount = 0;
 
