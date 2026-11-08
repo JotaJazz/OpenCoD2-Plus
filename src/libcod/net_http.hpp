@@ -47,6 +47,7 @@ struct NetHttpRequest
 	std::string body;
 	int timeoutMs;        // whole request, 0 for none
 	NetTlsOptions tls;
+	size_t maxBody = NET_HTTP_MAX_STRING; // a longer response body is refused
 };
 
 struct NetHttpResponse

@@ -1276,6 +1276,42 @@ void gsc_player_getuserinfo(scr_entref_t id)
 	stackPushString(Info_ValueForKey(svs.clients[id.entnum].userinfo, key));
 }
 
+// The Plus ID the player proved at connect, "" without one
+void gsc_player_getplusid(scr_entref_t id)
+{
+	if (!gsc_player_isclient(id, "gsc_player_getplusid"))
+		return;
+
+	stackPushString(PlusId_ForClient(id.entnum));
+}
+
+// "guid", "ip" or "guid,ip" when this player matches a live local ban of another ID, "" otherwise
+void gsc_player_getplusidflags(scr_entref_t id)
+{
+	if (!gsc_player_isclient(id, "gsc_player_getplusidflags"))
+		return;
+
+	stackPushString(PlusId_FlagsForClient(id.entnum));
+}
+
+// Seconds this ID has played on the servers that share the seen file, 0 without one
+void gsc_player_getplusidplaytime(scr_entref_t id)
+{
+	if (!gsc_player_isclient(id, "gsc_player_getplusidplaytime"))
+		return;
+
+	stackPushInt(PlusId_Playtime(id.entnum));
+}
+
+// Seconds since this ID was first seen, 0 without one
+void gsc_player_getplusidfirstseen(scr_entref_t id)
+{
+	if (!gsc_player_isclient(id, "gsc_player_getplusidfirstseen"))
+		return;
+
+	stackPushInt(PlusId_FirstSeenAgo(id.entnum));
+}
+
 // Methods below are named and behave as in zk_libcod
 
 static void gsc_player_setmuted(scr_entref_t id, const char *function, bool muted)

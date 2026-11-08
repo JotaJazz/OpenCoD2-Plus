@@ -524,3 +524,8 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 ## 2026-09-15 — upstream opencod2 (since 2026-06-25)
 
 - Initial reconstruction, MSVC build, data blobs, an x64 port in progress, the effects hierarchy; inherited as the engine (`src/PC`).
+
+## 2026-11-08 — OpenCoD2-Plus Server 48cf44c: Plus ID, Mbed TLS split
+
+- Brought the vendored files up to 48cf44c (branch `plus-id`, not yet on the server's master): the server's Plus ID (`src/libcod/plusid*.cpp/.hpp`, `scripts/plusid_test.py`, `banlist.py`, `test_banlist.py`, hooks in `gsc*`, `net_http`, `libcod.cpp`, `sv_client_mp.cpp`, `cod2client.py`). Its design is in the server's `docs/architecture/plus-id.md`. Plus version stays 123.
+- CMake: Mbed TLS moved out of `cod2_plus_libcod` into the `cod2_plus_mbedtls` OBJECT library (same flags), built once in every non-web build and linked by the client and dedicated targets, Win64 included; the Windows clients link `bcrypt` always. Client-side signing is the next stage.

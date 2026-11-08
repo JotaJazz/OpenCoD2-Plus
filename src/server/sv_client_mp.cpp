@@ -687,6 +687,7 @@ void SV_FreeClient( client_t *cl )
 
 #ifdef LIBCOD
 	Libcod_ResetClient(cl - svs.clients);
+	PlusId_ClientDropped(cl - svs.clients);
 #endif
 }
 
@@ -864,6 +865,8 @@ void SV_DirectConnect( netadr_t from )
 	int ping;
 #ifdef LIBCOD
 	int authorizationChallenge = -1;
+	char plusId[22] = "";
+	int plusIdFlags = 0;
 #endif
 
 	Com_DPrintf("SV_DirectConnect()\n");
@@ -994,6 +997,19 @@ void SV_DirectConnect( netadr_t from )
 			const char *notice = sv_plusNotice->current.string;
 
 			NET_OutOfBandPrint( NS_SERVER, from, va( "error\n\x15%s", *notice ? notice : PLUS_NOTICE ) );
+			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
+			return;
+		}
+#endif
+
+#ifdef LIBCOD
+		// after the challenge, so that a spoofed address costs no ECDSA check;
+		// takes pk, ps and pa out of the userinfo
+		const char *refuse = PlusId_CheckConnect( from, userinfo, challenge, guid, plusId, &plusIdFlags );
+
+		if ( refuse )
+		{
+			NET_OutOfBandPrint( NS_SERVER, from, va( "error\n\x15%s", refuse ) );
 			memset( &svs.challenges[i], 0, sizeof( svs.challenges[i] ) );
 			return;
 		}
@@ -1140,6 +1156,8 @@ gotnewcl:
 
 #ifdef LIBCOD
 	Libcod_ConnectAuthorizationState(clientNum, authorizationChallenge);
+	// before ClientConnect, whose script callback can ask for it
+	PlusId_ClientConnected(clientNum, plusId, plusIdFlags);
 #endif
 
 	// get the game a chance to reject this connection or modify the userinfo
@@ -1151,6 +1169,9 @@ gotnewcl:
 		NET_OutOfBandPrint(NS_SERVER, from, va("error\n%s", denied));
 		Com_DPrintf("Game rejected a connection: %s.\n", denied);
 		SV_FreeClientScriptId(newcl);
+#ifdef LIBCOD
+		PlusId_ClientDropped(clientNum);
+#endif
 		return;
 	}
 

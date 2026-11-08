@@ -193,9 +193,10 @@ class Client:
                 if line.startswith(reply) or line.startswith('error'):
                     return line
 
-    def connect(self, protocol, name, plus=123):
+    def connect(self, protocol, name, plus=123, extra=None):
         """Returns None once connected, otherwise the server's reply. plus is the
-        CoD2 Plus version to send, or None for a stock client."""
+        CoD2 Plus version to send, or None for a stock client. extra, given the
+        challenge, returns more userinfo to send (the Plus ID keys)."""
         self.protocol = protocol
         line = self._oob('getchallenge', 'challengeResponse')
         if not line.startswith('challengeResponse'):
@@ -205,6 +206,8 @@ class Client:
                     % (protocol, self.challenge, self.qport, name))
         if plus is not None:
             userinfo += '\\plus\\%d' % plus
+        if extra:
+            userinfo += extra(self.challenge)
         line = self._oob('connect "%s"' % userinfo, 'connectResponse')
         self.connect_reply = line
         return None if line.startswith('connectResponse') else line

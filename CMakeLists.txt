@@ -162,29 +162,38 @@ function(cod2_plus_script)
   endif()
 endfunction()
 
+# cod2_plus_mbedtls(): the OBJECT library with Mbed TLS, in every build that
+# has a client or a dedicated server (the Plus ID's signatures need it, and
+# Win64, which has no libcod, links it too), made once and linked by each.
+function(cod2_plus_mbedtls)
+  if(TARGET cod2_plus_mbedtls)
+    return()
+  endif()
+  set(dir ${COD2_SRC_DIR}/libcod)
+  file(GLOB mbedtls CONFIGURE_DEPENDS ${dir}/mbedtls/library/*.c)
+  add_library(cod2_plus_mbedtls OBJECT ${mbedtls})
+  target_compile_definitions(cod2_plus_mbedtls PRIVATE MBEDTLS_CONFIG_FILE="cod2rev_mbedtls_config.h" NDEBUG)
+  target_include_directories(cod2_plus_mbedtls PRIVATE ${dir}/mbedtls ${dir}/mbedtls/include)
+  if(COD2_X64)
+    # as CoD2rev-Plus's Makefile on x64: Mbed TLS builds AES-NI only with these (it checks the CPU at run time)
+    target_compile_options(cod2_plus_mbedtls PRIVATE -maes -mpclmul)
+  endif()
+endfunction()
+
 # cod2_plus_libcod(): the OBJECT library with libcod and the libraries it
-# brings (yyjson, SQLite, Mbed TLS), each with the flags CoD2rev-Plus's
-# Makefile gives it. Its Speex is left out: the engine links its own
+# brings (yyjson, SQLite; Mbed TLS is cod2_plus_mbedtls), each with the flags
+# CoD2rev-Plus's Makefile gives it. Its Speex is left out: the engine links its own
 # (src/PC/speex, for the client's voice chat), whose API, SpeexBits and
 # narrowband mode are the ones libcod_sound.cpp uses, and whose bitstream the
 # clients decode.
 function(cod2_plus_libcod)
   set(dir ${COD2_SRC_DIR}/libcod)
   file(GLOB libcod CONFIGURE_DEPENDS ${dir}/*.cpp)
-  file(GLOB mbedtls CONFIGURE_DEPENDS ${dir}/mbedtls/library/*.c)
-  set(mbedtls_defs MBEDTLS_CONFIG_FILE="cod2rev_mbedtls_config.h")
-  set(mbedtls_dirs ${dir}/mbedtls ${dir}/mbedtls/include)
-  add_library(cod2_plus_libcod OBJECT ${libcod} ${dir}/yyjson/yyjson.c ${dir}/sqlite/sqlite3.c ${mbedtls})
+  add_library(cod2_plus_libcod OBJECT ${libcod} ${dir}/yyjson/yyjson.c ${dir}/sqlite/sqlite3.c)
   target_compile_definitions(cod2_plus_libcod PRIVATE PROTOCOL_VERSION=${COD2_PROTOCOL} NDEBUG)
   set_source_files_properties(${libcod} PROPERTIES
-    COMPILE_DEFINITIONS "${COD2_LIBCOD_DEFS};${mbedtls_defs}"
-    INCLUDE_DIRECTORIES "${dir}/speex/include;${mbedtls_dirs}")
-  set_source_files_properties(${mbedtls} PROPERTIES
-    COMPILE_DEFINITIONS "${mbedtls_defs}" INCLUDE_DIRECTORIES "${mbedtls_dirs}")
-  if(COD2_X64)
-    # as CoD2rev-Plus's Makefile on x64: Mbed TLS builds AES-NI only with these (it checks the CPU at run time)
-    set_source_files_properties(${mbedtls} PROPERTIES COMPILE_OPTIONS "-maes;-mpclmul")
-  endif()
+    COMPILE_DEFINITIONS "${COD2_LIBCOD_DEFS};MBEDTLS_CONFIG_FILE=\"cod2rev_mbedtls_config.h\""
+    INCLUDE_DIRECTORIES "${dir}/speex/include;${dir}/mbedtls;${dir}/mbedtls/include")
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
@@ -578,6 +587,8 @@ else()
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
 endif()
+cod2_plus_mbedtls()
+list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_mbedtls>)
 cod2_cxx_sources(WIN_C ${WIN_C})
 if(COD2_WIN32_CLIENT)
   # The sound engine: C as on Linux, and optimized, as this client's other code
@@ -594,10 +605,8 @@ if(COD2_LIBCOD_CLIENT)
   # the engine's Com_Frame and Com_EventLoop (common.c) work for libcod
   target_compile_definitions(${W32_EXE} PRIVATE COD2_PLUS_LIBCOD=1)
 endif()
-if(COD2_PLUS_LIBCOD)
-  # Mbed TLS: BCryptGenRandom for its entropy, the system store for its CAs
-  target_link_libraries(${W32_EXE} PRIVATE bcrypt crypt32)
-endif()
+# Mbed TLS: BCryptGenRandom for its entropy, the system store for its CAs
+target_link_libraries(${W32_EXE} PRIVATE bcrypt crypt32)
 
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
@@ -820,8 +829,9 @@ if(COD2_LIBCOD_CLIENT)
   target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
 endif()
 cod2_plus_server()
-list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
-set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+cod2_plus_mbedtls()
+list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp> $<TARGET_OBJECTS:cod2_plus_mbedtls>)
+set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server> $<TARGET_OBJECTS:cod2_plus_mbedtls>)
 if(COD2_PLUS_LIBCOD)
   list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
 endif()

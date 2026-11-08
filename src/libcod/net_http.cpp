@@ -1157,7 +1157,7 @@ static bool Net_ParseContentLength(const std::string &text, uint64_t *size)
 	}
 }
 
-static bool Net_ReadChunked(NetReader *r, std::string *body, std::string *error)
+static bool Net_ReadChunked(NetReader *r, size_t maxBody, std::string *body, std::string *error)
 {
 	for ( ;; )
 	{
@@ -1201,7 +1201,7 @@ static bool Net_ReadChunked(NetReader *r, std::string *body, std::string *error)
 			}
 		}
 
-		if ( size > NET_HTTP_MAX_STRING || body->size() + size > NET_HTTP_MAX_STRING )
+		if ( size > maxBody || body->size() + size > maxBody )
 			return Net_TooLarge(error, body->size() + size);
 
 		while ( r->buf.size() < size + 2 )
@@ -1278,7 +1278,7 @@ bool NetHttp_Fetch(const NetHttpRequest *req, const volatile int *cancel, NetHtt
 		const std::string *length = Net_FindHeader(&res->headers, "content-length");
 
 		if ( encoding && Net_ContainsNoCase(encoding->c_str(), "chunked") )
-			ok = Net_ReadChunked(&reader, &res->body, &res->error);
+			ok = Net_ReadChunked(&reader, req->maxBody, &res->body, &res->error);
 		else if ( length )
 		{
 			uint64_t size;
@@ -1287,7 +1287,7 @@ bool NetHttp_Fetch(const NetHttpRequest *req, const volatile int *cancel, NetHtt
 				res->error = "Invalid response";
 				ok = false;
 			}
-			else if ( size > NET_HTTP_MAX_STRING )
+			else if ( size > req->maxBody )
 				ok = Net_TooLarge(&res->error, (size_t)( size > 4000000000u ? 4000000000u : size ));
 			else
 			{
@@ -1306,7 +1306,7 @@ bool NetHttp_Fetch(const NetHttpRequest *req, const volatile int *cancel, NetHtt
 			// until the server closes the connection
 			while ( ok )
 			{
-				if ( reader.buf.size() > NET_HTTP_MAX_STRING )
+				if ( reader.buf.size() > req->maxBody )
 					ok = Net_TooLarge(&res->error, reader.buf.size());
 				else if ( !Net_ReadMore(&reader, &res->error) )
 				{

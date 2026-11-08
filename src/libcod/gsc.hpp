@@ -227,6 +227,49 @@ const char* NET_AdrToStringNoPort( netadr_t a );
 
 void PM_ProjectVelocity(const float *velIn, const float *normal, float *velOut);
 void SV_AddLibcodCommands();
+
+// plusid.cpp: the Plus ID proven at connect; "" for a client without one
+struct PlusIdBan
+{
+	char id[22];
+	char reason[128];
+	char by[64];
+	char evidence[256];
+	long long date;    // Unix time
+	long long expires; // Unix time, 0 permanent
+	int guid;          // 0 without one
+	char ip[16];       // "" without one
+};
+const char *PlusId_CheckConnect(netadr_t from, char *userinfo, int challenge, int guid, char idOut[22], int *flagsOut);
+// the live ban of an ID, local first; *listName is NULL for a local one, *appeal
+// "" without one. Valid until the next call or list change
+const PlusIdBan *PlusId_FindBan(const char *id, const char **listName, const char **appeal = NULL);
+void PlusId_KickBanned();
+const char *PlusId_FlagsForClient(int clientNum);
+// ban dates as in the list format: "YYYY-MM-DD" (00:00 UTC) or "YYYY-MM-DDTHH:MM:SSZ", nothing else
+bool PlusId_ParseTime(const char *text, long long *out);
+void PlusId_FormatTime(long long t, bool dateOnly, char out[21]);
+bool PlusId_AddressAccepted(netadr_t signedAdr, netadr_t from);
+void PlusId_ClientConnected(int clientNum, const char *id, int flags);
+void PlusId_ClientDropped(int clientNum);
+const char *PlusId_ForClient(int clientNum);
+int PlusId_Playtime(int clientNum);
+int PlusId_FirstSeenAgo(int clientNum);
+void PlusId_Frame();
+void PlusId_Shutdown();
+void PlusId_RegisterDvars();
+void PlusId_SpawnServer();
+void PlusId_AddCommands();
+// shared helpers for plusid_lists.cpp; PlusId_ParseBan and the time functions are thread-safe
+struct yyjson_val;
+bool PlusId_ParseBan(yyjson_val *e, PlusIdBan *ban, bool shared);
+void PlusId_Path(const char *name, char *path, size_t size);
+bool PlusId_Replace(const char *tmp, const char *path);
+// plusid_lists.cpp: the signed shared ban lists of sv_banLists
+void PlusIdLists_RegisterDvars();
+void PlusIdLists_Frame();
+const PlusIdBan *PlusIdLists_Find(const char *id, const char **listName, const char **appeal);
+void PlusIdLists_Status_f();
 const char *SV_ModifyConfigstringIwdChkSum( client_t *client, int index );
 VariableValue* Scr_GetValue(unsigned int param);
 

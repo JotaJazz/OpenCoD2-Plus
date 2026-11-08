@@ -146,7 +146,7 @@ void gsc_http_register_dvars()
 	http_allowPrivate = Dvar_RegisterBool("sv_httpAllowPrivate", false, DVAR_INIT | DVAR_CHANGEABLE_RESET)->current.boolean;
 }
 
-static bool Http_StartThread(void *(*func)(void *), void *arg)
+bool Http_StartThread(void *(*func)(void *), void *arg)
 {
 	pthread_t thread;
 	pthread_attr_t attr;

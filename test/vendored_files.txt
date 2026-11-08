@@ -1,9 +1,12 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: 0870352
+# revision: 48cf44c
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
 scripts/plus_rules_test.py
+scripts/plusid_test.py
+scripts/banlist.py
+scripts/test_banlist.py
 src/script/scr_animtree.cpp
 src/script/scr_compiler.cpp
 src/script/scr_evaluate.cpp
@@ -405,6 +408,9 @@ src/libcod/mbedtls/library/x509_crt.c
 src/libcod/mbedtls/library/x509_internal.h
 src/libcod/net_http.cpp
 src/libcod/net_http.hpp
+src/libcod/plusid.cpp
+src/libcod/plusid.hpp
+src/libcod/plusid_lists.cpp
 src/libcod/speex/COPYING
 src/libcod/speex/config.h
 src/libcod/speex/include/speex/speex.h

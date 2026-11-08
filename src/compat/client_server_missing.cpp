@@ -43,6 +43,60 @@ int I_strcmpConstantTime(const char *s0, const char *s1)
 	return diff;
 }
 
+// universal/q_shared.cpp (the engine's has C linkage; plusid.cpp declares this one)
+void Info_RemoveKey( char *s, const char *key )
+{
+	char	*start;
+	char	pkey[MAX_INFO_KEY];
+	char	value[MAX_INFO_VALUE];
+	char	*o;
+
+	if ( strlen( s ) >= MAX_INFO_STRING )
+	{
+		Com_Error( ERR_DROP, "Info_RemoveKey: oversize infostring" );
+	}
+
+	if (strchr (key, '\\'))
+	{
+		return;
+	}
+
+	while (1)
+	{
+		start = s;
+		if (*s == '\\')
+			s++;
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value;
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if (!strcmp (key, pkey) )
+		{
+			memmove (start, s, strlen(s) + 1);	// remove this part
+			return;
+		}
+
+		if (!*s)
+			return;
+	}
+
+}
+
 // universal/q_shared.cpp
 bool Com_BitCheck( const int array[], int bitNum )
 {

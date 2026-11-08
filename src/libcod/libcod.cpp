@@ -171,6 +171,7 @@ void RegisterLibcodDvars()
 	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", false, DVAR_CHANGEABLE_RESET);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	g_bulletDropMaxTime = Dvar_RegisterInt("g_bulletDropMaxTime", 10000, 50, 60000, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	PlusId_RegisterDvars();
 
 #if LIBCOD_COMPILE_JSON == 1
 	gsc_json_register_dvars();
@@ -197,6 +198,7 @@ void Libcod_SpawnServerConfigstrings()
 {
 	g_reservedModels = Dvar_RegisterInt("g_reservedModels", 0, 0, 255, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
 	g_safePrecache = Dvar_RegisterBool("g_safePrecache", false, DVAR_ARCHIVE | DVAR_LATCH | DVAR_CHANGEABLE_RESET);
+	PlusId_SpawnServer();
 
 	if ( g_safePrecache->current.boolean )
 	{
@@ -342,6 +344,7 @@ void Libcod_InitLevel()
 // reinitializes the variable system, after which those ids mean nothing.
 void Libcod_ShutdownLevel()
 {
+	PlusId_Shutdown();
 	Libcod_ShutdownCallbacks();
 #if LIBCOD_COMPILE_EXEC == 1
 	gsc_exec_async_shutdown_level();
@@ -407,6 +410,7 @@ void Scr_RunFrameCallbacks()
 #if LIBCOD_COMPILE_HTTP == 1
 	gsc_http_frame();
 #endif
+	PlusId_Frame();
 }
 
 // Called after each usercmd of an active client. The callbacks can drop the
@@ -454,6 +458,8 @@ static void Com_Assert_f( void )
 
 void SV_AddLibcodCommands()
 {
+	PlusId_AddCommands();
+
 	if ( com_developer->current.integer )
 	{
 		Cmd_AddCommand("assert", Com_Assert_f);

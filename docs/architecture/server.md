@@ -14,7 +14,7 @@ but never run.
 | Game, bgame | `src/game`, `src/bgame` | bgame comes with the game: the two sides cannot share `level_bgs` (`animation_s` is 104 bytes in the engine, Windows layout via `COD2_WIN_ALIGN8`; 96 in OpenCoD2-Plus Server). |
 | Core and platform | `src/universal`, `src/qcommon`, `src/unix` / `src/win32` | the server starts in OpenCoD2-Plus Server's `main`; brings log rotation (`logfileName`, `logfileRotate`, `logTimestamps`), `sv_logRcon`, `net_strictPort`, `crash.log`. |
 | xanim | `src/xanim` | with it the server's bridge has no imports left. |
-| libcod | `src/libcod` | `COD2_PLUS_LIBCOD`; all modules but MySQL; `sv_master1`..`sv_master5`, bots, HTTP/WebSocket (Mbed TLS; MinGW links `bcrypt`, `crypt32`), SQLite, JSON. Speex is the engine's (`src/PC/speex`), same API and bitstream. |
+| libcod | `src/libcod` | `COD2_PLUS_LIBCOD`; all modules but MySQL; `sv_master1`..`sv_master5`, bots, HTTP/WebSocket (Mbed TLS, its own `cod2_plus_mbedtls` object library that every non-web client and dedicated build links, Win64 too; MinGW links `bcrypt`, `crypt32`), SQLite, JSON. Speex is the engine's (`src/PC/speex`), same API and bitstream. |
 
 ## Bridge (`--module server`)
 
