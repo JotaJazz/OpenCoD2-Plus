@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — OpenCoD2-Plus Server 85f92f0: Plus batch 2
+
+- Brought the vendored files up to 85f92f0: the bots graph cap rises to 32768 nodes with a warning when a map hits it (`gsc_graph.cpp`, `libcod.cpp`), and the Plus build prints a repeated script runtime error once and then as a count every 10 s (`scr_parser.cpp`, `plus_rules_test.py`). Server code only; the Plus version stays 123.
+- Checked: `vendor_check.py`, the dedicated variants, `linux-13` and `linux-client-x64` (with the main tree's `third_party` linked in). Not built: `mingw-client` and `msvc-client`.
+
 ## 2026-11-08 — OpenCoD2-Plus Server 6219002: Plus batch
 
 - Brought the vendored files up to 6219002 (upstream sync, Plus HTTP downloads, the antilag's anim rewind, votes across a reconnect, exact `wait`, bots floors) and added `src/server/sv_www_plus.cpp` and `.h` to `test/vendored_files.txt`. Server code only; the Plus version stays 123.

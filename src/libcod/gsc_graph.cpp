@@ -2572,6 +2572,16 @@ static int graphFlood(AStarGraph *graph, GraphCells &cellToNode, std::vector<uns
 }
 
 /*
+ * A graph the flood stopped at sv_graphMaxNodes is cut off where the map goes
+ * on, and bots there have no way; say so, as nothing else shows it
+ */
+static void graphWarnCap(const AStarGraph *graph)
+{
+	if ( (int)graph->nodes.size() >= sv_graphMaxNodes->current.integer )
+		Com_Printf("WARNING: graph autodiscover stopped at sv_graphMaxNodes (%i nodes): raise it for this map\n", sv_graphMaxNodes->current.integer);
+}
+
+/*
  * graphAutodiscover(<graph id>, <seed origin>, [grid step], [max nodes]) ->
  * nodes added. Grid flood-fill from the seed: snap the seed to the floor, then
  * BFS outward on a grid, adding a node wherever a player fits on walkable ground
@@ -2670,6 +2680,7 @@ void gsc_graph_autodiscover()
 	}
 
 	added += graphFlood(graph, cellToNode, queue, maxNodes, step, playerMins, playerMaxs);
+	graphWarnCap(graph);
 
 	graphInvalidatePrecompute(graph);
 
@@ -2850,6 +2861,7 @@ void gsc_graph_autodiscover_ex()
 	}
 
 	added += graphFlood(graph, cellToNode, queue, maxNodes, step, playerMins, playerMaxs);
+	graphWarnCap(graph);
 
 	graphInvalidatePrecompute(graph);
 

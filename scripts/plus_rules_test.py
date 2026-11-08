@@ -61,6 +61,7 @@ import cod2client, smoke_test
 from cod2client import CLC_MOVE_NO_DELTA, hash_key
 
 RCON = 'plusrules'
+LOG = None  # the server's console log, set by main
 BUTTON_ATTACK, BUTTON_RELOAD, BUTTON_LEANLEFT, BUTTON_LEANRIGHT = 1, 16, 64, 128  # q_shared.h
 PRONE, CROUCH = 256, 512  # BUTTON_PRONE, BUTTON_CROUCH: the stance held
 BUTTON_USE = 8
@@ -127,6 +128,26 @@ Callback_StartGameType()
 	setCvar("plustest_hit", "");
 	setCvar("plustest_wait", "");
 	level thread waits();
+	level thread errors();
+}
+
+// plustest_error (rcon) makes the same runtime error every frame for 11 s
+errors()
+{
+	for(;;)
+	{
+		if(getCvar("plustest_error") != "")
+		{
+			setCvar("plustest_error", "");
+			for(i = 0; i < 11 * 20; i++)
+			{
+				x = level.plustest_undefined + 7777;
+				wait 0.05;
+			}
+			setCvar("plustest_errored", "1");
+		}
+		wait 0.05;
+	}
 }
 
 // plustest_wait (rcon) times 40 x wait 0.05 and 4 x wait 1 into plustest_waited
@@ -811,6 +832,24 @@ def check_vote_reconnect(port, player, other, check):
             c.close()
 
 
+def check_error_repeats(port, player, other, check):
+    """With logErrors 1 the same runtime error every frame for 11 s prints once
+    and then once as a count after 10 s, not 220 times."""
+    # other threads of this gametype make errors too: count the blocks of this one
+    mine = re.compile(r'script runtime error[^\n]*\n[^\n]*7777')
+    before = len(mine.findall(open(LOG, encoding='latin-1').read()))
+    for command in ('set logErrors 1', 'set plustest_errored ""', 'set plustest_error 1'):
+        smoke_test.rcon(port, RCON, command)
+    deadline = time.time() + 25
+    while time.time() < deadline and 'is: "1' not in (smoke_test.rcon(port, RCON, 'plustest_errored') or '').replace('^7', ''):
+        player.read_frames(0.5, False)
+    smoke_test.rcon(port, RCON, 'set logErrors 0')
+    text = open(LOG, encoding='latin-1').read()
+    printed = len(mine.findall(text)) - before
+    check('error repeats: one error a frame for 11 s prints twice', printed == 2 and re.search(r'runtime error, \d+ times in 1\d s[^\n]*\n[^\n]*7777', text) is not None,
+          f'{printed} prints')
+
+
 def check_wait_time(port, player, other, check):
     """40 x wait 0.05 take 2 s and 4 x wait 1 take 4 s, to a frame, at any
     sv_fps: the fraction of a frame a wait leaves carries to the next."""
@@ -834,7 +873,8 @@ def check_wait_time(port, player, other, check):
 CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
           'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate,
           'lean_rewind': check_lean_rewind, 'stance_rewind': check_stance_rewind,
-          'archive_time': check_archive_time, 'vote_reconnect': check_vote_reconnect, 'wait_time': check_wait_time}
+          'archive_time': check_archive_time, 'vote_reconnect': check_vote_reconnect, 'wait_time': check_wait_time,
+          'error_repeats': check_error_repeats}
 
 
 def main():
@@ -869,6 +909,8 @@ def main():
             command += ['+set', 'g_forceSnaps', str(args.fps), '+set', 'g_forceRate', str(args.fps * 1000), '+set', 'sv_maxRate', '0']
         command += ['+map', args.map]
         log_path = os.path.join(home, 'out.log')
+        global LOG
+        LOG = log_path
         with open(log_path, 'wb') as log:
             server = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=home)
         player = None

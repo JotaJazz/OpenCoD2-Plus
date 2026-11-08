@@ -724,6 +724,60 @@ static bool Scr_GetErrorPosition( const char *codePos, unsigned int index, char 
 }
 #endif
 
+#if defined(LIBCOD) && defined(COD2_PLUS)
+/*
+==============
+Scr_PlusLogRuntimeError
+
+Plus: outside developer a runtime error does not end the thread, so a broken
+mod repeats the same error every frame and floods the log logErrors keeps.
+The first one prints, then the repeats of each message only as a count, every
+10 s. shortcut: a count left when the error stops is never printed; print it
+on a map change if that turns out to hide something
+==============
+*/
+#define SCR_PLUS_ERROR_SLOTS 8
+#define SCR_PLUS_ERROR_MS 10000
+
+static void Scr_PlusLogRuntimeError( const char *msg )
+{
+	static struct
+	{
+		char msg[256];
+		int printed;
+		int repeats;
+	} slots[SCR_PLUS_ERROR_SLOTS];
+	int now = Sys_Milliseconds();
+	int i, oldest = 0;
+
+	for ( i = 0; i < SCR_PLUS_ERROR_SLOTS; i++ )
+	{
+		if ( slots[i].msg[0] && !strncmp( slots[i].msg, msg, sizeof( slots[i].msg ) - 1 ) )
+		{
+			slots[i].repeats++;
+			if ( now - slots[i].printed >= SCR_PLUS_ERROR_MS )
+			{
+				Com_Printf("******* script runtime error, %i times in %i s *******\n%s\n************************************\n",
+				           slots[i].repeats, ( now - slots[i].printed ) / 1000, msg);
+				slots[i].printed = now;
+				slots[i].repeats = 0;
+			}
+			return;
+		}
+
+		if ( slots[i].printed - slots[oldest].printed < 0 )
+		{
+			oldest = i;
+		}
+	}
+
+	Com_Printf("******* script runtime error *******\n%s\n************************************\n", msg);
+	I_strncpyz( slots[oldest].msg, msg, sizeof( slots[oldest].msg ) );
+	slots[oldest].printed = now;
+	slots[oldest].repeats = 0;
+}
+#endif
+
 void RuntimeError( const char *codePos, unsigned int index, const char *msg, const char *dialogMessage )
 {
 	bool abort_on_error;
@@ -749,7 +803,11 @@ void RuntimeError( const char *codePos, unsigned int index, const char *msg, con
 			extern dvar_t *logErrors;
 			if ( logErrors->current.boolean )
 			{
+#ifdef COD2_PLUS
+				Scr_PlusLogRuntimeError(msg);
+#else
 				Com_Printf("******* script runtime error *******\n%s\n************************************\n", msg);
+#endif
 			}
 #endif
 			return;
