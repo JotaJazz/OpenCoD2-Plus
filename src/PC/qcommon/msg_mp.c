@@ -2,6 +2,7 @@
 #include "common_types.h"
 #include "imports.h"
 #include <string.h>
+#include "../../qcommon/plus_format.h"
 #if defined(_MSC_VER)
 #define MSG_FORCEINLINE __forceinline
 #else
@@ -308,7 +309,7 @@ void MSG_WriteBit0(msg_t *msg);
 void MSG_WriteBit1(msg_t *msg);
 int MSG_ReadBits(msg_t *msg, int bits);
 int MSG_ReadBit(msg_t *msg);
-int MSG_WriteBitsCompress(byte *from, byte *to, int size);
+int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize);
 int MSG_ReadBitsCompress(byte *from, byte *to, int size);
 int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern void Com_Error(int level, const char *fmt, ...);
@@ -524,11 +525,14 @@ int MSG_ReadBit(msg_t *msg)
     return MSG_ReadBit_core(msg);
 }
 
-extern void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset);
+extern void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset, int maxoffset);
 extern void Huff_offsetReceive(nodetype *node, int *ch, byte *fin, int *offset);
-int MSG_WriteBitsCompress(byte *from, byte *to, int size)
+/* toSize bounds the output (not in 1.3, as OpenCoD2-Plus Server's e103ff1): -1 when the
+ * message would not fit in it */
+int MSG_WriteBitsCompress(byte *from, byte *to, int size, int toSize)
 {
     int bit = 0;
+    int maxBits = toSize * 8;
     byte *p;
     byte *end;
 
@@ -536,11 +540,13 @@ int MSG_WriteBitsCompress(byte *from, byte *to, int size)
         p = from;
         end = from + size;
         do {
-            Huff_offsetTransmit((huff_t *)&msgHuff, *p, to, &bit);
+            Huff_offsetTransmit((huff_t *)&msgHuff, *p, to, &bit, maxBits);
             p++;
         } while (p != end);
     }
 
+    if (bit > maxBits)
+        return -1;
     return (bit + 7) >> 3;
 }
 
@@ -737,7 +743,7 @@ void MSG_SetDefaultUserCmd(playerState_t *ps, usercmd_t *cmd)
         }
 
         if (ps->fWeaponPosFrac != 0.0f) {
-            cmd->buttons |= (int)&__mh_execute_header;
+            cmd->buttons |= 0x1000;
         }
     }
 }
@@ -989,6 +995,10 @@ static inline __attribute__((always_inline)) void MSG_WriteValue(msg_t *msg, int
     }
 }
 
+/* Not 0 while CL_ParseSnapshot reads the entities of a Plus snapshot: their
+ * pos.trTime can be an offset from this time. */
+int msg_plusSnapshotTime;
+
 void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field, qboolean print)
 {
     int *fromF;
@@ -1002,6 +1012,11 @@ void MSG_ReadDeltaField(msg_t *msg, byte *from, byte *to, const NetField *field,
 
     if (!MSG_ReadBit_core(msg)) {
         *toF = *fromF;
+        return;
+    }
+
+    if (msg_plusSnapshotTime && field == entityStateFields && MSG_ReadBit_core(msg)) {
+        *toF = Plus_TimeFromOffset(msg_plusSnapshotTime, MSG_ReadBits(msg, PLUS_TIME_OFFSET_BITS));
         return;
     }
 
@@ -1596,6 +1611,22 @@ static void __attribute_regparm__(3)
     }
 
     MSG_WriteBit1_core(msg);
+
+    /* The client's own server writes through here, not through CoD2rev-Plus's
+     * msg_mp.cpp, and a Plus client reads this bit: the local client, or a
+     * remote one on a listen server. */
+    if (msg_plusSnapshotTime && field == entityStateFields) {
+        unsigned offset = Plus_TimeOffset(msg_plusSnapshotTime, *toF);
+
+        if (offset < PLUS_TIME_OFFSET_LIMIT) {
+            MSG_WriteBit1_core(msg);
+            MSG_WriteBits(msg, offset, PLUS_TIME_OFFSET_BITS);
+            return;
+        }
+
+        MSG_WriteBit0_core(msg); /* too far: as stock */
+    }
+
     bits = field->bits;
 
     if (bits == 0) {

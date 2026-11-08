@@ -12,7 +12,8 @@ gamestate baselines and the client states deltas from zeroed ones.
 import struct
 
 SVC_NOP, SVC_GAMESTATE, SVC_CONFIGSTRING, SVC_BASELINE, SVC_SERVERCOMMAND, \
-    SVC_DOWNLOAD, SVC_SNAPSHOT, SVC_EOF = range(8)
+    SVC_DOWNLOAD, SVC_SNAPSHOT, SVC_EOF, SVC_SNAPSHOT_PLUS = range(9)
+PLUS_TIME_OFFSET_BITS = 11  # src/qcommon/plus_format.h
 
 GENTITYNUM_BITS = 10
 MAX_GENTITIES = 1 << GENTITYNUM_BITS
@@ -206,12 +207,15 @@ def read_playerstate_field(r, bits):
     return r.read_value(bits)
 
 
-def read_delta_field(r, base, name, bits):
+def read_delta_field(r, base, name, bits, plus_time=None):
     """MSG_ReadDeltaField. The writer compares the field pointers, not the
     values, so every field up to the last changed one has its changed bit set;
-    then a value that is zero is sent as a single 0 bit."""
+    then a value that is zero is sent as a single 0 bit. plus_time is the time
+    of a Plus snapshot, whose pos.trTime can be an offset from it."""
     if not r.read_bit():
         return base[name]
+    if plus_time is not None and name == 'pos.trTime' and r.read_bit():
+        return plus_time - r.read_bits(PLUS_TIME_OFFSET_BITS)
     if not r.read_bit():
         return 0.0 if bits in (0, -99, -100) else 0
     if bits == 0:
@@ -223,7 +227,7 @@ def read_delta_field(r, base, name, bits):
     return r.read_value(bits)
 
 
-def read_delta_struct(r, base, fields):
+def read_delta_struct(r, base, fields, plus_time=None):
     """MSG_ReadDeltaStruct after the index: returns None when the struct is
     removed, else the new values (base updated with the first lc fields)."""
     if r.read_bit():
@@ -235,7 +239,7 @@ def read_delta_struct(r, base, fields):
     if lc > len(fields):
         raise ParseError('field count %d > %d' % (lc, len(fields)))
     for name, bits in fields[:lc]:
-        out[name] = read_delta_field(r, base, name, bits)
+        out[name] = read_delta_field(r, base, name, bits, plus_time)
     return out
 
 
@@ -381,8 +385,8 @@ class ServerState:
         self.command_sequence = sequence
         self.gamestate_count += 1
 
-    def _read_snapshot(self, r):
-        snap = {'server_time': r.read_long()}
+    def _read_snapshot(self, r, plus=False):
+        snap = {'server_time': r.read_long(), 'plus': plus}
         delta = r.read_byte()
         if delta:
             raise ParseError('delta snapshot from %d messages back' % delta)
@@ -396,7 +400,7 @@ class ServerState:
             if number == MAX_GENTITIES - 1:
                 break
             base = self.baselines.get(number, dict(null, number=number))
-            ent = read_delta_struct(r, base, ENTITY_FIELDS)
+            ent = read_delta_struct(r, base, ENTITY_FIELDS, snap['server_time'] if plus else None)
             if ent is not None:
                 ent['number'] = number
                 entities[number] = ent
@@ -443,8 +447,8 @@ class ServerState:
                 elif op == SVC_GAMESTATE:
                     self._read_gamestate(r)
                     out['gamestate'] = True
-                elif op == SVC_SNAPSHOT:
-                    out['snapshot'] = self._read_snapshot(r)
+                elif op in (SVC_SNAPSHOT, SVC_SNAPSHOT_PLUS):
+                    out['snapshot'] = self._read_snapshot(r, op == SVC_SNAPSHOT_PLUS)
                 elif op == SVC_DOWNLOAD:
                     block = r.read_short()
                     size = r.read_long() if block == 0 else None

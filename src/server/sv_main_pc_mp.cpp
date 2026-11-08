@@ -500,7 +500,7 @@ void SV_MasterHeartbeat( const char *hbname )
 
 		if ( adr->type != NA_BAD )
 		{
-			SVC_Status(*adr);
+			SVC_Status(*adr, true);
 		}
 	}
 }

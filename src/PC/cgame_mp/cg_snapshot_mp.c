@@ -80,10 +80,10 @@ extern void XAnimSetTime(XAnimTree *tree, unsigned int animIndex, float time);
 #define CENT_LIGHTINGORIGIN 0x204
 #define CENT_TREE 0x21c
 
-#define SNAP_NUMCLIENTS 0x26b8
-#define SNAP_CLIENTS 0x116b0
+#define SNAP_NUMCLIENTS ((int)offsetof(snapshot_t, numClients))
+#define SNAP_CLIENTS ((int)offsetof(snapshot_t, clients) - 0xc)   /* read at +0xc: clientIndex */
 
-#define CI_STRIDE 0x4b8
+#define CI_STRIDE ((int)sizeof(clientInfo_t))   /* 1.3's 0x4b8 on x86 */
 #define CI_INFOVALID 0x000
 #define CI_NEXTVALID 0x004
 #define CI_CLIENTNUM 0x008
@@ -95,7 +95,7 @@ extern void XAnimSetTime(XAnimTree *tree, unsigned int animIndex, float time);
 #define CI_DOBJDIRTY 0x3f8
 #define CI_PXANIMTREE 0x4a4
 
-#define CLSTATE_STRIDE 0x5c
+#define CLSTATE_STRIDE ((int)sizeof(clientState_t))
 
 #define ES_BINSIZE 0x0f0
 
@@ -154,22 +154,18 @@ static void CG_ResetEntity(char *cent)
 
     case 1:
     {
-        char *ci;
+        clientInfo_t *ci;
         int clientNum;
 
         ((centity_t *)cent)->previousEventSequence = ((centity_t *)cent)->nextState.eventSequence;
 
         clientNum = ((centity_t *)cent)->nextState.clientNum;
-        ci = (char *)&((cg_t *)cg)->bgs.clientinfo[clientNum] - 0x14 ;
+        ci = &((cg_t *)cg)->bgs.clientinfo[clientNum];
 
-        *(int *)(((char *)ci + offsetof(clientInfo_t, name[8])) + 0x3e0)  = *(int *)(cent + 0x15c) ;
-
-        *(int *)(((char *)ci + offsetof(clientInfo_t, name[8])) + 0x3e4)  = ((centity_t *)cent)->nextState.leanf;
-
-        {
-            char *to = ((char *)ci + offsetof(clientInfo_t, angles[0][0]));
-            VectorCopy3((char *)((centity_t *)cent)->lerpAngles, to);
-        }
+        /* 1.3 reached these from 0x14 before the clientInfo_t, at x86's offsets */
+        *(int *)&ci->lerpMoveDir = *(int *)&((centity_t *)cent)->nextState.angles2[1];
+        *(int *)&ci->lerpLean = ((centity_t *)cent)->nextState.leanf;
+        VectorCopy3((char *)((centity_t *)cent)->lerpAngles, (char *)ci->playerAngles);
 
         *(int *)((char *)((centity_t *)cent)->lerpAngles) = 0;
         *(int *)((char *)((centity_t *)cent)->lerpAngles + 8) = 0;
@@ -201,7 +197,9 @@ static void CG_ResetEntity(char *cent)
 
         pXAnimTree = ((clientInfo_t *)corpseInfo)->pXAnimTree;
 
-        if (((centity_t *)cent)->nextState.eFlags & 8) {
+        /* EF_BODY_START (0x80000), a body cloned this frame: it takes over its player's
+         * animation tree (1.3 0x4df227); 8 was EF_PRONE */
+        if (((centity_t *)cent)->nextState.eFlags & 0x80000) {
             int attachIndex;
 
             memcpy(corpseInfo, ci, CI_STRIDE);
@@ -634,9 +632,9 @@ void CG_SetNextSnap(snapshot_t *snap_param)
                             int csNum = ((centity_t *)cent)->nextState.number;
                             char *corpseCI = (char *)&cgs->corpseinfo[csNum - 64];
 
-                            XAnimTree *savedTree = *(XAnimTree **)(corpseCI + CI_PXANIMTREE);
+                            XAnimTree *savedTree = ((clientInfo_t *)corpseCI)->pXAnimTree;
 
-                            int animState = *(int *)(corpseCI + 0x390)  & ~0x200;
+                            int animState = ((clientInfo_t *)corpseCI)->legs.animationNumber & ~0x200;
 
                             void *anims = XAnimGetAnims(savedTree);
 

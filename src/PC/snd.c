@@ -991,7 +991,7 @@ found:
     if (channel < 0)
         return 0;
 
-    if (!*(unsigned char *)((char *)snd_enableStream + 8))
+    if (!snd_enableStream->current.enabled)
         return 0;
 
     entchannel = (pAlias0->flags & 0x780) >> 7;
@@ -1089,7 +1089,7 @@ void SND_Init(void)
     g_snd.looptime = g_snd.time;
     g_snd.slaveLerp = 0.0f;
 
-    g_snd.volume = 0.75f * *(float *)((char *)snd_volume + 8);
+    g_snd.volume = 0.75f * snd_volume->current.value;
 
     for (i = 0; i < 11; i++) {
         g_snd.defaultPauseSettings[i] = 1;
@@ -1340,8 +1340,15 @@ int SND_PlaySoundAliasAsMaster(const snd_alias_t *pAlias, int entnum, const vec_
 
 int SND_PlaySoundAlias(const snd_alias_t *pAlias, int entnum, const vec_t *org, int timeshift, snd_alias_system_t system)
 {
+    static int trace = -1;
+
     if (!pAlias)
         return 0;
+    /* COD2_TRACE_SOUND: each alias played and its entity (scripts/climb_sound_test.py) */
+    if (trace < 0)
+        trace = getenv("COD2_TRACE_SOUND") != NULL;
+    if (trace)
+        Com_Printf("SoundTrace: %s ent %d\n", pAlias->pszAliasName, entnum);
     return SND_PlaySoundAlias_Internal(pAlias, pAlias, 0.0f, entnum, org, NULL, timeshift, 0, system);
 }
 
@@ -1490,7 +1497,7 @@ static __attribute_regparm__(3) void SND_StartBackground(int track, const snd_al
     float pitch;
     Bool newPaused;
 
-    newPaused = (*(int *)((char *)cl_paused + 8) != 0);
+    newPaused = (cl_paused->current.integer != 0);
     if (newPaused != g_snd.paused) {
         if (newPaused)
             SND_PauseSounds();
@@ -1528,7 +1535,7 @@ static __attribute_regparm__(3) void SND_StartBackground(int track, const snd_al
         g_snd.background[track].goalrate = 0.0f;
     }
 
-    if (!*(unsigned char *)((char *)snd_enableStream + 8))
+    if (!snd_enableStream->current.enabled)
         return;
 
     SND_StartAliasStreamOnChannel(pAlias, pAlias, 0.0f, 0x400, (vec_t *)&g_snd.listeners[0].orient.origin, g_snd.chaninfo[channel].basevolume, pitch, 0, 0.0f, pAlias->startDelay, (pAlias->flags >> 1) & 1, channel, system);
@@ -1914,7 +1921,7 @@ static __attribute_regparm__(2)
         SND_StartAliasStream(pAlias0, pAlias1, chaninfo.lerp, chaninfo.entnum, (const vec_t *)&info[0x14], *(float *)&info[8], 1.0f, 0, *(float *)&info[0], 0, &channel, (snd_alias_system_t)(1));
     } else {
 
-        if (!*(unsigned char *)((char *)snd_enableStream + 8))
+        if (!snd_enableStream->current.enabled)
             return 1;
 
         SND_StartAliasStreamOnChannel(pAlias0, pAlias1, chaninfo.lerp, chaninfo.entnum, (const vec_t *)&info[0x14], *(float *)&info[8], 1.0f, 0, *(float *)&info[0], chaninfo.startDelay, chaninfo.master, channel, (snd_alias_system_t)(1));
@@ -2005,7 +2012,7 @@ void SND_Restore(MemoryFile *memFile)
             continue;
         if (!SND_ValidateSoundAliasBlend(pAlias0, pAlias1, 0))
             continue;
-        if (!*(unsigned char *)((char *)snd_enable3D + 8))
+        if (!snd_enable3D->current.enabled)
             continue;
 
         SND_StartAlias3DSample(pAlias0, pAlias1, chaninfo.lerp, chaninfo.entnum, (const vec_t *)&info[0x0C], *(float *)&info[8], *(float *)&info[4], 0, *(float *)&info[0], chaninfo.startDelay, chaninfo.master, &channel, (snd_alias_system_t)(1));
@@ -2048,7 +2055,7 @@ void SND_Restore(MemoryFile *memFile)
             continue;
         if (!SND_ValidateSoundAliasBlend(pAlias0, pAlias1, 0))
             continue;
-        if (!*(unsigned char *)((char *)snd_enable2D + 8))
+        if (!snd_enable2D->current.enabled)
             continue;
 
         SND_StartAlias2DSample(pAlias0, pAlias1, chaninfo.lerp, chaninfo.entnum, *(float *)&info[8], *(float *)&info[4], 0, *(float *)&info[0], chaninfo.startDelay, chaninfo.master, &channel, (snd_alias_system_t)(1));
@@ -2098,7 +2105,7 @@ void SND_Update(void)
     cpu = SND_GetDriverCPUPercentage();
     g_snd.cpu = cpu;
 
-    if (*(unsigned char *)((char *)com_statmon + 8) && cpu > 2)
+    if (com_statmon->current.enabled && cpu > 2)
         StatMon_Warning(2, 3000, "gfx/2d/warning@soundcpu.jpg");
 
     now = Sys_Milliseconds();
@@ -2106,7 +2113,7 @@ void SND_Update(void)
     g_snd.time = now;
     SND_DriverPreUpdate(frametime);
 
-    newPaused = (*(int *)((char *)cl_paused + 8) != 0);
+    newPaused = (cl_paused->current.integer != 0);
     if (newPaused != g_snd.paused) {
         if (newPaused)
             SND_PauseSounds();
@@ -2150,11 +2157,11 @@ void SND_Update(void)
             SND_StopSounds( (snd_stopsounds_arg_t)(0));
 
         Dvar_ClearModified(snd_volume);
-        g_snd.volume = g_snd.mastervol.volume * *(float *)((char *)snd_volume + 8) * 0.75f;
+        g_snd.volume = g_snd.mastervol.volume * snd_volume->current.value * 0.75f;
     } else if (*(unsigned char *)((char *)snd_volume + 7)) {
 
         Dvar_ClearModified(snd_volume);
-        g_snd.volume = g_snd.mastervol.volume * *(float *)((char *)snd_volume + 8) * 0.75f;
+        g_snd.volume = g_snd.mastervol.volume * snd_volume->current.value * 0.75f;
     }
 
     if (!g_snd.paused) {
@@ -2245,7 +2252,7 @@ void SND_Update(void)
         }
     }
 
-    fadeTime = *(int *)((char *)snd_slaveFadeTime + 8);
+    fadeTime = snd_slaveFadeTime->current.integer;
     if (fadeTime == 0) {
         g_snd.slaveLerp = hasMaster ? 1.0f : 0.0f;
     } else {

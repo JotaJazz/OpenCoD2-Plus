@@ -92,9 +92,9 @@ void MediaHandles_AddHandle(const MediaHandles *_this, TMediaElement item)
         } else {
             self->mMediaList.maxSize = 4;
         }
-        newElements = Z_MallocInternal(self->mMediaList.maxSize * 4);
+        newElements = Z_MallocInternal(self->mMediaList.maxSize * sizeof(void *));
         if (self->mMediaList.elements != NULL) {
-            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * 4);
+            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * sizeof(void *));
             Z_FreeInternal(self->mMediaList.elements);
         }
         self->mMediaList.elements = (TMediaElement *)(newElements);
@@ -185,7 +185,7 @@ EffectTemplate *FX_ParseEffect(GenericParser2 *parser, const char *name)
             goto next_group;
         }
 
-        prim = (PrimitiveTemplate *)Hunk_AllocAlignInternal(0x2a4, 4);
+        prim = (PrimitiveTemplate *)Hunk_AllocAlignInternal(COD2_SIZEOF_1_3(PrimitiveTemplate, 0x2a4), 4);
         PrimitiveTemplate_Init(prim);
         prim->mType = (PrimType)type;
         prim->mParentPrimIndex = currentPrimitiveIndex;
@@ -261,9 +261,9 @@ void MediaHandles_AddEffect(const MediaHandles *_this, EffectTemplate *fx)
         } else {
             self->mMediaList.maxSize = 4;
         }
-        newElements = Z_MallocInternal(self->mMediaList.maxSize * 4);
+        newElements = Z_MallocInternal(self->mMediaList.maxSize * sizeof(void *));
         if (self->mMediaList.elements != NULL) {
-            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * 4);
+            memcpy(newElements, self->mMediaList.elements, self->mMediaList.size * sizeof(void *));
             Z_FreeInternal(self->mMediaList.elements);
         }
         self->mMediaList.elements = (TMediaElement *)(newElements);

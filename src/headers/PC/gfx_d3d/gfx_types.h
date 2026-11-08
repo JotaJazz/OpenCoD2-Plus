@@ -838,7 +838,7 @@ struct r_globals_t {
     complex_t fftTrigTable[256];
     int fftBitswap[256];
     struct DObj_s *modelDObj;
-    char modelDObjBuf[100];
+    char modelDObjBuf[sizeof(struct DObj_s)];  /* 100 in 1.3, 152 on x64; follows a pointer, so aligned */
     trStatistics_t *stats;
     struct GfxLodParms lodParms;
     const GfxViewParms *debugViewParms;

@@ -133,6 +133,10 @@ static Bool FX_AddPrimitive(EffectPrimitive *prim, Effect *particle, const vec_t
 void FX_AddCloud(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddFlash(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddLight(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
+
+/* an Emitter is a Particle followed by its own fields */
+typedef char fx_emitter_base_check[offsetof(Emitter, emitPos) == sizeof(Particle) ? 1 : -1];
+
 void FX_AddCylinder(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
 void FX_AddParticle(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch);
@@ -168,11 +172,11 @@ static int CompareSortedEffects(const void *e0, const void *e1)
     if (result)
         return result;
 
-    result = (int)fx0->mRefEnt.customMaterial - (int)fx1->mRefEnt.customMaterial;
+    result = COD2_PTR_ORDER(fx0->mRefEnt.customMaterial, fx1->mRefEnt.customMaterial);
     if (result)
         return result;
 
-    return (*(float *)((byte *)e1 + 4) > *(float *)((byte *)e0 + 4)) ? 1 : -1;
+    return (((const SortedEffect *)e1)->distSq > ((const SortedEffect *)e0)->distSq) ? 1 : -1;
 }
 
 static int CompareSortedClusters(const void *e0, const void *e1)
@@ -242,9 +246,9 @@ void FX_CalcOrigin2(const PrimitiveTemplate *primTemp, vec_t *org, vec_t *org2, 
 
         if (flags & 0x20) {
 
-            float z = FxRange_GetVal((const FxRange *)(pt + 0xe0));
-            float y = FxRange_GetVal((const FxRange *)(pt + 0xd8));
-            float x = FxRange_GetVal((const FxRange *)(pt + 0xd0));
+            float z = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2Z)));
+            float y = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2Y)));
+            float x = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2X)));
             if (flags & 0x80) {
 
                 org2[0] = x;
@@ -272,15 +276,15 @@ void FX_CalcOrigin2(const PrimitiveTemplate *primTemp, vec_t *org, vec_t *org2, 
         org2[2] = org[2] + (temp[2] - org[2]) * fraction;
 
         if (flags & 0x10) {
-            void *effect = MediaHandles_GetEffect((const MediaHandles *)(pt + 0x70));
+            void *effect = MediaHandles_GetEffect((const MediaHandles *)(pt + offsetof(PrimitiveTemplate, mImpactFxHandles)));
             vec_t *traceNormal = (vec_t *)(trace + 4);
             FxScheduler_PlayEffectWithDir(*(void **)imp_theFxScheduler, effect, org2, traceNormal);
         }
     } else {
 
-        float z = FxRange_GetVal((const FxRange *)(pt + 0xe0));
-        float y = FxRange_GetVal((const FxRange *)(pt + 0xd8));
-        float x = FxRange_GetVal((const FxRange *)(pt + 0xd0));
+        float z = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2Z)));
+        float y = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2Y)));
+        float x = FxRange_GetVal((const FxRange *)(pt + offsetof(PrimitiveTemplate, mOrigin2X)));
 
         if (flags & 0x80) {
 
@@ -424,7 +428,7 @@ void FX_AddScheduledEffects(const vec_t *start, const vec_t *end)
 
         byte *fx = SCH_FX(scheduled);
         int primIndex = SCH_PRIM_INDEX(scheduled);
-        byte *primTemp = *(byte **)(fx + 8 + primIndex * 4);
+        byte *primTemp = (byte *)((EffectTemplate *)fx)->mPrimitives[primIndex];
 
         Rand_Init(SCH_RAND_SEED(scheduled));
 
@@ -438,16 +442,16 @@ void FX_AddScheduledEffects(const vec_t *start, const vec_t *end)
         if (boltEntity >= 0) {
 
             orientation_t orient;
-            Bool ok = FX_GetBoneOrientation( (const FxBoltInfo *)((void *)(scheduled + 0xc)), &orient);
+            Bool ok = FX_GetBoneOrientation( &((ScheduledEffect *)scheduled)->mBolt, &orient);
             if (ok) {
                 FxScheduler_CreateEffect(scheduler, fx, primTemp,
-                                         scheduled + 0xc, &orient, orient.axis,
+                                         &((ScheduledEffect *)scheduled)->mBolt, &orient, orient.axis,
                                          lateTime, indexInBatch);
             }
         } else {
 
             FxScheduler_CreateEffect(scheduler, fx, primTemp,
-                                     scheduled + 0xc, scheduled + 0x14, scheduled + 0x20,
+                                     &((ScheduledEffect *)scheduled)->mBolt, ((ScheduledEffect *)scheduled)->mOrigin, ((ScheduledEffect *)scheduled)->mAxis,
                                      lateTime, indexInBatch);
         }
 
@@ -517,7 +521,7 @@ extern void AxisTransformVector(vec3_t *axes, const vec_t x, const vec_t y, cons
 extern void OrientationPosFromWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
 static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, const vec_t *origin, vec3_t *ax)
 {
-    byte *primTemp = *(byte **)(prim + 4);
+    byte *primTemp = (byte *)((EffectPrimitive *)prim)->primTemp;
 
     vec3_t up = { 0.0f, 0.0f, 1.0f };
     int flags = (((PrimitiveTemplate *)(primTemp))->mSpawnFlags);
@@ -630,7 +634,7 @@ static void FX_CalcOriginAndAxis_impl(byte *prim, vec_t *orgOut, const vec_t *or
         }
     }
 
-    byte *bolt = *(byte **)(prim + 8);
+    byte *bolt = (byte *)((EffectPrimitive *)prim)->boltFrame.value;
     if (bolt) {
         const orientation_t *orient = FxBoltFrame_GetOrientation((const FxBoltFrame *)(bolt));
         vec3_t localOrg;
@@ -654,7 +658,7 @@ extern void Particle_SetAxis(const Particle *_this, vec3_t *ax);
 static void FX_InitParticle_impl(byte *prim, Effect *particle, vec_t *newOrigin, const vec_t *origin, vec3_t *ax, int indexInBatch)
 {
     (void)indexInBatch;
-    byte *primTemp = *(byte **)(prim + 4);
+    byte *primTemp = (byte *)((EffectPrimitive *)prim)->primTemp;
     int flags = (((PrimitiveTemplate *)(primTemp))->mAttributeFlags);
 
     if (flags & 0x2000)
@@ -719,7 +723,7 @@ void FX_AddFxRunner(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, cons
     void *effect = MediaHandles_GetEffect((const MediaHandles *)(((char *)primTemp + offsetof(PrimitiveTemplate, mPlayFxHandles))));
     void *scheduler = *(void **)imp_theFxScheduler;
     if (bolt) {
-        FxScheduler_PlayEffect(scheduler, effect, newOrigin, NULL, (byte *)bolt + 0x3c);
+        FxScheduler_PlayEffect(scheduler, effect, newOrigin, NULL, (byte *)&((FxBoltFrame *)bolt)->mBolt);
     } else {
         FxScheduler_PlayEffect(scheduler, effect, newOrigin, ax, NULL);
     }
@@ -818,7 +822,7 @@ void FX_DrawAll(void)
             sortOrder[cid] = i;
         }
         clusterSort = sortOrder;
-        qsort(visibleEffectsNonBolt, effectCount, 8, CompareSortedEffects);
+        qsort(visibleEffectsNonBolt, effectCount, sizeof(SortedEffect), CompareSortedEffects);
         clusterSort = NULL;
     }
 
@@ -938,7 +942,7 @@ static Bool FX_AddPrimitive_impl(byte *prim, Effect *particle, const vec_t *orig
     int endTime = curTime + (int)lifeRange;
     Effect_SetTimeStartEnd((const Effect *)(particle), curTime, endTime);
 
-    (((Effect *)(particle))->impactEffect) = (struct Effect *)(uintptr_t)(int)ep->fx;
+    (((Effect *)(particle))->impactEffect) = (struct Effect *)(uintptr_t)ep->fx;
     (((Effect *)(particle))->field_0x38) = ((PrimitiveTemplate *)primTemp)->mParentPrimIndex;
     (((Effect *)(particle))->field_0x10) = ((PrimitiveTemplate *)primTemp)->mGroupFlags;
 
@@ -1089,9 +1093,9 @@ extern void OrientationDirFromWorldDir(const orientation_t *or_, const vec_t *di
 void FX_AddCylinder(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
     (void)lateTime;
-    Effect *p = (Effect *)__Znam(0x278);
+    Effect *p = (Effect *)__Znam(COD2_SIZEOF_1_3(Tail, 0x278));
     if (p)
-        memset(p, 0, 0x278);
+        memset(p, 0, COD2_SIZEOF_1_3(Tail, 0x278));
     Cylinder_Cylinder( (const Cylinder *)(p));
     if (!p)
         return;
@@ -1137,9 +1141,9 @@ void FX_AddLine(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const in
 {
     (void)lateTime;
     (void)indexInBatch;
-    Effect *p = (Effect *)__Znam(0x258);
+    Effect *p = (Effect *)__Znam(COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     if (p)
-        memset(p, 0, 0x258);
+        memset(p, 0, COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     Line_Line( (const Line *)(p));
     if (!p)
         return;
@@ -1287,9 +1291,9 @@ extern void vectoangles(const vec_t *vec, vec_t *angles);
 extern float crandom(void);
 void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
-    Effect *p = (Effect *)__Znam(0x29c);
+    Effect *p = (Effect *)__Znam(COD2_SIZEOF_1_3(Emitter, 0x29c));
     if (p)
-        memset(p, 0, 0x29c);
+        memset(p, 0, COD2_SIZEOF_1_3(Emitter, 0x29c));
     Emitter_Emitter( (const Emitter *)(p));
     if (!p)
         return;
@@ -1348,7 +1352,7 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
     }
 
     if (!material)
-        (*(int *)&((Emitter *)p)->_base[168]) &= ~0x10;
+        ((Effect *)p)->mFlags &= ~0x10;
 
     vec3_t vel;
     Particle_GetTotalVelocityAtTime0( (const Particle *)(p), vel);
@@ -1370,7 +1374,7 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
     ((Emitter *)p)->angleDelta[1] = pos1;
     ((Emitter *)p)->angleDelta[2] = pos2;
 
-    (*(void **)&((Emitter *)p)->_base[180]) = material;
+    *(void **)&((Effect *)p)->mModelPtr = material;
     ((Emitter *)p)->emitFx = effect;
     ((Emitter *)p)->emitDensity = stepBase;
     ((Emitter *)p)->emitVariance = stepVar;
@@ -1382,9 +1386,9 @@ void FX_AddEmitter(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const
 extern void OrientedParticle_OrientedParticle(const OrientedParticle *op);
 void FX_AddOrientedParticle(EffectPrimitive *prim, vec3_t *ax, const vec_t *origin, const int lateTime, const int indexInBatch)
 {
-    Effect *p = (Effect *)__Znam(0x258);
+    Effect *p = (Effect *)__Znam(COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     if (p)
-        memset(p, 0, 0x258);
+        memset(p, 0, COD2_OFFSETOF_1_3(Tail, tailLength, 0x258));
     OrientedParticle_OrientedParticle((const OrientedParticle *)(p));
     if (!p)
         return;

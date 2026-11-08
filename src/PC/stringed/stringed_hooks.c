@@ -153,8 +153,8 @@ void SEH_InitLanguage(void)
     loc_language = Dvar_RegisterInt("loc_language", 0, 0, 13, 0x1021);
     loc_forceEnglish = Dvar_RegisterBool("loc_forceEnglish", 0, 0x1021);
     loc_translate = Dvar_RegisterBool("loc_translate", 1, 0x1020);
-    loc_warnings = Dvar_RegisterBool("loc_warnings", 0, (int)&__mh_execute_header);
-    loc_warningsAsErrors = Dvar_RegisterBool("loc_warningsAsErrors", 0, (int)&__mh_execute_header);
+    loc_warnings = Dvar_RegisterBool("loc_warnings", 0, 0x1000);
+    loc_warningsAsErrors = Dvar_RegisterBool("loc_warningsAsErrors", 0, 0x1000);
 
     g_currentAsian = ((unsigned int)(loc_language->current.integer - 8) <= 4);
 }
@@ -216,7 +216,9 @@ void SEH_UpdateLanguageInfo(void)
 
     iNumLanguages = 0;
     for (i = 0; i < 14; i++) {
-        if (FS_LanguageHasAssets(i)) {
+        /* Plus: French..Spanish can run on english assets (FS_LocalizedLanguageInUse);
+         * the stock fonts are Windows-1252, so not Russian, Polish or Asian. */
+        if (FS_LanguageHasAssets(i) || (i >= 1 && i <= 4 && FS_LanguageHasAssets(0))) {
             g_languages[i].bPresent = 1;
             iNumLanguages++;
         } else {

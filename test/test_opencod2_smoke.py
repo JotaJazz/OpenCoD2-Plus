@@ -38,5 +38,12 @@ class LoadExpected(unittest.TestCase):
             os.unlink(f.name)
 
 
+    def test_plus_for_118_unless_stock(self):
+        """The 1.3 builds are OpenCoD2-Plus Server's Plus variant unless built with COD2_PLUS_PROTOCOL=OFF."""
+        self.assertIn('--plus', opencod2_smoke.smoke_args('GAME', 'bin', 118, stock=False))
+        self.assertNotIn('--plus', opencod2_smoke.smoke_args('GAME', 'bin', 118, stock=True))
+        self.assertNotIn('--plus', opencod2_smoke.smoke_args('GAME', 'bin', 115, stock=False))
+
+
 if __name__ == '__main__':
     unittest.main()

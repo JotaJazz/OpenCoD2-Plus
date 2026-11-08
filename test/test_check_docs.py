@@ -39,6 +39,12 @@ class CheckDocs(unittest.TestCase):
         # its stages are never rewritten: a file named there may be gone
         self.assertEqual(self.problems('docs/ai/PROJECT_MEMORY.md', '`src/gone.c`\n'), [])
 
+    def test_superseded_adr_may_name_removed_paths(self):
+        """A superseded decision describes what was; an accepted one must name what is."""
+        text = '- Status: {}\n\nKeep `src/PC/gone_dir`.\n'
+        self.assertEqual(self.problems('docs/architecture/adr/0001-x.md', text.format('Superseded by 0002')), [])
+        self.assertEqual(len(self.problems('docs/architecture/adr/0001-x.md', text.format('Accepted'))), 1)
+
     def test_paths_inside_commands(self):
         self.write('scripts/real.py', '')
         self.write('CMakeLists.txt', '')

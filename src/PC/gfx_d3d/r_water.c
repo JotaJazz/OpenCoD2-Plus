@@ -10,8 +10,7 @@ static struct WaterGlob waterGlob;
 
 extern r_globals_t rg;
 extern r_backEndGlobals_t backEnd;
-extern void **g_unknown_195f22c;
-extern void **g_unknown_195f230;
+extern const dvar_t *r_drawWater;
 
 extern void Image_UploadData(GfxImage *image, D3DFORMAT format, int face, int mipLevel, const byte *src);
 extern void R_DownsampleMipMapBilinear(const byte *src, int srcBufferSize, int srcWidth, int srcHeight, int texelPitch, byte *dst, int dstBufferSize);
@@ -36,7 +35,6 @@ void RB_UploadWaterTexture(GfxImage *image, water_t *water)
     int xymask, ymask;
     int ixm1y;
     byte *pixels;
-    byte *uploadFlag;
 
     waterData = (complex_t *)&waterGlob;
 
@@ -47,7 +45,7 @@ void RB_UploadWaterTexture(GfxImage *image, water_t *water)
 
     water->writable.frameCount = currentFrame;
 
-    if ((*(dvar_t **)(g_unknown_195f230))->current.enabled == 0) {
+    if (!r_drawWater->current.enabled) {
         return;
     }
 
@@ -234,10 +232,7 @@ normalmap_path:
             }
         }
 
-        uploadFlag = *(byte **)g_unknown_195f22c;
-        *uploadFlag = 1;
         Image_UploadData(image, D3DFMT_A8R8G8B8, 0, 0, waterGlob.pixels);
-        *uploadFlag = 0;
         return;
     }
 
@@ -245,10 +240,6 @@ upload_heightmap:
 
     {
         int srcWidth, srcHeight, mipIndex;
-        byte *uploadFlagPtr;
-
-        uploadFlagPtr = *(byte **)g_unknown_195f22c;
-        *uploadFlagPtr = 1;
 
         Image_UploadData(image, D3DFMT_L8, 0, 0, waterGlob.pixels);
 
@@ -273,6 +264,5 @@ upload_heightmap:
             mipIndex++;
         }
 
-        *uploadFlagPtr = 0;
     }
 }

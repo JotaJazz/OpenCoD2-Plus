@@ -12,6 +12,7 @@ static struct DxGlobals * const dx_g = &dx;
 
 extern unsigned char mtlLoadGlob[];
 extern dvar_t *r_rendererInUse;
+extern const dvar_t *r_water;
 
 #if defined(__x86_64__) || defined(_M_X64)
 #    define MTLGLOB_COUNT (*(int *)mtlLoadGlob)
@@ -1562,6 +1563,12 @@ static MaterialShader *MATERIAL_REGPARM2_ABI COD2_FORCE_ALIGN_ARG_POINTER Materi
         } else {
             Com_sprintf(target, 16, "ps_%i_%i", compileVer / 10, compileVer % 10);
             entryPoint = "ps_main";
+#ifdef GFX_REAL_D3D9
+            /* not 1.3's: r_water's text for lib/water.hlsl (r_water_hlsl.h) passes ps_2_0's 64
+               arithmetic slots (Microsoft's compiler counts 91): ps_2_a has 512 */
+            if (r_water && r_water->current.enabled && !strncmp(filename, "water", 5))
+                Com_sprintf(target, 16, "ps_2_a");
+#endif
         }
     }
 
@@ -1783,6 +1790,7 @@ extern const byte s_techniqueTypeNames[];
  * can share the (layout-neutral, text-parsed) techset loader. */
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack);
 
+#ifndef COD2_X64   /* x64 marshals the 32-bit file instead (Material_Marshal32To64) */
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialObj *material, int imageTrack)
 {
     byte *mtl = (byte *)material;
@@ -1848,6 +1856,8 @@ static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance_impl(MaterialOb
     }
 }
 
+#endif
+
 static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int imageTrack)
 {
     byte *mtl = (byte *)mtlx;
@@ -1859,7 +1869,7 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
             static int tl;
             if (tl++ < 20) {
                 fprintf(stderr, "[TSLOAD] mtl='%.24s' tsOff=%d tsName='%.32s' found=%p\n",
-                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (unsigned)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
+                        *(const char **)mtl, (*(int *)&((Material *)mtl)->techniqueSet), (tsName && (uintptr_t)tsName > 0x10000) ? tsName : "(bad)", (void *)techSet);
                 fflush(stderr);
             }
         }
@@ -2500,7 +2510,7 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
                     byte *pb = (byte *)tech + 8;
                     int pi;
                     for (pi = 0; pi < passCount; pi++, pb += 0x5c)
-                        if (!Material_ValidatePassArguments_impl((const Material *)mtl, tsNameStr, (const char *)*(int *)tech, 2, (const MaterialShaderArgument *)&((MaterialPassDx9 *)pb)->pixelShader))
+                        if (!Material_ValidatePassArguments_impl((const Material *)mtl, tsNameStr, tech->name, 2, (const MaterialShaderArgument *)&((MaterialPassDx9 *)pb)->pixelShader))
                             return 0;
                 } else {
                     int pi;
@@ -2520,10 +2530,12 @@ static Bool Material_ResolveTechniqueSet(Material *mtlx, const char *tsName, int
     }
 }
 
+#ifndef COD2_X64
 static Bool MATERIAL_REGPARM2_ABI Material_FinishLoadingInstance(MaterialObj *material, int imageTrack)
 {
     return Material_FinishLoadingInstance_impl(material, imageTrack);
 }
+#endif
 
 extern int Material_LoadFile(const char *filename, int *fileHandle);
 extern void *Material_Alloc(int size);
@@ -2677,9 +2689,31 @@ static Material *Material_Marshal32To64(byte *blob, int imageTrack)
             dt[i].unused_1     = 0;
             dt[i].u.image      = (GfxImage *)0;
             if (sem == 5) {
-                /* TS_WATER_MAP: world water setup not yet marshaled on x64 (the UI
-                 * never references water). Leave NULL; revisit with world rendering. */
-                dt[i].u.water = (MaterialWaterDef *)0;
+                /* TS_WATER_MAP: the file's 32-byte water def (u16 width, Lx, Lz, amplitude,
+                 * wind speed, wind dir[2], map) into a water_t setup, as the x86 path */
+                const byte *wd = blob + st[i].image;
+                MaterialWaterDef *water = (MaterialWaterDef *)Material_Alloc((int)sizeof(MaterialWaterDef));
+                water_t setup;
+
+                memset(&setup, 0, sizeof(setup));
+                water->textureWidth = *(const unsigned short *)wd;
+                memcpy(&water->horizontalWorldLength, wd + 4, 4);
+                memcpy(&water->verticalWorldLength, wd + 8, 4);
+                memcpy(&water->amplitude, wd + 12, 4);
+                memcpy(&water->windSpeed, wd + 16, 4);
+                memcpy(water->windDirection, wd + 20, 8);
+                setup.M = setup.N = water->textureWidth;
+                setup.Lx = water->horizontalWorldLength;
+                setup.Lz = water->verticalWorldLength;
+                setup.gravity = 800.0f;
+                setup.windvel = water->windSpeed;
+                setup.winddir[0] = water->windDirection[0];
+                setup.winddir[1] = water->windDirection[1];
+                setup.amplitude = water->amplitude;
+                water->map = R_LoadWaterSetup(&setup);
+                if (!water->map)
+                    return (Material *)0;
+                dt[i].u.water = water;
             } else {
                 int isDx7 = (r_rendererInUse->current.integer == 2);
                 if (isDx7 && (unsigned)(sem - 3) <= 1) {

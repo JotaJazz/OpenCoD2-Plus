@@ -927,7 +927,7 @@ float Item_Slider_ThumbPosition(itemDef_t *item)
 qboolean Menu_CheckOnKey(displayContextDef_t *dc, menuDef_t *menu, int key)
 {
     byte *m = (byte *)menu;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
     int i;
 
     if (getenv("COD2_KEYDIAG")) {
@@ -1126,7 +1126,7 @@ void Menus_Close(displayContextDef_t *dc, menuDef_t *menu)
     int openCount, i, menuIndex;
     qboolean wasVisible = 0;
     qboolean inStack = 0;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
 
     openCount = (((displayContextDef_s*)(d))->openMenuCount);
     for (i = openCount - 1; i >= 0; i--) {
@@ -1790,12 +1790,12 @@ void Script_SetItemColor(displayContextDef_t *dc, itemDef_t *item, const char **
 
         float *out = NULL;
         if (I_stricmp(name, "backcolor") == 0) {
-            out = (float *)(item2 + 0x1dc);
+            out = ((itemDef_t *)item2)->window.backColor;
         } else if (I_stricmp(name, "forecolor") == 0) {
-            out = (float *)(item2 + 0x1cc);
+            out = ((itemDef_t *)item2)->window.foreColor;
             Window_AddDynamicFlags( (itemDef_t *)((void *)item2), 0x10000);
         } else if (I_stricmp(name, "bordercolor") == 0) {
-            out = (float *)(item2 + 0x1ec);
+            out = ((itemDef_t *)item2)->window.borderColor;
         }
 
         if (out) {
@@ -2251,7 +2251,7 @@ void Menus_Open(displayContextDef_t *dc, menuDef_t *menu)
     byte *d = (byte *)dc;
     byte *m = (byte *)menu;
     int openCount, i, j;
-    byte tempItem[0x2a0];
+    byte tempItem[sizeof(itemDef_t)];
 
     openCount = (((displayContextDef_s*)(d))->openMenuCount);
     for (i = openCount - 1; i >= 0; i--)
@@ -4299,7 +4299,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
                     if (curVal != (((multiDef_s*)(mDef))->dvarValue[0])) {
                         int i;
                         for (i = 1; i < count; i++) {
-                            if (*(float *)(mDef + 0x100 + i * 4) == curVal) {
+                            if (((multiDef_s *)mDef)->dvarValue[i] == curVal) {
                                 current = i;
                                 break;
                             }
@@ -4314,7 +4314,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
                 if (count > 0) {
                     int i;
                     for (i = 0; i < count; i++) {
-                        if (I_stricmp(string, *(const char **)(mDef + 0x80 + i * 4)) == 0) {
+                        if (I_stricmp(string, ((multiDef_s *)mDef)->dvarStr[i]) == 0) {
                             current = i;
                             break;
                         }
@@ -4349,7 +4349,7 @@ qboolean Item_HandleKey(displayContextDef_t *dc, itemDef_t *item, int key, qbool
         const char *newVal;
         if ((((multiDef_s*)(multiPtr))->strDef)) {
 
-            newVal = *(const char **)(multiPtr + 0x80 + newIndex * 4);
+            newVal = ((multiDef_s *)multiPtr)->dvarStr[newIndex];
         } else {
 
             newVal = va("%g", (double)(((multiDef_s*)(multiPtr))->dvarValue[newIndex]));
@@ -4961,7 +4961,7 @@ void Menu_HandleKey(displayContextDef_t *dc, menuDef_t *menu, int key, qboolean 
 
     if (key == 0x1b) {
         if (!g_waitingForKey && (*(void **)&((menuDef_t *)m)->onESC)) {
-            byte tempItem[0x2a0];
+            byte tempItem[sizeof(itemDef_t)];
             *(void **)&(*(unsigned char *)&((itemDef_t *)tempItem)->parent) = menu;
             Item_RunScript(dc, (itemDef_t *)tempItem, ((menuDef_t *)m)->onESC);
         }
@@ -5602,7 +5602,7 @@ void Menus_HandleOOBClick(displayContextDef_t *dc, menuDef_t *menu, int key, qbo
         if ((((Window *)m)->staticFlags & 0x2000000)) {
 
             if (((*(byte *)&((menuDef_t *)m)->window.dynamicFlags[0]) & 4) && (*(void **)&((menuDef_t *)m)->onClose)) {
-                byte tempItem[0x2a0];
+                byte tempItem[sizeof(itemDef_t)];
                 *(void **)&(*(unsigned char *)&((itemDef_t *)tempItem)->parent) = menu;
                 Item_RunScript(dc, (itemDef_t *)tempItem, ((menuDef_t *)m)->onClose);
             }

@@ -166,13 +166,12 @@ static inline void R_SafeRelease(void **objPtr)
 
 static void R_ReleaseForShutdownOrReset(void)
 {
-    byte *d = (byte *)&dx;
     int i;
 
     {
-        int scCount = *(int *)(d + 11592);
+        int scCount = dx.windowCount;
         for (i = 0; i < scCount; i++) {
-            void **psc = (void **)(d + 0x2d50 + i * 16);
+            void **psc = (void **)&dx.windows[i].swapChain;
             R_SafeRelease(psc);
         }
     }
@@ -180,31 +179,31 @@ static void R_ReleaseForShutdownOrReset(void)
     R_ShutdownRenderTargets();
     R_ShutdownStaticModelCache();
 
-    R_SafeRelease((void **)(d + 11656));
+    R_SafeRelease((void **)&dx.dynamicIndexBufferPool[0].buffer);
 
-    R_SafeRelease((void **)(d + 11696));
+    R_SafeRelease((void **)&dx.dynamicVertexBufferPool[0].buffer);
 
     for (i = 0; i < 2; i++) {
-        R_SafeRelease((void **)(d + 0x2d98 + i * 12));
+        R_SafeRelease((void **)&dx.skinnedCacheVbPool[i].buffer);
     }
 
-    if (*(void **)(d + 11728)) {
+    if (dx.tempSkinBuf) {
 
-        ((void (*)(void *))ri.Z_VirtualFreeInternal)(*(void **)(d + 11728));
-        *(void **)(d + 11728) = NULL;
-        *(int *)(d + 11732) = 0;
+        ((void (*)(void *))ri.Z_VirtualFreeInternal)((void *)dx.tempSkinBuf);
+        *(void **)&dx.tempSkinBuf = NULL;
+        dx.tempSkinPos = 0;
     }
 
-    if (*(void **)(d + 11704)) {
-        R_FreeStaticVertexBuffer(*(IDirect3DVertexBuffer9 **)(d + 11704));
-        *(void **)(d + 11704) = NULL;
+    if (dx.particleCloudVertexBuffer) {
+        R_FreeStaticVertexBuffer((IDirect3DVertexBuffer9 *)dx.particleCloudVertexBuffer);
+        *(void **)&dx.particleCloudVertexBuffer = NULL;
     }
-    if (*(void **)(d + 11708)) {
-        R_FreeStaticIndexBuffer( (IDirect3DIndexBuffer9 *)(*(void **)(d + 11708)));
-        *(void **)(d + 11708) = NULL;
+    if (dx.particleCloudIndexBuffer) {
+        R_FreeStaticIndexBuffer((IDirect3DIndexBuffer9 *)dx.particleCloudIndexBuffer);
+        *(void **)&dx.particleCloudIndexBuffer = NULL;
     }
 
-    R_SafeRelease((void **)(d + 11612));
+    R_SafeRelease((void **)&dx.flushGpuQuery);
 
     {
         byte *sunFlare = (byte *)imp_sunFlareArray;
@@ -277,8 +276,8 @@ static HRESULT R_CreateDevice(HWND hwnd, DWORD behavior, void *d3dpp)
 void R_UpdateGpuSyncType(void)
 {
     int v;
-    if (!*(byte *)(*(int *)imp_r_multiGpu + 8))
-        v = *(int *)(*(int *)imp_r_gpuSync + 8);
+    if (!(*(const dvar_t **)imp_r_multiGpu)->current.enabled)
+        v = (*(const dvar_t **)imp_r_gpuSync)->current.integer;
     else
         v = 0;
     dx.gpuSync = v;
@@ -485,7 +484,7 @@ void R_GammaCorrect(byte *buffer, int bufSize)
     float invGamma;
     int i;
 
-    invGamma = 1.0f / *(float *)(*(int *)imp_r_gamma + 8);
+    invGamma = 1.0f / (*(const dvar_t **)imp_r_gamma)->current.value;
 
     if (invGamma == 1.0f) {
 
@@ -522,7 +521,6 @@ void R_FatalLockError(HRESULT hr)
 
 static void R_Shutdown(qboolean destroyWindow)
 {
-    byte *d = (byte *)&dx;
 
 #ifdef GFX_REAL_D3D9
     if (getenv("REALD3D9_MATDIAG")) {
@@ -550,22 +548,23 @@ static void R_Shutdown(qboolean destroyWindow)
     Material_Shutdown();
     R_ShutdownImages();
 
-    *(int *)((byte *)&rgp + 4252) = 0;
+    *(void **)&rgp.world = NULL;
     R_UnlockSkinnedCache();
     R_FlushStaticModelCache();
 
     if (destroyWindow) {
         R_ReleaseForShutdownOrReset();
 
-        while (*(int *)(d + 11592) != 0) {
-            int idx = *(int *)(d + 11592) - 1;
-            *(int *)(d + 11592) = idx;
-            *(void **)(d + 11584 + idx * 16 + 12) = NULL;
+        while (dx.windowCount != 0) {
+            int idx = dx.windowCount - 1;
+            dx.windowCount = idx;
+            *(void **)&dx.windows[idx].hwnd = NULL;
         }
 
-        R_SafeRelease((void **)(d + 8));
+        /* the device, then Direct3D: 1.3's d + 8 and d + 4, x86 offsets */
+        R_SafeRelease((void **)&dx.device);
 
-        R_SafeRelease((void **)(d + 4));
+        R_SafeRelease((void **)&dx.d3d9);
 
         R_UnregisterDvars();
     }
@@ -582,7 +581,7 @@ void R_SetColorMappings(void)
     if (!vidConfig.deviceSupportsGamma)
         return;
 
-    invGamma = 1.0f / *(float *)(*(int *)imp_r_gamma + 8);
+    invGamma = 1.0f / (*(const dvar_t **)imp_r_gamma)->current.value;
 
     if (invGamma == 1.0f) {
         for (i = 0; i < 256; i++)
@@ -772,7 +771,8 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             extern void R_GetModeSize(int *width, int *height);
             int width, height;
             void *hwnd;
-            unsigned char pp[56];
+            struct _D3DPRESENT_PARAMETERS_ pp;
+            extern int RealD3D9_PresentParamsSize(void);
             HRESULT hr;
 
             ri_printf(0, "Initializing REAL Direct3D9 (GFX_REAL_D3D9)\n");
@@ -783,9 +783,11 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             if (!dx.d3d9)
                 R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
-            RealD3D9_FillPresentParams(pp, hwnd, width, height, r_swapInterval->current.enabled);
+            if (RealD3D9_PresentParamsSize() != (int)sizeof(pp))
+                R_Error(ERR_FATAL, "D3DPRESENT_PARAMETERS: %i bytes here, %i in d3d9_real.c", (int)sizeof(pp), RealD3D9_PresentParamsSize());
+            RealD3D9_FillPresentParams(&pp, hwnd, width, height, r_swapInterval->current.enabled);
             s_realWindow = hwnd;
-            hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
+            hr = R_CreateDevice_impl((HWND)hwnd, 0x40, &pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
             if ((hr < 0 || !dx.device) && r_gfxApi->current.integer) {
                 ri_printf(0, "^3r_gfxApi could not make a device, using Direct3D 9\n");
@@ -793,7 +795,7 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
                 dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9(0);
                 if (!dx.d3d9)
                     R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
-                hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
+                hr = R_CreateDevice_impl((HWND)hwnd, 0x40, &pp);
             }
             if (hr < 0 || !dx.device)
                 R_Error(ERR_FATAL, "Couldn't create the Direct3D 9 device: %s", R_ErrorDescription(hr));
@@ -873,9 +875,9 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
     FFT_Init(rg.fftBitswap, rg.fftTrigTable);
 
     {
-        int args[3] = { 0, 0, 0 };
+        struct DObjModel_s args = { 0 };  /* two pointers: 24 bytes on x64, not 1.3's 12 */
         ((void (*)(void *, int, void *, void *, int))ri.DObjCreate)(
-            args, 1, NULL, rg.modelDObjBuf, 0);
+            &args, 1, NULL, rg.modelDObjBuf, 0);
         rg.modelDObj = (struct DObj_s *)rg.modelDObjBuf;
     }
 
@@ -932,12 +934,12 @@ Bool R_RecoverLostDevice(void)
     if (rgp.world)
         R_ReleaseWorld();
 
-    int displayMode = *(int *)(dxp + 11596);
-    int backBufWidth = *(int *)(dxp + 11604);
-    int backBufHeight = *(int *)(dxp + 11608);
+    int displayMode = (int)(intptr_t)dx.windows[0].hwnd;   /* 1.3's dxp + 11596, read as an int */
+    int backBufWidth = dx.windows[0].width;
+    int backBufHeight = dx.windows[0].height;
     int refreshRate = vidConfig.displayFrequency;
     int isFullscreen = vidConfig.isFullscreen != 0;
-    int aaSamples = *(int *)(*(int *)imp_r_aaSamples + 8);
+    int aaSamples = (*(const dvar_t **)imp_r_aaSamples)->current.integer;
 
     if (aaSamples > 1) {
         void *d3d = (void *)dx.d3d9;
@@ -960,7 +962,8 @@ Bool R_RecoverLostDevice(void)
 
 aa_done:;
 
-    int d3dpp[14];
+    /* 16: room for the real D3DPRESENT_PARAMETERS on x64 (64 bytes) */
+    __attribute__((aligned(8))) int d3dpp[16];
     memset(d3dpp, 0, sizeof(d3dpp));
     d3dpp[0] = backBufWidth;
     d3dpp[1] = backBufHeight;
@@ -971,7 +974,7 @@ aa_done:;
     d3dpp[6] = 1;
     d3dpp[8] = 0x4b;
 
-    int swapInterval = *(byte *)(*(int *)imp_r_swapInterval + 8);
+    int swapInterval = (*(const dvar_t **)imp_r_swapInterval)->current.enabled;
     d3dpp[11] = swapInterval ? 1 : 0x80000000;
     d3dpp[10] = displayMode;
     d3dpp[9] = 0;

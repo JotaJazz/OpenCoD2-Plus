@@ -7,6 +7,14 @@
 
 extern const dvar_t *cg_drawHealth;
 extern const dvar_t *cg_hudCompassSize;
+extern const dvar_t *cg_hudCompassMaxRange;
+extern const dvar_t *cg_hudCompassMinRange;
+extern const dvar_t *cg_hudCompassMinRadius;
+extern const dvar_t *cg_hudObjectiveMaxRange;
+extern const dvar_t *cg_hudObjectiveMinAlpha;
+extern const dvar_t *cg_drawCompass;
+extern const dvar_t *cg_hudCompassOffsetX;
+extern const dvar_t *cg_hudCompassOffsetY;
 extern const dvar_t *cg_hudProneY;
 extern const dvar_t *cg_hudStanceFlash;
 extern const dvar_t *cg_hudStanceHintPrints;
@@ -52,6 +60,9 @@ extern const char *va(const char *fmt, ...);
 extern int CL_GetKeyCatchers(void);
 extern Bool CL_GetDisplayHUDWithKeycatchUI(void);
 extern const char *CL_GetConfigString(int index);
+extern MaterialHandle CL_RegisterMaterialNoMip(const char *name, int imageTrack);
+extern const float vectoyaw(const vec_t *vec);
+extern const float AngleNormalize360(const float angle);
 extern void CL_DrawStretchPic(float x, float y, float w, float h, int horzAlign, int vertAlign, float s1, float t1, float s2, float t2, const vec_t *color, MaterialHandle material);
 extern const dvar_t *Dvar_RegisterBool_mac(const char *name, int value, int flags);
 extern const dvar_t *Dvar_RegisterFloat(const char *name, float value, float min, float max, int flags);
@@ -168,6 +179,8 @@ COD2_ASSERT_FIELD(WeaponDef,     weapSlot,       0x80);
 COD2_ASSERT_FIELD(WeaponDef,     overlayReticle, 0x278);
 COD2_ASSERT_FIELD(WeaponDef,     bWideListIcon,  0x344);
 COD2_ASSERT_FIELD(playerState_t, fWeaponPosFrac, 0xdc);
+COD2_ASSERT_FIELD(objective_t,   icon,           0x18);
+typedef char objective_size_check[sizeof(objective_t) == 0x1c ? 1 : -1];   /* 1.3 steps 0x1c through them */
 
 static qboolean CG_DrawHealthEnabled(void)
 {
@@ -1552,21 +1565,26 @@ static inline __attribute__((always_inline)) void CG_DrawLowHealthOverlay(const 
     float alpha;
     int elapsed;
 
-    if (!CG_DrawHealthEnabled()) {
-        return;
-    }
-
+    /* 1.3 (0x4c5250) draws it whatever cg_drawHealth (default 0) says: that
+     * dvar only gates the health bar (0x4c4a70, 0x4c4d40) */
     if (!cg) {
         return;
     }
 
     health = CG_CalcPlayerHealth();
+    if (health == 0.0f) {
+        return;
+    }
     CG_PulseLowHealthOverlay(health);
 
+    /* 0x4c4fb0: the fade from the pulse's start, a clock behind it counting 0 */
     alpha = cg->healthOverlayToAlpha;
     if (cg->healthOverlayPulseDuration > 0) {
         elapsed = cg->time - cg->healthOverlayPulseTime;
-        if (elapsed >= 0 && elapsed < cg->healthOverlayPulseDuration) {
+        if (elapsed < 0) {
+            elapsed = 0;
+        }
+        if (elapsed < cg->healthOverlayPulseDuration) {
             float frac = (float)elapsed / (float)cg->healthOverlayPulseDuration;
             alpha = cg->healthOverlayFromAlpha + (cg->healthOverlayToAlpha - cg->healthOverlayFromAlpha) * frac;
         }
@@ -1611,6 +1629,86 @@ static inline __attribute__((always_inline)) void CG_DrawPlayerCompass(const rec
                       compassRect.horzAlign, compassRect.vertAlign, cg->compassYaw, drawColor, material);
 }
 
+/* 0x4c5620: every current objective, around the compass's center. Past cg_hudCompassMaxRange it fades
+   down to cg_hudObjectiveMinAlpha at cg_hudObjectiveMaxRange, and it stays on the rim. */
+static void CG_DrawCompassObjectives(const rectDef_t *rect, const vec_t *color)
+{
+    float fade, size, centerX, centerY, iconSize;
+    float maxRange, minRange, maxAlphaRange, minAlpha, minRadius;
+    int i;
+
+    fade = CG_HudFadeAlpha(hud_fade_compass, cg->compassFadeTime);
+    if (fade == 0.0f)
+        return;
+    CG_UpdateCompPointerOrientation();
+
+    size = cg_hudCompassSize->current.value;
+    centerX = rect->x + rect->w * size * 0.5f;
+    centerY = rect->y + rect->h * size * 0.5f - (size - 1.0f) * rect->h;
+    iconSize = size * 16.0f;
+    maxRange = cg_hudCompassMaxRange->current.value;
+    minRange = cg_hudCompassMinRange->current.value;
+    maxAlphaRange = cg_hudObjectiveMaxRange->current.value;
+    minAlpha = cg_hudObjectiveMinAlpha->current.value;
+    minRadius = cg_hudCompassMinRadius->current.value;
+    if (!cg->bgs.clientinfo[cg->snap->ps.clientNum].infoValid)
+        return;
+
+    for (i = 0; i < 16; i++) {
+        const objective_t *objective = &cg->snap->ps.objective[i];
+        float delta[3], yaw, dist, radius, t;
+        vec4_t drawColor;
+        MaterialHandle icon;
+        char iconName[64];
+
+        if (objective->state != 4)
+            continue;
+
+        /* entNum comes from the server; anything but an entity reads the position */
+        if ((unsigned int)objective->entNum < 0x3ff) {
+            const float *origin = cg_entities[objective->entNum].lerpOrigin;
+            delta[0] = origin[0] - cg->refdef.vieworg[0];
+            delta[1] = origin[1] - cg->refdef.vieworg[1];
+        } else {
+            delta[0] = objective->origin[0] - cg->refdef.vieworg[0];
+            delta[1] = objective->origin[1] - cg->refdef.vieworg[1];
+        }
+        delta[2] = 0.0f;
+        yaw = AngleNormalize360(vectoyaw(delta) - cg->compPointerYaw) * 0.01745329238f;
+        dist = sqrtf(delta[0] * delta[0] + delta[1] * delta[1]);
+
+        drawColor[0] = color[0];
+        drawColor[1] = color[1];
+        drawColor[2] = color[2];
+        if (dist <= maxRange) {
+            drawColor[3] = 1.0f;
+        } else if (dist >= maxAlphaRange) {
+            drawColor[3] = minAlpha;
+        } else {
+            t = maxAlphaRange - maxRange != 0.0f ? (dist - maxRange) / (maxAlphaRange - maxRange) : 0.0f;
+            drawColor[3] = 1.0f - (1.0f - minAlpha) * t;
+        }
+        if (fade < drawColor[3])
+            drawColor[3] = fade;
+
+        if (dist <= minRange) {
+            radius = minRadius;
+        } else if (dist >= maxRange) {
+            radius = 1.0f;
+        } else {
+            t = maxRange - minRange != 0.0f ? (maxRange - dist) / (maxRange - minRange) : 0.0f;
+            radius = 1.0f - (1.0f - minRadius) * t;
+        }
+        radius = (float)((double)size * radius * 43.75);
+
+        icon = cgs->media.objectiveMaterials[0];
+        if (CG_ServerMaterialName(objective->icon, iconName, sizeof(iconName)))
+            icon = CL_RegisterMaterialNoMip(iconName, 7);
+        UI_DrawHandlePic(centerX - iconSize * 0.5f - sinf(yaw) * radius, centerY - iconSize * 0.5f - cosf(yaw) * radius,
+                         iconSize, iconSize, rect->horzAlign, rect->vertAlign, drawColor, icon);
+    }
+}
+
 static inline __attribute__((always_inline)) void CG_DrawPlayerCompassFriendliesOwnerdraw(rectDef_t *rect, MaterialHandle material, vec_t *color)
 {
     vec_t drawColor[4];
@@ -1645,6 +1743,13 @@ void CG_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
     rect.h = h;
     rect.horzAlign = horzAlign;
     rect.vertAlign = vertAlign;
+    if (ownerDraw == CG_PLAYER_COMPASS || ownerDraw == CG_PLAYER_COMPASS_BACK
+        || ownerDraw == CG_PLAYER_COMPASS_POINTERS || ownerDraw == CG_PLAYER_COMPASS_FRIENDS) {
+        if (!cg_drawCompass->current.enabled)
+            return;
+        rect.x += cg_hudCompassOffsetX->current.value;
+        rect.y += cg_hudCompassOffsetY->current.value;
+    }
 
     switch (ownerDraw) {
     case CG_PLAYER_AMMO_VALUE:
@@ -1712,7 +1817,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         CG_DrawPlayerCompassBack(&rect, material, color);
         break;
     case CG_PLAYER_COMPASS_POINTERS:
-        CG_UpdateCompPointerOrientation();
+        CG_DrawCompassObjectives(&rect, color);
         break;
     case CG_PLAYER_COMPASS_FRIENDS:
         CG_DrawPlayerCompassFriendliesOwnerdraw(&rect, material, color);

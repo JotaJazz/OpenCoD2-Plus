@@ -21,7 +21,7 @@ static struct sockaddr socksRelayAddr;
 static int ip_socket;
 static int numIP;
 static byte localIP[16][4];
-static char winsockdata[400];
+static char winsockdata[COD2_SIZEOF_1_3(WSADATA, 400)];  /* WSADATA has a char * (408 bytes on x64) */
 static qboolean winsockInitialized;
 static int socks_socket;
 static int ipx_socket;
@@ -53,7 +53,7 @@ typedef struct {
     unsigned short sa_family;
 #endif
     unsigned short sa_port;
-    unsigned long sa_addr;
+    uint32_t sa_addr;
     unsigned char sa_zero[8];
 } sockaddr_gen;
 
@@ -314,7 +314,7 @@ qboolean Sys_StringToAdr(const char *s, netadr_t *a)
         if (!h) {
             return 0;
         }
-        sadr.sin_addr.s_addr = *(unsigned long *)h->h_addr_list[0];
+        sadr.sin_addr.s_addr = *(uint32_t *)h->h_addr_list[0];
     }
 
     if (sadr.sin_family != AF_INET) {
@@ -322,7 +322,7 @@ qboolean Sys_StringToAdr(const char *s, netadr_t *a)
     }
 
     a->type = NA_IP;
-    *(unsigned long *)a->ip = sadr.sin_addr.s_addr;
+    *(uint32_t *)a->ip = sadr.sin_addr.s_addr;
     a->port = sadr.sin_port;
 
     return 1;
@@ -395,7 +395,7 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
         if (((sockaddr_gen *)&from)->sa_family == AF_INET) {
             sockaddr_gen *from_in = (sockaddr_gen *)&from;
             net_from->type = NA_IP;
-            *(unsigned long *)net_from->ip = from_in->sa_addr;
+            *(uint32_t *)net_from->ip = from_in->sa_addr;
             net_from->port = from_in->sa_port;
         }
 
@@ -444,7 +444,7 @@ Bool Sys_SendPacket(int length, const void *data, netadr_t to)
         addr.sin_addr.s_addr = 0xFFFFFFFF;
     } else if (to.type == NA_IP) {
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = *(unsigned long *)to.ip;
+        addr.sin_addr.s_addr = *(uint32_t *)to.ip;
         addr.sin_port = to.port;
     }
 
@@ -457,7 +457,7 @@ Bool Sys_SendPacket(int length, const void *data, netadr_t to)
         socksBuf[1] = 0;
         socksBuf[2] = 0;
         socksBuf[3] = 1;
-        *(unsigned long *)(socksBuf + 4) = addr.sin_addr.s_addr;
+        *(uint32_t *)(socksBuf + 4) = addr.sin_addr.s_addr;
         *(unsigned short *)(socksBuf + 8) = addr.sin_port;
         memcpy(socksBuf + 10, data, length);
         ret = sendto(net_socket, socksBuf, length + 10, 0, (struct sockaddr *)&socksRelayAddr, 16);
@@ -551,7 +551,7 @@ void NET_OpenIP(void)
                 } else {
                     struct hostent *h = gethostbyname(s);
                     if (h) {
-                        address.sin_addr.s_addr = *(unsigned long *)h->h_addr_list[0];
+                        address.sin_addr.s_addr = *(uint32_t *)h->h_addr_list[0];
                     }
                 }
             } else {
@@ -613,7 +613,7 @@ void NET_OpenIP(void)
 
                         memset(&saddr, 0, sizeof(saddr));
                         saddr.sin_family = AF_INET;
-                        saddr.sin_addr.s_addr = *(unsigned long *)((struct hostent *)hp)->h_addr_list[0];
+                        saddr.sin_addr.s_addr = *(uint32_t *)((struct hostent *)hp)->h_addr_list[0];
                         saddr.sin_port = htons(net_socksPort->current.integer);
 
                         if (connect(socks_socket, (struct sockaddr *)&saddr, 16) == -1) {
@@ -695,7 +695,7 @@ void NET_OpenIP(void)
                         buf[1] = 3;
                         buf[2] = 0;
                         buf[3] = 1;
-                        *(unsigned long *)(buf + 4) = 0;
+                        *(uint32_t *)(buf + 4) = 0;
                         {
                             unsigned short sp = (unsigned short)((sockPort >> 8) | (sockPort << 8));
                             *(unsigned short *)(buf + 8) = sp;
@@ -726,7 +726,7 @@ void NET_OpenIP(void)
                         }
 
                         ((byte *)&socksRelayAddr)[1] = 2;
-                        *(unsigned long *)(((byte *)&socksRelayAddr) + 4) = *(unsigned long *)(buf + 4);
+                        *(uint32_t *)(((byte *)&socksRelayAddr) + 4) = *(uint32_t *)(buf + 4);
                         *(unsigned short *)(((byte *)&socksRelayAddr) + 2) = *(unsigned short *)(buf + 8);
                         memset(((byte *)&socksRelayAddr) + 8, 0, 8);
 
@@ -813,7 +813,7 @@ void NET_OpenIP(void)
 
                                 {
                                     char namebuf[16];
-                                    unsigned long ipaddr;
+                                    uint32_t ipaddr;
 
                                     strncpy(namebuf, ifr2, 16);
                                     if (ioctl(tmpSocket, 0xc020690d, namebuf) < 0) {
@@ -825,7 +825,7 @@ void NET_OpenIP(void)
                                         continue;
                                     }
 
-                                    ipaddr = cod2_bswap32(*(unsigned long *)(namebuf + 20));
+                                    ipaddr = cod2_bswap32(*(uint32_t *)(namebuf + 20));
                                     localIP[numIP][0] = (ipaddr >> 24) & 0xFF;
                                     localIP[numIP][1] = (ipaddr >> 16) & 0xFF;
                                     localIP[numIP][2] = (ipaddr >> 8) & 0xFF;

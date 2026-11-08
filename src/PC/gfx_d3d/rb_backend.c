@@ -87,94 +87,6 @@ void rdsl_log_null_technique2(void *material, int techType)
 int rb_drawsurfscmd_count = 0;
 int rb_drawsurfscmd_dxskip = 0;
 
-static void RB_X64TraceText(const char *text, const Font *font, const Material *material,
-                            GfxColor color, int style, float x, float y, float xScale, float yScale)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 120) {
-        return;
-    }
-
-    f = fopen("x64_text_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f, "text[%d]='%.96s' font=%p fontName=%s material=%p matName=%s color=0x%08x style=%d xy=(%.1f,%.1f) scale=(%.3f,%.3f)\n",
-            traceCount,
-            text ? text : "<null>",
-            (const void *)font,
-            font && font->name ? font->name : "<null>",
-            (const void *)material,
-            material && material->info.name ? material->info.name : "<null>",
-            color.packed,
-            style,
-            x, y, xScale, yScale);
-    fclose(f);
-    traceCount++;
-#else
-    (void)text;
-    (void)font;
-    (void)material;
-    (void)color;
-    (void)style;
-    (void)x;
-    (void)y;
-    (void)xScale;
-    (void)yScale;
-#endif
-}
-
-static void RB_X64TraceGlyph(const char *text, int ch, const Glyph *glyph,
-                             float glyphX, float glyphY, float w, float h, GfxColor color)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 80) {
-        return;
-    }
-
-    f = fopen("x64_glyph_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f, "glyph[%d] text='%.48s' ch=%d glyph=%p letter=%u x0=%d y0=%d dx=%u size=%ux%u st=(%.4f,%.4f %.4f,%.4f) draw=(%.1f,%.1f %.1fx%.1f) color=0x%08x\n",
-            traceCount,
-            text ? text : "<null>",
-            ch,
-            (const void *)glyph,
-            glyph ? glyph->letter : 0,
-            glyph ? (int)glyph->x0 : 0,
-            glyph ? (int)glyph->y0 : 0,
-            glyph ? (unsigned)glyph->dx : 0,
-            glyph ? (unsigned)glyph->pixelWidth : 0,
-            glyph ? (unsigned)glyph->pixelHeight : 0,
-            glyph ? glyph->s0 : 0.0f,
-            glyph ? glyph->t0 : 0.0f,
-            glyph ? glyph->s1 : 0.0f,
-            glyph ? glyph->t1 : 0.0f,
-            glyphX, glyphY, w, h,
-            color.packed);
-    fclose(f);
-    traceCount++;
-#else
-    (void)text;
-    (void)ch;
-    (void)glyph;
-    (void)glyphX;
-    (void)glyphY;
-    (void)w;
-    (void)h;
-    (void)color;
-#endif
-}
-
 #define RB_DVAR(imp) (*(const dvar_t **)(imp))
 
 static int RB_TextTraceContains(const char *text, const char *needle)
@@ -227,6 +139,7 @@ static void diag_rb_frame_start(void)
 }
 
 extern int rb_rdsl_call_count;
+extern int rb_waterSceneCopied;
 extern int g_dip_gl_draw;
 extern int g_rb_endsurface_count;
 extern int g_rb_endsurface_draw;
@@ -868,6 +781,17 @@ static void RB_EndFrame_real(void)
 #endif
         hr = ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *))(vtable[0x44 / 4]))(device, NULL, NULL, NULL, NULL);
 
+#ifdef GFX_REAL_D3D9
+    {
+        /* a result other than S_OK, once each: S_PRESENT_OCCLUDED (0x08760868)
+         * succeeds without showing the frame (r_gfxApi d3d12's black screen) */
+        static HRESULT s_lastPresentHr;
+
+        if (hr != 0 && hr != s_lastPresentHr)
+            ri.Printf(0, "Direct3DDevice9::Present returned 0x%08x\n", (unsigned)hr);
+        s_lastPresentHr = hr;
+    }
+#endif
     if (hr < 0) {
         if (hr != (HRESULT)0x88760868) {
             R_Error(0, "Direct3DDevice9::Present failed: %s\n", R_ErrorDescription(hr));
@@ -903,7 +827,7 @@ void RB_InitSceneViewport(void);
 
 void RB_InitBackendGlobalStructs(void)
 {
-    memset(&backEnd, 0, 0x36e90);
+    memset(&backEnd, 0, COD2_SIZEOF_1_3(backEnd, 0x36e90));
     *(int *)&backEnd.worldEntity = 3;
     backEnd.resolvedPostSunTarget = (GfxRenderTargetId)(0xe);
     backEnd.resolvedSceneTarget = (GfxRenderTargetId)(0xe);
@@ -1426,7 +1350,7 @@ static void RB_SetLightPropertiesCmd(GfxRenderCommandExecState *execState)
     *(int *)&backEnd.light[idx].specular[2] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[2];
     *(int *)&backEnd.light[idx].specular[3] = *(int *)&((GfxCmdSetLightProperties *)cmd)->specular[3];
 
-    *(int *)&backEnd.light[idx].def = (int)(((GfxCmdSetLightProperties *)cmd)->lightDef);
+    *(void **)&backEnd.light[idx].def = (void *)((GfxCmdSetLightProperties *)cmd)->lightDef;
 
     *(int *)&backEnd.light[idx].position[0] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[0];
     *(int *)&backEnd.light[idx].position[1] = *(int *)&((GfxCmdSetLightProperties *)cmd)->position[1];
@@ -1619,6 +1543,7 @@ static void RB_RenderDrawSurfList(GfxDrawSurf *drawSurfs, int drawSurfCount,
     GfxEntity *entities;
 
     rb_rdsl_call_count++;
+    rb_waterSceneCopied = 0;   /* r_water copies the scene once per list, rb_shade.c */
 
     backEnd.currentEntity = &backEnd.worldEntity;
     backEnd.currentEntityLighting = NULL;
@@ -1681,7 +1606,7 @@ sort_changed:
             const char *nm = material ? *(const char **)material : "(nomat)";
             const unsigned *w = (const unsigned *)material;
             fprintf(stderr, "[MATDIAG] surf#%d mat=%p name='%.24s' tt=%d | +30..+4c: %08x %08x %08x %08x %08x %08x %08x %08x\n",
-                    md, (void *)material, (nm && (unsigned)nm > 0x10000) ? nm : "(badptr)", techType,
+                    md, (void *)material, (nm && (uintptr_t)nm > 0x10000) ? nm : "(badptr)", techType,
                     w[0x30 / 4], w[0x34 / 4], w[0x38 / 4], w[0x3c / 4], w[0x40 / 4], w[0x44 / 4], w[0x48 / 4], w[0x4c / 4]);
             fflush(stderr);
             md++;
@@ -2357,7 +2282,7 @@ static void RB_DrawSpriteCmd(GfxRenderCommandExecState *execState)
     byte *cmd;
     const Material *spriteMaterial;
     char *t = (char *)&tess;
-    byte entity[0x74];
+    byte entity[sizeof(GfxEntity)];
 
     cmd = (byte *)execState->cmd;
 
@@ -2382,7 +2307,7 @@ static void RB_DrawSpriteCmd(GfxRenderCommandExecState *execState)
     ((GfxEntity *)entity)->origin[1] = ((GfxCmdDrawSprite *)cmd)->pos[1];
     ((GfxEntity *)entity)->origin[2] = ((GfxCmdDrawSprite *)cmd)->pos[2];
 
-    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((int)(uintptr_t)((GfxCmdDrawSprite *)cmd)->material);
+    ((GfxEntity *)entity)->customMaterial = (MaterialHandle)((GfxCmdDrawSprite *)cmd)->material;
 
     ((GfxEntity *)entity)->reType = (refEntityType_t)(4);
 
@@ -3472,8 +3397,6 @@ static void RB_BlendSavedScreenCmd(GfxRenderCommandExecState *execState)
     int alphaByte;
     D3DCOLOR blendColor;
     const Material *blendMaterial;
-    float screenWidth, screenHeight;
-    float pow2Width, pow2Height;
 
     cmd = (byte *)execState->cmd;
 
@@ -3500,32 +3423,19 @@ static void RB_BlendSavedScreenCmd(GfxRenderCommandExecState *execState)
 
     alphaByte = (int)floorf(alphaScaled + 0.5f);
 
-    {
-        byte colorBytes[4];
-        colorBytes[0] = (byte)alphaByte;
-        colorBytes[1] = 0xFF;
-        colorBytes[2] = 0xFF;
-        colorBytes[3] = 0xFF;
-        blendColor = *(D3DCOLOR *)colorBytes;
-    }
+    /* 1.3 (gfx_d3d_mp_x86_s.dll 0x10031180): the fade as the color's alpha over
+     * white, and the whole screen-sized image, 0..1 (the Mac port's power-of-two
+     * coordinates drew it flipped and stretched). This engine's packed colors keep
+     * alpha in byte 0 (R_ConvertColorToBytes), where 1.3's keep it in byte 3 */
+    blendColor = 0xffffff00 | (byte)alphaByte;
 
     backEnd.currentFeedbackImage = dx.renderTargets[R_RENDERTARGET_SAVED_SCREEN].image;
 
     blendMaterial = ((r_global_permanent_t *)rgp)->shellShockMaterial;
 
-    {
-        unsigned int sw = (unsigned int)dxState.renderTargetWidth;
-        unsigned int sh = (unsigned int)dxState.renderTargetHeight;
-        screenWidth = (float)sw;
-        screenHeight = (float)sh;
-        pow2Width = (float)nextPow2(sw);
-        pow2Height = (float)nextPow2(sh);
-    }
-
     RB_DrawStretchPic(blendMaterial,
-                      0.0f, 0.0f, screenWidth, screenHeight,
-                      0.0f, screenHeight / pow2Height,
-                      screenWidth / pow2Width, 0.0f,
+                      0.0f, 0.0f, (float)dxState.renderTargetWidth, (float)dxState.renderTargetHeight,
+                      0.0f, 0.0f, 1.0f, 1.0f,
                       blendColor, (GfxPrimStatsTarget)10);
 
 advance:
@@ -3709,7 +3619,6 @@ static void RB_BACKEND_REGPARM3_SSE_ABI RB_DrawTextWithCursor_impl(const char *t
             h = (float)glyph->pixelHeight * yScale;
             w = (float)glyph->pixelWidth * xScale;
             if (count == 0) {
-                RB_X64TraceGlyph(text, ch, glyph, glyphX, glyphY, w, h, newColor);
             }
             if (traceText && count == 0) {
                 printf("[textcmd-glyph0] ch=%d glyph=(%d,%d %dx%d) draw=(%.1f,%.1f %.1fx%.1f) st=(%.3f,%.3f %.3f,%.3f) color=0x%08x mat=%s\n",
@@ -3793,8 +3702,6 @@ static void RB_DrawTextCmd(GfxRenderCommandExecState *execState)
     int cursorPos = cmd->cursorPos;
     int cursor = (signed char)cmd->cursor;
 
-    RB_X64TraceText(text, font, font ? (const Material *)font->material : NULL,
-                    color, style, x, y, xScale, yScale);
 
     if (RB_ShouldTraceTextCmd(text)) {
         printf("[textcmd-back] cmd=%p bytes=%u text='%.96s' xy=(%.1f,%.1f) scale=(%.3f,%.3f) color=0x%08x bytes=(%u,%u,%u,%u) style=%d max=%d cursor=%d/%d font=%p\n",
@@ -3929,13 +3836,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
 
                 backEnd.currentFeedbackImage = backEnd.glowImage[glowIndex];
 
-                {
-                    float pw = (float)nextPow2((unsigned int)dxState.renderTargetWidth);
-                    float ph = (float)nextPow2((unsigned int)dxState.renderTargetHeight);
-                    RB_DrawStretchPic(glowMaterial, 0, 0, sw, sh,
-                                      0, sh / ph, sw / pw, 0, 0xffffffff, (GfxPrimStatsTarget)10);
-                    RB_EndSurface();
-                }
+                /* the whole glow image, 0..1, as 1.3 (gfx_d3d_mp_x86_s.dll 0x100309cc) */
+                RB_DrawStretchPic(glowMaterial, 0, 0, sw, sh,
+                                  0, 0, 1.0f, 1.0f, 0xffffffff, (GfxPrimStatsTarget)10);
+                RB_EndSurface();
 
                 glowIndex = 1 - glowIndex;
             }
@@ -3961,6 +3865,7 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
                 float virtualWidth = GetVirtualWidthFromRealWidth(3.0f);
                 D3DCOLOR blurColor = 0xffffffff;
 
+                /* 1.3 (0x10030b70) puts the fade in the alpha byte: byte 0 here */
                 if (totalBlur > virtualWidth) {
                     int alpha = (int)floorf(totalBlur / virtualWidth * 255.0f + 0.5f);
                     blurColor = (blurColor & 0xffffff00) | (alpha & 0xff);
@@ -3976,11 +3881,10 @@ static void RB_ApplyLatePostEffectsCmd(GfxRenderCommandExecState *execState)
                         const Material *blurMaterial = ((r_global_permanent_t *)rgp)->feedbackBlendMaterial;
                         float sw = (float)dxState.renderTargetWidth;
                         float sh = (float)dxState.renderTargetHeight;
-                        float pw = (float)nextPow2((unsigned int)dxState.renderTargetWidth);
-                        float ph = (float)nextPow2((unsigned int)dxState.renderTargetHeight);
 
+                        /* the screen-sized blurred image whole, 0..1, as 1.3 (0x10030c26) */
                         RB_DrawStretchPic(blurMaterial, 0, 0, sw, sh,
-                                          0, sh / ph, sw / pw, 0, blurColor, (GfxPrimStatsTarget)10);
+                                          0, 0, 1.0f, 1.0f, blurColor, (GfxPrimStatsTarget)10);
                         RB_EndSurface();
                     }
                 }

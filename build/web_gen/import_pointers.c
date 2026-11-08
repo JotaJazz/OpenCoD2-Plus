@@ -272,7 +272,7 @@ extern void __ZTV22CVAOPacketProgrammable(void);
 extern void __ZTV22IDirect3DVertexShader9(void);
 extern void __ZTV23CVAOPacketFixedFunction(void);
 extern void __ZTV23IDirect3DVolumeTexture9(void);
-extern void __ZTV5Flash(void);
+extern char __ZTV5Flash[];   /* data: wasm-ld tells functions from data */
 extern void __ZTV7CBaseVA(void);
 extern void __ZTV8IUnknown(void);
 extern unsigned char alwaysfails[];
@@ -293,7 +293,7 @@ extern unsigned char bg_foliagesnd_slowinterval[];
 extern unsigned char bg_iNumWeapons[];
 extern unsigned char bg_itemlist[];
 extern unsigned char bg_ladder_yawcap[];
-extern void bg_numItems(void);
+extern char bg_numItems[];   /* data: wasm-ld tells functions from data */
 extern unsigned char bg_prone_yawcap[];
 extern unsigned char bg_swingSpeed[];
 extern unsigned char bgs[];
@@ -480,18 +480,18 @@ extern unsigned char clc[];
 extern unsigned char clients[];
 extern unsigned char cls[];
 extern unsigned char cm[];
-extern void colorBlack(void);
-extern void colorBlue(void);
-extern void colorCyan(void);
-extern void colorGreen(void);
-extern void colorLtCyan(void);
-extern void colorLtGrey(void);
-extern void colorLtYellow(void);
-extern void colorMagenta(void);
-extern void colorMdCyan(void);
-extern void colorRed(void);
-extern void colorWhite(void);
-extern void colorYellow(void);
+extern char colorBlack[];   /* data: wasm-ld tells functions from data */
+extern char colorBlue[];   /* data: wasm-ld tells functions from data */
+extern char colorCyan[];   /* data: wasm-ld tells functions from data */
+extern char colorGreen[];   /* data: wasm-ld tells functions from data */
+extern char colorLtCyan[];   /* data: wasm-ld tells functions from data */
+extern char colorLtGrey[];   /* data: wasm-ld tells functions from data */
+extern char colorLtYellow[];   /* data: wasm-ld tells functions from data */
+extern char colorMagenta[];   /* data: wasm-ld tells functions from data */
+extern char colorMdCyan[];   /* data: wasm-ld tells functions from data */
+extern char colorRed[];   /* data: wasm-ld tells functions from data */
+extern char colorWhite[];   /* data: wasm-ld tells functions from data */
+extern char colorYellow[];   /* data: wasm-ld tells functions from data */
 extern unsigned char com_dedicated[];
 extern unsigned char com_developer[];
 extern unsigned char com_errorEntered[];
@@ -801,7 +801,7 @@ extern unsigned char scrVarPub[];
 extern unsigned char scrVmPub[];
 extern unsigned char scr_const[];
 extern unsigned char sharedUiInfo[];
-extern void singleClientEvents(void);
+extern char singleClientEvents[];   /* data: wasm-ld tells functions from data */
 extern unsigned char snd_bits[];
 extern unsigned char snd_enableReverb[];
 extern unsigned char snd_errorOnMissing[];
@@ -863,8 +863,8 @@ extern unsigned char theFxScheduler[];
 extern unsigned char updateScreenCalled[];
 extern unsigned char var_typename[];
 extern unsigned char vbr_nb_thresh[];
-extern void vec3_colorintensity(void);
-extern void vec3_origin(void);
+extern char vec3_colorintensity[];   /* data: wasm-ld tells functions from data */
+extern char vec3_origin[];   /* data: wasm-ld tells functions from data */
 extern unsigned char vidConfig[];
 extern unsigned char vid_xpos[];
 extern unsigned char vid_ypos[];

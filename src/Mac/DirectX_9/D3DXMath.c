@@ -117,7 +117,7 @@ D3DXMATRIX *D3DXMatrixMultiply(D3DXMATRIX *pOut, const D3DXMATRIX *pM1, const D3
     return pOut;
 }
 
-int D3DXVec4Transform(float (*pOut)[10][16], const D3DXVECTOR4 *pV, const D3DXMATRIX *pM)
+intptr_t D3DXVec4Transform(float (*pOut)[10][16], const D3DXVECTOR4 *pV, const D3DXMATRIX *pM)
 {
     float *out;
     const float *matrix;
@@ -130,7 +130,7 @@ int D3DXVec4Transform(float (*pOut)[10][16], const D3DXVECTOR4 *pV, const D3DXMA
     out[2] = pV->x * matrix[2] + pV->y * matrix[6] + pV->z * matrix[10] + pV->w * matrix[14];
     out[3] = pV->x * matrix[3] + pV->y * matrix[7] + pV->z * matrix[11] + pV->w * matrix[15];
 
-    return (int)pOut;
+    return (intptr_t)pOut;
 }
 
 const char *DXGetErrorDescription9A(HRESULT hr)

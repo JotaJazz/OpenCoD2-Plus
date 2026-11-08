@@ -10,7 +10,8 @@ scripts/, test/, docs/, cmake/, mods/, third_party/) anywhere in backticks
 that does not exist; personal data (a Windows drive path but the
 C:\\path\\to\\ placeholder, /home/<name> or /mnt/<drive>, an IPv4 address
 but 127.0.0.1 and 0.0.0.0, a CD key or the word codkey); a stage
-of docs/ai/PROJECT_MEMORY.md with more than 3 bullets. Exits with 0 when
+of docs/ai/PROJECT_MEMORY.md with more than 3 bullets. Paths in the memory and in a
+superseded ADR are not checked: they describe what was. Exits with 0 when
 there are none.
 """
 import os, re, sys
@@ -46,6 +47,8 @@ def check_file(root, path):
     with open(os.path.join(root, path), encoding='utf-8') as f:
         lines = f.read().split('\n')
     here = os.path.dirname(os.path.join(root, path))
+    # what was: the memory's stages and a superseded decision may name removed paths
+    historical = path == MEMORY or any(l.startswith('- Status: Superseded') for l in lines[:6])
     fenced = False
     bullets = None
     for n, line in enumerate(lines, 1):
@@ -76,7 +79,7 @@ def check_file(root, path):
                 token = token.strip('\'"').split('=')[-1].strip('\'"').split('#')[0].rstrip('.,:;)')
                 if not token.startswith(REPO_DIRS) or any(c in token for c in '*<>{}$|'):
                     continue
-                if path != MEMORY and not os.path.exists(os.path.join(root, token)):
+                if not historical and not os.path.exists(os.path.join(root, token)):
                     problems.append(where + 'no such path %s' % token)
     return problems
 

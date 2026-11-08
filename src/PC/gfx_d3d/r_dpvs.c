@@ -911,7 +911,7 @@ static void R_DPVS_REGPARM3_ABI R_AddVisibleSurfacesInCell_impl(const GfxCell *c
 
                 if (dpvsG.drawXmodels) {
 
-                    int lodLevel = *(int *)&ent->lighting.dx7.sunVisibility;
+                    int lodLevel = *(int *)&ent->lighting.baseCoords[1];  /* the dx7 view's sunVisibility on x86 */
                     if (lodLevel > 1) {
 
                         float *bounds = (float *)modelRef->mins;
@@ -1958,7 +1958,7 @@ static void R_AddWorldSurfacesDpvs_impl(const GfxViewParms *viewParms, int camer
                 void *bmodel = (void *)sceneEnt->u.data;
                 vec3_t boundsMin, boundsMax, transformed;
 
-                if (!bmodel || (unsigned int)bmodel < 0x1000)
+                if (!bmodel || (uintptr_t)bmodel < 0x1000)
                     continue;
 
                 ClearBounds(boundsMin, boundsMax);

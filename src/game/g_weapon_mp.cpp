@@ -118,6 +118,15 @@ vec2_t fixed_spread_grid[] =
 	{ -1.0, -1.0 },
 };
 
+#ifdef LIBCOD
+// g_shotgun_spread_fix: CoD2x's two 8-pellet patterns, as fractions of the spread
+static const vec2_t shotgun_spread_patterns[2][8] =
+{
+	{ { 0.0, -0.8 }, { 0.0, 0.0 }, { 0.0, 0.4 }, { 0.0, -0.4 }, { -0.4, 0.0 }, { 0.4, 0.0 }, { -0.6, 0.6 }, { 0.6, 0.6 } },
+	{ { -0.1, 0.0 }, { 0.1, 0.0 }, { 0.0, 0.5 }, { 0.0, -0.5 }, { -0.8, 0.6 }, { 0.8, 0.6 }, { -0.8, -0.6 }, { 0.8, -0.6 } },
+};
+#endif
+
 /*
 ===============
 Bullet_Endpos
@@ -589,6 +598,10 @@ void gunrandom( float *x, float *y )
 	*y = r * sinT;
 }
 
+#ifdef COD2_PLUS
+static void G_PlusSetPose( gentity_t *ent, const plusPose_t *pose );
+#endif
+
 /*
 ===============
 G_AntiLag_RestoreClientPos
@@ -615,7 +628,16 @@ void G_AntiLag_RestoreClientPos( AntilagClientStore *antilagStore )
 		SV_UnlinkEntity(&g_entities[client]);
 		memcpy(g_entities[client].r.currentOrigin, antilagStore->realClientPositions[client], sizeof(g_entities[client].r.currentOrigin));
 		SV_LinkEntity(&g_entities[client]);
+
+#ifdef COD2_PLUS
+		if ( antilagStore->poseMoved[client] )
+			G_PlusSetPose(&g_entities[client], &antilagStore->realPoses[client]);
+#endif
 	}
+
+#ifdef COD2_PLUS
+	SV_ResetSkeletonCache();
+#endif
 }
 
 /*
@@ -640,6 +662,84 @@ void CalcMuzzlePoints( gentity_t *ent, weaponParms *wp )
 	AngleVectors(viewang, wp->forward, wp->right, wp->up);
 	G_GetPlayerViewOrigin(ent, wp->muzzleTrace);
 }
+
+#ifdef COD2_PLUS
+// a second of frames at 125 Hz, more than the antilag goes back
+#define PLUS_POSE_FRAMES 128
+static plusPose_t plusPoses[MAX_CLIENTS][PLUS_POSE_FRAMES];
+static int plusPoseNext[MAX_CLIENTS];
+
+static void G_PlusGetPose( gentity_t *ent, plusPose_t *pose )
+{
+	clientInfo_t *ci = &level_bgs.clientinfo[ent->s.number];
+
+	pose->time = level.time;
+	VectorCopy(ent->r.currentAngles, pose->currentAngles);
+	pose->eFlags = ent->s.eFlags;
+	pose->fTorsoHeight = ent->s.fTorsoHeight;
+	pose->fTorsoPitch = ent->s.fTorsoPitch;
+	pose->fWaistPitch = ent->s.fWaistPitch;
+	pose->legsYaw = ci->legs.yawAngle;
+	pose->torsoYaw = ci->torso.yawAngle;
+	pose->torsoPitch = ci->torso.pitchAngle;
+	pose->lerpLean = ci->lerpLean;
+	VectorCopy(ci->playerAngles, pose->playerAngles);
+	pose->control = ci->control;
+}
+
+static void G_PlusSetPose( gentity_t *ent, const plusPose_t *pose )
+{
+	clientInfo_t *ci = &level_bgs.clientinfo[ent->s.number];
+
+	VectorCopy(pose->currentAngles, ent->r.currentAngles);
+	ent->s.eFlags = pose->eFlags;
+	ent->s.fTorsoHeight = pose->fTorsoHeight;
+	ent->s.fTorsoPitch = pose->fTorsoPitch;
+	ent->s.fWaistPitch = pose->fWaistPitch;
+	ci->legs.yawAngle = pose->legsYaw;
+	ci->torso.yawAngle = pose->torsoYaw;
+	ci->torso.pitchAngle = pose->torsoPitch;
+	ci->lerpLean = pose->lerpLean;
+	VectorCopy(pose->playerAngles, ci->playerAngles);
+	ci->control = pose->control;
+}
+
+/*
+===============
+G_PlusRecordPose
+
+Plus: keeps a player's pose at the end of each frame. The antilag moved only
+the origin: the yaw, lean, aim and stance flags of the hitboxes stayed those
+of the present, so a shot at a player who leaned out and back missed what the
+shooter saw. The bone controllers reach their angles over time, as the client
+draws them, so their state is kept as it is, not rebuilt from a playerstate
+(docs/architecture/plus-protocol.md#antilag)
+===============
+*/
+void G_PlusRecordPose( gentity_t *ent )
+{
+	int clientNum = ent->s.number;
+
+	G_PlusGetPose(ent, &plusPoses[clientNum][plusPoseNext[clientNum] % PLUS_POSE_FRAMES]);
+	plusPoseNext[clientNum]++;
+}
+
+// the newest pose kept at gameTime or before it, or NULL
+static const plusPose_t *G_PlusFindPose( int clientNum, int gameTime )
+{
+	for ( int i = 1; i <= PLUS_POSE_FRAMES && i <= plusPoseNext[clientNum]; i++ )
+	{
+		const plusPose_t *pose = &plusPoses[clientNum][(plusPoseNext[clientNum] - i) % PLUS_POSE_FRAMES];
+
+		if ( pose->time > level.time )
+			return NULL; // from an earlier map
+		if ( pose->time <= gameTime )
+			return pose;
+	}
+
+	return NULL;
+}
+#endif
 
 /*
 ===============
@@ -692,7 +792,23 @@ void G_AntiLagRewindClientPos( int gameTime, AntilagClientStore *antilagStore )
 		SV_LinkEntity(&g_entities[client]);
 
 		antilagStore->clientMoved[client] = true;
+
+#ifdef COD2_PLUS
+		const plusPose_t *pose = G_PlusFindPose(client, gameTime);
+
+		if ( pose )
+		{
+			G_PlusGetPose(&g_entities[client], &antilagStore->realPoses[client]);
+			G_PlusSetPose(&g_entities[client], pose);
+			antilagStore->poseMoved[client] = true;
+		}
+#endif
 	}
+
+#ifdef COD2_PLUS
+	// the skeletons computed this frame are of the present poses
+	SV_ResetSkeletonCache();
+#endif
 }
 
 /*
@@ -949,6 +1065,31 @@ void G_BulletFireSpread( const gentity_t *weaponEnt, gentity_t *attacker, const 
 #ifdef LIBCOD
 	if ( attacker->client )
 		range *= libcodClients[attacker->s.number].fireRangeScale;
+#endif
+
+#ifdef LIBCOD
+	// every pellet on one of two fixed patterns, turned at random per shot, so
+	// the same shot does not kill or miss by chance
+	if ( g_shotgun_spread_fix->current.boolean && wp->weapDef->shotCount == 8 )
+	{
+		const vec2_t *pattern = shotgun_spread_patterns[randomf() < 0.5];
+		float aimOffset = tan( spread * DEG_TO_RAD ) * range;
+		float s, c;
+
+		FastSinCos(randomf() * 2 * M_PI, &s, &c);
+
+		for ( int i = 0; i < 8; i++ )
+		{
+			float right = (pattern[i][0] * c - pattern[i][1] * s) * aimOffset;
+			float up = (pattern[i][0] * s + pattern[i][1] * c) * aimOffset;
+
+			VectorMA(wp->muzzleTrace, range, wp->forward, end);
+			VectorMA(end, right, wp->right, end);
+			VectorMA(end, up, wp->up, end);
+			Bullet_Fire_Extended(weaponEnt, attacker, start, end, 1.0, 0, wp, weaponEnt, gameTime);
+		}
+		return;
+	}
 #endif
 
 	for ( int i = 0; i < shotCount; i++ )

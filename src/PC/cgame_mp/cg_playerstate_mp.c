@@ -22,40 +22,41 @@ void CG_Respawn(void);
 void CG_DamageFeedback(int yawByte, int pitchByte, int damage);
 void CG_TransitionPlayerState(playerState_t *ps, playerState_t *ops);
 
-#define CG_SNAP_PTR 0x20
-#define CG_OFF_25BB0 0x25bb0
-#define CG_OFF_25BBC 0x25bbc
-#define CG_OFF_25BC4 0x25bc4
-#define CG_OFF_25C94 0x25c94
-#define CG_OFF_25C98 0x25c98
-#define CG_OFF_28490 0x28490
-#define CG_OFF_284C4 0x284c4
-#define CG_OFF_285D4 0x285d4
-#define CG_OFF_285E0 0x285e0
-#define CG_OFF_285EC 0x285ec
-#define CG_OFF_28594 0x28594
-#define CG_OFF_285A0 0x285a0
-#define CG_OFF_2826C 0x2826c
-#define CG_OFF_2BDE8 0x2bde8
-#define CG_OFF_2BDEC 0x2bdec
-#define CG_OFF_2BE30 0x2be30
-#define CG_OFF_2BE48 0x2be48
-#define CG_OFF_2BE50 0x2be50
-#define CG_OFF_2BE54 0x2be54
-#define CG_OFF_2BE70 0x2be70
-#define CG_OFF_2BE74 0x2be74
-#define CG_OFF_2BE80 0x2be80
-#define CG_OFF_2BED4 0x2bed4
-#define CG_OFF_2BF0C 0x2bf0c
-#define CG_OFF_2BF10 0x2bf10
-#define CG_OFF_2BF14 0x2bf14
-#define CG_OFF_2BF1C 0x2bf1c
-#define CG_OFF_2C030 0x2c030
-#define CG_OFF_2C03C 0x2c03c
-#define CG_OFF_2C0A4 0x2c0a4
-#define CG_OFF_2C0B0 0x2c0b0
-#define CG_OFF_2C50C 0x2c50c
-#define CG_OFF_2CD10 0x2cd10
+/* the cg_t fields at 1.3's x86 offsets (names kept for the code below) */
+#define CG_SNAP_PTR ((int)offsetof(cg_t, snap))
+#define CG_OFF_25BB0 ((int)offsetof(cg_t, time))
+#define CG_OFF_25BBC ((int)offsetof(cg_t, mapRestart))
+#define CG_OFF_25BC4 ((int)offsetof(cg_t, predictedPlayerState))
+#define CG_OFF_25C94 ((int)offsetof(cg_t, predictedPlayerState.offHandIndex))
+#define CG_OFF_25C98 ((int)offsetof(cg_t, predictedPlayerState.weapon))
+#define CG_OFF_28490 ((int)offsetof(cg_t, playerEntity.fLastWeaponPosFrac))
+#define CG_OFF_284C4 ((int)offsetof(cg_t, predictedError))
+#define CG_OFF_285D4 ((int)offsetof(cg_t, swayViewAngles))
+#define CG_OFF_285E0 ((int)offsetof(cg_t, swayAngles))
+#define CG_OFF_285EC ((int)offsetof(cg_t, swayOffset))
+#define CG_OFF_28594 ((int)offsetof(cg_t, refdef.viewaxis[0]))
+#define CG_OFF_285A0 ((int)offsetof(cg_t, refdef.viewaxis[1]))
+#define CG_OFF_2826C ((int)offsetof(cg_t, predictedPlayerEntity))
+#define CG_OFF_2BDE8 ((int)offsetof(cg_t, cursorHintIcon))
+#define CG_OFF_2BDEC ((int)offsetof(cg_t, cursorHintTime))
+#define CG_OFF_2BE30 ((int)offsetof(cg_t, proneBlockedEndTime))
+#define CG_OFF_2BE48 ((int)offsetof(cg_t, attackerTime))
+#define CG_OFF_2BE50 ((int)offsetof(cg_t, weaponSelect))
+#define CG_OFF_2BE54 ((int)offsetof(cg_t, weaponSelectTime))
+#define CG_OFF_2BE70 ((int)offsetof(cg_t, equippedOffHand))
+#define CG_OFF_2BE74 ((int)offsetof(cg_t, viewDamage))
+#define CG_OFF_2BE80 ((int)offsetof(cg_t, viewDamage[1]))
+#define CG_OFF_2BED4 ((int)offsetof(cg_t, damageTime))
+#define CG_OFF_2BF0C ((int)offsetof(cg_t, v_dmg_time))
+#define CG_OFF_2BF10 ((int)offsetof(cg_t, v_dmg_pitch))
+#define CG_OFF_2BF14 ((int)offsetof(cg_t, v_dmg_roll))
+#define CG_OFF_2BF1C ((int)offsetof(cg_t, xyspeed))
+#define CG_OFF_2C030 ((int)offsetof(cg_t, kickAVel))
+#define CG_OFF_2C03C ((int)offsetof(cg_t, kickAngles))
+#define CG_OFF_2C0A4 ((int)offsetof(cg_t, vGunOffset))
+#define CG_OFF_2C0B0 ((int)offsetof(cg_t, vGunSpeed))
+#define CG_OFF_2C50C ((int)offsetof(cg_t, cameraShake))
+#define CG_OFF_2CD10 ((int)offsetof(cg_t, adsViewErrorDone))
 
 #define CENT_EVENT_PARM 0x190
 

@@ -1,44 +1,20 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "version": 2,
   "configurePresets": [
     {
       "name": "msvc-client",
-      "displayName": "Windows MSVC client (x86, Ninja, Debug)",
-      "description": "Native Windows cod2_win32.exe via cl.exe. Run from an x86 Native Tools for VS command prompt.",
+      "displayName": "Windows client on the MSVC ABI (clang + lld-link, Ninja)",
+      "description": "cod2_win32.exe with clang targeting i686-pc-windows-msvc. Run from an x86 Native Tools for VS command prompt (vcvars32.bat); clang from VS's C++ Clang tools (-DCOD2_CLANG_DIR to override); the SDL2 VC package under third_party/SDL2-<version>/.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/msvc",
       "cacheVariables": {
-        "COD2_WIN_MSVC": "ON",
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "msvc-client-release",
-      "displayName": "Windows MSVC client (x86, Ninja, Release /O2)",
-      "description": "Optimized native Windows cod2_win32.exe. Add -DCOD2_SDL2_STATIC=ON for an optimized standalone exe. NOTE: /O2 on decompiler-faithful code is less battle-tested than the Debug build. Run from an x86 Native Tools for VS command prompt.",
-      "inherits": "msvc-client",
-      "binaryDir": "${sourceDir}/build/msvc-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "msvc-client-x64",
-      "displayName": "Windows MSVC client (x64 port, Ninja, Debug) -- COMPILE ONLY",
-      "description": "IN-PROGRESS x86_64 port. Compiles the engine source set (cod2_msvc_objs) under the x64 cl to measure the x64 error surface; does NOT link/run yet (needs the Stage 2 typed-data migration). Run from an x64 Native Tools for VS command prompt.",
-      "inherits": "msvc-client",
-      "binaryDir": "${sourceDir}/build/msvc-x64",
-      "cacheVariables": {
-        "COD2_X64": "ON"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain-msvc-clang.cmake",
+        "COD2_WIN32_CLIENT": "ON",
+        "COD2_WIN32_REAL_D3D9": "ON"
       }
     }
   ],
   "buildPresets": [
-    { "name": "msvc-client", "configurePreset": "msvc-client" },
-    { "name": "msvc-client-release", "configurePreset": "msvc-client-release" },
-    { "name": "msvc-client-x64", "configurePreset": "msvc-client-x64", "targets": ["cod2_msvc_objs"] }
+    { "name": "msvc-client", "configurePreset": "msvc-client", "targets": ["cod2_win32"] }
   ]
 }

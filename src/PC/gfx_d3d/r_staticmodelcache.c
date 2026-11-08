@@ -113,46 +113,36 @@ void R_InitStaticModelCache(void)
     }
 }
 
-static __attribute_regparm__(3) void SMC_FreeCachedSurface_r(static_model_cache_t *cache, void *tree, int nodeIndex, int levelsToLeaf)
+static __attribute_regparm__(3) void SMC_FreeCachedSurface_r(static_model_cache_t *cache, void *treeData, int nodeIndex, int levelsToLeaf)
 {
-    char *t = (char *)tree;
+    /* nodes and leafs by their types: 1.3's offsets (+0xc, leafIdx * 16 - 0x78) are 32 bits' */
+    static_model_tree_t *tree = (static_model_tree_t *)treeData;
+    static_model_node_t *node = &tree->nodes[nodeIndex];
+    static_model_leaf_t *leaf = &tree->leafs[((nodeIndex + 1) << levelsToLeaf) - 16];
+    GfxStaticSurface *surface;
+    int lodLevel;
 
-    if (*(short *)(t + nodeIndex * 4 + 0xc) == 0) {
-        int leafIdx = (nodeIndex + 1) << levelsToLeaf;
-        char *surf = t + leafIdx * 16 - 0x80;
-        void *next = *(void **)(surf + 0xc);
-        void *prev = *(void **)(surf + 0x8);
-        *(void **)next = prev;
-        *((void **)prev + 1) = next;
+    if (node->usedVerts == 0) {
+        /* a free block: unlink its node from its free list */
+        ((static_model_node_list_t *)leaf->freenode.next)->prev = leaf->freenode.prev;
+        ((static_model_node_list_t *)leaf->freenode.prev)->next = leaf->freenode.next;
         return;
     }
 
-    *(short *)(t + nodeIndex * 4 + 0xc) = 0;
+    node->usedVerts = 0;
 
-    if (*(byte *)(t + nodeIndex * 4 + 0xe) != 0) {
-        int leafIdx = (nodeIndex + 1) << levelsToLeaf;
-        char *surf = t + leafIdx * 16 - 0x78;
-        char *header = *(char **)(surf + 0xc);
-
-        {
-            int lodLevel = 0;
-            char *slot = header;
-            while (lodLevel < 4) {
-                if (*(void **)(slot + lodLevel * 4) == (void *)surf) {
-                    *(void **)(slot + lodLevel * 4) = NULL;
-                    break;
-                }
-                lodLevel++;
+    if (node->inuse) {
+        surface = leaf->surf.surface;
+        for (lodLevel = 0; lodLevel < 4; lodLevel++) {
+            if (surface->cachedLods[lodLevel] == &leaf->surf) {
+                surface->cachedLods[lodLevel] = NULL;
+                break;
             }
         }
 
-        *(int *)((char *)cache + 0xc430) -= (1 << (levelsToLeaf + 5));
-        {
-            short vertCount = *(short *)(*(char **)(surf + 8) + 2);
-            *(int *)((char *)cache + 0xc434) -= vertCount;
-        }
-
-        *(byte *)(t + nodeIndex * 4 + 0xe) = 0;
+        cache->stats.allocatedVerts -= (1 << (levelsToLeaf + 5));
+        cache->stats.usedVerts -= leaf->surf.xsurf->vertCount;
+        node->inuse = 0;
         return;
     }
 
@@ -435,7 +425,7 @@ static __attribute_regparm__(2)
     list->next = (intptr_t)block;
     ((static_model_node_list_t *)block->next)->prev = (intptr_t)block;
 
-    leafIndex = (unsigned int)((char *)block - (char *)&tree->leafs[0]) >> 4;
+    leafIndex = (unsigned int)((static_model_leaf_t *)block - &tree->leafs[0]);
     buddyLeafIndex = leafIndex + (1 << (4 - listIndex));
     buddyFreenode = &tree->leafs[buddyLeafIndex].freenode;
 
@@ -504,7 +494,7 @@ GfxStaticModelSurfaceCached *R_CacheStaticModelSurface(GfxStaticSurface *staticS
         ((static_model_tree_list_t *)tree->usedlist.next)->prev = (intptr_t)&tree->usedlist;
     }
 
-    leafIndex = (unsigned int)((char *)block - (char *)&tree->leafs[0]) / 16;
+    leafIndex = (unsigned int)((static_model_leaf_t *)block - &tree->leafs[0]);
 
     nodeIndex = ((leafIndex + 16) >> (4 - listIndex)) - 1;
 
@@ -768,7 +758,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
         {
             byte *rgp2 = (byte *)imp_rgp;
             byte *world2 = (*(byte **)&((r_global_permanent_t *)rgp2)->world);
-            float *blc = (float *)((*(byte **)&((GfxWorld *)world2)->smodelInsts) + smodelIndex * 96 + 0x54);
+            float *blc = ((GfxWorld *)world2)->smodelInsts[smodelIndex].baseLightingCoords;
             float val;
 
             val = blc[0] * 32768.0f + 0.5f;
@@ -853,7 +843,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
 
                     {
                         void **ccvt = *(void ***)colorConverter;
-                        ((void(D3DVTCC *)(void *, void *, void *))ccvt[0])(colorConverter,
+                        ((void (*)(void *, void *, void *))ccvt[0])(colorConverter,   /* a C function, not COM: cdecl */
                                                                            dst2 + 0x18, src2 + 0x18);
                     }
 
@@ -1008,7 +998,7 @@ void R_SkinStaticModelCachedCmd(SkinStaticModelCachedCmd *skinCmd, SkinBuffers *
 
                     {
                         void **ccvt = *(void ***)colorConverter;
-                        ((void(D3DVTCC *)(void *, void *, void *))ccvt[0])(colorConverter,
+                        ((void (*)(void *, void *, void *))ccvt[0])(colorConverter,   /* a C function, not COM: cdecl */
                                                                            pDst + 0xc, pSrc + 0xc);
                     }
 

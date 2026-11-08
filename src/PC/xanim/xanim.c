@@ -13,7 +13,7 @@ static unsigned int g_end;
 extern void SL_RemoveRefToString(unsigned int stringValue);
 extern void SL_AddRefToString(unsigned int stringValue);
 extern const char *SL_ConvertToString(unsigned int stringValue);
-extern unsigned int Scr_AddConstString(unsigned int value);
+extern void Scr_AddConstString(unsigned int value);   /* as OpenCoD2-Plus Server defines it */
 extern void Scr_NotifyNum(int entnum, int classnum, unsigned int stringValue, unsigned int paramcount);
 static XAnimNotify g_notifyList[128];
 static int g_notifyListSize;
@@ -489,7 +489,7 @@ const char *XAnimGetAnimDebugName(const XAnim *anims, unsigned int animIndex)
 
 XAnimTree *XAnimCreateTree(XAnim *anims, Alloc_t Alloc)
 {
-    unsigned int treeSize = anims->size * 5 + 9;
+    unsigned int treeSize = offsetof(XAnimTree_s, infoArray) + anims->size * 5 + 1;  /* header: 8 bytes on 32 bits, 12 on x64 */
     XAnimTree_s *tree = (XAnimTree_s *)Alloc(treeSize);
 
     memset(tree, 0, treeSize);
@@ -827,8 +827,7 @@ identity:
 __attribute_regparm__(3) __attribute_sseregparm__
     void XAnimCalcRelDeltaParts(const XAnimParts *parts, XAnimSimpleRotPos *rotPos, int quatIndex, float weightScale, float time1, float time2)
 {
-    vec2_t q1;
-    vec2_t q2;
+    vec2_t q[2];  /* quatIndex picks one: the two must be adjacent */
     vec3_t vec1;
     vec3_t vec2;
     float *quat;
@@ -840,8 +839,8 @@ __attribute_regparm__(3) __attribute_sseregparm__
     float norm;
     float rotScale;
 
-    XAnim_CalcDeltaForTime(parts, q1, vec1, time1);
-    XAnim_CalcDeltaForTime(parts, q2, vec2, time2);
+    XAnim_CalcDeltaForTime(parts, q[0], vec1, time1);
+    XAnim_CalcDeltaForTime(parts, q[1], vec2, time2);
 
     if (parts->bLoop && time1 > time2) {
         XAnimDeltaPartTrans *trans = parts->deltaPart->trans;
@@ -857,14 +856,14 @@ __attribute_regparm__(3) __attribute_sseregparm__
     }
 
     rotScale = weightScale * 9.313794180343393e-10f;
-    rotPos->rot[0] += (q2[0] * q1[1] - q2[1] * q1[0]) * rotScale;
-    rotPos->rot[1] += (q2[0] * q1[0] + q2[1] * q1[1]) * rotScale;
+    rotPos->rot[0] += (q[1][0] * q[0][1] - q[1][1] * q[0][0]) * rotScale;
+    rotPos->rot[1] += (q[1][0] * q[0][0] + q[1][1] * q[0][1]) * rotScale;
 
     dx = vec2[0] - vec1[0];
     dy = vec2[1] - vec1[1];
     dz = vec2[2] - vec1[2];
 
-    quat = (float *)q1 + quatIndex * 2;
+    quat = q[quatIndex];
     qx = quat[0];
     qy = quat[1];
     norm = qx * qx + qy * qy;
@@ -1508,7 +1507,7 @@ void XAnimCloneAnimTree(const XAnimTree *from, XAnimTree *to)
 void XAnimFreeTree(XAnimTree *tree, Free_t Free)
 {
     XAnimTree_s *tree_s = (XAnimTree_s *)tree;
-    unsigned int treeSize = tree_s->anims->size * 5 + 9;
+    unsigned int treeSize = offsetof(XAnimTree_s, infoArray) + tree_s->anims->size * 5 + 1;
 
     XAnimClearTree(tree);
 
@@ -1740,18 +1739,6 @@ static const unsigned char *XAnimCalcGetAnimToModelLocal(const DObj *obj, const 
 /* x64 only: a size or frames pointer no real anim has (see
  * XAnimCalcAccumulateTransLocal). On 32 bits every pointer is below 4 GB, so
  * the pointer test would drop every animated channel. */
-static int XAnimCalcBadFramesLocal(unsigned int size, const void *frames)
-{
-#if defined(COD2_X64)
-    return size > 4096u || (uintptr_t)frames + 0x100000000ULL < 0x200000000ULL ||
-           (uintptr_t)frames >= 0x800000000000ULL;
-#else
-    (void)size;
-    (void)frames;
-    return 0;
-#endif
-}
-
 /* The key and lerp of a channel with size keys (frames[0..size]). At the
  * anim's end (time 1, or no frames) it is the last key, frames[size], as
  * CoD2rev-Plus's XAnimCalcNonLoopEnd reads it; the time index would stop one
@@ -1785,8 +1772,6 @@ static void XAnimCalcAccumulateFullQuatLocal(DObjAnimMat *mat, const XAnimPartQu
         float lerpFrac;
         const XQuat *frames = (const XQuat *)quat->u.frames.u.frames;
 
-        if (XAnimCalcBadFramesLocal(quat->size, frames))
-            return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
@@ -1813,8 +1798,6 @@ static void XAnimCalcAccumulateSimpleQuatLocal(DObjAnimMat *mat, const XAnimPart
         float lerpFrac;
         const XQuat2 *frames = (const XQuat2 *)quat->u.frames.u.frames2;
 
-        if (XAnimCalcBadFramesLocal(quat->size, frames))
-            return; /* x64 TODO: corrupt anim frame data (see XAnimCalcAccumulateTransLocal) */
 
         XAnimCalcGetKeyLocal(animTime, &quat->u.frames.indices, quat->size, &frameIndex, &lerpFrac);
         if (frameIndex < 0 || frameIndex >= (int)quat->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */
@@ -1835,16 +1818,6 @@ static void XAnimCalcAccumulateTransLocal(DObjAnimMat *mat, const XAnimPartTrans
             int frameIndex;
             float lerpFrac;
             const vec3_t *frames = (const vec3_t *)trans->u.frames.frames;
-
-            /* x64 TODO(root not found): some XAnimPartTrans present corrupt data here --
-               a garbage size (>4096; no real anim has that many keyframes) and/or a bad
-               frames pointer (truncated OR mid-range non-canonical). The .xanim loader is
-               x64-correct, so the corruption is post-load (anim tree/DObj bone path).
-               Skip this bone's trans accumulation to avoid dereferencing bad data. */
-            if (XAnimCalcBadFramesLocal(trans->size, frames)) {
-                mat->transWeight += weightScale;
-                return;
-            }
 
             XAnimCalcGetKeyLocal(animTime, &trans->u.frames.indices, trans->size, &frameIndex, &lerpFrac);
             if (frameIndex < 0 || frameIndex >= (int)trans->size) { frameIndex = 0; lerpFrac = 0.0f; } /* x64: guard OOB frame index */

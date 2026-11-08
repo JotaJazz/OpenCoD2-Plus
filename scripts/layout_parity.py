@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compares struct layouts between this repo's headers and CoD2rev-Plus's.
 
-    python3 scripts/layout_parity.py [--variant linux|linux-10|mingw]
+    python3 scripts/layout_parity.py [--variant linux|linux-10|mingw|linux-client-x64]
     python3 scripts/layout_parity.py --headers-a A.h --headers-b B.h --types T.txt --flags "-m32"
 
 Each line of the types file (default test/layout_parity_types.txt) is a type
@@ -20,7 +20,9 @@ os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
-PROTOCOL = {'linux': 118, 'linux-10': 115, 'mingw': 118}
+PROTOCOL = {'linux': 118, 'linux-10': 115, 'mingw': 118, 'linux-client-x64': 118}
+X64_VARIANTS = ('linux-client-x64',)
+ENGINE_VM_TYPES = ('VariableUnion', 'VariableValue', 'VariableValueInternal')
 
 
 def load_types(path):
@@ -114,6 +116,9 @@ def main():
     args = ap.parse_args()
 
     types = load_types(args.types)
+    # the engine narrows its script VM's values on x64 for src/PC/script, which a build with
+    # CoD2rev-Plus's VM (the Linux x64 client) does not compile, and nothing else of the engine uses
+    types = [t for t in types if not (args.variant in X64_VARIANTS and t[0] in ENGINE_VM_TYPES)]
     if not types:
         print(f'no types in {args.types}')
         return 1

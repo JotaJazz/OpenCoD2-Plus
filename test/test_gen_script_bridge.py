@@ -61,6 +61,13 @@ class Thunks(unittest.TestCase):
         code = g.export_thunk('Scr_GetEntityRef', ['unsigned long'])
         self.assertNotIn('static_assert', code)
 
+    def test_trailing_engine_args(self):
+        """The engine passes 1.3's trailing argument CoD2rev-Plus dropped: the thunk takes and ignores it,
+        as a call through a wrong signature traps on wasm."""
+        code = g.export_thunk('SL_GetString_', ['char const*', 'unsigned int'])
+        self.assertIn('cod2x_SL_GetString_(char const* a0, unsigned int a1, int)', code)
+        self.assertIn('return SL_GetString_(a0, a1);', code)
+
     def test_get_anim_custom(self):
         self.assertIn('unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)', g.EXPORT_CUSTOM['Scr_GetAnim'])
 
@@ -76,6 +83,19 @@ class Abi(unittest.TestCase):
         self.assertEqual(abi['Com_Printf'], ('v', 0, [4], True))
         self.assertIsNone(abi['SV_Gone'])
         self.assertEqual(abi['NET_Port'], ('i', 2, [], False))
+
+    def test_abi_gaps(self):
+        """A crossing with no line in one architecture's file would get no asserts there."""
+        abi32 = engine_abi.parse('A v0 4\nB missing\nC i4 -\n')
+        abi64 = engine_abi.parse('A v0 8\nB missing\n')
+        self.assertEqual(g.abi_gaps(['A', 'B', 'C', 'D'], abi32, abi64), ['C (x64)', 'D (x86, x64)'])
+        self.assertEqual(g.abi_gaps(['A'], {}, {}), [])   # a module without ABI files is not checked
+
+    def test_export_asserts_name_the_abi_file(self):
+        """The engine's server is gone: an export's asserts point at what they check, its 1.3 ABI."""
+        code = g.export_thunk('SV_Frame', ['int'], abi=('v', 0, [4], False))
+        self.assertIn('differs from the engine\'s 1.3 ABI', code)
+        self.assertNotIn('src/PC/server_mp', code)
 
     def test_import_asserts(self):
         code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=('v', 0, [4, 4], False))
@@ -94,6 +114,22 @@ class Abi(unittest.TestCase):
     def test_export_widened(self):
         code = g.export_thunk('SV_IsLocalClient', ['int'], abi=('i', 4, [4], False))
         self.assertIn('extern "C" cod2_abi_int<decltype(SV_IsLocalClient(std::declval<int>())), 4> cod2x_SV_IsLocalClient(int a0)', code)
+
+    def test_x64_values_pick_by_architecture(self):
+        # test/<module>_abi_x64.txt: a value the two architectures differ on is checked as COD2_ABI_PICK
+        abi = g.ArchAbi(('v', 0, [4, 4], False), ('v', 0, [8, 4], False))
+        code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=abi)
+        self.assertIn('static_assert(cod2_abi_slot<msg_t*>() == COD2_ABI_PICK(4, 8), "MSG_WriteByte: parameter 0', code)
+        self.assertIn('static_assert(cod2_abi_slot<int>() == 4, "MSG_WriteByte: parameter 1', code)
+
+    def test_x64_widened_return_picks(self):
+        code = g.import_thunk('SV_XModelGet', ['char const*'], abi=g.ArchAbi(('i', 4, [4], False), ('i', 8, [8], False)))
+        self.assertIn('cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), COD2_ABI_PICK(4, 8)>', code)
+
+    def test_one_architecture_only_is_guarded(self):
+        code = g.import_thunk('MSG_WriteByte', ['msg_t*', 'int'], abi=g.ArchAbi(('v', 0, [4, 4], False), None))
+        self.assertIn('#ifndef COD2_X64\nstatic_assert(cod2_abi_class<', code)
+        self.assertIn('#endif\n', code)
 
 
 class CustomImports(unittest.TestCase):

@@ -1,6 +1,7 @@
 #ifdef GFX_REAL_D3D9
 
 #    include <stdio.h>
+#    include <stdlib.h>
 #    include <string.h>
 
 #    ifdef _WIN32
@@ -163,6 +164,8 @@ static void *RealD3D9_CreateD3D12(void)
     return RealD3D9_Usable(pCreate(32, &args, 1));
 }
 
+static int s_apiInUse = GFX_API_D3D9;
+
 /* the API r_gfxApi asks for, or plain Direct3D 9 if that cannot run here */
 void *RealD3D9_Direct3DCreate9(int api)
 {
@@ -176,11 +179,13 @@ void *RealD3D9_Direct3DCreate9(int api)
         iface = RealD3D9_CreateD3D12();
     if (iface) {
         Com_Printf("Graphics API: %s\n", names[api]);
+        s_apiInUse = api;
         return iface;
     }
     if (api != GFX_API_D3D9)
         Com_Printf("^3%s is not available here, using Direct3D 9\n", names[api]);
     iface = RealD3D9_CreateFrom(RealD3D9_LoadD3D9());
+    s_apiInUse = GFX_API_D3D9;
     if (iface)
         Com_Printf("Graphics API: %s\n", names[GFX_API_D3D9]);
     return iface;
@@ -295,23 +300,51 @@ void *RealD3D9_CreateGameWindow(int w, int h, int fullscreen)
     return hwnd;
 }
 
+/* D3DPRESENT_PARAMETERS: natural alignment gives d3d9.h's layout on x86 and x64
+ * (the window at 28 or 32, 56 or 64 bytes) */
+typedef struct {
+    unsigned int width, height, format, count, multiSample, multiSampleQuality, swapEffect;
+    void *window;
+    int windowed, autoDepthStencil;
+    unsigned int depthStencilFormat, flags, refreshRate, interval;
+} RealPresentParams;
+
+int RealD3D9_PresentParamsSize(void)
+{
+    return (int)sizeof(RealPresentParams);
+}
+
 void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h, int swapInterval)
 {
-    unsigned char *p = (unsigned char *)ppOut;
-    memset(p, 0, 56);
-    *(unsigned int *)(p + 0) = (unsigned int)w;
-    *(unsigned int *)(p + 4) = (unsigned int)h;
-    *(unsigned int *)(p + 8) = 22;
-    *(unsigned int *)(p + 12) = 1;
+    RealPresentParams *pp = (RealPresentParams *)ppOut;
 
-    *(unsigned int *)(p + 24) = 1;
-    *(void **)(p + 28) = hwnd;
-    *(int *)(p + 32) = 1;
-    *(int *)(p + 36) = 1;
-    *(unsigned int *)(p + 40) = 75;
-
+    memset(pp, 0, sizeof(*pp));
+    pp->width = (unsigned int)w;
+    pp->height = (unsigned int)h;
+    pp->format = 22; /* D3DFMT_X8R8G8B8 */
+    pp->count = 1;
+    pp->swapEffect = 1; /* D3DSWAPEFFECT_DISCARD */
+    pp->window = hwnd;
+    pp->windowed = 1;
+    pp->autoDepthStencil = 1;
+    pp->depthStencilFormat = 75; /* D3DFMT_D24S8 */
     /* D3DPRESENT_INTERVAL_ONE or _IMMEDIATE: the default, 0, waits for the display */
-    *(unsigned int *)(p + 52) = swapInterval ? 1 : 0x80000000u;
+    pp->interval = swapInterval ? 1 : 0x80000000u;
+
+#    ifdef _WIN32
+    /* D3D9On12 never shows a windowed frame (an RTX 5080, 2026-11-03: discard,
+     * copy and flip all stay black, the back buffer holds the frame); exclusive
+     * full screen at the desktop's refresh shows it */
+    if (s_apiInUse == GFX_API_D3D12) {
+        DEVMODEA mode;
+
+        memset(&mode, 0, sizeof(mode));
+        mode.dmSize = sizeof(mode);
+        pp->windowed = 0;
+        if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &mode))
+            pp->refreshRate = mode.dmDisplayFrequency;
+    }
+#    endif
 }
 
 #endif

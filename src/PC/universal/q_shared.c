@@ -75,7 +75,7 @@ void OrientationPosToWorldPos(const orientation_t *or_, const vec_t *pos, vec_t 
 void OrientationDirToWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
 void OrientationPosFromWorldPos(const orientation_t *or_, const vec_t *pos, vec_t *out);
 void OrientationDirFromWorldDir(const orientation_t *or_, const vec_t *dir, vec_t *out);
-int I_strnicmp(const char *s0, const char *s1, size_t n);
+int I_strnicmp(const char *s0, const char *s1, int n);
 char *I_strupr(char *s);
 char *I_strlwr(char *s);
 void AddLeanToPosition(vec_t *position, const float fViewYaw, const float fLeanFrac, const float fViewRoll, const float fLeanDist);
@@ -686,7 +686,7 @@ static inline __attribute__((always_inline)) int I_strnicmp_core(const char *s0,
     return 0;
 }
 
-int I_strnicmp(const char *s0, const char *s1, size_t n)
+int I_strnicmp(const char *s0, const char *s1, int n)
 {
     return I_strnicmp_core(s0, s1, n);
 }

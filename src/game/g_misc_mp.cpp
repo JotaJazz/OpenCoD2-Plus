@@ -1,4 +1,5 @@
 #include "../qcommon/qcommon.h"
+#include "../server/server.h"
 #include "g_shared.h"
 
 turretInfo_s turretInfoStore[MAX_TURRETS];
@@ -247,6 +248,21 @@ void G_ClientStopUsingTurret( gentity_t *self )
 		pTurretInfo->prevStance = TURRET_STANCE_INVALID;
 	}
 
+#ifdef COD2_PLUS
+	// Plus: a Plus client leaves the turret where using it put them, behind
+	// the gun, if their box fits there. Going back to where they stood when
+	// they took it let them peek from behind cover (zPAM's MG clip). The box
+	// is the standing one, the largest the stance they get back can take.
+	trace_t trace;
+	trace.startsolid = qtrue;
+
+	if ( svs.clients[owner->s.number].plusVersion == PLUS_VERSION )
+	{
+		G_TraceCapsule(&trace, owner->client->ps.origin, owner->client->ps.mins, owner->client->ps.maxs, owner->client->ps.origin, owner->s.number, MASK_PLAYERSOLID);
+	}
+
+	if ( trace.startsolid || trace.allsolid )
+#endif
 	TeleportPlayer(owner, pTurretInfo->userOrigin, owner->r.currentAngles);
 
 	owner->client->ps.eFlags &= ~EF_TURRET_ACTIVE;
@@ -532,7 +548,12 @@ turret_think
 */
 void turret_think( gentity_t *self )
 {
+#ifdef COD2_PLUS
+	// Plus: every frame, at any sv_fps; the steps below follow level.frameTime
+	self->nextthink = level.time + level.frameTime;
+#else
 	self->nextthink = level.time + 50;
+#endif
 
 	if ( self->tagInfo )
 	{
@@ -679,7 +700,11 @@ int turret_UpdateTargetAngles( gentity_t *self, const vec3_t desiredAngles, qboo
 
 	for ( i = 0; i < 2; i++ )
 	{
+#ifdef COD2_PLUS
+		fSpeed[i] = fSpeed[i] * (level.frameTime * 0.001f);
+#else
 		fSpeed[i] = fSpeed[i] * 0.05f;
+#endif
 		assert(fSpeed[i] >= 0);
 
 		fDelta = AngleSubtract(desiredAngles[i], self->s.angles2[i]);
@@ -759,7 +784,11 @@ void turret_UpdateSound( gentity_t *self )
 	}
 
 	self->s.loopSound = (unsigned char)pTurretInfo->fireSnd;
+#ifdef COD2_PLUS
+	pTurretInfo->fireSndDelay -= level.frameTime;
+#else
 	pTurretInfo->fireSndDelay -= 50;
+#endif
 
 	if ( pTurretInfo->fireSndDelay > 0 )
 	{
@@ -1216,7 +1245,15 @@ void turret_track( gentity_t *self, gentity_t *other )
 
 	other->client->ps.viewlocked = PLAYERVIEWLOCK_FULL;
 	self->s.eFlags &= ~EF_FIRING;
+#ifdef COD2_PLUS
+	// Plus: a frame's time, not 50 ms: at 40 Hz a manned MG fired twice as
+	// fast. The time past the shot carries over, so frames that do not divide
+	// fireTime keep its rate
+	turretInfo->fireTime -= level.frameTime;
+	int fireTimeLate = turretInfo->fireTime < 0 ? turretInfo->fireTime : 0;
+#else
 	turretInfo->fireTime -= 50;
+#endif
 
 	if ( turretInfo->fireTime > 0 )
 	{
@@ -1231,6 +1268,9 @@ void turret_track( gentity_t *self, gentity_t *other )
 	}
 
 	turretInfo->fireTime = weapDef->fireTime;
+#ifdef COD2_PLUS
+	turretInfo->fireTime += fireTimeLate;
+#endif
 	turret_shoot_internal(self, other);
 	self->s.eFlags |= EF_FIRING;
 }

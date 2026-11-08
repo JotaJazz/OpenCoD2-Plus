@@ -297,7 +297,7 @@ Bool PrimitiveTemplate_ParseMaterials(const PrimitiveTemplate *_this, GPValue *g
     if (GPValue_IsList(grp)) {
         for (p = GPV_LIST(grp); p; p = GPV_NEXT(p)) {
             media.material = Material_RegisterHandle(GPV_STRING(p), 3, 6);
-            MediaHandles_AddHandle((MediaHandles *)((byte *)_this + 0x68), media);
+            MediaHandles_AddHandle((MediaHandles *)((byte *)_this + offsetof(PrimitiveTemplate, mMediaHandles)), media);
         }
         return 1;
     }
@@ -308,7 +308,7 @@ Bool PrimitiveTemplate_ParseMaterials(const PrimitiveTemplate *_this, GPValue *g
         return 0;
     }
     media.material = Material_RegisterHandle(str, 3, 6);
-    MediaHandles_AddHandle((MediaHandles *)((byte *)_this + 0x68), media);
+    MediaHandles_AddHandle((MediaHandles *)((byte *)_this + offsetof(PrimitiveTemplate, mMediaHandles)), media);
     return 1;
 }
 
@@ -598,7 +598,7 @@ void PrimitiveTemplate_ParseChannelCurve(const PrimitiveTemplate *_this, GPValue
         keyCount = 0;
     }
 
-    int channelOffset = channel * 3;
+    int channelOffset = channel * (int)(sizeof(FxChannel) / 4);  /* x64: 16-byte FxChannel */
     *(const FxCurve **)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + channelOffset * 4) =
         FxCurve_AllocAndCreateWithKeys(keys, 1, keyCount);
 
@@ -675,12 +675,12 @@ void PrimitiveTemplate_CreateBackCompatibleRotationDeltaCurve(const PrimitiveTem
         }
     }
 
-    int chanOff = channelId * 3 * 4;
+    int chanOff = channelId * (int)sizeof(FxChannel);
     *(const FxCurve **)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + chanOff) =
         FxCurve_AllocAndCreateWithKeys(keys, 1, 20);
 
-    *(unsigned int *)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + chanOff + 4) = *(unsigned int *)&graphScale;
-    *(unsigned int *)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + chanOff + 8) = *(unsigned int *)&graphScale;
+    *(unsigned int *)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + chanOff + offsetof(FxChannel, scaleRange.mMin)) = *(unsigned int *)&graphScale;
+    *(unsigned int *)(((char *)thisPtr + offsetof(PrimitiveTemplate, mFxChannels[0].curve)) + chanOff + offsetof(FxChannel, scaleRange.mMax)) = *(unsigned int *)&graphScale;
 }
 
 Bool PrimitiveTemplate_ParseFlags(const PrimitiveTemplate *_this, const char *line, const FxFlagEntry *flagEntries, int flagEntryCount)

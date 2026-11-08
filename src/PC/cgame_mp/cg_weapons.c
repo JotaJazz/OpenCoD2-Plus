@@ -1622,18 +1622,18 @@ void CG_BulletHitEvent(int sourceEntityNum, vec_t *position, vec_t *normal, vec_
     if (event == 0xb6) {
         alias = cgs->media.bulletHitSmallSound[surfType];
         fxTable = cgs->media.fx ? (byte *)cgs->media.fx->table : NULL;
-        fxNormal = fxTable ? *(void **)(fxTable + surfType * 4) : NULL;
-        fxReflect = fxTable ? *(void **)(fxTable + 0x5c + surfType * 4) : NULL;
+        fxNormal = fxTable ? (void *)((const FxImpactEntry *)fxTable)[0 * 23 + surfType] : NULL;
+        fxReflect = fxTable ? (void *)((const FxImpactEntry *)fxTable)[1 * 23 + surfType] : NULL;
     } else if (event == 0xb7) {
         alias = cgs->media.bulletHitLargeSound[surfType];
         fxTable = cgs->media.fx ? (byte *)cgs->media.fx->table : NULL;
-        fxNormal = fxTable ? *(void **)(fxTable + 0xb8 + surfType * 4) : NULL;
-        fxReflect = fxTable ? *(void **)(fxTable + 0x114 + surfType * 4) : NULL;
+        fxNormal = fxTable ? (void *)((const FxImpactEntry *)fxTable)[2 * 23 + surfType] : NULL;
+        fxReflect = fxTable ? (void *)((const FxImpactEntry *)fxTable)[3 * 23 + surfType] : NULL;
     } else {
         alias = cgs->media.shotgunHitSound[surfType];
         fxTable = cgs->media.fx ? (byte *)cgs->media.fx->table : NULL;
-        fxNormal = fxTable ? *(void **)(fxTable + 0x170 + surfType * 4) : NULL;
-        fxReflect = fxTable ? *(void **)(fxTable + 0x1cc + surfType * 4) : NULL;
+        fxNormal = fxTable ? (void *)((const FxImpactEntry *)fxTable)[4 * 23 + surfType] : NULL;
+        fxReflect = fxTable ? (void *)((const FxImpactEntry *)fxTable)[5 * 23 + surfType] : NULL;
     }
 
     if (!cg_blood->current.enabled && surfType == 7) {

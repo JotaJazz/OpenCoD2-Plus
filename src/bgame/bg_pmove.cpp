@@ -417,6 +417,9 @@ void PM_ClipVelocity( const vec3_t in, const vec3_t normal, vec3_t out )
 	VectorMA(in, -change, normal, out);
 }
 
+// PmoveSingle's pm->plusRules, for PM_UpdateLean, which gets no pmove
+static int pm_plusRules;
+
 /*
 ==================
 PM_UpdateLean
@@ -482,7 +485,12 @@ void PM_UpdateLean( playerState_t *ps, float msec, usercmd_t *cmd,
 
 			if ( leanofs > fLeanMax )
 			{
-				leanofs = fLeanMax;
+				// Plus: going prone leaning, the lean comes back as it does when
+				// let go; it halved in one frame, quicker than the body moves
+				if ( pm_plusRules && ps->leanf > fLeanMax )
+					leanofs = I_fmax(ps->leanf - msec / 280.0 * fLeanMax, fLeanMax);
+				else
+					leanofs = fLeanMax;
 			}
 		}
 		else
@@ -494,7 +502,10 @@ void PM_UpdateLean( playerState_t *ps, float msec, usercmd_t *cmd,
 
 			if ( -fLeanMax > leanofs )
 			{
-				leanofs = -fLeanMax;
+				if ( pm_plusRules && ps->leanf < -fLeanMax )
+					leanofs = I_fmin(ps->leanf + msec / 280.0 * fLeanMax, -fLeanMax);
+				else
+					leanofs = -fLeanMax;
 			}
 		}
 	}
@@ -3261,7 +3272,7 @@ static void PM_CrashLand( playerState_t *ps, pml_t *pml )
 				if ( stunTime >= 1500 )
 					fSpeedMult = 0.2;
 				else
-					fSpeedMult = 0.5 - ((stunTime - 500.0) / 1000.0) * 0.3f;
+					fSpeedMult = 0.5f - ((stunTime - 500.0f) / 1000.0f) * 0.3f;
 			}
 
 			ps->pm_time = stunTime;
@@ -3897,7 +3908,7 @@ void PM_LadderMove( pmove_t *pm, pml_t *pml )
 
 	if ( pm->cmd.rightmove )
 	{
-		VectorMA(wishvel, scale * 0.2 * pm->cmd.rightmove, pml->right, wishvel);
+		VectorMA(wishvel, scale * 0.2f * pm->cmd.rightmove, pml->right, wishvel);
 	}
 
 	wishspeed = Vec3NormalizeTo(wishvel, wishdir);
@@ -4026,7 +4037,7 @@ void PM_WalkMove( pmove_t *pm, pml_t *pml )
 	scale = PM_CmdScale_Walk(pm, &cmd);
 
 	scale *= PM_DamageScale_Walk(ps->damageTimer);
-	ps->damageTimer -= (int)(pml->frametime * 1000.0);
+	ps->damageTimer -= (int)(pml->frametime * 1000.0f);
 
 	if ( ps->damageTimer <= 0 )
 	{
@@ -4130,6 +4141,8 @@ void PmoveSingle( pmove_t *pm )
 
 	ps = pm->ps;
 	assert(ps);
+
+	pm_plusRules = pm->plusRules;
 
 	// RF, update conditional values for anim system
 	BG_AnimUpdatePlayerStateConditions(pm);

@@ -147,7 +147,7 @@ void Material_FinishLoading(void);
 void Material_ReleaseAll(void);
 void Material_UpdatePicmipAll(void);
 int Material_LoadFile(const char *filename, fileHandle_t *file);
-const char *R_GetMaterialName(_ValueType handle);
+const char *R_GetMaterialName(MaterialHandle handle);
 int R_GetMaterialSubimageCount(MaterialHandle handle);
 void Material_Sort(void);
 const char *Material_RegisterString(const char *string);
@@ -257,7 +257,7 @@ static Bool Material_Compare(const Material *mtl0, const Material *mtl1)
     int diff = (int)mtl0->info.sortKey - (int)mtl1->info.sortKey;
     if (diff != 0)
         return (unsigned int)diff >> 31;
-    diff = (int)((unsigned int)mtl0->techniqueSet - (unsigned int)mtl1->techniqueSet);
+    diff = COD2_PTR_ORDER(mtl0->techniqueSet, mtl1->techniqueSet);
     if (diff == 0)
         return 0;
     return (unsigned int)diff >> 31;
@@ -416,8 +416,8 @@ void Material_UpdatePicmipAll(void)
 
     rg = (byte *)imp_rg;
 
-    for (slot = rg; slot != rg + sizeof(((r_globals_t *)0)->materialHashTable); slot += 4) {
-        material = *(byte **)(slot + 0x28);
+    for (slot = rg; slot != rg + sizeof(((r_globals_t *)0)->materialHashTable); slot += sizeof(void *)) {
+        material = *(byte **)(slot + offsetof(r_globals_t, materialHashTable));
         if (!material)
             continue;
 
@@ -452,9 +452,9 @@ int Material_LoadFile(const char *filename, int *file)
     return ri.FS_FOpenFileRead(fullFilename, file, 1);
 }
 
-const char *R_GetMaterialName(_ValueType handle)
+const char *R_GetMaterialName(MaterialHandle handle)
 {
-    return *(const char **)(*(int *)&handle);
+    return handle->info.name;
 }
 
 int R_GetMaterialSubimageCount(MaterialHandle handle)
@@ -969,12 +969,12 @@ void R_Cmd_ReloadMaterialTextures(void)
             img = ((MaterialTextureDef *)texdef)->u.image;
             if (!lastReloaded) {
 
-                if ((unsigned int)img > (unsigned int)best)
+                if ((uintptr_t)img > (uintptr_t)best)
                     best = img;
             } else {
 
-                if ((unsigned int)img > (unsigned int)best &&
-                    (unsigned int)img < (unsigned int)lastReloaded)
+                if ((uintptr_t)img > (uintptr_t)best &&
+                    (uintptr_t)img < (uintptr_t)lastReloaded)
                     best = img;
             }
         }

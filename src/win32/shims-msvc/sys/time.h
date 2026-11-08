@@ -11,8 +11,9 @@ extern "C" {
 #include <sys/timeb.h>
 #include <time.h>
 
-/* struct timeval may already come from <winsock2.h>; guard against redefinition. */
-#ifndef _TIMEVAL_DEFINED
+/* struct timeval may already come from the SDK's winsock (which defines it
+ * unguarded, so it must come first) or the engine's shims/sys/socket.h */
+#if !defined(_WINSOCK2API_) && !defined(_WINSOCKAPI_) && !defined(_TIMEVAL_DEFINED)
 #define _TIMEVAL_DEFINED
 struct timeval { long tv_sec; long tv_usec; };
 #endif

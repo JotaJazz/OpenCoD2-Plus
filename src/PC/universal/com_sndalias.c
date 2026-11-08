@@ -242,8 +242,8 @@ void Com_LoadSoundAliases(const char *loadspec, const char *loadspecCurGame, snd
 
     Com_MakeSoundAliasesPermanent(
 #if defined(__x86_64__) || defined(_M_X64)
-        (void *)&g_sa.aliasInfo[system],
-        (void *)&g_sa.soundFileInfo[system]);
+        (snd_alias_list_t *)&g_sa.aliasInfo[system],
+        (SoundFileInfo *)&g_sa.soundFileInfo[system]);
 #else
         (snd_alias_list_t *)((byte *)&g_sa + 4104 + (int)system * 16),
         (SoundFileInfo *)((byte *)&g_sa + 4152 + (int)system * 8));
@@ -273,7 +273,7 @@ after_load:
     if ((int)system <= 1) {
 
 #if defined(__x86_64__) || defined(_M_X64)
-        int missCount = Com_LoadSoundAliasSounds((void *)&g_sa.soundFileInfo[system]);
+        int missCount = Com_LoadSoundAliasSounds((SoundFileInfo *)&g_sa.soundFileInfo[system]);
 #else
         int missCount = Com_LoadSoundAliasSounds((SoundFileInfo *)((byte *)&g_sa + 4152 + (int)system * 8));
 #endif
@@ -523,9 +523,6 @@ snd_alias_t *Com_PickSoundAliasFromList(snd_alias_list_t *aliasList)
     return Com_PickSoundAliasFromList_core(aliasList);
 }
 
-#ifdef _MSC_VER
-__forceinline
-#endif
 snd_alias_list_t *Com_FindSoundAlias(const char *name)
 {
     snd_alias_list_t *aliasList;

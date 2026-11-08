@@ -1,6 +1,12 @@
 #include "common_types.h"
 extern dvar_t *r_rendererInUse;
 #include "imports.h"
+
+/* 1.3's offsets, read by field so x64 lays them out its own way */
+COD2_ASSERT_FIELD(GfxWorld, vd.worldVb, 0x30);
+COD2_ASSERT_FIELD(GfxWorld, sunLight, 0xb4);
+COD2_ASSERT_FIELD(GfxWorld, mins, 0x13c);
+COD2_ASSERT_FIELD(GfxWorld, maxs, 0x148);
 extern refimport_t ri;
 #include "bytematch.h"
 #include <string.h>
@@ -57,21 +63,21 @@ void R_ResetSunLightOverride(void)
 void R_ReleaseWorld(void)
 {
 
-    if (*(void **)((*(byte **)&rgp.world) + 0x30) != NULL) {
-        R_FreeStaticVertexBuffer(*(IDirect3DVertexBuffer9 **)((*(byte **)&rgp.world) + 0x30));
-        *(void **)((*(byte **)&rgp.world) + 0x30) = NULL;
+    if (((GfxWorld *)*(byte **)&rgp.world)->vd.worldVb != NULL) {
+        R_FreeStaticVertexBuffer((IDirect3DVertexBuffer9 *)((GfxWorld *)*(byte **)&rgp.world)->vd.worldVb);
+        *(void **)&((GfxWorld *)*(byte **)&rgp.world)->vd.worldVb = NULL;
     }
 }
 
 void R_GetWorldBounds(vec_t *min, vec_t *max)
 {
 
-    const vec_t *bmin = (const vec_t *)((*(byte **)&rgp.world) + 0x13c);
+    const vec_t *bmin = ((GfxWorld *)*(byte **)&rgp.world)->mins;
     min[0] = bmin[0];
     min[1] = bmin[1];
     min[2] = bmin[2];
 
-    const vec_t *bmax = (const vec_t *)((*(byte **)&rgp.world) + 0x148);
+    const vec_t *bmax = ((GfxWorld *)*(byte **)&rgp.world)->maxs;
     max[0] = bmax[0];
     max[1] = bmax[1];
     max[2] = bmax[2];
@@ -80,7 +86,7 @@ void R_GetWorldBounds(vec_t *min, vec_t *max)
 void R_InterpretSunLightParseParams(SunLightParseParams *sunParse)
 {
 
-    R_InterpretSunLightParseParamsIntoLights(sunParse, (GfxLight *)((*(byte **)&rgp.world) + 0xb4));
+    R_InterpretSunLightParseParamsIntoLights(sunParse, &((GfxWorld *)*(byte **)&rgp.world)->sunLight);
 
     {
         byte *world = (*(byte **)&rgp.world);
@@ -166,7 +172,7 @@ void R_ShutdownWorld(void)
         void *vb = (*(void **)&((GfxWorld *)world)->vd.worldVb);
         if (vb != NULL) {
             R_FreeStaticVertexBuffer((IDirect3DVertexBuffer9 *)vb);
-            *(void **)((*(byte **)&rgp.world) + 0x30) = NULL;
+            *(void **)&((GfxWorld *)*(byte **)&rgp.world)->vd.worldVb = NULL;
         }
     }
 
@@ -219,7 +225,7 @@ void R_UpdateLightsFromDvars(void)
 
     world = (*(byte **)&rgp.world);
     if (world) {   /* no world (e.g. main menu, no map loaded) -> nothing to update */
-        R_InterpretSunLightParseParamsIntoLights((SunLightParseParams *)sunParse, (GfxLight *)(world + 0xb4));
+        R_InterpretSunLightParseParamsIntoLights((SunLightParseParams *)sunParse, &((GfxWorld *)world)->sunLight);
 
         {
             vec_t *dst = (vec_t *)&((GfxWorld *)world)->sunColorFromBsp[0];
@@ -234,7 +240,7 @@ void R_UpdateLightsFromDvars(void)
 void R_LoadWorld(const char *name, int *checksum)
 {
     byte *world;
-    byte *worldData;
+    SunLightParseParams *sp;
     refimport_t *refimport;
     dvar_t *dvar;
     byte *frontEnd;
@@ -249,27 +255,27 @@ void R_LoadWorld(const char *name, int *checksum)
     }
 
     world = *(byte **)&rgp.world;
-    worldData = (byte *)(((char *)world + offsetof(GfxWorld, sunParse.name[0])));
+    sp = &((GfxWorld *)world)->sunParse;
 
     refimport = (refimport_t *)&ri;
 
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakAmbient), (*(float *)&((GfxWorld *)worldData)->sunParse.name[12]));
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakDiffuseFraction), (*(float *)&((GfxWorld *)worldData)->sunParse.name[28]));
-    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakSunLight), (*(float *)&((GfxWorld *)worldData)->sunParse.name[32]));
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakAmbient), sp->ambientScale);
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakDiffuseFraction), sp->diffuseFraction);
+    refimport->Dvar_SetFloat(R_DvarFromImport(imp_r_lightTweakSunLight), sp->sunLight);
 
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakAmbientColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[16]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[20]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[24]), 1.0f);
+                             sp->ambientColor[0], sp->ambientColor[1],
+                             sp->ambientColor[2], 1.0f);
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakSunColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[36]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[40]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[44]), 1.0f);
+                             sp->sunColor[0], sp->sunColor[1],
+                             sp->sunColor[2], 1.0f);
     refimport->Dvar_SetColor(R_DvarFromImport(imp_r_lightTweakSunDiffuseColor),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[48]), (*(float *)&((GfxWorld *)worldData)->sunParse.name[52]),
-                             (*(float *)&((GfxWorld *)worldData)->sunParse.name[56]), 1.0f);
+                             sp->diffuseColor[0], sp->diffuseColor[1],
+                             sp->diffuseColor[2], 1.0f);
 
     refimport->Dvar_SetVec3(R_DvarFromImport(imp_r_lightTweakSunDirection),
-                            ((GfxWorld *)worldData)->sunParse.ambientScale, ((GfxWorld *)worldData)->sunParse.ambientColor[0],
-                            ((GfxWorld *)worldData)->sunParse.ambientColor[1]);
+                            sp->angles[0], sp->angles[1],
+                            sp->angles[2]);
 
     dvar = R_DvarFromImport(imp_r_lightTweakAmbient);
     refimport->Dvar_SetModified(dvar);

@@ -101,7 +101,7 @@ void BG_LoadWeaponStrings(void);
 
 void BG_InitWeaponStrings(void)
 {
-    memset(weaponStrings, 0, 0x400);
+    memset(weaponStrings, 0, 128 * COD2_SIZEOF_1_3(animStringItem_t, 8));
     BG_LoadWeaponStrings();
 }
 
@@ -1515,7 +1515,7 @@ static void __attribute_regparm__(3)
     g_pLoadAnims = pLoadAnims;
     g_piNumLoadAnims = piNumAnims;
 
-    memset(weaponStrings, 0, 0x400);
+    memset(weaponStrings, 0, 128 * COD2_SIZEOF_1_3(animStringItem_t, 8));
     BG_LoadWeaponStrings();
 
     memset(defineStr, 0, sizeof(defineStr));   /* was 0x480 (x86 size); x64 rows are wider */
@@ -1979,7 +1979,7 @@ void BG_LoadAnim(void)
                 vec3_t angleDelta;
                 vec3_t posDelta;
 
-                anim->duration = (int)(length * 1000.0f);
+                anim->duration = (int)(length * 1000.0);  /* x87 multiplied in extended precision: 0.9 gives 899, as the server */
                 XAnimGetRelDelta(anims, i, angleDelta, posDelta, 0.0f, 1.0f);
                 anim->moveSpeed = sqrtf(posDelta[0] * posDelta[0] +
                                         posDelta[1] * posDelta[1] +

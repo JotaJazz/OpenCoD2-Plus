@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|web|all ...] [--c [--cxx-dirs "a;b"]]
 
-linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
+linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
 (cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
 the client draws with the real d3d9 and d3dx9's HLSL compiler, and
 mingw-client-gl builds it on the Mac port's GL device instead
-(COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. The engine compiles as C++ unless --c is given; with --c,
+(COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. linux-client-x64 builds the
+64-bit Linux client (cod2_linux, -DCOD2_X64=ON), skipped without the amd64 SDL2
+headers scripts/linux_x64_deps.sh unpacks, and mingw-client-x64 the 64-bit
+Windows client, skipped without scripts/mingw64_deps.sh's SDL2. msvc-client builds the
+Windows client on the MSVC ABI (clang + lld-link) through cmd.exe on a copy of the
+tree on a Windows drive (scripts/msvc_build.py), skipped without cmd.exe. web builds
+the Emscripten client (third_party/emsdk), whose link may leave undefined only the
+symbols test/web_undefined.txt lists. The engine compiles as C++ unless --c is given; with --c,
 --cxx-dirs picks the src/ modules that still compile as C++. Exits with 0 when
 every requested variant builds with no errors and, on Linux, no binary needs a
 glibc newer than GLIBC_MAX (the floor of the C build: servers run on older
@@ -27,7 +34,7 @@ with another return or parameter type than its definition's
 (scripts/check_c_decls.py), nor a global declared larger than it is defined
 (scripts/check_var_sizes.py).
 """
-import argparse, os, re, subprocess, sys
+import argparse, glob, os, re, shutil, subprocess, sys
 os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -47,9 +54,30 @@ for _v in ('mingw', 'mingw-client'):
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
 # the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
 VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+# stock 1.3: the client and servers without CoD2 1.3 Plus (COD2_PLUS)
+VARIANTS['linux-13'] = ['-DCOD2_PLUS_PROTOCOL=OFF']
 # the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
 VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
 VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
+# the 64-bit Linux client: the engine on LP64, with scripts/linux_x64_deps.sh's SDL2 headers
+VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON']
+# the 64-bit Windows client: scripts/mingw64_deps.sh's compilers and SDL2
+VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake', '-DCOD2_X64=ON',
+                                 '-DCOD2_WIN32_CLIENT=ON', '-DCOD2_WIN32_REAL_D3D9=ON']
+# the Windows client on the MSVC ABI (clang + lld-link), built on Windows through
+# cmd.exe by scripts/msvc_build.py, which passes these flags itself
+MSVC_SRC = os.environ.get('COD2_MSVC_SRC', '/mnt/e/opencod2-msvc-src')
+VARIANTS['msvc-client'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-msvc-clang.cmake', '-DCOD2_WIN32_CLIENT=ON',
+                           '-DCOD2_WIN32_REAL_D3D9=ON']
+# the web build (Emscripten), with the SDK in third_party/emsdk; its link tolerates
+# undefined symbols as upstream's did, but only those test/web_undefined.txt lists
+VARIANTS['web'] = []
+EMSDK_ENV = os.path.join(ROOT, 'third_party', 'emsdk', 'emsdk_env.sh')
+WEB_UNDEFINED = os.path.join(ROOT, 'test', 'web_undefined.txt')
+SDL2_MINGW64 = os.path.join(ROOT, 'third_party', 'mingw64-sdl2', 'SDL2-2.30.9', 'x86_64-w64-mingw32', 'lib', 'libSDL2.a')
+MINGW64_NM = os.path.join(ROOT, 'third_party', 'mingw64', 'usr', 'bin', 'x86_64-w64-mingw32-nm')
+LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
+                              '_real_SDL_config.h')
 LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
 # the MinGW client links the static SDL2 the user supplies
 LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
@@ -60,15 +88,74 @@ def is_x64(variant):
     return variant.startswith('linux-x64')
 
 
+def msvc_two_copies(nm_text):
+    """The external globals the MSVC-ABI objects define both as C (_x) and as C++ (?x@@3...):
+    two copies of one variable, which the Itanium ABI would have joined and no alias joins
+    (msvc_data_aliases.cmake aliases only an undefined one). nm_text is nm -g --defined-only
+    of the objects, with 'file:' headers."""
+    c, cxx = {}, {}
+    obj = ''
+    for line in nm_text.splitlines():
+        if line.endswith(':'):
+            obj = os.path.basename(line[:-1])
+            continue
+        parts = line.split()
+        if len(parts) != 3 or parts[1] not in 'BDRC':
+            continue
+        name = parts[2]
+        m = re.fullmatch(r'_([A-Za-z_]\w*)', name) or re.fullmatch(r'\?([A-Za-z_]\w*)@@3.*', name)
+        if m:
+            (c if name.startswith('_') else cxx)[m.group(1)] = f'{name} ({obj})'
+    return [f'{base}: {c[base]}, {cxx[base]}' for base in sorted(set(c) & set(cxx))]
+
+
+def web_undefined_new(log, allowed):
+    """The symbols a web link reports undefined that the allowed set does not have."""
+    found = re.findall(r'warning: undefined symbol: (\S+)', log)
+    return sorted(set(found) - set(allowed))
+
+
+def build_web(build_dir):
+    script = (f'source {EMSDK_ENV} >/dev/null 2>&1 && emcmake cmake -S {ROOT} -B {build_dir} >/dev/null && '
+              f'cmake --build {build_dir} -j {os.cpu_count() or 4} -- -k')
+    result = subprocess.run(['bash', '-c', script], cwd=ROOT, capture_output=True, text=True)
+    output = result.stdout + result.stderr
+    errors = [line for line in output.splitlines() if 'error:' in line]
+    if result.returncode != 0 and not errors:
+        errors = ['build failed'] + output.splitlines()[-10:]
+    if not errors:
+        with open(WEB_UNDEFINED) as f:
+            allowed = {line.strip() for line in f if line.strip() and not line.startswith('#')}
+        errors = [f'newly undefined: {name}' for name in web_undefined_new(output, allowed)]
+    return errors
+
+
 def build(variant, extra):
     build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
+    if variant == 'web':
+        return build_web(build_dir)
+    if variant == 'msvc-client':
+        result = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'msvc_build.py'), '--variant', variant, '--']
+                                + extra,
+                                cwd=ROOT, capture_output=True, text=True)
+        if result.returncode == 0:
+            objs = [o for d in glob.glob(os.path.join(MSVC_SRC, 'build', 'check-' + variant, 'CMakeFiles', '*.dir'))
+                    if re.search(r'/(cod2_win32|cod2_plus_\w+)\.dir$', d)
+                    for o in glob.glob(os.path.join(d, '**', '*.obj'), recursive=True)]
+            nm = subprocess.run(['i686-w64-mingw32-nm', '-g', '--defined-only'] + objs, capture_output=True, text=True)
+            return [f'two copies of {line}' for line in msvc_two_copies(nm.stdout)]
+        log = os.path.join(build_dir, 'msvc_build.log')
+        lines = open(log, encoding='utf-8', errors='replace').read().splitlines() if os.path.exists(log) else []
+        errors = [line for line in lines if re.search(r'error[: ]|error$', line) and 'warning' not in line]
+        return errors or ['msvc build failed'] + (lines or (result.stdout + result.stderr).splitlines())[-10:]
     source = os.path.join(ROOT, 'cmake', 'lnxded64') if is_x64(variant) else ROOT
     configure = subprocess.run(['cmake', '-S', source, '-B', build_dir] + VARIANTS[variant] + ([] if is_x64(variant) else extra),
                                cwd=ROOT, capture_output=True, text=True)
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
     # the client's own target
-    target = ['--target', 'cod2_win32'] if variant.startswith('mingw-client') else []
+    target = (['--target', 'cod2_win32'] if variant.startswith('mingw-client')
+              else ['--target', 'cod2_linux'] if variant == 'linux-client-x64' else [])
     result = subprocess.run(['cmake', '--build', build_dir, '-j', str(os.cpu_count() or 4)] + target + ['--', '-k'],
                             cwd=ROOT, capture_output=True, text=True)
     output = result.stdout + result.stderr
@@ -108,11 +195,19 @@ def duplicates(variant, build_dir):
     from the engine, and the exported functions an engine object of it still
     defines: the dedicated servers, and the Linux and Windows clients' local
     servers."""
-    nm, prefix = ('i686-w64-mingw32-nm', '_') if variant.startswith('mingw') else ('nm', '')
+    if variant == 'mingw-client-x64':
+        # PE x64 decorates no C name
+        nm, prefix = (MINGW64_NM if os.path.exists(MINGW64_NM) else 'x86_64-w64-mingw32-nm'), ''
+    elif variant.startswith('mingw'):
+        nm, prefix = 'i686-w64-mingw32-nm', '_'
+    else:
+        nm, prefix = 'nm', ''
     if variant.startswith('mingw-client'):
         targets = [('cod2_win32', 'client_server')]
     elif variant.startswith('mingw'):
         targets = [('cod2_win32_ded', 'server')]
+    elif variant == 'linux-client-x64':
+        targets = [('cod2_linux', 'client_server')]
     else:
         targets = [('cod2_lnxded', 'server'), ('cod2_linux', 'client_server')]
     errors = []
@@ -242,19 +337,33 @@ def main():
     ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
     ap.add_argument('--c', action='store_true', help='builds C instead of C++ (-DCOD2_CXX_ALL=OFF)')
     ap.add_argument('--allow-skip', action='store_true', help='a variant whose dependencies are missing is no failure')
-    ap.add_argument('--old-script', action='store_true', help='src/PC/script instead of CoD2rev-Plus\'s VM (-DCOD2_PLUS_SCRIPT=OFF)')
     args = ap.parse_args()
 
     variants = list(VARIANTS) if 'all' in args.variants else args.variants
     extra = ['-DCOD2_CXX_DIRS=' + (args.cxx_dirs or '')]
     extra.append('-DCOD2_CXX_ALL=' + ('OFF' if args.c else 'ON'))
-    extra.append('-DCOD2_PLUS_SCRIPT=' + ('OFF' if args.old_script else 'ON'))
 
     failed = False
     skipped = False
     for variant in variants:
-        if variant.startswith('mingw-client') and not os.path.exists(SDL2_MINGW):
+        if variant == 'mingw-client-x64' and not os.path.exists(SDL2_MINGW64):
+            print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW64, ROOT)}: scripts/mingw64_deps.sh)')
+            skipped = True
+            continue
+        if variant.startswith('mingw-client') and variant != 'mingw-client-x64' and not os.path.exists(SDL2_MINGW):
             print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
+            skipped = True
+            continue
+        if variant == 'linux-client-x64' and not os.path.exists(LINUX_X64_SDL2):
+            print(f'skip {variant} (no {os.path.relpath(LINUX_X64_SDL2, ROOT)}: scripts/linux_x64_deps.sh)')
+            skipped = True
+            continue
+        if variant == 'web' and not os.path.exists(EMSDK_ENV):
+            print(f'skip {variant} (no {os.path.relpath(EMSDK_ENV, ROOT)}: the Emscripten SDK)')
+            skipped = True
+            continue
+        if variant == 'msvc-client' and not shutil.which('cmd.exe'):
+            print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
             continue
         if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):
@@ -265,9 +374,9 @@ def main():
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
-        if not errors and not is_x64(variant):
+        if not errors and not is_x64(variant) and variant != 'web':
             errors = duplicates(variant, build_dir)
-        if not errors and variant.startswith('linux') and not is_x64(variant):
+        if not errors and variant.startswith('linux') and not is_x64(variant) and variant != 'linux-client-x64':
             errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir) + var_sizes(build_dir)
         if not errors and variant in ('linux', 'linux-10'):
             errors = c_linkage(build_dir)

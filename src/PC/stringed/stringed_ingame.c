@@ -639,8 +639,8 @@ void SE_Init(void)
         return;
     }
 
-    TheStringPackage = (CStringEdPackage *)Z_MallocInternal(0x28);
-    memset(TheStringPackage, 0, 0x28);
+    TheStringPackage = (CStringEdPackage *)Z_MallocInternal(COD2_SIZE_1_3_PADDED(0x28));
+    memset(TheStringPackage, 0, COD2_SIZE_1_3_PADDED(0x28));
     CStringEdPackage_Clear(TheStringPackage);
 }
 

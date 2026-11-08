@@ -102,9 +102,7 @@ void CG_AddMarks(void)
 
 void CG_ImpactMark(MaterialHandle markMaterial, const vec_t *origin, const vec_t *dir, float orientation, const vec_t *color, float radius)
 {
-    vec3_t axisRight;
-    vec3_t axisCross;
-    vec3_t axisDir;
+    vec3_t axis[3];  /* dir, cross, right: R_MarkFragments reads all three */
     vec3_t originalPoints[4];
     GfxMarkFragment markFragments[384];
     int fragmentCount;
@@ -123,14 +121,14 @@ void CG_ImpactMark(MaterialHandle markMaterial, const vec_t *origin, const vec_t
     if (((cg_t *)cg)->nomarks != 0)
         return;
 
-    Vec3NormalizeTo(dir, axisDir);
-    PerpendicularVector(axisDir, axisCross);
-    RotatePointAroundVector(axisRight, axisDir, axisCross, orientation);
-    Vec3Cross(axisDir, axisRight, axisCross);
+    Vec3NormalizeTo(dir, axis[0]);
+    PerpendicularVector(axis[0], axis[1]);
+    RotatePointAroundVector(axis[2], axis[0], axis[1], orientation);
+    Vec3Cross(axis[0], axis[2], axis[1]);
 
     for (j = 0; j < 3; j++) {
-        a = radius * axisCross[j];
-        b = radius * axisRight[j];
+        a = radius * axis[1][j];
+        b = radius * axis[2][j];
         originalPoints[0][j] = origin[j] - a - b;
         originalPoints[1][j] = origin[j] + a - b;
         originalPoints[2][j] = origin[j] + a + b;
@@ -140,7 +138,7 @@ void CG_ImpactMark(MaterialHandle markMaterial, const vec_t *origin, const vec_t
     fragmentCount = CL_MarkFragments(
         originalPoints,
         origin,
-        (const vec3_t *)axisDir,
+        (const vec3_t *)axis,
         radius,
         1024,
         (GfxWorldVertex *)&markVerts,

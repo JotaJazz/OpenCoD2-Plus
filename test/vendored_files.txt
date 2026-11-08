@@ -1,8 +1,9 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: 642bc91
+# revision: 1551c01
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
+scripts/plus_rules_test.py
 src/script/scr_animtree.cpp
 src/script/scr_compiler.cpp
 src/script/scr_evaluate.cpp
@@ -16,6 +17,7 @@ src/script/scr_vm.cpp
 src/script/scr_yacc.cpp
 src/script/script_public.h
 src/qcommon/qcommon.h
+src/qcommon/plus_format.h
 src/qcommon/cmd.h
 src/qcommon/cm_local.h
 src/qcommon/cm_public.h

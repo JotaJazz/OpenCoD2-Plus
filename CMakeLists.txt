@@ -19,11 +19,6 @@
 # =============================================================================
 cmake_minimum_required(VERSION 3.16)
 
-# Native-Windows MSVC client build (cl.exe). Set by the msvc-client preset;
-# selects the cmake/win32-msvc.cmake path and suppresses the GCC-only -m32 seed
-# and the global GAS ASM language (MSVC's blobs become C, not MASM).
-option(COD2_WIN_MSVC "Native Windows build with MSVC/cl instead of MinGW" OFF)
-
 # x86_64 (LP64) target. OFF (default) = the original ILP32/x86 reconstruction
 # (4-byte pointers, the committed 32-bit data blobs). ON is an IN-PROGRESS port:
 # it suppresses the -m32 seed and the 32-bit-only asserts/lib paths so an x64
@@ -34,20 +29,15 @@ option(COD2_X64 "Target x86_64/LP64 instead of the original ILP32/x86 (port in p
 
 # -m32 must be in effect when the native compiler is probed (multilib link
 # tests). Seed it ONLY for the plain native 32-bit build — the MinGW (i686) and
-# Emscripten toolchains are 32-bit/wasm already and must not see -m32, MSVC
-# rejects it outright, and the x64 port wants the native 64-bit ABI.
-if(NOT CMAKE_TOOLCHAIN_FILE AND NOT COD2_WIN_MSVC AND NOT COD2_X64)
+# Emscripten toolchains are 32-bit/wasm already and must not see -m32, and the
+# x64 port wants the native 64-bit ABI.
+if(NOT CMAKE_TOOLCHAIN_FILE AND NOT COD2_X64)
   set(CMAKE_C_FLAGS_INIT   "-m32")
   set(CMAKE_CXX_FLAGS_INIT "-m32")
   set(CMAKE_ASM_FLAGS_INIT "-m32")
 endif()
 
-# The GAS .S blobs are a GNU-toolchain concern; the MSVC path uses C data.
-if(COD2_WIN_MSVC)
-  project(cod2 LANGUAGES C CXX)
-else()
-  project(cod2 LANGUAGES C CXX ASM)
-endif()
+project(cod2 LANGUAGES C CXX ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_STANDARD 99)
@@ -83,37 +73,19 @@ set(COD2_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 # stay C.
 set(COD2_CXX_DIRS "" CACHE STRING "With COD2_CXX_ALL=OFF: src/ subdirectories or files still compiled as C++, e.g. PC/qcommon;PC/snd.c")
 # Linux and MinGW compile the engine as C++ (Phase 0 of the unification plan);
-# OFF goes back to C, where COD2_CXX_DIRS can still pick single modules. The
-# MSVC path (cmake/win32-msvc.cmake) has its own source list and stays C.
+# OFF goes back to C, where COD2_CXX_DIRS can still pick single modules.
 option(COD2_CXX_ALL "Compile every engine C source as C++" ON)
 set(COD2_CXX_NEVER "^(blobs|PC/speex|PC/jpeg-6|PC/zlib|win32/sdl2)/")
 
-# CoD2rev-Plus's script VM (src/script, copied unchanged) in place of the
-# reconstruction in src/PC/script, on the 32-bit Linux and MinGW builds; MSVC,
-# the web build and the x64 port keep src/PC/script for now. PROTOCOL_VERSION
-# follows the game version.
-option(COD2_PLUS_SCRIPT "Use CoD2rev-Plus's script VM (src/script)" ON)
-if(COD2_WIN_MSVC OR EMSCRIPTEN OR COD2_X64)
-  set(COD2_PLUS_SCRIPT OFF)
-endif()
-if(COD2_PLUS_SCRIPT)
-  add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
-endif()
-# CoD2rev-Plus's server, game and bgame (src/server, src/game, src/bgame) in
-# the dedicated server, on the 32-bit Linux and MinGW builds; the client keeps
-# src/PC/server_mp, src/PC/game_mp, src/PC/game and src/PC/bgame. They call
-# CoD2rev-Plus's script VM, so they need COD2_PLUS_SCRIPT.
-option(COD2_PLUS_SERVER "Use CoD2rev-Plus's server, game and bgame (src/server, src/game, src/bgame) in the dedicated server" ON)
-if(NOT COD2_PLUS_SCRIPT)
-  set(COD2_PLUS_SERVER OFF)
-endif()
-# CoD2rev-Plus's server, game and bgame for the client's local games (Linux,
-# and MinGW with COD2_WIN32_CLIENT), on the engine's core and xanim; cgame
+# OpenCoD2-Plus Server's script VM, server, game, bgame and collision in every
+# build (the engine's own were removed, ADR 0015); the sources and the data
+# blobs test these macros. The client's local games run on them too, and cgame
 # keeps the engine's bgame, whose globals have their eng_ names
-# (scripts/bgame_names.py). It needs COD2_PLUS_SERVER.
-option(COD2_PLUS_CLIENT_SERVER "Use CoD2rev-Plus's server, game and bgame in the client's local games" ON)
-if(NOT COD2_PLUS_SERVER OR (WIN32 AND NOT COD2_WIN32_CLIENT))
-  set(COD2_PLUS_CLIENT_SERVER OFF)
+# (scripts/bgame_names.py). PROTOCOL_VERSION follows the game version.
+add_compile_definitions(COD2_PLUS_SCRIPT=1)   # the data blobs leave the VM globals to src/script
+set(COD2_PLUS_CLIENT_SERVER ON)
+if(WIN32 AND NOT COD2_WIN32_CLIENT)
+  set(COD2_PLUS_CLIENT_SERVER OFF)   # a MinGW configure builds either the client or the dedicated server
 endif()
 if(COD2_PLUS_CLIENT_SERVER)
   add_compile_definitions(COD2_PLUS_CLIENT_SERVER=1)  # cgame no longer shares the bgame with a local server
@@ -125,9 +97,9 @@ endif()
 # games. Their LIBCOD blocks in the server, game, bgame, core and script VM
 # are compiled in with it.
 option(COD2_PLUS_LIBCOD "CoD2rev-Plus's libcod in the dedicated server and the client's local games" ON)
-if(NOT COD2_PLUS_SERVER OR (COD2_WIN32_CLIENT AND NOT COD2_PLUS_CLIENT_SERVER))
-  # a MinGW client's configuration has no dedicated server: libcod only with
-  # its local server
+if((WIN32 AND COD2_X64) OR EMSCRIPTEN)
+  # libcod keeps pointers in long (gsc_memory.cpp), 4 bytes on Win64; the web
+  # build has none of its threads, sockets and SQLite
   set(COD2_PLUS_LIBCOD OFF)
 endif()
 # the client too: then the script VM, which both share, has libcod's blocks;
@@ -148,8 +120,15 @@ if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
 else()
   set(COD2_PROTOCOL 118)
 endif()
-if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))
-  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web and MSVC builds")
+# 1.3 Plus or stock 1.3: with it (OpenCoD2-Plus Server's make PLUS=1) the
+# servers take only the Plus client and the client announces itself as one;
+# without it everything speaks stock 1.3, and every other improvement stays
+option(COD2_PLUS_PROTOCOL "1.3 builds speak CoD2 1.3 Plus (OFF: stock 1.3)" ON)
+if(COD2_PROTOCOL EQUAL 118 AND COD2_PLUS_PROTOCOL)
+  add_compile_definitions(COD2_PLUS)
+endif()
+if(COD2_FEATURE_CFLAGS AND EMSCRIPTEN)
+  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web build")
 endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
@@ -201,6 +180,10 @@ function(cod2_plus_libcod)
     INCLUDE_DIRECTORIES "${dir}/speex/include;${mbedtls_dirs}")
   set_source_files_properties(${mbedtls} PROPERTIES
     COMPILE_DEFINITIONS "${mbedtls_defs}" INCLUDE_DIRECTORIES "${mbedtls_dirs}")
+  if(COD2_X64)
+    # as CoD2rev-Plus's Makefile on x64: Mbed TLS builds AES-NI only with these (it checks the CPU at run time)
+    set_source_files_properties(${mbedtls} PROPERTIES COMPILE_OPTIONS "-maes;-mpclmul")
+  endif()
 endfunction()
 
 # cod2_plus_server(): the OBJECT library with CoD2rev-Plus's server, game,
@@ -249,7 +232,7 @@ endfunction()
 
 # cod2_plus_replaced(<list_var> <out_var>): moves to <out_var> the sources of
 # <list_var> that test/plus_replaces.txt names (a line ending in / names a
-# directory): with COD2_PLUS_SERVER the dedicated server leaves them to
+# directory): the dedicated server leaves them to
 # CoD2rev-Plus's code, and only the client links them.
 function(cod2_plus_replaced list_var out_var)
   file(STRINGS ${CMAKE_SOURCE_DIR}/test/plus_replaces.txt entries REGEX "^[^#]")
@@ -352,12 +335,19 @@ list(APPEND WEB_C
   src/PC/zlib/inflate.c src/PC/zlib/inftrees.c src/PC/zlib/infutil.c src/PC/zlib/zutil.c
   src/web/webgl2_compat.c src/web/wasm_aliases.c src/web/cod2_wasmfs_mount.c)
 
-add_executable(cod2 ${WEB_C} ${WEB_GEN_C})
+# the local games on OpenCoD2-Plus Server's VM, server, game, bgame and
+# collision, through the bridge, as the other clients
+add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1
+  "MAC_STATIC=")   # OpenCoD2-Plus Server's q_shared.h defines it per platform, none of them wasm
+cod2_plus_script()
+cod2_plus_server_client()
+add_executable(cod2 ${WEB_C} ${WEB_GEN_C} $<TARGET_OBJECTS:cod2_plus_script>
+  $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
 target_compile_definitions(cod2 PRIVATE WEB_BUILD=1 SDL_DISABLE_IMMINTRIN_H)
 target_include_directories(cod2 PRIVATE
   ${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR}/PC/zlib ${COD2_SRC_DIR}
   ${COD2_SRC_DIR}/headers ${CMAKE_SOURCE_DIR})
-target_compile_options(cod2 PRIVATE -w -O0 -gsource-map -flto ${COD2_WNO})
+target_compile_options(cod2 PRIVATE -w -O0 -gsource-map -flto -sUSE_SDL=2 ${COD2_WNO})   # the SDL2 port's headers
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
@@ -388,14 +378,6 @@ add_custom_command(TARGET cod2 POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${COD2_SRC_DIR}/web/cod2_fs.js ${CMAKE_BINARY_DIR}/cod2_fs.js)
 
 # =============================================================================
-elseif(WIN32 AND MSVC)
-# ----------------------------------------------------------------------------
-# WINDOWS / MSVC (cl.exe) -- additive native-Windows client build.
-# Self-contained in cmake/win32-msvc.cmake so the MinGW path below is untouched.
-# ----------------------------------------------------------------------------
-include(${CMAKE_SOURCE_DIR}/cmake/win32-msvc.cmake)
-
-# =============================================================================
 elseif(WIN32)
 # ----------------------------------------------------------------------------
 # WINDOWS (MinGW cross-compile: cod2_win32_ded.exe / cod2_win32.exe)
@@ -413,58 +395,100 @@ add_compile_options(${COD2_FEATURE_LIST})
 # win32 C flags (mirror Makefile.win32 WCFLAGS); -fcommon is essential (tentative
 # BSS defs in both bss.c and the reconstructed .c rely on the pre-GCC-10 merge).
 add_compile_options(
-  "$<$<COMPILE_LANGUAGE:C>:-w;-g;-msse;-fcommon;-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:C>:-w;-g;-msse2;-mfpmath=sse;-fcommon;-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
-  "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse;-DSDL_DISABLE_IMMINTRIN_H>"
+  "$<$<COMPILE_LANGUAGE:CXX>:-w;-g;-msse2;-mfpmath=sse;-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/win32_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-D_GNU_SOURCE=1;-DWIN32;-D_WIN32>"
-  "$<$<COMPILE_LANGUAGE:ASM>:-m32>")
+  "$<$<COMPILE_LANGUAGE:ASM>:$<$<NOT:$<BOOL:${COD2_X64}>>:-m32>>")
 include_directories(${COD2_SRC_DIR}/PC/speex ${COD2_SRC_DIR} ${COD2_SRC_DIR}/headers ${COD2_SRC_DIR}/win32/shims ${CMAKE_SOURCE_DIR})
+if(COD2_MSVC_ABI)
+  # the MSVC runtime has no POSIX headers (unistd.h, dirent.h, pthread.h): the shims, first
+  include_directories(BEFORE ${COD2_SRC_DIR}/win32/shims-msvc)
+  add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS
+                          _WINSOCK_DEPRECATED_NO_WARNINGS)
+endif()
 
-# PE link: same seam aliases as Linux, but every C symbol carries PE's leading '_'.
+# PE link: same seam aliases as Linux; PE32 decorates every C symbol with a
+# leading '_', PE x64 does not
+if(COD2_X64)
+  set(COD2_PE_C "")
+else()
+  set(COD2_PE_C "_")
+endif()
 set(COD2_WIN_LINK
   -static -static-libgcc -static-libstdc++
   -Wl,--allow-multiple-definition -Wl,--wrap,R_Error
-  -Wl,--defsym,___mh_execute_header=0x1000
-  -Wl,--defsym,_level_ptr=_level
-  -Wl,--defsym,_g_entities_ptr=_g_entities
-  -Wl,--defsym,_scr_const_ptr=_scr_const
-  -Wl,--defsym,_playerCorpseInfo_ptr=_g_scr_data
-  -Wl,--defsym,_g_renderer_ptr=_re
-  -Wl,--defsym,_scrAnimPub_ptr=_scrAnimPub
-  -Wl,--defsym,_scrCompPub_ptr=_scrCompilePub
-  -Wl,--defsym,_scrParserPub_ptr=_scrParserPub
-  -Wl,--defsym,_r_frontEndData_ptr=_rg
-  -Wl,--defsym,_r_sys_ptr=_ri
-  -Wl,--defsym,_r_limits_ptr=_vidConfig
-  -Wl,--defsym,_sv_ptr=_sv
-  -Wl,--defsym,_svs_ptr=_svs
-  -Wl,--defsym,_cg_globUI=_legacyHacks
-  -Wl,--defsym,_g_time=_imp_level_bgs
-  -Wl,--defsym,_g_time_ptr=_imp_bgs)
+  -Wl,--defsym,${COD2_PE_C}__mh_execute_header=0x1000
+  -Wl,--defsym,${COD2_PE_C}level_ptr=${COD2_PE_C}level
+  -Wl,--defsym,${COD2_PE_C}g_entities_ptr=${COD2_PE_C}g_entities
+  -Wl,--defsym,${COD2_PE_C}scr_const_ptr=${COD2_PE_C}scr_const
+  -Wl,--defsym,${COD2_PE_C}playerCorpseInfo_ptr=${COD2_PE_C}g_scr_data
+  -Wl,--defsym,${COD2_PE_C}g_renderer_ptr=${COD2_PE_C}re
+  -Wl,--defsym,${COD2_PE_C}scrAnimPub_ptr=${COD2_PE_C}scrAnimPub
+  -Wl,--defsym,${COD2_PE_C}scrCompPub_ptr=${COD2_PE_C}scrCompilePub
+  -Wl,--defsym,${COD2_PE_C}scrParserPub_ptr=${COD2_PE_C}scrParserPub
+  -Wl,--defsym,${COD2_PE_C}r_frontEndData_ptr=${COD2_PE_C}rg
+  -Wl,--defsym,${COD2_PE_C}r_sys_ptr=${COD2_PE_C}ri
+  -Wl,--defsym,${COD2_PE_C}r_limits_ptr=${COD2_PE_C}vidConfig
+  -Wl,--defsym,${COD2_PE_C}sv_ptr=${COD2_PE_C}sv
+  -Wl,--defsym,${COD2_PE_C}svs_ptr=${COD2_PE_C}svs
+  -Wl,--defsym,${COD2_PE_C}cg_globUI=${COD2_PE_C}legacyHacks
+  -Wl,--defsym,${COD2_PE_C}g_time=${COD2_PE_C}imp_level_bgs
+  -Wl,--defsym,${COD2_PE_C}g_time_ptr=${COD2_PE_C}imp_bgs)
 set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
+if(COD2_MSVC_ABI)
+  # lld-link spells GNU ld's options its own way; the MSVC runtime brings the C++
+  # library, and zlib is compiled from src/PC/zlib below
+  list(FILTER COD2_WIN_LINK EXCLUDE REGEX "__mh_execute_header")   # absolute: src/stubs/link_stubs.c
+  string(REPLACE "-Wl,--defsym," "-Wl,/alternatename:" COD2_WIN_LINK "${COD2_WIN_LINK}")
+  list(REMOVE_ITEM COD2_WIN_LINK -static -static-libgcc -static-libstdc++)
+  list(TRANSFORM COD2_WIN_LINK REPLACE "^-Wl,--allow-multiple-definition$" "-Wl,/FORCE:MULTIPLE")
+  list(TRANSFORM COD2_WIN_LINK REPLACE "^-Wl,--wrap,(.*)$" "-Wl,/wrap:\\1")
+  set(COD2_WIN_LIBS ws2_32 winmm dbghelp)
+endif()
 
 if(COD2_WIN32_CLIENT)
-  list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+  if(NOT COD2_X64)
+    if(COD2_MSVC_ABI)
+      list(APPEND COD2_WIN_LINK -Wl,/LARGEADDRESSAWARE)
+    else()
+      list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
+    endif()
+  endif()
   add_compile_definitions(W32_CLIENT)
-  include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
-  list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
+  if(COD2_X64)
+    # the x86_64 static SDL2 of SDL's MinGW package (scripts/mingw64_deps.sh)
+    set(COD2_SDL2_WIN64 ${CMAKE_SOURCE_DIR}/third_party/mingw64-sdl2/SDL2-2.30.9/x86_64-w64-mingw32)
+    include_directories(${COD2_SDL2_WIN64}/include ${COD2_SDL2_WIN64}/include/SDL2)
+    list(APPEND COD2_WIN_LINK -L${COD2_SDL2_WIN64}/lib)
+  elseif(COD2_MSVC_ABI)
+    # SDL's VC development package (SDL2.lib, SDL2.dll), supplied in third_party/
+    file(GLOB COD2_SDL2_VC ${CMAKE_SOURCE_DIR}/third_party/SDL2-*/lib/x86)
+    if(NOT COD2_SDL2_VC)
+      message(FATAL_ERROR "no SDL2 VC package under third_party/SDL2-*/ (SDL2-devel-<version>-VC.zip)")
+    endif()
+    list(GET COD2_SDL2_VC 0 COD2_SDL2_VC)
+    # the package keeps its headers in include/, the engine includes <SDL2/SDL.h>
+    file(COPY ${COD2_SDL2_VC}/../../include/ DESTINATION ${CMAKE_BINARY_DIR}/sdl2/SDL2)
+    include_directories(${CMAKE_BINARY_DIR}/sdl2 ${CMAKE_BINARY_DIR}/sdl2/SDL2)
+    list(APPEND COD2_WIN_LINK -L${COD2_SDL2_VC})
+  else()
+    include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
+    list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
+  endif()
   list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid wininet
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)
-  if(COD2_PLUS_CLIENT_SERVER)
-    # one executable per configure: the blobs leave the game's and the
-    # collision's globals to CoD2rev-Plus's code, as cod2_linux's do
-    add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1)
-  endif()
+  # one executable per configure: the blobs leave the game's and the
+  # collision's globals to CoD2rev-Plus's code, as cod2_linux's do
+  add_compile_definitions(COD2_PLUS_GAME=1 COD2_PLUS_CM=1)
 else()
   add_compile_definitions(DEDICATED)
   set(W32_EXE cod2_win32_ded)
-  if(COD2_PLUS_SERVER)
-    add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
-  endif()
+  add_compile_definitions(COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)  # the blobs leave their globals to CoD2rev-Plus
 endif()
 if(COD2_WIN32_CLIENT AND COD2_WIN32_REAL_D3D9)
   add_compile_definitions(GFX_REAL_D3D9)
@@ -480,26 +504,38 @@ file(GLOB_RECURSE W_WIN_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${CO
 file(GLOB         W_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WIN_C ${W_PC_C} ${W_MAC_C} ${W_STUBS_C} ${W_WIN_C} ${W_ROOT_C})
 list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
-# the MSVC build's shims (its own dirent, SDL2 stubs, link glue): with MinGW
+# the MSVC-ABI build's POSIX shims (its own dirent, pthreads): with MinGW
 # their readdir replaced the C runtime's, whose struct dirent differs, so
 # every file name came 8 bytes short and no .iwd was found
 list(FILTER WIN_C EXCLUDE REGEX "^src/win32/shims-msvc/")
-list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
+if(COD2_MSVC_ABI)
+  # the MSVC runtime has no readdir nor pthreads
+  list(APPEND WIN_C src/win32/shims-msvc/dirent_msvc.c src/win32/shims-msvc/pthread_msvc.c)
+  # zlib allocates through the engine (src/stubs/zlib_alloc.c), as on MinGW, where it wins over -lz's
+  set_source_files_properties(src/PC/zlib/zutil.c PROPERTIES COMPILE_DEFINITIONS MY_ZCALLOC)
+else()
+  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/zlib/(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
+endif()
 list(APPEND WIN_C src/blobs/bss.c src/unix/sysdiff_statehash.c)
 if(COD2_WIN32_CLIENT)
   list(APPEND WIN_C src/unix/linux_input.c)   # pure-SDL2 event pump, works on win32
-  # Miles: the game's own mss32.dll (src/PC/win32/mss32_dll.c) instead of the
-  # Mac port's engine
+  # src/snd_sdl instead of the Mac port's engine
   list(REMOVE_ITEM WIN_C src/Mac/Tools/MacMSS.c)
-  add_compile_definitions(COD2_MSS32_DLL=1)
 else()
   list(REMOVE_ITEM WIN_C src/win32/gl_loader.c)  # client-only (real GL loader)
 endif()
 
 # ELF .S data blobs -> PE/COFF .S, then assemble (data/literals/import_pointers/vtables).
 set(W32GEN ${CMAKE_SOURCE_DIR}/build/win_gen)
-set(WIN_ASM_GEN ${W32GEN}/data.win.S ${W32GEN}/literals.win.S ${W32GEN}/import_pointers.win.S)
-set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
+if(COD2_X64)
+  # x64: the portable C blobs (pointer slots as void *), as the 64-bit Linux
+  # client and MSVC; PE x64 names need no '_' aliases for their C++ symbols
+  set(WIN_ASM_GEN ${CMAKE_SOURCE_DIR}/build/native_gen/data32.c ${CMAKE_SOURCE_DIR}/build/native_gen/literals32.c
+      ${CMAKE_SOURCE_DIR}/build/native_gen/import_pointers_native.c)
+else()
+  set(WIN_ASM_GEN ${W32GEN}/data.win.S ${W32GEN}/literals.win.S ${W32GEN}/import_pointers.win.S)
+  set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
+endif()
 
 # PE link aliases for C++ symbols stored in the (C-compiled) data blobs: the C
 # compiler prefixes them to '___ZN...' (common syms, no address until link), so
@@ -507,21 +543,23 @@ set_source_files_properties(${WIN_ASM_GEN} PROPERTIES LANGUAGE ASM)
 # bind a common symbol). Generated at configure time from the blob sources.
 file(STRINGS ${W32GEN}/cxx_defsyms_c.txt COD2_CXX_DEFSYMS_C)
 file(STRINGS ${W32GEN}/cxx_defsyms_asm.txt COD2_CXX_DEFSYMS_ASM)
-foreach(pair ${COD2_CXX_DEFSYMS_C} ${COD2_CXX_DEFSYMS_ASM})
-  list(APPEND COD2_WIN_LINK -Wl,--defsym,${pair})
-endforeach()
+if(NOT COD2_X64)
+  if(COD2_MSVC_ABI)
+    set(COD2_DEFSYM -Wl,/alternatename:)
+  else()
+    set(COD2_DEFSYM -Wl,--defsym,)
+  endif()
+  foreach(pair ${COD2_CXX_DEFSYMS_C} ${COD2_CXX_DEFSYMS_ASM})
+    list(APPEND COD2_WIN_LINK ${COD2_DEFSYM}${pair})
+  endforeach()
+endif()
 
 set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
   COMPILE_DEFINITIONS "COD2_GIT_HASH=\"${COD2_GIT_HASH}\"")
 
-set(COD2_SCRIPT_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/script/")
-  cod2_plus_script()
-  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
-endif()
-set(COD2_W32_SERVER_OBJS "")
-if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
+cod2_plus_script()
+set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
+if(NOT COD2_WIN32_CLIENT)
   cod2_plus_replaced(WIN_C replaced)
   cod2_plus_server()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
@@ -531,19 +569,23 @@ if(COD2_PLUS_SERVER AND NOT COD2_WIN32_CLIENT)
     endif()
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
-elseif(COD2_PLUS_CLIENT_SERVER)
-  # the client runs CoD2rev-Plus's server, game, bgame and collision
-  # instead, as cod2_linux does
-  list(FILTER WIN_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
+else()
+  # the client runs CoD2rev-Plus's server, game, bgame and collision, as cod2_linux does
   cod2_plus_server_client()
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
   if(COD2_LIBCOD_CLIENT)
     list(APPEND COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
   endif()
-elseif(COD2_PLUS_SCRIPT)
-  set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
+if(COD2_WIN32_CLIENT)
+  # The sound engine: C as on Linux, and optimized, as this client's other code
+  # is not and a mixer has a deadline. SDL's threads enter with a 4-byte stack.
+  file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
+  set_source_files_properties(${COD2_SND_SDL_C} PROPERTIES COMPILE_OPTIONS
+    "-O2;-fno-strict-aliasing;-fwrapv;$<$<NOT:$<OR:$<BOOL:${COD2_X64}>,$<BOOL:${COD2_MSVC_ABI}>>>:-mincoming-stack-boundary=2>")
+  list(APPEND WIN_C ${COD2_SND_SDL_C})
+endif()
 enable_language(RC)
 add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS}
   ${COD2_SRC_DIR}/win32/opencod2.rc)
@@ -559,6 +601,19 @@ endif()
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 target_link_options(${W32_EXE} PRIVATE ${COD2_WIN_LINK})
+if(COD2_MSVC_ABI)
+  # C and C++ globals meet by name only on the Itanium ABI: alias them (cmake/msvc_data_aliases.cmake)
+  get_filename_component(COD2_LLVM_BIN ${CMAKE_CXX_COMPILER} DIRECTORY)
+  add_custom_command(TARGET ${W32_EXE} PRE_LINK
+    COMMAND ${CMAKE_COMMAND} -DNM=${COD2_LLVM_BIN}/llvm-nm.exe -DOBJECT_DIR=${CMAKE_BINARY_DIR}/CMakeFiles
+            -DOUT=${CMAKE_BINARY_DIR}/msvc_data_aliases.rsp -P ${CMAKE_SOURCE_DIR}/cmake/msvc_data_aliases.cmake
+    VERBATIM)
+  # a console program entering at WinMain, as MinGW's runtime does
+  target_link_options(${W32_EXE} PRIVATE -Wl,@${CMAKE_BINARY_DIR}/msvc_data_aliases.rsp -Wl,/MAP
+                      -Wl,/ENTRY:WinMainCRTStartup -Wl,/SAFESEH:NO   # the assembled blobs carry no SEH tables
+                      -Wl,/STACK:0x200000   # GNU ld's 2 MB, the stack every map and script ran with on MinGW
+                      -Wl,/DEBUG)   # a .pdb, so the crash reporter names functions
+endif()
 target_link_libraries(${W32_EXE} PRIVATE ${COD2_WIN_LIBS})
 set_target_properties(${W32_EXE} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} SUFFIX ".exe")
@@ -606,6 +661,15 @@ if(NOT SDL2_FOUND)
   set(SDL2_INCLUDE_DIRS /usr/include/SDL2)
   set(SDL2_LIBRARIES SDL2)
 endif()
+# the 64-bit client: SDL2's amd64 headers from scripts/linux_x64_deps.sh (a host set up
+# for the 32-bit builds has only libsdl2-dev:i386), and the system's amd64 runtime
+set(COD2_LINUX_X64_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-x64)
+if(COD2_X64 AND NOT CMAKE_TOOLCHAIN_FILE AND EXISTS ${COD2_LINUX_X64_DIR}/usr/include/SDL2/SDL.h)
+  set(SDL2_INCLUDE_DIRS ${COD2_LINUX_X64_DIR}/usr/include/x86_64-linux-gnu ${COD2_LINUX_X64_DIR}/usr/include
+      ${COD2_LINUX_X64_DIR}/usr/include/x86_64-linux-gnu/SDL2 ${COD2_LINUX_X64_DIR}/usr/include/SDL2)
+  set(SDL2_CFLAGS_OTHER -D_REENTRANT)
+  set(SDL2_LIBRARIES -l:libSDL2-2.0.so.0)
+endif()
 
 if(COD2_DEBUG)
   set(COD2_OPT_FLAGS -O0)
@@ -622,7 +686,7 @@ endif()
 separate_arguments(COD2_FEATURE_LIST UNIX_COMMAND "${COD2_FEATURE_CFLAGS}")
 
 add_compile_options(
-  "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:C>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse2;-mfpmath=sse;-fno-omit-frame-pointer>"
   "$<$<COMPILE_LANGUAGE:C>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:C>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:C>:${SDL2_CFLAGS_OTHER}>"
@@ -630,7 +694,7 @@ add_compile_options(
   "$<$<COMPILE_LANGUAGE:C>:${COD2_WNO}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_HARDEN_CFLAGS}>"
   "$<$<COMPILE_LANGUAGE:C>:${COD2_FEATURE_LIST}>"
-  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse;-fno-omit-frame-pointer>"
+  "$<$<COMPILE_LANGUAGE:CXX>:${COD2_ARCH_CFLAGS};-fno-pie;-no-pie;-w;-g;-msse2;-mfpmath=sse;-fno-omit-frame-pointer>"
   "$<$<COMPILE_LANGUAGE:CXX>:-include;${COD2_SRC_DIR}/headers/glibc_compat.h>"
   "$<$<COMPILE_LANGUAGE:CXX>:-DSDL_DISABLE_IMMINTRIN_H>"
   "$<$<COMPILE_LANGUAGE:CXX>:${SDL2_CFLAGS_OTHER}>"
@@ -678,6 +742,11 @@ file(GLOB_RECURSE COD2_MAC_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "$
 file(GLOB_RECURSE COD2_STUBS_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.c")
 file(GLOB         COD2_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(ALL_C ${COD2_PC_C} ${COD2_MAC_C} ${COD2_STUBS_C} ${COD2_ROOT_C})
+# Sound: the clients have the SDL engine, and the dedicated server the Mac port's stubs of Miles.
+# src/stubs/audio_stubs.c stays in both: the voice code (groupvoice, mac_record_dsound.c) links to it.
+file(GLOB COD2_SND_DED_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/Mac/Tools/MacMSS*.c")
+list(REMOVE_ITEM ALL_C ${COD2_SND_DED_C})
+file(GLOB COD2_SND_SDL_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/snd_sdl/*.c")
 file(GLOB_RECURSE COD2_PC_ASM    CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/PC/*.S")
 file(GLOB_RECURSE COD2_STUBS_ASM CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.S")
 file(GLOB         COD2_ROOT_ASM  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.S")
@@ -699,63 +768,48 @@ set_source_files_properties(src/PC/qcommon/crash_handler.c PROPERTIES
 
 set(COD2_DED_GUARDED src/Mac/Main/mac_main.c src/PC/qcommon/common.c)
 list(REMOVE_ITEM ALL_C ${COD2_DED_GUARDED})
-# With COD2_PLUS_SERVER the dedicated server links CoD2rev-Plus's code instead
-# of the sources in test/plus_replaces.txt, which only the client links, and the
-# blobs that define their globals are compiled for each executable, leaving
-# them to CoD2rev-Plus's code in the dedicated.
-set(COD2_SERVER_MP_C "")
-if(COD2_PLUS_SERVER)
-  cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
-  cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
-  list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
-  list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/universal/com_math.c)
-  list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
-  list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c
-    src/PC/universal/com_math.c)
-endif()
+# The dedicated server links CoD2rev-Plus's code instead of the sources in
+# test/plus_replaces.txt, which only the client links, and the blobs that
+# define their globals are compiled for each executable, leaving them to
+# CoD2rev-Plus's code in the dedicated.
+cod2_plus_replaced(ALL_C COD2_SERVER_MP_C)
+cod2_plus_replaced(COD2_DED_GUARDED replaced_guarded)
+list(APPEND COD2_SERVER_MP_C ${replaced_guarded})
+list(REMOVE_ITEM ALL_C src/blobs/bss.c src/PC/universal/com_math.c)
+list(REMOVE_ITEM GEN_C ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c)
+list(APPEND COD2_DED_GUARDED src/blobs/bss.c ${GEN_DIR}/data32.c ${GEN_DIR}/literals32.c
+  src/PC/universal/com_math.c)
 
 # 64-bit file offsets and inode numbers: without them a 32-bit readdir/stat
 # fails with EOVERFLOW on file systems with large inodes (Windows drives under
 # WSL), and no .iwd is found.
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
-set(COD2_SCRIPT_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  list(FILTER ALL_C EXCLUDE REGEX "^src/PC/script/")
-  cod2_plus_script()
-  set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
-endif()
+cod2_plus_script()
+set(COD2_SCRIPT_OBJS $<TARGET_OBJECTS:cod2_plus_script>)
 cod2_cxx_sources(ALL_C ${ALL_C})
 cod2_cxx_sources(COD2_DED_GUARDED ${COD2_DED_GUARDED})
+cod2_cxx_sources(COD2_SND_DED_C ${COD2_SND_DED_C})
 add_library(cod2_objs OBJECT ${ALL_C} ${ALL_ASM} ${GEN_C})
-set(COD2_CLIENT_SERVER_OBJS "")
-set(COD2_DED_SERVER_OBJS "")
-if(COD2_PLUS_SCRIPT)
-  set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
-  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
+add_library(cod2_snd_ded OBJECT ${COD2_SND_DED_C})
+add_library(cod2_snd_sdl OBJECT ${COD2_SND_SDL_C})
+# the client runs CoD2rev-Plus's server, game and bgame
+cod2_plus_server_client()
+set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
+if(COD2_LIBCOD_CLIENT)
+  list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
 endif()
-if(COD2_PLUS_SERVER)
-  if(COD2_PLUS_CLIENT_SERVER)
-    # the client runs CoD2rev-Plus's server, game and bgame instead
-    list(FILTER COD2_SERVER_MP_C EXCLUDE REGEX "^src/PC/(server_mp|game_mp|game)/|^src/PC/qcommon/cm_")
-    cod2_plus_server_client()
-    set(COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_core> $<TARGET_OBJECTS:cod2_plus_server_client>)
-    if(COD2_LIBCOD_CLIENT)
-      list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
-    endif()
-  endif()
-  cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
-  add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
-  if(COD2_LIBCOD_CLIENT)
-    # the engine's Com_Frame and Com_EventLoop (common.c, here) work for libcod
-    target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
-  endif()
-  cod2_plus_server()
-  list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
-  set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
-  if(COD2_PLUS_LIBCOD)
-    list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
-  endif()
+cod2_cxx_sources(COD2_SERVER_MP_C ${COD2_SERVER_MP_C})
+add_library(cod2_server_mp OBJECT ${COD2_SERVER_MP_C})
+if(COD2_LIBCOD_CLIENT)
+  # the engine's Com_Frame and Com_EventLoop (common.c, here) work for libcod
+  target_compile_definitions(cod2_server_mp PRIVATE COD2_PLUS_LIBCOD=1)
+endif()
+cod2_plus_server()
+list(APPEND COD2_CLIENT_SERVER_OBJS $<TARGET_OBJECTS:cod2_server_mp>)
+set(COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_server>)
+if(COD2_PLUS_LIBCOD)
+  list(APPEND COD2_DED_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_libcod>)
 endif()
 set(COD2_DED_SCRIPT_OBJS ${COD2_SCRIPT_OBJS})
 if(COD2_PLUS_LIBCOD AND NOT COD2_LIBCOD_CLIENT)
@@ -765,14 +819,13 @@ endif()
 # The shared headers compiled as C++ (their layout pins and C linkage).
 add_library(cod2_cxx_header_check OBJECT test/cxx/header_check.cpp)
 
-add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> ${COD2_SCRIPT_OBJS} ${COD2_CLIENT_SERVER_OBJS} ${COD2_DED_GUARDED})
+add_executable(cod2_linux $<TARGET_OBJECTS:cod2_objs> $<TARGET_OBJECTS:cod2_snd_sdl> ${COD2_SCRIPT_OBJS} ${COD2_CLIENT_SERVER_OBJS} ${COD2_DED_GUARDED})
 target_link_libraries(cod2_linux PRIVATE ${COD2_LIBS})
 target_link_options(cod2_linux PRIVATE ${COD2_LINK_EXTRA})
 
-add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
+add_executable(cod2_lnxded $<TARGET_OBJECTS:cod2_objs> $<TARGET_OBJECTS:cod2_snd_ded> ${COD2_DED_SCRIPT_OBJS} ${COD2_DED_SERVER_OBJS} ${COD2_DED_GUARDED}
   src/unix/linux_ded_stubs.c)
-target_compile_definitions(cod2_lnxded PRIVATE DEDICATED $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_SERVER=1>
-  $<$<BOOL:${COD2_PLUS_SERVER}>:COD2_PLUS_GAME=1>)
+target_compile_definitions(cod2_lnxded PRIVATE DEDICATED COD2_PLUS_SERVER=1 COD2_PLUS_GAME=1)
 target_compile_definitions(cod2_linux PRIVATE $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_GAME=1>
   $<$<BOOL:${COD2_PLUS_CLIENT_SERVER}>:COD2_PLUS_CM=1>)
 target_link_libraries(cod2_lnxded PRIVATE ${COD2_DED_LIBS})

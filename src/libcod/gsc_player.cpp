@@ -318,7 +318,9 @@ void gsc_player_getip(scr_entref_t id)
 
 	char localip[16] = "127.0.0.1";
 
-	if (strcmp(localip, tmp) == 0)
+	// a local proxy's players get the address it reported; a client on
+	// 127.0.0.1 without one keeps that address, not an empty string
+	if (strcmp(localip, tmp) == 0 && proxy_realip[id.entnum][0])
 	{
 		snprintf(tmp, sizeof(tmp), "%s", proxy_realip[id.entnum]);
 	}

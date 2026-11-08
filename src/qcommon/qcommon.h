@@ -153,6 +153,7 @@ typedef struct
 
 // What net_altPort announces, as the 1.0 build also plays with 1.3 clients
 #define ALT_PORT_PROTOCOL 118
+#define PLUS_VERSION 123 // docs/architecture/plus-protocol.md
 #define ALT_PORT_VERSION "1.3"
 
 void NET_Init( void );
@@ -199,7 +200,10 @@ enum svc_ops_e
 	svc_serverCommand,
 	svc_download,
 	svc_snapshot,
-	svc_EOF
+	svc_EOF,
+#ifdef COD2_PLUS
+	svc_snapshotPlus // after svc_EOF, so that the stock numbers stay
+#endif
 };
 
 enum clc_ops_e
@@ -405,9 +409,9 @@ void Huff_Init( huffman_t *huff );
 void MSG_initHuffman();
 void Huff_addRef( huff_t* huff, byte ch );
 int  Huff_Receive( node_t *node, int *ch, byte *fin );
-void Huff_transmit( huff_t *huff, int ch, byte *fout );
+void Huff_transmit( huff_t *huff, int ch, byte *fout, int maxoffset );
 void Huff_offsetReceive( node_t *node, int *ch, byte *fin, int *offset );
-void Huff_offsetTransmit( huff_t *huff, int ch, byte *fout, int *offset );
+void Huff_offsetTransmit( huff_t *huff, int ch, byte *fout, int *offset, int maxoffset );
 void Huff_putBit( int bit, byte *fout, int *offset );
 int  Huff_getBit( byte *fout, int *offset );
 
@@ -418,7 +422,7 @@ void MSG_WriteBit0( msg_t* msg );
 void MSG_WriteBit1(msg_t *msg);
 int MSG_ReadBits(msg_t *msg, int bits);
 int MSG_ReadBit(msg_t *msg);
-int MSG_WriteBitsCompress( byte *from, byte *to, int fromSizeBytes );
+int MSG_WriteBitsCompress( byte *from, byte *to, int fromSizeBytes, int toSizeBytes );
 int MSG_ReadBitsCompress( const byte *from, int fromSizeBytes, byte *to, int toSizeBytes );
 void MSG_WriteByte( msg_t *msg, int c );
 void MSG_WriteData(msg_t *buf, const void *data, int length);
@@ -438,6 +442,9 @@ void MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to
 void MSG_WriteDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *field );
 void MSG_WriteDeltaStruct( msg_t *msg, byte *from, byte *to, qboolean force, int numFields, int indexBits, const netField_t *stateFields, qboolean bChangeBit );
 void MSG_WriteDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, qboolean force);
+#ifdef COD2_PLUS
+extern int msg_plusSnapshotTime; // not 0: this snapshot writes entity times as offsets from it
+#endif
 void MSG_WriteDeltaArchivedEntity(msg_t *msg, archivedEntity_t *from, archivedEntity_t *to, int flags);
 void MSG_WriteDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, qboolean force);
 void MSG_ReadDeltaField( msg_t *msg, byte *from, byte *to, const netField_t *field, qboolean print );

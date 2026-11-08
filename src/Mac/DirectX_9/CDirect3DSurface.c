@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,7 +59,7 @@ int CDirect3DSurface_GetGLBlitInfo(const void *surf, unsigned int *texId, unsign
 
     if (!s || !s->owner)
         return 0;
-    id = *(const unsigned int *)((const byte *)s->owner + 5 * sizeof(void *) + 64);
+    id = ((const D3DTextureHead *)s->owner)->texIDStorage;
     if (!id)
         return 0;
     if (texId)
@@ -139,7 +140,11 @@ HRESULT CDirect3DSurface_LockRect(const CDirect3DSurface *_this, D3DLOCKED_RECT 
 
     (void)Flags;
 
-    if (!surface->surfaceMemory || (unsigned int)surface->surfaceMemory >= 0xf0000000) {
+#ifdef COD2_X64
+    if (!surface->surfaceMemory) {  /* 0xf0000000 is no bound on x64: mmap'd buffers lie above it */
+#else
+    if (!surface->surfaceMemory || (uintptr_t)surface->surfaceMemory >= 0xf0000000) {
+#endif
         static byte scratch[4 * 1024 * 1024];
         pLockedRect->pBits = scratch;
     } else {

@@ -1,4 +1,5 @@
 #include "../qcommon/qcommon.h"
+#include "../server/server.h"
 #include "g_shared.h"
 
 /*
@@ -379,7 +380,7 @@ void P_DamageFeedback( gentity_t *player )
 		client->ps.aimSpreadScale = 255;
 	}
 
-	kick = count * 0.2;
+	kick = count * 0.2f;
 
 	if ( kick < 5.0 )
 	{
@@ -1062,6 +1063,10 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 		pm.tracemask = MASK_PLAYERSOLID;
 
 	pm.handler = PMOVE_HANDLER_SERVER;
+#ifdef COD2_PLUS
+	// the same test that sends it Plus snapshots, so its prediction knows
+	pm.plusRules = svs.clients[ent->s.number].plusVersion == PLUS_VERSION;
+#endif
 
 	VectorCopy(client->ps.origin, client->oldOrigin);
 
@@ -1440,6 +1445,10 @@ void ClientEndFrame( gentity_t *ent )
 		}
 	}
 
+#ifdef COD2_PLUS
+	G_PlusRecordPose(ent);
+#endif
+
 	ent->client->buttonsSinceLastFrame = 0;
 }
 
@@ -1539,7 +1548,11 @@ void G_PlayerStateToEntityStateExtrapolate( playerState_t *ps, entityState_t *s,
 	// set the time for linear prediction
 	s->pos.trTime = time;
 	// set maximum extra polation time
+#ifdef COD2_PLUS
+	s->pos.trDuration = 1000 / sv_fps->current.integer;
+#else
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+#endif
 
 	s->apos.trType = TR_INTERPOLATE;
 	VectorCopy( ps->viewangles, s->apos.trBase );

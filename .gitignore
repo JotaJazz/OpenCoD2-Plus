@@ -54,3 +54,8 @@ docs/superpowers/
 
 # Linux real Direct3D 9 deps (scripts/build_linux_vk_deps.sh)
 third_party/linux-vk/
+third_party/linux-x64/
+third_party/mingw64/
+third_party/mingw64-sdl2/
+# Emscripten SDK for the web build (third_party/emsdk, installed by hand)
+third_party/emsdk/

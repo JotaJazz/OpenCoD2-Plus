@@ -58,7 +58,6 @@ void CG_PlayerSprites(centity_t *cent);
 void CG_Player(centity_t *cent);
 void CG_Corpse(centity_t *cent);
 
-#define CI_STRIDE 1208
 
 void CG_UpdatePlayerDObj(centity_t *cent)
 {
@@ -73,7 +72,7 @@ void CG_UpdatePlayerDObj(centity_t *cent)
     es = &cent->nextState;
     clientNum = es->clientNum;
 
-    ci = (byte *)(((char *)cg + offsetof(cg_t, bgs.clientinfo[0].infoValid)) + clientNum * CI_STRIDE);
+    ci = (byte *)&cg->bgs.clientinfo[clientNum];
 
     obj = Com_GetClientDObj(clientNum, cent->localClientNum);
     BG_UpdatePlayerDObj(obj, es, (clientInfo_t *)ci, 0);
@@ -82,7 +81,6 @@ void CG_UpdatePlayerDObj(centity_t *cent)
 void CG_ResetPlayerEntity(centity_t *cent)
 {
     entityState_t *es;
-    byte *ciBase;
     byte *ci;
     int clientNum;
     int deadFlag;
@@ -91,8 +89,7 @@ void CG_ResetPlayerEntity(centity_t *cent)
     es = &cent->nextState;
     clientNum = es->clientNum;
 
-    ciBase = (byte *)(((char *)cg + offsetof(cg_t, bgs.anim_user)) + clientNum * CI_STRIDE);
-    ci = ciBase + 0x14;
+    ci = (byte *)&cg->bgs.clientinfo[clientNum];
 
     deadFlag = es->eFlags & 0x20000;
 
@@ -115,13 +112,13 @@ void CG_ResetPlayerEntity(centity_t *cent)
             XAnimSetCompleteGoalWeight(pAnimTree, (*(unsigned short *)&cg->bgs.animScriptData.turningAnim) , 0.0f, 0.0f, 1.0f, 0, 0, 0);
         }
 
-        memset(ciBase + 0x394, 0, 48);
+        memset(&((clientInfo_t *)ci)->legs, 0, sizeof(lerpFrame_t));
         ((clientInfo_t *)ci)->legs.yawAngle = ((clientInfo_t *)ci)->playerAngles[1];
         ((clientInfo_t *)ci)->legs.yawing = 0;
         ((clientInfo_t *)ci)->legs.pitchAngle = 0;
         ((clientInfo_t *)ci)->legs.pitching = 0;
 
-        memset(ciBase + 0x3c4, 0, 48);
+        memset(&((clientInfo_t *)ci)->torso, 0, sizeof(lerpFrame_t));
         ((clientInfo_t *)ci)->torso.yawAngle = ((clientInfo_t *)ci)->playerAngles[1];
         ((clientInfo_t *)ci)->torso.yawing = 0;
         (*(int *)&((clientInfo_t *)ci)->torso.pitchAngle) = (*(int *)&((clientInfo_t *)ci)->playerAngles[0]);
@@ -284,8 +281,7 @@ static void CG_PlayerTurretPositionAndBlend(centity_t *cent)
 
     {
         int iClientNum = es->clientNum;
-        byte *ciBase = (byte *)(((char *)cg + offsetof(cg_t, bgs.anim_user)) + iClientNum * CI_STRIDE);
-        byte *turretCi = ciBase + 0x14;
+        byte *turretCi = (byte *)&cg->bgs.clientinfo[iClientNum];
         byte *pLerpAnim;
         int animValue;
         byte *animPtr;
@@ -314,7 +310,7 @@ static void CG_PlayerTurretPositionAndBlend(centity_t *cent)
         if (!*(int *)turretCi)
             return;
 
-        pLerpAnim = ciBase + 0x394;
+        pLerpAnim = (byte *)&((clientInfo_t *)turretCi)->legs;
 
         animValue = ((lerpFrame_t *)pLerpAnim)->animationNumber;
         if (!animValue)
@@ -630,7 +626,7 @@ void CG_Player(centity_t *cent)
     ((GfxEntity *)body)->materialRGBA[3] = 0xFF;
 
     {
-        byte *ci = (byte *)(((char *)cg + offsetof(cg_t, bgs.clientinfo[0].infoValid)) + iClientNum * CI_STRIDE);
+        byte *ci = (byte *)&cg->bgs.clientinfo[iClientNum];
         BG_PlayerAnimation(obj, es, (clientInfo_t *)ci);
     }
 

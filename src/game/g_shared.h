@@ -1196,10 +1196,34 @@ enum hintType_t
 	HINT_FRIENDLY
 };
 
+#ifdef COD2_PLUS
+// what a player's hitboxes take besides the origin, kept for each frame so
+// the antilag can rewind it too (G_PlusRecordPose, g_weapon_mp.cpp)
+struct plusPose_t
+{
+	int time;
+	vec3_t currentAngles;
+	int eFlags;
+	float fTorsoHeight;
+	float fTorsoPitch;
+	float fWaistPitch;
+	float legsYaw;
+	float torsoYaw;
+	float torsoPitch;
+	float lerpLean;
+	vec3_t playerAngles;
+	controller_info_t control;
+};
+#endif
+
 struct AntilagClientStore
 {
 	vec3_t realClientPositions[MAX_CLIENTS];
 	bool clientMoved[MAX_CLIENTS];
+#ifdef COD2_PLUS
+	plusPose_t realPoses[MAX_CLIENTS];
+	bool poseMoved[MAX_CLIENTS];
+#endif
 };
 
 struct spawn_t
@@ -1474,6 +1498,9 @@ void G_RunThink(gentity_s *ent);
 void G_CheckHitTriggerDamage( gentity_t *pActivator, const vec3_t vStart, const vec3_t vEnd, int iDamage, int iMOD );
 qboolean OnSameTeam(gentity_s *ent1, gentity_s *ent2);
 void G_AntiLagRewindClientPos(int gameTime, AntilagClientStore *antilagStore);
+#ifdef COD2_PLUS
+void G_PlusRecordPose(gentity_t *ent);
+#endif
 void G_AntiLag_RestoreClientPos(AntilagClientStore *antilagStore);
 void G_GrenadeTouchTriggerDamage( gentity_t *pActivator, const vec3_t vStart, const vec3_t vEnd, int iDamage, int iMOD );
 

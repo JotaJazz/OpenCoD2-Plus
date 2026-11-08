@@ -7,14 +7,14 @@
 #include "server_decls.h"
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>::value, "CM_BoxSightTrace returns a struct");
-static_assert(cod2_abi_class<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "CM_BoxSightTrace: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_BoxSightTrace: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_BoxSightTrace: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_BoxSightTrace: parameter 3 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_BoxSightTrace: parameter 4 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 5 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 6 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "CM_BoxSightTrace: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_BoxSightTrace: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_BoxSightTrace: parameter 2 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_BoxSightTrace: parameter 3 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_BoxSightTrace: parameter 4 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 5 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_BoxSightTrace: parameter 6 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_CM_BoxSightTrace(int a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) __asm__(COD2_SYM("CM_BoxSightTrace"));
 cod2_abi_int<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_CM_BoxSightTrace(int a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) { return (cod2_abi_int<decltype(CM_BoxSightTrace(std::declval<int>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4>)CM_BoxSightTrace(a0, a1, a2, a3, a4, a5, a6); }
 
@@ -26,72 +26,72 @@ int cod2x_CM_BoxTrace(trace_t *results, const float *start, const float *end, co
 }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_CalcTraceEntents(std::declval<TraceExtents*>()))>::value, "CM_CalcTraceEntents returns a struct");
-static_assert(cod2_abi_class<decltype(CM_CalcTraceEntents(std::declval<TraceExtents*>()))>() == 'v', "CM_CalcTraceEntents: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<TraceExtents*>() == 4, "CM_CalcTraceEntents: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_CalcTraceEntents(std::declval<TraceExtents*>()))>() == 'v', "CM_CalcTraceEntents: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<TraceExtents*>() == COD2_ABI_PICK(4, 8), "CM_CalcTraceEntents: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_CalcTraceEntents(std::declval<TraceExtents*>())) cod2x_CM_CalcTraceEntents(TraceExtents* a0) __asm__(COD2_SYM("CM_CalcTraceEntents"));
 decltype(CM_CalcTraceEntents(std::declval<TraceExtents*>())) cod2x_CM_CalcTraceEntents(TraceExtents* a0) { return CM_CalcTraceEntents(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_Cleanup())>::value, "CM_Cleanup returns a struct");
-static_assert(cod2_abi_class<decltype(CM_Cleanup())>() == 'v', "CM_Cleanup: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_Cleanup())>() == 'v', "CM_Cleanup: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_Cleanup()) cod2x_CM_Cleanup() __asm__(COD2_SYM("CM_Cleanup"));
 decltype(CM_Cleanup()) cod2x_CM_Cleanup() { return CM_Cleanup(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_ContentsOfModel(std::declval<int>()))>::value, "CM_ContentsOfModel returns a struct");
-static_assert(cod2_abi_class<decltype(CM_ContentsOfModel(std::declval<int>()))>() == 'i', "CM_ContentsOfModel: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_ContentsOfModel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_ContentsOfModel(std::declval<int>()))>() == 'i', "CM_ContentsOfModel: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_ContentsOfModel: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_ContentsOfModel(std::declval<int>())), 4> cod2x_CM_ContentsOfModel(int a0) __asm__(COD2_SYM("CM_ContentsOfModel"));
 cod2_abi_int<decltype(CM_ContentsOfModel(std::declval<int>())), 4> cod2x_CM_ContentsOfModel(int a0) { return (cod2_abi_int<decltype(CM_ContentsOfModel(std::declval<int>())), 4>)CM_ContentsOfModel(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_LinkWorld())>::value, "CM_LinkWorld returns a struct");
-static_assert(cod2_abi_class<decltype(CM_LinkWorld())>() == 'v', "CM_LinkWorld: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_LinkWorld())>() == 'v', "CM_LinkWorld: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_LinkWorld()) cod2x_CM_LinkWorld() __asm__(COD2_SYM("CM_LinkWorld"));
 decltype(CM_LinkWorld()) cod2x_CM_LinkWorld() { return CM_LinkWorld(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_LoadMap(std::declval<char const*>(), std::declval<int*>()))>::value, "CM_LoadMap returns a struct");
-static_assert(cod2_abi_class<decltype(CM_LoadMap(std::declval<char const*>(), std::declval<int*>()))>() == 'v', "CM_LoadMap: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "CM_LoadMap: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int*>() == 4, "CM_LoadMap: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_LoadMap(std::declval<char const*>(), std::declval<int*>()))>() == 'v', "CM_LoadMap: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "CM_LoadMap: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int*>() == COD2_ABI_PICK(4, 8), "CM_LoadMap: parameter 1 differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_LoadMap(std::declval<char const*>(), std::declval<int*>())) cod2x_CM_LoadMap(char const* a0, int* a1) __asm__(COD2_SYM("CM_LoadMap"));
 decltype(CM_LoadMap(std::declval<char const*>(), std::declval<int*>())) cod2x_CM_LoadMap(char const* a0, int* a1) { return CM_LoadMap(a0, a1); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_NumInlineModels())>::value, "CM_NumInlineModels returns a struct");
-static_assert(cod2_abi_class<decltype(CM_NumInlineModels())>() == 'i', "CM_NumInlineModels: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_NumInlineModels())>() == 'i', "CM_NumInlineModels: return class differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_NumInlineModels()), 4> cod2x_CM_NumInlineModels() __asm__(COD2_SYM("CM_NumInlineModels"));
 cod2_abi_int<decltype(CM_NumInlineModels()), 4> cod2x_CM_NumInlineModels() { return (cod2_abi_int<decltype(CM_NumInlineModels()), 4>)CM_NumInlineModels(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>()))>::value, "CM_PointContents returns a struct");
-static_assert(cod2_abi_class<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>()))>() == 'i', "CM_PointContents: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_PointContents: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_PointContents: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>()))>() == 'i', "CM_PointContents: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_PointContents: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_PointContents: parameter 1 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>())), 4> cod2x_CM_PointContents(float const* a0, int a1) __asm__(COD2_SYM("CM_PointContents"));
 cod2_abi_int<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>())), 4> cod2x_CM_PointContents(float const* a0, int a1) { return (cod2_abi_int<decltype(CM_PointContents(std::declval<float const*>(), std::declval<int>())), 4>)CM_PointContents(a0, a1); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_RadiusOfModel(std::declval<int>()))>::value, "CM_RadiusOfModel returns a struct");
-static_assert(cod2_abi_class<decltype(CM_RadiusOfModel(std::declval<int>()))>() == 'f', "CM_RadiusOfModel: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_size<decltype(CM_RadiusOfModel(std::declval<int>()))>() == 4, "CM_RadiusOfModel: return size differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_RadiusOfModel: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_RadiusOfModel(std::declval<int>()))>() == 'f', "CM_RadiusOfModel: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_size<decltype(CM_RadiusOfModel(std::declval<int>()))>() == 4, "CM_RadiusOfModel: return size differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_RadiusOfModel: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_RadiusOfModel(std::declval<int>())) cod2x_CM_RadiusOfModel(int a0) __asm__(COD2_SYM("CM_RadiusOfModel"));
 decltype(CM_RadiusOfModel(std::declval<int>())) cod2x_CM_RadiusOfModel(int a0) { return CM_RadiusOfModel(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_Shutdown())>::value, "CM_Shutdown returns a struct");
-static_assert(cod2_abi_class<decltype(CM_Shutdown())>() == 'v', "CM_Shutdown: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_Shutdown())>() == 'v', "CM_Shutdown: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(CM_Shutdown()) cod2x_CM_Shutdown() __asm__(COD2_SYM("CM_Shutdown"));
 decltype(CM_Shutdown()) cod2x_CM_Shutdown() { return CM_Shutdown(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>()))>::value, "CM_TempBoxModel returns a struct");
-static_assert(cod2_abi_class<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>()))>() == 'i', "CM_TempBoxModel: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TempBoxModel: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TempBoxModel: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_TempBoxModel: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>()))>() == 'i', "CM_TempBoxModel: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TempBoxModel: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TempBoxModel: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_TempBoxModel: parameter 2 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>())), 4> cod2x_CM_TempBoxModel(float const* a0, float const* a1, int a2) __asm__(COD2_SYM("CM_TempBoxModel"));
 cod2_abi_int<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>())), 4> cod2x_CM_TempBoxModel(float const* a0, float const* a1, int a2) { return (cod2_abi_int<decltype(CM_TempBoxModel(std::declval<float const*>(), std::declval<float const*>(), std::declval<int>())), 4>)CM_TempBoxModel(a0, a1, a2); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>()))>::value, "CM_TraceBox returns a struct");
-static_assert(cod2_abi_class<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>()))>() == 'i', "CM_TraceBox: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<TraceExtents*>() == 4, "CM_TraceBox: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TraceBox: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TraceBox: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float>() == 4, "CM_TraceBox: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>()))>() == 'i', "CM_TraceBox: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<TraceExtents*>() == COD2_ABI_PICK(4, 8), "CM_TraceBox: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TraceBox: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TraceBox: parameter 2 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float>() == 4, "CM_TraceBox: parameter 3 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())), 4> cod2x_CM_TraceBox(TraceExtents* a0, float const* a1, float const* a2, float a3) __asm__(COD2_SYM("CM_TraceBox"));
 cod2_abi_int<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())), 4> cod2x_CM_TraceBox(TraceExtents* a0, float const* a1, float const* a2, float a3) { return (cod2_abi_int<decltype(CM_TraceBox(std::declval<TraceExtents*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())), 4>)CM_TraceBox(a0, a1, a2, a3); }
 
@@ -103,16 +103,16 @@ int cod2x_CM_TransformedBoxTraceExternal(trace_t *results, const float *start, c
 }
 
 static_assert(cod2_bridge_returns_scalar<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>()))>::value, "CM_TransformedPointContents returns a struct");
-static_assert(cod2_abi_class<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>()))>() == 'i', "CM_TransformedPointContents: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TransformedPointContents: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "CM_TransformedPointContents: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TransformedPointContents: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "CM_TransformedPointContents: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>()))>() == 'i', "CM_TransformedPointContents: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TransformedPointContents: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "CM_TransformedPointContents: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TransformedPointContents: parameter 2 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "CM_TransformedPointContents: parameter 3 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>())), 4> cod2x_CM_TransformedPointContents(float const* a0, int a1, float const* a2, float const* a3) __asm__(COD2_SYM("CM_TransformedPointContents"));
 cod2_abi_int<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>())), 4> cod2x_CM_TransformedPointContents(float const* a0, int a1, float const* a2, float const* a3) { return (cod2_abi_int<decltype(CM_TransformedPointContents(std::declval<float const*>(), std::declval<int>(), std::declval<float const*>(), std::declval<float const*>())), 4>)CM_TransformedPointContents(a0, a1, a2, a3); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(GScr_LoadConsts())>::value, "GScr_LoadConsts returns a struct");
-static_assert(cod2_abi_class<decltype(GScr_LoadConsts())>() == 'v', "GScr_LoadConsts: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(GScr_LoadConsts())>() == 'v', "GScr_LoadConsts: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(GScr_LoadConsts()) cod2x_GScr_LoadConsts() __asm__(COD2_SYM("GScr_LoadConsts"));
 decltype(GScr_LoadConsts()) cod2x_GScr_LoadConsts() { return GScr_LoadConsts(); }
 
@@ -124,27 +124,27 @@ int cod2x_G_AnimScriptSound(int client, snd_alias_list_t *aliasList)
 }
 
 static_assert(cod2_bridge_returns_scalar<decltype(G_FreeEntity(std::declval<gentity_s*>()))>::value, "G_FreeEntity returns a struct");
-static_assert(cod2_abi_class<decltype(G_FreeEntity(std::declval<gentity_s*>()))>() == 'v', "G_FreeEntity: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<gentity_s*>() == 4, "G_FreeEntity: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(G_FreeEntity(std::declval<gentity_s*>()))>() == 'v', "G_FreeEntity: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<gentity_s*>() == COD2_ABI_PICK(4, 8), "G_FreeEntity: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(G_FreeEntity(std::declval<gentity_s*>())) cod2x_G_FreeEntity(gentity_s* a0) __asm__(COD2_SYM("G_FreeEntity"));
 decltype(G_FreeEntity(std::declval<gentity_s*>())) cod2x_G_FreeEntity(gentity_s* a0) { return G_FreeEntity(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(G_GetWeaponIndexForName(std::declval<char const*>()))>::value, "G_GetWeaponIndexForName returns a struct");
-static_assert(cod2_abi_class<decltype(G_GetWeaponIndexForName(std::declval<char const*>()))>() == 'i', "G_GetWeaponIndexForName: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "G_GetWeaponIndexForName: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(G_GetWeaponIndexForName(std::declval<char const*>()))>() == 'i', "G_GetWeaponIndexForName: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "G_GetWeaponIndexForName: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4> cod2x_G_GetWeaponIndexForName(char const* a0) __asm__(COD2_SYM("G_GetWeaponIndexForName"));
 cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4> cod2x_G_GetWeaponIndexForName(char const* a0) { return (cod2_abi_int<decltype(G_GetWeaponIndexForName(std::declval<char const*>())), 4>)G_GetWeaponIndexForName(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>()))>::value, "G_ParseWeaponAccurayGraphs returns a struct");
-static_assert(cod2_abi_class<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>()))>() == 'i', "G_ParseWeaponAccurayGraphs: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<WeaponDef*>() == 4, "G_ParseWeaponAccurayGraphs: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>()))>() == 'i', "G_ParseWeaponAccurayGraphs: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<WeaponDef*>() == COD2_ABI_PICK(4, 8), "G_ParseWeaponAccurayGraphs: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1> cod2x_G_ParseWeaponAccurayGraphs(WeaponDef* a0) __asm__(COD2_SYM("G_ParseWeaponAccurayGraphs"));
 cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1> cod2x_G_ParseWeaponAccurayGraphs(WeaponDef* a0) { return (cod2_abi_int<decltype(G_ParseWeaponAccurayGraphs(std::declval<WeaponDef*>())), 1>)G_ParseWeaponAccurayGraphs(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>()))>::value, "G_PlayerEvent returns a struct");
-static_assert(cod2_abi_class<decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>()))>() == 'v', "G_PlayerEvent: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>()))>() == 'v', "G_PlayerEvent: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "G_PlayerEvent: parameter 1 differs from the engine's 1.3 ABI");
 extern "C" decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>())) cod2x_G_PlayerEvent(int a0, int a1) __asm__(COD2_SYM("G_PlayerEvent"));
 decltype(G_PlayerEvent(std::declval<int>(), std::declval<int>())) cod2x_G_PlayerEvent(int a0, int a1) { return G_PlayerEvent(a0, a1); }
 
@@ -155,14 +155,14 @@ void cod2x_G_RegisterWeapon(int weapIndex)
 }
 
 static_assert(cod2_bridge_returns_scalar<decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>::value, "G_TraceCapsule returns a struct");
-static_assert(cod2_abi_class<decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "G_TraceCapsule: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<trace_t*>() == 4, "G_TraceCapsule: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 3 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "G_TraceCapsule: parameter 4 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 5 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 6 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'v', "G_TraceCapsule: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<trace_t*>() == COD2_ABI_PICK(4, 8), "G_TraceCapsule: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "G_TraceCapsule: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "G_TraceCapsule: parameter 2 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "G_TraceCapsule: parameter 3 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "G_TraceCapsule: parameter 4 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 5 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "G_TraceCapsule: parameter 6 differs from the engine's 1.3 ABI");
 extern "C" decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) __asm__(COD2_SYM("G_TraceCapsule"));
 decltype(G_TraceCapsule(std::declval<trace_t*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<int>(), std::declval<int>())) cod2x_G_TraceCapsule(trace_t* a0, float const* a1, float const* a2, float const* a3, float const* a4, int a5, int a6) { return G_TraceCapsule(a0, a1, a2, a3, a4, a5, a6); }
 
@@ -172,70 +172,70 @@ void cod2x_SV_AddDedicatedCommands(void)
 }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_Frame(std::declval<int>()))>::value, "SV_Frame returns a struct");
-static_assert(cod2_abi_class<decltype(SV_Frame(std::declval<int>()))>() == 'v', "SV_Frame: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_Frame: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_Frame(std::declval<int>()))>() == 'v', "SV_Frame: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_Frame: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_Frame(std::declval<int>())) cod2x_SV_Frame(int a0) __asm__(COD2_SYM("SV_Frame"));
 decltype(SV_Frame(std::declval<int>())) cod2x_SV_Frame(int a0) { return SV_Frame(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_GameCommand())>::value, "SV_GameCommand returns a struct");
-static_assert(cod2_abi_class<decltype(SV_GameCommand())>() == 'i', "SV_GameCommand: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_GameCommand())>() == 'i', "SV_GameCommand: return class differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(SV_GameCommand()), 4> cod2x_SV_GameCommand() __asm__(COD2_SYM("SV_GameCommand"));
 cod2_abi_int<decltype(SV_GameCommand()), 4> cod2x_SV_GameCommand() { return (cod2_abi_int<decltype(SV_GameCommand()), 4>)SV_GameCommand(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_Init())>::value, "SV_Init returns a struct");
-static_assert(cod2_abi_class<decltype(SV_Init())>() == 'v', "SV_Init: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_Init())>() == 'v', "SV_Init: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_Init()) cod2x_SV_Init() __asm__(COD2_SYM("SV_Init"));
 decltype(SV_Init()) cod2x_SV_Init() { return SV_Init(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_Netchan_AddOOBProfilePacket(std::declval<int>()))>::value, "SV_Netchan_AddOOBProfilePacket returns a struct");
-static_assert(cod2_abi_class<decltype(SV_Netchan_AddOOBProfilePacket(std::declval<int>()))>() == 'v', "SV_Netchan_AddOOBProfilePacket: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_Netchan_AddOOBProfilePacket: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_Netchan_AddOOBProfilePacket(std::declval<int>()))>() == 'v', "SV_Netchan_AddOOBProfilePacket: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_Netchan_AddOOBProfilePacket: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_Netchan_AddOOBProfilePacket(std::declval<int>())) cod2x_SV_Netchan_AddOOBProfilePacket(int a0) __asm__(COD2_SYM("SV_Netchan_AddOOBProfilePacket"));
 decltype(SV_Netchan_AddOOBProfilePacket(std::declval<int>())) cod2x_SV_Netchan_AddOOBProfilePacket(int a0) { return SV_Netchan_AddOOBProfilePacket(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_Netchan_PrintProfileStats(std::declval<int>()))>::value, "SV_Netchan_PrintProfileStats returns a struct");
-static_assert(cod2_abi_class<decltype(SV_Netchan_PrintProfileStats(std::declval<int>()))>() == 'v', "SV_Netchan_PrintProfileStats: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_Netchan_PrintProfileStats: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_Netchan_PrintProfileStats(std::declval<int>()))>() == 'v', "SV_Netchan_PrintProfileStats: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_Netchan_PrintProfileStats: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_Netchan_PrintProfileStats(std::declval<int>())) cod2x_SV_Netchan_PrintProfileStats(int a0) __asm__(COD2_SYM("SV_Netchan_PrintProfileStats"));
 decltype(SV_Netchan_PrintProfileStats(std::declval<int>())) cod2x_SV_Netchan_PrintProfileStats(int a0) { return SV_Netchan_PrintProfileStats(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_PacketEvent(std::declval<netadr_t>(), std::declval<msg_t*>()))>::value, "SV_PacketEvent returns a struct");
-static_assert(cod2_abi_class<decltype(SV_PacketEvent(std::declval<netadr_t>(), std::declval<msg_t*>()))>() == 'v', "SV_PacketEvent: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<netadr_t>() == 20, "SV_PacketEvent: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<msg_t*>() == 4, "SV_PacketEvent: parameter 1 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_PacketEvent(std::declval<netadr_t>(), std::declval<msg_t*>()))>() == 'v', "SV_PacketEvent: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<netadr_t>() == 20, "SV_PacketEvent: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<msg_t*>() == COD2_ABI_PICK(4, 8), "SV_PacketEvent: parameter 1 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_PacketEvent(std::declval<netadr_t>(), std::declval<msg_t*>())) cod2x_SV_PacketEvent(netadr_t a0, msg_t* a1) __asm__(COD2_SYM("SV_PacketEvent"));
 decltype(SV_PacketEvent(std::declval<netadr_t>(), std::declval<msg_t*>())) cod2x_SV_PacketEvent(netadr_t a0, msg_t* a1) { return SV_PacketEvent(a0, a1); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>::value, "SV_PointContents returns a struct");
-static_assert(cod2_abi_class<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "SV_PointContents: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<float const*>() == 4, "SV_PointContents: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_PointContents: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_PointContents: parameter 2 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>()))>() == 'i', "SV_PointContents: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<float const*>() == COD2_ABI_PICK(4, 8), "SV_PointContents: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_PointContents: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_PointContents: parameter 2 differs from the engine's 1.3 ABI");
 extern "C" cod2_abi_int<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_SV_PointContents(float const* a0, int a1, int a2) __asm__(COD2_SYM("SV_PointContents"));
 cod2_abi_int<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4> cod2x_SV_PointContents(float const* a0, int a1, int a2) { return (cod2_abi_int<decltype(SV_PointContents(std::declval<float const*>(), std::declval<int>(), std::declval<int>())), 4>)SV_PointContents(a0, a1, a2); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_SetConfigValueForKey(std::declval<int>(), std::declval<int>(), std::declval<char const*>(), std::declval<char const*>()))>::value, "SV_SetConfigValueForKey returns a struct");
-static_assert(cod2_abi_class<decltype(SV_SetConfigValueForKey(std::declval<int>(), std::declval<int>(), std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "SV_SetConfigValueForKey: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfigValueForKey: parameter 0 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfigValueForKey: parameter 1 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "SV_SetConfigValueForKey: parameter 2 differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "SV_SetConfigValueForKey: parameter 3 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_SetConfigValueForKey(std::declval<int>(), std::declval<int>(), std::declval<char const*>(), std::declval<char const*>()))>() == 'v', "SV_SetConfigValueForKey: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfigValueForKey: parameter 0 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<int>() == 4, "SV_SetConfigValueForKey: parameter 1 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "SV_SetConfigValueForKey: parameter 2 differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "SV_SetConfigValueForKey: parameter 3 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_SetConfigValueForKey(std::declval<int>(), std::declval<int>(), std::declval<char const*>(), std::declval<char const*>())) cod2x_SV_SetConfigValueForKey(int a0, int a1, char const* a2, char const* a3) __asm__(COD2_SYM("SV_SetConfigValueForKey"));
 decltype(SV_SetConfigValueForKey(std::declval<int>(), std::declval<int>(), std::declval<char const*>(), std::declval<char const*>())) cod2x_SV_SetConfigValueForKey(int a0, int a1, char const* a2, char const* a3) { return SV_SetConfigValueForKey(a0, a1, a2, a3); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_Shutdown(std::declval<char const*>()))>::value, "SV_Shutdown returns a struct");
-static_assert(cod2_abi_class<decltype(SV_Shutdown(std::declval<char const*>()))>() == 'v', "SV_Shutdown: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "SV_Shutdown: parameter 0 differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_Shutdown(std::declval<char const*>()))>() == 'v', "SV_Shutdown: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "SV_Shutdown: parameter 0 differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_Shutdown(std::declval<char const*>())) cod2x_SV_Shutdown(char const* a0) __asm__(COD2_SYM("SV_Shutdown"));
 decltype(SV_Shutdown(std::declval<char const*>())) cod2x_SV_Shutdown(char const* a0) { return SV_Shutdown(a0); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_ShutdownGameProgs())>::value, "SV_ShutdownGameProgs returns a struct");
-static_assert(cod2_abi_class<decltype(SV_ShutdownGameProgs())>() == 'v', "SV_ShutdownGameProgs: return class differs from src/PC/server_mp");
+static_assert(cod2_abi_class<decltype(SV_ShutdownGameProgs())>() == 'v', "SV_ShutdownGameProgs: return class differs from the engine's 1.3 ABI");
 extern "C" decltype(SV_ShutdownGameProgs()) cod2x_SV_ShutdownGameProgs() __asm__(COD2_SYM("SV_ShutdownGameProgs"));
 decltype(SV_ShutdownGameProgs()) cod2x_SV_ShutdownGameProgs() { return SV_ShutdownGameProgs(); }
 
 static_assert(cod2_bridge_returns_scalar<decltype(SV_XModelGet(std::declval<char const*>()))>::value, "SV_XModelGet returns a struct");
-static_assert(cod2_abi_class<decltype(SV_XModelGet(std::declval<char const*>()))>() == 'i', "SV_XModelGet: return class differs from src/PC/server_mp");
-static_assert(cod2_abi_slot<char const*>() == 4, "SV_XModelGet: parameter 0 differs from src/PC/server_mp");
-extern "C" cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4> cod2x_SV_XModelGet(char const* a0) __asm__(COD2_SYM("SV_XModelGet"));
-cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4> cod2x_SV_XModelGet(char const* a0) { return (cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), 4>)SV_XModelGet(a0); }
+static_assert(cod2_abi_class<decltype(SV_XModelGet(std::declval<char const*>()))>() == 'i', "SV_XModelGet: return class differs from the engine's 1.3 ABI");
+static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "SV_XModelGet: parameter 0 differs from the engine's 1.3 ABI");
+extern "C" cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), COD2_ABI_PICK(4, 8)> cod2x_SV_XModelGet(char const* a0) __asm__(COD2_SYM("SV_XModelGet"));
+cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), COD2_ABI_PICK(4, 8)> cod2x_SV_XModelGet(char const* a0) { return (cod2_abi_int<decltype(SV_XModelGet(std::declval<char const*>())), COD2_ABI_PICK(4, 8)>)SV_XModelGet(a0); }

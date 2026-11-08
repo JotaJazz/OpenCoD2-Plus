@@ -78,7 +78,7 @@ static void cr_emit(int fd, const char *fmt, ...)
     }
 }
 
-static void cr_emit_common(int fd, const char *crashDesc)
+static void cr_emit_common(int fd, const char *kind, const char *crashDesc)
 {
     time_t now = time(NULL);
     char when[64];
@@ -88,7 +88,7 @@ static void cr_emit_common(int fd, const char *crashDesc)
     if (tmv)
         strftime(when, sizeof(when), "%Y-%m-%d %H:%M:%S", tmv);
 
-    cr_emit(fd, "================ %s CRASH REPORT ================\n\n", cr_appName);
+    cr_emit(fd, "================ %s %s REPORT ================\n\n", cr_appName, kind);
     cr_emit(fd, "crash      : %s\n", crashDesc);
     cr_emit(fd, "time       : %s\n", when);
     cr_emit(fd, "version    : %s (game data %s)\n", cr_version, cr_buildDate);
@@ -246,10 +246,9 @@ static void cr_win_regs(int fd, CONTEXT *c)
     cr_emit(fd, "\n");
 }
 
-static void cr_win_backtrace(int fd, CONTEXT *ctxIn)
+static void cr_win_backtrace(int fd, CONTEXT *ctxIn, HANDLE thread)
 {
     HANDLE proc = GetCurrentProcess();
-    HANDLE thread = GetCurrentThread();
     CONTEXT ctx;
     STACKFRAME64 frame;
     DWORD machine;
@@ -532,9 +531,9 @@ static void cr_win_do(EXCEPTION_POINTERS *ep, const char *descIn)
     snprintf(path, sizeof(path), "cod2_crash_%lu.txt", (unsigned long)pid);
     fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 
-    cr_emit_common(fd, desc);
+    cr_emit_common(fd, "CRASH", desc);
     cr_win_regs(fd, ep ? ep->ContextRecord : NULL);
-    cr_win_backtrace(fd, ep ? ep->ContextRecord : NULL);
+    cr_win_backtrace(fd, ep ? ep->ContextRecord : NULL, GetCurrentThread());
     cr_emit(fd, "================ END CRASH REPORT ================\n");
     if (fd >= 0)
         close(fd);
@@ -542,9 +541,9 @@ static void cr_win_do(EXCEPTION_POINTERS *ep, const char *descIn)
     {
         int fd2 = open("Z:\\tmp\\cod2_crash_latest.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644);
         if (fd2 >= 0) {
-            cr_emit_common(fd2, desc);
+            cr_emit_common(fd2, "CRASH", desc);
             cr_win_regs(fd2, ep ? ep->ContextRecord : NULL);
-            cr_win_backtrace(fd2, ep ? ep->ContextRecord : NULL);
+            cr_win_backtrace(fd2, ep ? ep->ContextRecord : NULL, GetCurrentThread());
             cr_emit(fd2, "================ END CRASH REPORT ================\n");
             close(fd2);
         }
@@ -553,6 +552,82 @@ static void cr_win_do(EXCEPTION_POINTERS *ep, const char *descIn)
         return;
 
     cr_win_popup(path, desc);
+}
+
+static HANDLE cr_mainThread;
+static volatile LONG cr_frames;
+static volatile LONG cr_freezeSeconds;
+
+/* The context is copied and the thread let go before anything is written: suspended, it could
+   hold the heap's lock, and the report would turn a pause into a hang. */
+static void cr_freeze_report(int seconds)
+{
+    char path[64], desc[128];
+    CONTEXT ctx;
+    int fd, have;
+
+    if (cr_inHandler)
+        return;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.ContextFlags = CONTEXT_FULL;
+    if (SuspendThread(cr_mainThread) == (DWORD)-1)
+        return;
+    have = GetThreadContext(cr_mainThread, &ctx);
+    ResumeThread(cr_mainThread);
+    if (!have)
+        return;
+
+    snprintf(path, sizeof(path), "cod2_freeze_%lu.txt", (unsigned long)GetCurrentProcessId());
+    snprintf(desc, sizeof(desc), "no frame for %i s; a slow map load looks the same", seconds);
+    fd = open(path, O_CREAT | O_APPEND | O_WRONLY, 0644);   /* a slow load must not erase a real freeze */
+    if (fd < 0)
+        return;
+    cr_emit_common(fd, "FREEZE", desc);
+    cr_win_regs(fd, &ctx);
+    cr_win_backtrace(fd, &ctx, cr_mainThread);
+    cr_emit(fd, "================ END FREEZE REPORT ================\n\n");
+    close(fd);
+}
+
+static DWORD WINAPI cr_freeze_watch(LPVOID unused)
+{
+    LONG seen = -1;
+    int still = 0, reported = 0;
+    time_t now = time(NULL);
+
+    (void)unused;
+    localtime(&now);   /* allocates this thread's buffer now: the main thread may hang inside the heap */
+    for (;;) {
+        LONG frames, seconds;
+
+        Sleep(1000);
+        frames = cr_frames;
+        seconds = cr_freezeSeconds;
+        if (frames != seen || !seconds) {
+            seen = frames;
+            still = 0;
+            reported = 0;
+        } else if (++still >= seconds && !reported) {
+            reported = 1;
+            cr_freeze_report(still);
+        }
+    }
+}
+
+/* From the main thread once a frame. shortcut: Windows only, as a player's freezes are reported from
+   there; Linux needs a signal to read another thread's registers. */
+void Sys_FreezeWatchFrame(int seconds)
+{
+    static int started;
+
+    cr_freezeSeconds = seconds;
+    cr_frames++;
+    if (started)
+        return;
+    started = 1;
+    if (DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &cr_mainThread, 0, FALSE,
+                        DUPLICATE_SAME_ACCESS))
+        CreateThread(NULL, 0, cr_freeze_watch, NULL, 0, NULL);
 }
 
 static LONG WINAPI cr_seh_filter(EXCEPTION_POINTERS *ep)
@@ -929,7 +1004,7 @@ static void cr_posix_handler(int sig, siginfo_t *info, void *ucontext)
     snprintf(path, sizeof(path), "cod2_crash_%d.txt", (int)getpid());
     fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 
-    cr_emit_common(fd, desc);
+    cr_emit_common(fd, "CRASH", desc);
     cr_posix_osinfo(fd);
     cr_emit(fd, "\n");
     cr_posix_regs(fd, ucontext);

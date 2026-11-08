@@ -27,27 +27,45 @@ extern refimport_t ri;
 
 static int hackSize;
 
-#define JPEG_COMPRESS_STRUCT_SIZE 372
+/* jpeg-6 jpeg_compress_struct layout, measured per ABI: Win32 aligns input_gamma (double)
+   to 8 and Linux i386 to 4, so everything after it moves by 4; 64-bit widens the pointers. */
 #define JPEG_C_ERR 0x00
-#define JPEG_C_DEST 0x18
-#define JPEG_C_IMAGE_WIDTH 0x1c
-#define JPEG_C_IMAGE_HEIGHT 0x20
-#define JPEG_C_INPUT_COMPONENTS 0x24
-#define JPEG_C_IN_COLOR_SPACE 0x28
-#define JPEG_C_NEXT_SCANLINE 0xdc
+#if defined(_WIN64) || defined(__x86_64__)
+#    define JPEG_COMPRESS_STRUCT_SIZE 520
+#    define JPEG_C_DEST 0x28
+#    define JPEG_C_IMAGE_WIDTH 0x30
+#    define JPEG_C_IMAGE_HEIGHT 0x34
+#    define JPEG_C_INPUT_COMPONENTS 0x38
+#    define JPEG_C_IN_COLOR_SPACE 0x3c
+#    define JPEG_C_NEXT_SCANLINE 0x130
+#else
+#    define JPEG_C_DEST 0x18
+#    define JPEG_C_IMAGE_WIDTH 0x1c
+#    define JPEG_C_IMAGE_HEIGHT 0x20
+#    define JPEG_C_INPUT_COMPONENTS 0x24
+#    define JPEG_C_IN_COLOR_SPACE 0x28
+#    if defined(_WIN32)
+#        define JPEG_COMPRESS_STRUCT_SIZE 376
+#        define JPEG_C_NEXT_SCANLINE 0xe0
+#    else
+#        define JPEG_COMPRESS_STRUCT_SIZE 372
+#        define JPEG_C_NEXT_SCANLINE 0xdc
+#    endif
+#endif
 
-#if COD2_FEATURE_MODERN_LIBS
-#    define JPEG_D_STRUCT_SIZE 0x1d0
+/* jpeg-6 jpeg_decompress_struct, measured per ABI: the same on Win32 and Linux i386. */
+#if defined(_WIN64) || defined(__x86_64__)
+#    define JPEG_D_STRUCT_SIZE 632
+#    define JPEG_D_OUTPUT_WIDTH 0x88
+#    define JPEG_D_OUTPUT_HEIGHT 0x8c
+#    define JPEG_D_OUT_COLOR_COMPS 0x90
+#    define JPEG_D_OUTPUT_SCANLINE 0xa8
+#else
+#    define JPEG_D_STRUCT_SIZE 464
 #    define JPEG_D_OUTPUT_WIDTH 0x70
 #    define JPEG_D_OUTPUT_HEIGHT 0x74
 #    define JPEG_D_OUT_COLOR_COMPS 0x78
 #    define JPEG_D_OUTPUT_SCANLINE 0x8c
-#else
-#    define JPEG_D_STRUCT_SIZE 0x1b4
-#    define JPEG_D_OUTPUT_WIDTH 0x68
-#    define JPEG_D_OUTPUT_HEIGHT 0x6c
-#    define JPEG_D_OUT_COLOR_COMPS 0x74
-#    define JPEG_D_OUTPUT_SCANLINE 0x84
 #endif
 
 typedef struct jpeg_memory_destination_s {
@@ -59,8 +77,6 @@ typedef struct jpeg_memory_destination_s {
 static void init_destination(j_compress_ptr cinfo);
 boolean empty_output_buffer(j_compress_ptr cinfo);
 static void term_destination(j_compress_ptr cinfo);
-static void *Z_MallocJpeg(size_t size);
-static void Z_FreeJpeg(void *ptr, size_t size);
 static void ExitJpeg(void);
 static void PrintfJpeg(char *message);
 void R_SaveJpg(const char *filename, int quality, int image_width, int image_height, unsigned char *image_buffer);
@@ -88,20 +104,6 @@ static void term_destination(j_compress_ptr cinfo)
     jpeg_memory_destination_t *dest = *(jpeg_memory_destination_t **)(c + JPEG_C_DEST);
 
     hackSize = (int)(dest->bufsize - dest->pub.free_in_buffer);
-}
-
-static void *Z_MallocJpeg(size_t size)
-{
-    byte *sys = (byte *)&ri;
-    void *(*mallocFunc)(size_t) = *(void *(**)(size_t))(sys + 0x14);
-    return mallocFunc(size);
-}
-
-static void Z_FreeJpeg(void *ptr, size_t size)
-{
-    byte *sys = (byte *)&ri;
-    void (*freeFunc)(void *, size_t) = *(void (**)(void *, size_t))(sys + 0x18);
-    freeFunc(ptr, size);
 }
 
 static void ExitJpeg(void)
@@ -191,18 +193,13 @@ void R_LoadJpg(const char *filepath, byte **file, byte **pic, int *width, int *h
     int x;
 
     sys = (byte *)&ri;
-    filesize = ((int (*)(const char *, byte **)) * (void **)(sys + 0x128))(filepath, &fbuffer);
+    filesize = ((int (*)(const char *, byte **))ri.FS_ReadFile)(filepath, &fbuffer);
 
     if (fbuffer == NULL)
         return;
 
     jpeg_std_error((jpeg_error_mgr *)jerr);
     *(void **)(cinfo) = jerr;
-#if !COD2_FEATURE_MODERN_LIBS
-
-    *(void **)(cinfo + 0x18) = (void *)Z_MallocJpeg;
-    *(void **)(cinfo + 0x1c) = (void *)Z_FreeJpeg;
-#endif
 
     jpeg_CreateDecompress((struct jpeg_decompress_struct *)cinfo, 0x3e, JPEG_D_STRUCT_SIZE);
 #if COD2_FEATURE_MODERN_LIBS
@@ -247,7 +244,7 @@ void R_LoadJpg(const char *filepath, byte **file, byte **pic, int *width, int *h
     *imageFormat = (D3DFORMAT)0x15;
 
     sys = (byte *)&ri;
-    buf = ((byte * (*)(int)) * (void **)(sys + 0x10))(output_width * output_height * 4);
+    buf = ((byte * (*)(int))ri.Hunk_AllocateTempMemoryInternal)(output_width * output_height * 4);
     *pic = buf;
 
     row_stride = output_width * 4;

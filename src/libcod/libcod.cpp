@@ -1,5 +1,8 @@
 #include "gsc.hpp"
 
+#include "mbedtls/entropy.h"
+#include "mbedtls/md.h"
+
 #ifdef LIBCOD
 
 dvar_t *sv_master[MAX_MASTER_SERVERS];
@@ -19,6 +22,7 @@ dvar_t *g_spectateBots;
 dvar_t *g_logPickup;
 dvar_t *sv_botKickMessages;
 dvar_t *sv_noAuthorize;
+dvar_t *sv_challengeStateless;
 dvar_t *sv_authorizeTimeout;
 dvar_t *sv_limitLocalRcon;
 dvar_t *sv_isLookingAtOnDemand;
@@ -40,6 +44,7 @@ bool libcod_precaching;
 dvar_t *jump_bounceEnable;
 dvar_t *g_mantleBlockEnable;
 dvar_t *g_fixedWeaponSpreads;
+dvar_t *g_shotgun_spread_fix;
 dvar_t *g_dropGrenadeOnDeath;
 dvar_t *sv_botUseTriggerUse;
 dvar_t *g_bulletDrop;
@@ -140,6 +145,7 @@ void RegisterLibcodDvars()
 	g_logPickup = Dvar_RegisterBool("g_logPickup", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_botKickMessages = Dvar_RegisterBool("sv_botKickMessages", true, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_noAuthorize = Dvar_RegisterBool("sv_noAuthorize", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+	sv_challengeStateless = Dvar_RegisterBool("sv_challengeStateless", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_authorizeTimeout = Dvar_RegisterInt("sv_authorizeTimeout", AUTHORIZE_TIMEOUT, 0, 1200000, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_limitLocalRcon = Dvar_RegisterBool("sv_limitLocalRcon", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_isLookingAtOnDemand = Dvar_RegisterBool("sv_isLookingAtOnDemand", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
@@ -159,6 +165,8 @@ void RegisterLibcodDvars()
 	g_mantleBlockEnable = Dvar_RegisterBool("g_mantleBlockEnable", true, DVAR_CHANGEABLE_RESET);
 
 	g_fixedWeaponSpreads = Dvar_RegisterBool("g_fixedWeaponSpreads", false, DVAR_CHANGEABLE_RESET);
+	// CoD2x's name, which zPAM 4.x sets
+	g_shotgun_spread_fix = Dvar_RegisterBool("g_shotgun_spread_fix", false, DVAR_CHANGEABLE_RESET);
 	g_dropGrenadeOnDeath = Dvar_RegisterBool("g_dropGrenadeOnDeath", true, DVAR_CHANGEABLE_RESET);
 	sv_botUseTriggerUse = Dvar_RegisterBool("sv_botUseTriggerUse", false, DVAR_CHANGEABLE_RESET);
 	g_bulletDrop = Dvar_RegisterBool("g_bulletDrop", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
@@ -478,10 +486,20 @@ const char* NET_AdrToStringNoPort( netadr_t a )
 	return s;
 }
 
+// The map name builds the link's paths: "../x" pointed them outside the
+// library and the game folder. Without a separator ".." is just a file name
+static bool manymaps_validName(const char *mapname)
+{
+	return !strpbrk(mapname, "/\\:");
+}
+
 void manymaps_prepare(const char *mapname, int read)
 {
 	char map_check[MAX_OSPATH];
 	char library_path[MAX_OSPATH];
+
+	if (!manymaps_validName(mapname))
+		return;
 
 	dvar_t *fs_homepath = Dvar_FindVar("fs_homepath");
 	dvar_t *fs_game = Dvar_FindVar("fs_game");
@@ -588,21 +606,96 @@ static leakyBucket_t buckets[ MAX_BUCKETS ];
 static leakyBucket_t* bucketHashes[ MAX_HASHES ];
 leakyBucket_t outboundLeakyBucket;
 
-static long SVC_HashForAddress( netadr_t address )
+// A seed chosen at startup: with ioq3's fixed weighted sum of the IP's bytes,
+// forged packets from chosen addresses filled one chain and every lookup
+// walked it
+static uint32_t SVC_HashSeed()
 {
-	unsigned char *ip = address.ip;
-	int	i;
-	long hash = 0;
+	static uint32_t seed;
+	static bool seeded;
 
-	for ( i = 0; i < 4; i++ )
+	if ( !seeded )
 	{
-		hash += (long)( ip[ i ] ) * ( i + 119 );
+		mbedtls_entropy_context entropy;
+		mbedtls_entropy_init( &entropy );
+		if ( mbedtls_entropy_func( &entropy, (unsigned char *)&seed, sizeof( seed ) ) != 0 )
+			seed = (uint32_t)rand() << 16 ^ (uint32_t)rand() ^ (uint32_t)Sys_Milliseconds();
+		mbedtls_entropy_free( &entropy );
+		seeded = true;
 	}
 
-	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
-	hash &= ( MAX_HASHES - 1 );
+	return seed;
+}
 
-	return hash;
+/*
+=================
+SV_ChallengeCookie
+
+New: a challenge is an HMAC of the address and a 30-second window under a key
+chosen at startup, so a client that got one can always show it, even after a
+flood of made-up addresses turned the 1024-slot table over. Only the address
+it was sent to can know it
+=================
+*/
+#define CHALLENGE_WINDOW_MSEC 30000
+
+static int SV_ChallengeCookieAt( netadr_t adr, uint64_t window )
+{
+	static unsigned char key[32];
+	static bool keyed;
+	unsigned char data[14], mac[32];
+	int challenge;
+
+	if ( !keyed )
+	{
+		mbedtls_entropy_context entropy;
+		mbedtls_entropy_init( &entropy );
+		if ( mbedtls_entropy_func( &entropy, key, sizeof( key ) ) != 0 )
+		{
+			for ( size_t i = 0; i < sizeof( key ); i++ )
+				key[i] = (unsigned char)( rand() ^ Sys_Milliseconds() >> ( i & 7 ) );
+		}
+		mbedtls_entropy_free( &entropy );
+		keyed = true;
+	}
+
+	memcpy( data, adr.ip, 4 );
+	memcpy( data + 4, &adr.port, 2 );
+	memcpy( data + 6, &window, 8 );
+	mbedtls_md_hmac( mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ), key, sizeof( key ), data, sizeof( data ), mac );
+	memcpy( &challenge, mac, sizeof( challenge ) );
+
+	// 0 is a cleared slot
+	return challenge ? challenge : 1;
+}
+
+int SV_ChallengeCookie( netadr_t adr )
+{
+	return SV_ChallengeCookieAt( adr, Sys_Milliseconds64() / CHALLENGE_WINDOW_MSEC );
+}
+
+bool SV_ChallengeCookieValid( netadr_t adr, int challenge )
+{
+	uint64_t window = Sys_Milliseconds64() / CHALLENGE_WINDOW_MSEC;
+
+	return challenge && ( challenge == SV_ChallengeCookieAt( adr, window ) || challenge == SV_ChallengeCookieAt( adr, window - 1 ) );
+}
+
+static long SVC_HashForAddress( netadr_t address )
+{
+	uint32_t x;
+
+	memcpy( &x, address.ip, 4 );
+	x ^= SVC_HashSeed();
+
+	// the MurmurHash3 finalizer, so every bit of the seed reaches the chain
+	x ^= x >> 16;
+	x *= 0x85ebca6b;
+	x ^= x >> 13;
+	x *= 0xc2b2ae35;
+	x ^= x >> 16;
+
+	return x & ( MAX_HASHES - 1 );
 }
 
 static leakyBucket_t *SVC_BucketForAddress( netadr_t address )
@@ -717,7 +810,7 @@ bool hook_SV_MapExists(const char *mapname)
 {
 	bool map_exists = SV_MapExists(mapname);
 
-	if (map_exists)
+	if (map_exists || !manymaps_validName(mapname))
 	{
 		return map_exists;
 	}
@@ -1219,9 +1312,25 @@ static bool SV_ResolveMaster_libcod( int index, netadr_t *adr )
 	return true;
 }
 
+static netadr_t masterAdr[MAX_MASTER_SERVERS];
+
+// The resolved masters: queries from them skip the global query limits
+bool SV_IsMasterAddress( netadr_t from )
+{
+	for ( int i = 0 ; i < MAX_MASTER_SERVERS ; i++ )
+	{
+		if ( masterAdr[i].type == NA_IP && from.type == NA_IP && memcmp( masterAdr[i].ip, from.ip, 4 ) == 0 )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void SV_MasterHeartbeat_libcod(const char *hbname)
 {
-	static netadr_t	adr[MAX_MASTER_SERVERS];
+	netadr_t *adr = masterAdr;
 	netadr_t alt;
 	int	i;
 
@@ -1267,11 +1376,11 @@ void SV_MasterHeartbeat_libcod(const char *hbname)
 				continue;
 			}
 
-			SVC_Status( adr[i] );
+			SVC_Status( adr[i], true );
 
 			alt = adr[i];
 			alt.altPort = 1;
-			SVC_Status( alt );
+			SVC_Status( alt, true );
 		}
 	}
 }

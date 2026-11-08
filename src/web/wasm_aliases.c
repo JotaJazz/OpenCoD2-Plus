@@ -11,6 +11,9 @@ char name[64] __attribute__((aligned(4))) = {0};
 
 void *TheStringPackage = 0;
 
+/* the binary's "" literal, which the native and Windows data blobs define */
+const char str_002157b8[1] = "";
+
 const CodeSamplerSource s_codeSamplers[1] = {{0}};
 const CodeSamplerSource s_defaultCodeSamplers[1] = {{0}};
 const CodeConstantSource s_codeConsts[1] = {{0}};

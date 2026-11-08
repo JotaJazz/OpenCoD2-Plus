@@ -570,6 +570,16 @@ void hurt_touch( gentity_t *self, gentity_t *other, qboolean bTouched )
 		return;
 	}
 
+#ifdef COD2_PLUS
+	// Plus: while touched, the next hurt is on the interval's grid, not the
+	// frame after it: at 50 or 60 Hz every 50 ms came every 60 or 64
+	int interval = self->spawnflags & 16 ? 1000 : 50;
+
+	if ( self->trigger.timestamp > level.time - interval )
+		self->trigger.timestamp += interval;
+	else
+		self->trigger.timestamp = level.time + interval;
+#else
 	if ( self->spawnflags & 16 )
 	{
 		self->trigger.timestamp = level.time + 1000;
@@ -578,6 +588,7 @@ void hurt_touch( gentity_t *self, gentity_t *other, qboolean bTouched )
 	{
 		self->trigger.timestamp = level.time + 50;
 	}
+#endif
 
 	if ( self->spawnflags & 8 )
 	{

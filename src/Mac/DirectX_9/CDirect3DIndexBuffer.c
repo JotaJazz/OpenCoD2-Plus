@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 typedef void (*fnptr_t)(void);
@@ -16,6 +17,10 @@ typedef struct {
     UINT32 lockSize;
     unsigned char isLocked;
 } CDirect3DIndexBufferClean;
+D3D_HEAD_CHECK(CDirect3DIndexBufferClean, D3DBufferHead, refCount);
+D3D_HEAD_CHECK(CDirect3DIndexBufferClean, D3DBufferHead, lengthBytes);
+D3D_HEAD_CHECK(CDirect3DIndexBufferClean, D3DBufferHead, data);
+
 
 ULONG CDirect3DIndexBuffer_AddRef(const CDirect3DIndexBuffer *_this);
 void ZN20CDirect3DIndexBufferD0Ev(const CDirect3DIndexBuffer *_this);

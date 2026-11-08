@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include "imports.h"
 #include <stdio.h>
+#include "r_hide_address.h"
 /* dvar globals */
 extern const dvar_t *r_forceLod;
+extern const dvar_t *r_hideServerIp;
 extern const dvar_t *r_gpuSync;
 extern const dvar_t *r_highLodDist;
 extern const dvar_t *r_lightTweakAmbient;
@@ -52,31 +54,6 @@ extern void RB_CreateDynamicBuffers(void);
 extern void RB_AdaptiveGpuSyncTarget(void);
 extern void Material_Sort(void);
 extern struct r_globals_t rg;
-
-static void R_X64TraceStretchPic(MaterialHandle material, float x, float y, float w, float h)
-{
-#if defined(COD2_X64)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 4096)
-        return;
-
-    f = fopen("x64_stretchpic_trace.txt", traceCount ? "a" : "w");
-    if (f) {
-        fprintf(f, "stretch[%d] material=%p xywh=(%.1f,%.1f,%.1f,%.1f)\n",
-                traceCount, (void *)material, x, y, w, h);
-        fclose(f);
-    }
-    traceCount++;
-#else
-    (void)material;
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-#endif
-}
 
 extern unsigned char s_backEndData[];
 extern GfxCmdArray *s_cmdList;
@@ -666,7 +643,6 @@ void R_AddCmdDrawStretchPic(float x, float y, float w, float h, float s0, float 
 {
     GfxCmdStretchPic *cmd;
 
-    R_X64TraceStretchPic(material, x, y, w, h);
     { extern int g_q_stretchpic; extern void Com_Printf(const char *, ...); g_q_stretchpic++; if (g_q_stretchpic <= 4) Com_Printf("[qsp] #%d material=%p\n", g_q_stretchpic, (void *)material); }
     cmd = (GfxCmdStretchPic *)R_AllocCmd((int)sizeof(GfxCmdStretchPic), 0, 0xf);
     if (cmd == NULL) {
@@ -761,8 +737,11 @@ void R_AddCmdDrawTextWithCursor(const char *text, int maxChars, FontHandle font,
     cmdText = cmd->text;
     memcpy(cmdText, text, len);
     cmdText[len] = '\0';
+    /* the drawn copy only: the server browser joins with the string it was given */
+    if (r_hideServerIp && r_hideServerIp->current.enabled)
+        R_HideAddresses(cmdText);
 
-    if (R_ShouldTraceTextCmd(cmdText)) {
+    if (R_ShouldTraceTextCmd(text)) {   /* picked by what was asked, prints what is drawn */
         printf("[textcmd-front] used=%d bytes=%d text='%.96s' xy=(%.1f,%.1f) scale=(%.3f,%.3f) style=%d max=%d cursor=%d/%d colorBytes=(%u,%u,%u,%u) font=%p\n",
                s_cmdList ? s_cmdList->usedTotal : -1,
                byteCount,
@@ -869,7 +848,7 @@ void R_AddCmdSetMaterialColor(const vec_t *color)
 {
     GfxCmdSetMaterialColor *cmd;
 
-    cmd = (GfxCmdSetMaterialColor *)R_AllocCriticalCmd(0x14, 4);
+    cmd = (GfxCmdSetMaterialColor *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetMaterialColor), 4);
 
     if (color != NULL) {
         cmd->color[0] = color[0];
@@ -889,7 +868,7 @@ void R_AddCmdLightProperties(int lightIndex, const GfxLight *light)
     float scale;
     GfxCmdSetLightProperties *cmd;
 
-    cmd = (GfxCmdSetLightProperties *)R_AllocCriticalCmd(0x4c, 5);
+    cmd = (GfxCmdSetLightProperties *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetLightProperties), 5);
 
     cmd->lightIndex = lightIndex;
     cmd->position[0] = light->position[0];
@@ -919,7 +898,7 @@ void R_AddCmdSetRenderTarget(GfxRenderTargetId renderTargetId)
 {
     GfxCmdSetRenderTarget *cmd;
 
-    cmd = (GfxCmdSetRenderTarget *)R_AllocCriticalCmd(8, 0xe);
+    cmd = (GfxCmdSetRenderTarget *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetRenderTarget), 0xe);
     cmd->renderTargetId = renderTargetId;
 }
 
@@ -927,7 +906,7 @@ void R_AddCmdDrawSun(int viewIndex)
 {
     GfxCmdDrawSunPostEffects *cmd;
 
-    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd(8, 0, 0x18);
+    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd((int)sizeof(GfxCmdDrawSunPostEffects), 0, 0x18);
     cmd->viewIndex = viewIndex;
 }
 
@@ -935,7 +914,7 @@ void R_AddCmdBeginView(int viewCount, const GfxSceneDef *sceneDef, const GfxView
 {
     GfxCmdBeginView *cmd;
 
-    cmd = (GfxCmdBeginView *)R_AllocCriticalCmd(0x30, 0xc);
+    cmd = (GfxCmdBeginView *)R_AllocCriticalCmd((int)sizeof(GfxCmdBeginView), 0xc);
 
     cmd->viewCount = viewCount;
     cmd->sceneDef = *sceneDef;
@@ -947,7 +926,7 @@ void R_AddCmdSetViewport(int x, int y, int width, int height)
 {
     GfxCmdSetViewport *cmd;
 
-    cmd = (GfxCmdSetViewport *)R_AllocCriticalCmd(0x14, 0xd);
+    cmd = (GfxCmdSetViewport *)R_AllocCriticalCmd((int)sizeof(GfxCmdSetViewport), 0xd);
     cmd->viewport.x = x;
     cmd->viewport.y = y;
     cmd->viewport.width = width;
@@ -994,7 +973,7 @@ void R_AddCmdApplyLatePostEffects(float blurRadius)
 {
     GfxCmdApplyLatePostEffects *cmd;
 
-    cmd = (GfxCmdApplyLatePostEffects *)R_AllocCmd(8, 0, 0x1a);
+    cmd = (GfxCmdApplyLatePostEffects *)R_AllocCmd((int)sizeof(GfxCmdApplyLatePostEffects), 0, 0x1a);
     if (cmd == NULL) {
         return;
     }
@@ -1006,7 +985,7 @@ void R_AddCmdDrawSunPostEffects(int viewIndex)
 {
     GfxCmdDrawSunPostEffects *cmd;
 
-    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd(8, 0, 0x1b);
+    cmd = (GfxCmdDrawSunPostEffects *)R_AllocCmd((int)sizeof(GfxCmdDrawSunPostEffects), 0, 0x1b);
     if (cmd == NULL) {
         return;
     }
@@ -1018,7 +997,7 @@ void R_AddCmdClearScreen(int whichToClear, const vec_t *color, float depth, int 
 {
     GfxCmdClearScreen *cmd;
 
-    cmd = (GfxCmdClearScreen *)R_AllocCriticalCmd(0x1c, 0xb);
+    cmd = (GfxCmdClearScreen *)R_AllocCriticalCmd((int)sizeof(GfxCmdClearScreen), 0xb);
 
     cmd->whichToClear = (byte)whichToClear;
     cmd->stencil = (byte)stencil;

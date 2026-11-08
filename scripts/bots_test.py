@@ -90,6 +90,7 @@ def main():
     ap.add_argument('--bombmode', type=int, choices=(0, 1, 2),
                     help='SD bomb mode: stock SD always plays 0, so a copy with this mode is installed')
     ap.add_argument('--keep', help='copy games_mp.log and the server log to this folder')
+    ap.add_argument('--fps', type=int, default=20, help='sv_fps, with a snapshot every frame above 20')
     ap.add_argument('--corrupt-cache', action='store_true',
                     help='start with a garbage waypoint file, which must be rebuilt')
     args = ap.parse_args()
@@ -149,7 +150,9 @@ def main():
                  '+set', 'g_gametype', args.gametype, '+set', f'scr_{args.gametype}_timelimit', '0',
                  '+set', f'scr_{args.gametype}_scorelimit', '0', '+set', 'g_logSync', '1',
                  '+set', 'sv_maxclients', '8', '+set', 'bots_count', '6', '+set', 'bots_debug', '1',
-                 '+map', args.map],
+                 '+set', 'sv_fps', str(args.fps)]
+                + (['+set', 'g_forceSnaps', str(args.fps), '+set', 'g_forceRate', str(args.fps * 1000)] if args.fps > 20 else [])
+                + ['+map', args.map],
                 stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT)
         changed_at = None
         try:

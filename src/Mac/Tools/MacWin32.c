@@ -15,7 +15,7 @@
 #include "imports.h"
 #include "stubs/gcc40_compat.h"
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 MMRESULT timeBeginPeriod(int period)
 {
     (void)period;
@@ -43,7 +43,7 @@ BOOL QueryPerformanceFrequency(void *lpFrequency)
     return 1;
 }
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 BOOL QueryPerformanceCounter(void *lpPerformanceCount)
 {
     struct timeval tv;
@@ -54,7 +54,7 @@ BOOL QueryPerformanceCounter(void *lpPerformanceCount)
 }
 #endif
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 int MessageBoxA(void *hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
     (void)hWnd;
@@ -98,7 +98,7 @@ BOOL SetThreadPriority(HANDLE hThread, int nPriority)
     return 1;
 }
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 DWORD GetCurrentThreadId(void)
 {
 
@@ -188,7 +188,7 @@ BOOL VirtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
     return 1;
 }
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 int GetSystemMetrics(int nIndex)
 {
 
@@ -209,7 +209,7 @@ typedef struct {
     int find_dirs;
 } FFState;
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 HANDLE FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData)
 {
     FFState *state;
@@ -270,7 +270,7 @@ HANDLE FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData)
 }
 #endif
 
-#if !defined(_M_X64)  /* x64: use real Win32 (Mac/POSIX emulation collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: use real Win32 (Mac/POSIX emulation collides by name); MinGW links these as 32 bits does */
 BOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData)
 {
     FFState *state = (FFState *)hFindFile;

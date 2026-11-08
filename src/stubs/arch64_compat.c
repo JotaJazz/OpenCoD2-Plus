@@ -7,7 +7,8 @@
 
 #    include "common_types.h"
 
-#    define ARCH64_VTABLE(sym) unsigned char sym[256] __attribute__((aligned(16))) = { 0 }
+/* weak: the Linux x64 build's generated blob (build/native_gen/data32.c) now defines some of these */
+#    define ARCH64_VTABLE(sym) unsigned char sym[256] __attribute__((aligned(16), weak)) = { 0 }
 /* Effect vtables are implemented with real function pointers in FxPrimitives.c:
 ARCH64_VTABLE(__ZTV6Effect);
 ARCH64_VTABLE(__ZTV16OrientedParticle);
@@ -22,10 +23,10 @@ ARCH64_VTABLE(__ZTV12IncludeClass);
 
 void *__ZTIl = 0;
 
-void *TheStringPackage = 0;
-void *__ZN12CSoundObject13sReadCallbackE = 0;
-void *__ZN12CSoundObject13sSeekCallbackE = 0;
-void *__ZN12CSoundObject14sCloseCallbackE = 0;
-void *__ZN12CSoundObject13sOpenCallbackE = 0;
+__attribute__((weak)) void *TheStringPackage = 0;
+__attribute__((weak)) void *__ZN12CSoundObject13sReadCallbackE = 0;
+__attribute__((weak)) void *__ZN12CSoundObject13sSeekCallbackE = 0;
+__attribute__((weak)) void *__ZN12CSoundObject14sCloseCallbackE = 0;
+__attribute__((weak)) void *__ZN12CSoundObject13sOpenCallbackE = 0;
 
 #endif

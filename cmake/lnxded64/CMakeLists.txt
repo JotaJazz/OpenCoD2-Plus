@@ -14,10 +14,14 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "this project builds 64-bit only")
 endif()
 
-set(common -fno-pie -O1 -fno-omit-frame-pointer -mfpmath=387 -m64 -Wformat -Wno-unused-result
+set(common -fno-pie -O1 -fno-omit-frame-pointer -msse2 -mfpmath=sse -m64 -Wformat -Wno-unused-result
   -fstack-protector-strong -fno-strict-aliasing -fwrapv)
 add_compile_options(${common} "$<$<COMPILE_LANGUAGE:CXX>:-include;${SRC}/headers/glibc_compat.h>")
 add_compile_definitions(NDEBUG PROTOCOL_VERSION=${COD2_PROTOCOL} _FORTIFY_SOURCE=2 _FILE_OFFSET_BITS=64)
+option(COD2_PLUS_PROTOCOL "1.3 builds the 1.3 Plus server (OFF: stock 1.3)" ON)
+if(COD2_PROTOCOL EQUAL 118 AND COD2_PLUS_PROTOCOL)
+  add_compile_definitions(COD2_PLUS)  # OpenCoD2-Plus Server's make PLUS=1: the 1.3 Plus server
+endif()
 
 set(libcod_defs LIBCOD LIBCOD_COMPILE_BOTS=1 LIBCOD_COMPILE_ENTITY=1 LIBCOD_COMPILE_EXEC=1
   LIBCOD_COMPILE_GRAPH=1 LIBCOD_COMPILE_HTTP=1 LIBCOD_COMPILE_JSON=1 LIBCOD_COMPILE_LEVEL=1

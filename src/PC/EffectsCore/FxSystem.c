@@ -6,7 +6,7 @@ extern const dvar_t *fx_freeze;   /* real global; imp_fx_freeze holds its value 
 #include <string.h>
 extern refexport_t re;
 
-extern void CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
+extern int CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
 extern GfxEntity *R_AddRefEntityToScene(GfxEntity *ent, const struct XModel *model, int unk);
 extern void FX_AddScheduledEffects(const vec_t *start, const vec_t *end);
 extern void FX_UpdateAllNonBolt(void);
@@ -60,9 +60,8 @@ void FxHelper_Init(const FxHelper *_this)
 void FxHelper_AdjustTime(const FxHelper *_this, int intime)
 {
     FxHelper *self = (FxHelper *)_this;
-    char *frozenStruct = (char *)fx_freeze;
 
-    if (frozenStruct[8]) {
+    if (fx_freeze->current.enabled) {
         self->mFrameTime = 0;
     } else {
         if (self->time == 0) {
@@ -88,10 +87,9 @@ void FxHelper_AdjustTime(const FxHelper *_this, int intime)
 void FxHelper_WarpTime(const FxHelper *_this, int intime)
 {
     FxHelper *self = (FxHelper *)_this;
-    char *frozenStruct = (char *)fx_freeze;
     int frameTime;
 
-    if (frozenStruct[8] || self->time == 0) {
+    if (fx_freeze->current.enabled || self->time == 0) {
         self->mFrameTime = 0;
         goto set_time_seed;
     }

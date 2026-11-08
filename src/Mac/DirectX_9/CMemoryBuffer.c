@@ -10,7 +10,7 @@ int CMemoryBuffer_sDelayedFreeRequests = 0;
 UINT32 CMemoryBuffer_sMemoryDesignatedForDelayedFree = 0;
 
 typedef struct {
-    int vptr;
+    intptr_t vptr;  /* int on 32 bits, as 1.3; the vtable's address */
     byte *allocation;
     byte *data;
     UINT32 length;
@@ -27,7 +27,7 @@ typedef struct CMemoryBufferFreeRequestNode {
 
 static byte *CMemoryBuffer_AlignAllocation(byte *allocation)
 {
-    return (byte *)(((unsigned long)(allocation + 31)) & ~31UL);
+    return (byte *)(((uintptr_t)(allocation + 31)) & ~(uintptr_t)31);
 }
 
 static CMemoryBufferFreeRequestNode *CMemoryBuffer_GetDelayedFreeHead(void)
@@ -61,7 +61,7 @@ void CMemoryBuffer_CMemoryBuffer(const CMemoryBuffer *_this, UINT32 Length)
     byte *allocation;
 
     buffer = (CMemoryBufferImpl *)_this;
-    buffer->vptr = (int)(unsigned long)vtbl_CMemoryBuffer;
+    buffer->vptr = (intptr_t)vtbl_CMemoryBuffer;
     buffer->length = Length;
     buffer->freedLater = Length == 0;
 
@@ -90,7 +90,7 @@ void ZN13CMemoryBufferD1Ev(const CMemoryBuffer *_this)
     CMemoryBufferImpl *buffer;
 
     buffer = (CMemoryBufferImpl *)_this;
-    buffer->vptr = (int)(unsigned long)vtbl_CMemoryBuffer;
+    buffer->vptr = (intptr_t)vtbl_CMemoryBuffer;
 
     if (!buffer->freedLater && buffer->allocation) {
         free(buffer->allocation);

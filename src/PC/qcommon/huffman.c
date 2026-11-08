@@ -33,8 +33,8 @@ void Huff_Init(huffman_t *huff);
 void Huff_offsetReceive(node_t *node, int *ch, byte *fin, int *offset);
 static void increment(huff_t *huff, node_t *node);
 void Huff_addRef(huff_t *huff, int ch, msg_t *mbuf, int offset);
-void huffman_send(node_t *node, node_t *child, byte *fout);
-void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset);
+void huffman_send(node_t *node, node_t *child, byte *fout, int maxoffset);
+void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset, int maxoffset);
 
 static inline __attribute__((always_inline)) void add_bit(int bit, byte *fout)
 {
@@ -191,12 +191,20 @@ void Huff_offsetReceive(node_t *node, int *ch, byte *fin, int *offset)
     *offset = bloc;
 }
 
-static inline __attribute__((always_inline)) void huffman_send_core(node_t *node, node_t *child, byte *fout)
+/* Not in 1.3 (as OpenCoD2-Plus Server's e103ff1, after ioquake3): stops at maxoffset bits and
+ * leaves bloc past it, so MSG_WriteBitsCompress sees a message that would overrun its buffer;
+ * a rare byte takes up to 11 bits, so the output can outgrow the input. */
+static inline __attribute__((always_inline)) void huffman_send_core(node_t *node, node_t *child, byte *fout,
+                                                                    int maxoffset)
 {
     if (NODE_PARENT(node)) {
-        huffman_send(NODE_PARENT(node), node, fout);
+        huffman_send(NODE_PARENT(node), node, fout, maxoffset);
     }
     if (child) {
+        if (bloc >= maxoffset) {
+            bloc = maxoffset + 1;
+            return;
+        }
         if (NODE_RIGHT(node) == child) {
             add_bit(1, fout);
         } else {
@@ -205,9 +213,9 @@ static inline __attribute__((always_inline)) void huffman_send_core(node_t *node
     }
 }
 
-void huffman_send(node_t *node, node_t *child, byte *fout)
+void huffman_send(node_t *node, node_t *child, byte *fout, int maxoffset)
 {
-    huffman_send_core(node, child, fout);
+    huffman_send_core(node, child, fout, maxoffset);
 }
 
 void Huff_addRef(huff_t *huff, int ch, msg_t *mbuf, int offset)
@@ -286,10 +294,10 @@ void Huff_addRef(huff_t *huff, int ch, msg_t *mbuf, int offset)
     increment(huff, NODE_PARENT(tnode2));
 }
 
-void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset)
+void Huff_offsetTransmit(huff_t *huff, int ch, byte *fout, int *offset, int maxoffset)
 {
     bloc = *offset;
-    huffman_send_core(huff->loc[ch], NULL, fout);
+    huffman_send_core(huff->loc[ch], NULL, fout, maxoffset);
     *offset = bloc;
 }
 

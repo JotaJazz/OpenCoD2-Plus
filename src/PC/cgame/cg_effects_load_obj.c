@@ -161,7 +161,7 @@ FxImpactTable *CG_RegisterImpactEffects(const char *mapname)
         CG_RegisterImpactEffectsForDir(mapdir, (char *(*)[23])szEffectFile);
     }
 
-    FxImpactTable *fx = (FxImpactTable *)Hunk_AllocAlignInternal(8, 4);
+    FxImpactTable *fx = (FxImpactTable *)Hunk_AllocAlignInternal(COD2_SIZEOF_1_3(FxImpactTable, 8), 4);
     fx->table = (FxImpactEntry *)Hunk_AllocAlignInternal(sizeof(szEffectFile), 4);
 
     int typeIdx;
@@ -180,16 +180,16 @@ FxImpactTable *CG_RegisterImpactEffects(const char *mapname)
                 Com_Printf("no entry for effect type '%s' on surface type '%s'\n",
                            pszTypeName, Com_SurfaceTypeToName(surfIdx));
                 typeBadCount++;
-                ((int *)entries)[surfIdx] = 0;
+                entries[surfIdx] = 0;
             } else if (*effectFile == '\0') {
-                ((int *)entries)[surfIdx] = 0;
+                entries[surfIdx] = 0;
             } else {
-                ((int *)entries)[surfIdx] = (int)FX_RegisterEffect(effectFile);
+                entries[surfIdx] = (FxImpactEntry)FX_RegisterEffect(effectFile);
             }
         }
 
         iBadCount += typeBadCount;
-        offset += 23 * 4;
+        offset += 23 * (int)sizeof(FxImpactEntry);
     }
 
     if (iBadCount != 0) {

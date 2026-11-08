@@ -13,6 +13,14 @@
 template<class T> struct cod2_bridge_returns_scalar
 	: std::integral_constant<bool, std::is_scalar<T>::value || std::is_void<T>::value> {};
 
+/* A value of the engine's ABI that differs between the 32-bit builds
+   (test/<module>_abi.txt) and the 64-bit client (test/<module>_abi_x64.txt). */
+#ifdef COD2_X64
+#define COD2_ABI_PICK(x86, x64) (x64)
+#else
+#define COD2_ABI_PICK(x86, x64) (x86)
+#endif
+
 /* The ABI of one side, as scripts/engine_abi.py records the engine's: the
    return class (v void, i integer or pointer in eax, f floating in st0, s
    struct or union through a hidden pointer), its size, and the stack slot a
@@ -40,7 +48,7 @@ template<> struct cod2_abi_uint<2> { typedef unsigned short type; };
 template<> struct cod2_abi_uint<4> { typedef unsigned int type; };
 template<> struct cod2_abi_uint<8> { typedef unsigned long long type; };
 template<class T, unsigned N> using cod2_abi_int =
-	typename std::conditional<sizeof(T) == N, T, typename cod2_abi_uint<N>::type>::type;
+	typename std::conditional<cod2_abi_size<T>() == N, T, typename cod2_abi_uint<N>::type>::type;
 
 /* The assembler name of a C symbol: MinGW (i686) prefixes an underscore. */
 #define COD2_SYM_STR2(x) #x

@@ -59,7 +59,11 @@ extern "C" {
 #define COD2_STDCALL
 #define COD2_FASTCALL
 #define COD2_FORCE_ALIGN_ARG_POINTER
+#if defined(COD2_X64) && defined(__GNUC__)
+#define COD2_ALIGNED(n) __attribute__((aligned(n)))  /* a layout, not a calling convention: x64 keeps it */
+#else
 #define COD2_ALIGNED(n)
+#endif
 #endif
 
 #if COD2_APPLE_GCC_X86_ABI
@@ -2852,7 +2856,7 @@ typedef int CGDataProvider;
 typedef int CGImage;
 typedef int CSpecArray;
 typedef int Exop;
-typedef int FxImpactEntry;
+typedef intptr_t FxImpactEntry;   /* an effect pointer: pointer-sized on x64 */
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;
@@ -4740,7 +4744,11 @@ typedef _D3DRESOURCETYPE D3DRESOURCETYPE;
 typedef _D3DTEXTUREFILTERTYPE D3DTEXTUREFILTERTYPE;
 typedef _D3DXSHADER_CONSTANTINFO D3DXSHADER_CONSTANTINFO;
 typedef int DCTELEM;
+#ifdef COD2_X64
+typedef unsigned int DWORD;  /* 32 bits, as on Windows and in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int DWORD;
+#endif
 typedef OpaqueDialogPtr * DialogPtr;
 typedef OpaqueEventHandlerRef * EventHandlerRef;
 typedef __EventLoopTimer * EventLoopTimerRef;
@@ -4780,7 +4788,11 @@ typedef HDC__ * HDC;
 typedef HINSTANCE__ * HINSTANCE;
 typedef HMONITOR__ * HMONITOR;
 typedef long unsigned int HPROENUM;
+#ifdef COD2_X64
+typedef uintptr_t HPROVIDER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef long unsigned int HPROVIDER;
+#endif
 typedef _SAMPLE * HSAMPLE;
 typedef _STREAM * HSTREAM;
 typedef HWND__ * HWND;
@@ -4953,7 +4965,7 @@ typedef char io_name_t[128];
 typedef jpeg_common_struct * j_common_ptr;
 typedef jpeg_compress_struct * j_compress_ptr;
 typedef jpeg_decompress_struct * j_decompress_ptr;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(COD2_X64)   /* x64: the system's, 200 bytes, not 1.3's 39 ints */
 #include <setjmp.h>
 #else
 typedef int jmp_buf[39];
@@ -5118,7 +5130,11 @@ typedef UInt32 AudioUnitRenderActionFlags;
 typedef UInt32 ByteCount;
 typedef UInt32 CFStringEncoding;
 typedef UInt32 FourCharCode;
+#ifdef COD2_X64
+typedef uintptr_t HDIGDRIVER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef UInt32 HDIGDRIVER;
+#endif
 typedef UInt32 ItemCount;
 typedef UInt32 LSKindID;
 typedef UInt32 OptionBits;
@@ -6164,7 +6180,11 @@ struct EffectVisInfo {
 
 struct Emitter {
 
+#ifdef COD2_X64
+    char _base[0x378];  /* sizeof(Particle) on x64, checked in FxUtil.c */
+#else
     char _base[0x24c];
+#endif
 
     vec3_t emitPos;
     vec3_t initialVel;
@@ -11495,7 +11515,7 @@ struct cplane_s {
 
 struct cspField_t {
     const char *szName;
-    int iOffset;
+    ptrdiff_t iOffset;   /* CoD2rev-Plus's: 8 bytes on x64 */
     int iFieldType;
 };
 
@@ -14072,8 +14092,14 @@ struct scrVmPub_t {
 };
 
 struct scr_anim_s {
-    short unsigned int index;
-    short unsigned int tree;
+    /* CoD2rev-Plus's: while it links an anim, the VM keeps a code position here (8 bytes on x64) */
+    union {
+        struct {
+            short unsigned int index;
+            short unsigned int tree;
+        };
+        const char *linkPointer;
+    };
 };
 
 struct loadAnim_t {
@@ -15399,20 +15425,20 @@ struct gentity_s {
     qboolean unlinkAfterEvent;
     int clipmask;
     int processedFrame;
-    int parent;
+    struct gentity_s *parent;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     int nextthink;
     int health;
     int maxHealth;
     int damage;
     int count;
-    int chain;
+    struct gentity_s *chain;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     union { struct item_ent_t item; struct trigger_ent_t trigger; struct mover_ent_t mover; struct corpse_ent_t corpse; struct grenade_ent_t grenade; };
-    int tagInfo;
-    int tagChildren;
+    struct tagInfo_s *tagInfo;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
+    struct gentity_s *tagChildren;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     byte attachModelNames[7];
     scr_string_t attachTagNames[7];
     int useCount;
-    int nextFree;
+    struct gentity_s *nextFree;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
 };
 
 int COD2_GEntityHandle(const gentity_t *ent);
@@ -15895,6 +15921,7 @@ struct pmove_t {
     Bool mantleStarted;
     vec3_t mantleEndPos;
     int mantleDuration;
+    int plusRules; /* the Plus server's rules: cl_plusRules */
 };
 
 struct va_info_t {

@@ -11,7 +11,7 @@ extern "C" {
 void Com_Printf(const char *fmt, ...) {}
 void Com_DPrintf(const char *fmt, ...) {}
 int I_stricmp(const char *a, const char *b) { return strcasecmp(a, b); }
-int I_strnicmp(const char *a, const char *b, size_t n) { return strncasecmp(a, b, n); }
+int I_strnicmp(const char *a, const char *b, int n) { return strncasecmp(a, b, n); }
 const dvar_t *Dvar_FindVar(const char *name)
 {
     static dvar_t d;
@@ -69,7 +69,7 @@ class NetHardening(unittest.TestCase):
         self.assertEqual({n: self.ask('cvar', n) for n in names}, {n: expected for n in names})
 
     def test_commands_blocked(self):
-        self.assert_cvars(['activeAction', 'ACTIVEACTION', 'nextdemo'], '0')
+        self.assert_cvars(['activeAction', 'ACTIVEACTION', 'nextdemo', 'com_writeConfig', 'com_freezeWatch', 'cl_hideServerIp'], '0')
 
     def test_protected_blocked(self):
         self.assert_cvars(['fs_basepath', 'FS_BASEPATH', 'rcon_password', 'RCON_PASSWORD', 'cl_allowDownload',

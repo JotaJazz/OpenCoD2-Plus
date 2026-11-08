@@ -920,6 +920,10 @@ void SV_InitGameVM( qboolean restart, qboolean registerDvars )
 	Sys_LoadingKeepAlive();
 #endif
 
+	// G_InitGame can trace against DObj entities before the first frame has
+	// set up the skeleton memory, which is NULL until then on the first map
+	SV_ResetSkeletonCache();
+
 	// use the current msec count for a random seed
 	// init for this gamestate
 	G_InitGame(svs.time, Sys_MillisecondsRaw(), restart, registerDvars);

@@ -18,7 +18,7 @@ with it on (COD2_PLUS_SCRIPT, COD2_PLUS_SERVER), this writes:
 
 Return types come from decltype on the real CoD2rev-Plus declarations, so the
 compiler checks every thunk against them. When test/<module>_abi.txt exists
-(scripts/engine_abi.py), each thunk also asserts that the return class and
+(format in scripts/engine_abi.py), each thunk also asserts that the return class and
 size and the stack slot of every parameter match the engine's definition,
 and widens an integer return the two sides give different sizes.
 --names prints the imports and exports instead, one per line.
@@ -41,14 +41,24 @@ EXTRA_ARGS = {
     'FS_FreeFileList': (['int'], ['10']),
 }
 
+# Exports the engine calls with 1.3's trailing arguments, which CoD2rev-Plus's
+# versions dropped: the thunk takes them unnamed and ignores them, since a
+# call through another signature traps on wasm (x86's cdecl only ignores them).
+EXPORT_TRAILING = {
+    'MT_Alloc': ['int'],            # type
+    'SL_GetString_': ['int'],       # type
+    'SL_GetStringOfLen': ['int'],   # type
+}
+
 # Engine functions with another name in this repo.
 RENAMED = {
     'Hunk_ClearTempMemoryHighInternal': 'Hunk_ClearTempMemoryHigh',
 }
 
 # Functions the VM needs that this engine does not have; they are written by
-# hand in src/compat/script_missing.cpp.
-PROVIDED = {'Hunk_AllocXAnimTreePrecache', 'Q_rint', 'Q_vsnprintf', 'Sys_UnimplementedFunctionInternal',
+# hand in src/compat/script_missing.cpp, but for Dvar_FindVar, which the
+# server's bridge defines.
+PROVIDED = {'Dvar_FindVar', 'Hunk_AllocXAnimTreePrecache', 'Q_rint', 'Q_vsnprintf', 'Sys_UnimplementedFunctionInternal',
             'VectorCompare'}
 
 # Exports the engine calls with the client binary's script system id first
@@ -82,7 +92,7 @@ unsigned int cod2x_Scr_GetAnim(unsigned int index, int tree)
 {
     scr_anim_s anim = Scr_GetAnim(index, (XAnimTree_s *)(uintptr_t)tree);
     unsigned int value;
-    static_assert(sizeof(anim) == sizeof(value), "scr_anim_s is 4 bytes");
+    static_assert(sizeof(anim) >= sizeof(value), "scr_anim_s holds index and tree in its first 4 bytes");   /* 8 on x64: the union's linkPointer */
     memcpy(&value, &anim, sizeof(value));
     return value;
 }
@@ -461,30 +471,76 @@ def ret_type(name, params):
     return f'decltype({name}(' + ', '.join(f'std::declval<{p}>()' for p in fixed(params)) + '))'
 
 
-def abi_asserts(name, params, abi, ret, side):
-    """static_asserts that CoD2rev-Plus's declaration (params, ret) matches the
-    engine's ABI line for name; side says whose definition the line comes from."""
-    if abi is None:
-        return ''
+class ArchAbi(tuple):
+    """The engine's ABI line for one name on 32 bits (test/<module>_abi.txt) and on
+    x64 (test/<module>_abi_x64.txt); either may be None when that file lacks it."""
+    def __new__(cls, x86, x64):
+        return tuple.__new__(cls, (x86, x64))
+
+
+def pick(x86, x64):
+    """A C++ constant that is x86 on 32 bits and x64 on a COD2_X64 build."""
+    return str(x86) if x86 == x64 else f'COD2_ABI_PICK({x86}, {x64})'
+
+
+def abi_lines(name, params, abi, ret, side):
+    """static_asserts that CoD2rev-Plus's declaration (params, ret) matches one
+    engine ABI line, an (x86, x64) pair of values where both are known."""
     cls, size, slots, variadic = abi
     plus = fixed(params)
+    def chr_(c):
+        return pick(f"'{c[0]}'", f"'{c[1]}'")
     # A caller that expects nothing may ignore an integer in eax, but not a
     # float, which would stay on the x87 stack.
-    void_ok = f' || cod2_abi_class<{ret}>() == \'v\'' if side == 'the engine' and cls == 'i' else ''
-    out = [f'static_assert(cod2_abi_class<{ret}>() == \'{cls}\'{void_ok}, "{name}: return class differs from {side}");']
-    if cls in 'fs':
-        out.append(f'static_assert(cod2_abi_size<{ret}>() == {size}, "{name}: return size differs from {side}");')
+    void_ok = f' || cod2_abi_class<{ret}>() == \'v\'' if side == 'the engine' and cls == ('i', 'i') else ''
+    out = [f'static_assert(cod2_abi_class<{ret}>() == {chr_(cls)}{void_ok}, "{name}: return class differs from {side}");']
+    if cls[0] in 'fs' or cls[1] in 'fs':
+        out.append(f'static_assert(cod2_abi_size<{ret}>() == {pick(*size)}, "{name}: return size differs from {side}");')
     if len(plus) != len(slots) or ('...' in params) != variadic:
         out.append(f'static_assert(false && sizeof({ret}*), "{name}: {len(plus)} parameters, {side} has {len(slots)}'
                    f'{" and is variadic" if variadic else ""}");')
     else:
-        out += [f'static_assert(cod2_abi_slot<{p}>() == {s}, "{name}: parameter {i} differs from {side}");'
+        out += [f'static_assert(cod2_abi_slot<{p}>() == {pick(*s)}, "{name}: parameter {i} differs from {side}");'
                 for i, (p, s) in enumerate(zip(plus, slots))]
-    return '\n'.join(out) + '\n'
+    return out
+
+
+def both(line):
+    """One ABI line as (x86, x64) pairs of each value."""
+    cls, size, slots, variadic = line
+    return (cls, cls), (size, size), [(s, s) for s in slots], variadic
+
+
+def abi_asserts(name, params, abi, ret, side):
+    """static_asserts that CoD2rev-Plus's declaration (params, ret) matches the
+    engine's ABI for name; side says whose definition the line comes from. abi is
+    one line for both architectures or an ArchAbi; a line only one architecture
+    has is checked on that one alone."""
+    if abi is None:
+        return ''
+    if not isinstance(abi, ArchAbi):
+        return '\n'.join(abi_lines(name, params, both(abi), ret, side)) + '\n'
+    x86, x64 = abi
+    if x86 is None and x64 is None:
+        return ''
+    if x86 is None or x64 is None or len(x86[2]) != len(x64[2]) or x86[3] != x64[3]:
+        out = []
+        for line, guard in ((x86, '#ifndef COD2_X64'), (x64, '#ifdef COD2_X64')):
+            if line is not None:
+                out += [guard] + abi_lines(name, params, both(line), ret, side) + ['#endif']
+        return '\n'.join(out) + '\n'
+    merged = ((x86[0], x64[0]), (x86[1], x64[1]), list(zip(x86[2], x64[2])), x86[3])
+    return '\n'.join(abi_lines(name, params, merged, ret, side)) + '\n'
 
 
 def widened(abi, ret):
     """The C type to declare for an integer return the engine gives another size, or None."""
+    if isinstance(abi, ArchAbi):
+        x86, x64 = abi
+        if x86 is None or x64 is None or x86[0] != 'i' or x64[0] != 'i':
+            line = x86 if x64 is None else x64 if x86 is None else None
+            return widened(line, ret) if line is not None else None
+        return f'cod2_abi_int<{ret}, {pick(x86[1], x64[1])}>'
     if abi is None or abi[0] != 'i':
         return None
     return f'cod2_abi_int<{ret}, {abi[1]}>'
@@ -494,12 +550,12 @@ def export_thunk(name, params, cfg=None, abi=None, target=None):
     """The C symbol name calling CoD2rev-Plus's target (name unless renamed)."""
     cfg = cfg or MODULES['script']
     target = target or name
-    sig = ', '.join(named(p, i) for i, p in enumerate(params))
+    sig = ', '.join([named(p, i) for i, p in enumerate(params)] + EXPORT_TRAILING.get(name, []))
     args = ', '.join(f'a{i}' for i in range(len(fixed(params))))
     r = ret_type(target, params)
     guard = '' if name in cfg['struct_return_ok'] else \
         f'static_assert(cod2_bridge_returns_scalar<{r}>::value, "{name} returns a struct");\n'
-    guard += abi_asserts(name, params, abi, r, 'src/PC/server_mp')
+    guard += abi_asserts(name, params, abi, r, "the engine's 1.3 ABI")
     w = widened(abi, r)
     if '...' in params:
         # the engine's arguments are formatted here and passed on as "%s", as
@@ -659,6 +715,20 @@ def group_names(module, builds):
     return out
 
 
+def abi_gaps(names, abi32, abi64):
+    """The crossing names a module's ABI files leave out, with the architectures
+    they lack: their thunks would get no asserts there. A module without the
+    files (abi32 empty) has none."""
+    if not abi32:
+        return []
+    gaps = []
+    for name in sorted(names):
+        lacking = [arch for arch, abi in (('x86', abi32), ('x64', abi64)) if name not in abi]
+        if lacking:
+            gaps.append(f'{name} ({", ".join(lacking)})')
+    return gaps
+
+
 def crossing_names(module, build):
     """(import names, export names) of a module, for scripts/engine_abi.py."""
     _, exports, imports, interface = read_module(module, build)
@@ -688,7 +758,12 @@ def main():
         print('\n'.join(sorted(set(imports) | set(crossing_names(args.module, args.build)[1]))))
         return 0
     import engine_abi
-    abi = engine_abi.load(args.module)
+    abi32, abi64 = engine_abi.load(args.module), engine_abi.load(args.module, 'x64')
+    abi = {n: ArchAbi(abi32.get(n), abi64.get(n)) for n in set(abi32) | set(abi64)} if abi64 else abi32
+    gaps = abi_gaps(set(imports) | set(crossing_names(args.module, args.build)[1]), abi32, abi64)
+    if gaps:
+        print(f'no line in test/{args.module}_abi*.txt (the engine side\'s 1.3 ABI, kept by hand) for: ' + ', '.join(gaps))
+        return 1
 
     out = [cfg['header']]
     missing = []
@@ -718,7 +793,7 @@ def main():
     print(f'{len(interface) - len(missing)} exports, {len(imports)} imports')
     if missing:
         print(f'in test/{args.module}_interface.txt but not defined by the module: ' + ' '.join(missing))
-    absent = sorted(n for n in set(imports) | set(interface) if abi and n in abi and abi[n] is None)
+    absent = sorted(n for n in set(imports) | set(interface) if abi32 and n in abi32 and abi32[n] is None)
     if absent:
         print(f'not in the engine binary (test/{args.module}_abi.txt): ' + ' '.join(absent))
     return 0

@@ -2,7 +2,7 @@
  *
  * Isolated TU: includes <windows.h> but NOT the engine headers (cod2_defs.h
  * etc.), so the Windows SDK types stay out of the engine's own Win32 universe.
- * Compiled only in the MSVC build (added to the source set in win32-msvc.cmake).
+ * Compiled only in the MSVC-ABI build (CMakeLists.txt, COD2_MSVC_ABI).
  */
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

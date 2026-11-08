@@ -1,5 +1,6 @@
 #include "common_types.h"
 #include "imports.h"
+#include "d3d_heads.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,18 +25,7 @@ extern float g_scale2;
 extern bool g_InhibitCopy;
 extern bool g_NoTextureID;
 
-#if defined(_MSC_VER)
-/* These C names alias the C++ static-member symbols (defined in the data blob /
- * the reconstructed class). cl has no symbol-rename; bind via /alternatename.
- * x86: a C identifier `__ZN..` emits MSVC symbol `___ZN..` (one extra '_'). */
-extern bool CDirect3DDevice_mNeedsVertexShaderValidation;
-extern bool CDirect3DDevice_mNeedsTransformationValidation;
-extern bool CDirect3DDevice_mNeedsRasterizationValidation;
-COD2_ALT("CDirect3DDevice_mNeedsVertexShaderValidation", "__ZN15CDirect3DDevice28mNeedsVertexShaderValidationE")
-COD2_ALT("CDirect3DDevice_mNeedsTransformationValidation", "__ZN15CDirect3DDevice30mNeedsTransformationValidationE")
-COD2_ALT("CDirect3DDevice_mNeedsRasterizationValidation", "__ZN15CDirect3DDevice29mNeedsRasterizationValidationE")
-#else
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_WIN64)  /* PE32 decorates C names; PE x64 does not */
 #define COD2_COFF_ASM_PREFIX "_"
 #else
 #define COD2_COFF_ASM_PREFIX ""
@@ -44,7 +34,6 @@ extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsVertexS
 extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsTransformationValidation __asm__(COD2_COFF_ASM_PREFIX "__ZN15CDirect3DDevice30mNeedsTransformationValidationE");
 extern bool __attribute__((visibility("default"))) CDirect3DDevice_mNeedsRasterizationValidation __asm__(COD2_COFF_ASM_PREFIX "__ZN15CDirect3DDevice29mNeedsRasterizationValidationE");
 #undef COD2_COFF_ASM_PREFIX
-#endif
 
 static const float GaussianBlurWeights[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 static float sPointScale[3] = { 0.0f, 0.0f, 0.0f };
@@ -67,7 +56,7 @@ extern void CDirect3DSurface_CDirect3DSurface(const CDirect3DSurface *_this,
                                               SurfaceType s, GLenum CubemapID, UINT32 Level, UINT32 Width, UINT32 Height,
                                               D3DFORMAT Format, const void *pSurfaceMemory, COpenGLTexture *pOpenGLTextureInfo);
 extern void CDirect3DSurface_UpdateOpenGLSurfaceObject(const CDirect3DSurface *_this, int bRecreateSurface);
-extern int CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
+extern intptr_t CDirect3DSwapChain_CDirect3DSwapChain(const CDirect3DSwapChain *_this);
 extern int CDirect3DSwapChain_SetBackBuffer(const CDirect3DSwapChain *_this, const IDirect3DSurface9 *pBackBuffer);
 
 extern UINT32 MacOpenGLUtils_GetImageSizeInBytes(UINT32 Width, UINT32 Height, UINT32 Depth, UINT32 LevelCount, const D3DFORMAT *f);
@@ -602,10 +591,8 @@ static unsigned int CDirect3DDevice_GetTextureGLId(IDirect3DBaseTexture9 *textur
 {
     if (!CDirect3DDevice_IsRealTexture(texture))
         return 0;
-    /* CDirect3DTexture.texIDStorage: 3 ptrs (2 vtbl + mpTexID) + 16 int fields(64B) +
-       2 ptrs (surfaces,pixelData) => 5*sizeof(void*)+64. x86=0x54, x64=0x68.
-       CDirect3DCubeTexture has the same layout up to this field. */
-    return *(unsigned int *)((byte *)texture + 5 * sizeof(void *) + 64);
+    /* CDirect3DTexture and CDirect3DCubeTexture share this head (d3d_heads.h) */
+    return ((const D3DTextureHead *)texture)->texIDStorage;
 }
 
 static GLenum CDirect3DDevice_GetTextureTarget(IDirect3DBaseTexture9 *texture)
@@ -1608,7 +1595,7 @@ HRESULT CDirect3DDevice_DrawIndexedPrimitive(const CDirect3DDevice *_this,
     if (!dev->streams[0] || !dev->indexBuffer)
         return 0;
 
-    vbData = *(byte **)((byte *)dev->streams[0] + sizeof(void *) + 8);   /* VB.data: vtable+refCount+lengthBytes (x86 was +12) */
+    vbData = ((const D3DBufferHead *)dev->streams[0])->data;
     if (!vbData)
         return 0;
     offset = dev->streamOffsets[0];
@@ -1662,7 +1649,7 @@ HRESULT CDirect3DDevice_DrawIndexedPrimitive(const CDirect3DDevice *_this,
     else
         colorByteOrder = COLOR_BYTES_BGRA;
 
-    ibData = *(byte **)((byte *)dev->indexBuffer + sizeof(void *) + 8);   /* IB.data (x86 was +12) */
+    ibData = ((const D3DBufferHead *)dev->indexBuffer)->data;
     if (!ibData)
         return 0;
 

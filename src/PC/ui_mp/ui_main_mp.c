@@ -170,7 +170,7 @@ extern int GetClientname(int index, char *name, int nameSize);
 extern void I_strncpyz(char *dest, const char *src, int len);
 extern char *I_CleanStr(char *str);
 extern int I_stricmp(const char *s1, const char *s2);
-extern int I_strnicmp(const char *s1, const char *s2, size_t n);
+extern int I_strnicmp(const char *s1, const char *s2, int n);
 extern void I_strncat(char *dest, int len, const char *src);
 extern int FS_FOpenFileByMode(const char *name, int *f, int mode);
 extern int FS_Read(void *buf, int len, int f);
@@ -1715,10 +1715,10 @@ const char *UI_ReplaceConversions(const char *sourceString, ConversionArguments 
 
 const char *UI_ReplaceConversionString(const char *sourceString, const char *replaceString)
 {
-    int convArgs[10];
+    intptr_t convArgs[10];
     memset(convArgs, 0, sizeof(convArgs));
     convArgs[0] = 1;
-    convArgs[1] = (int)replaceString;
+    convArgs[1] = (intptr_t)replaceString;
     return UI_ReplaceConversions(sourceString, (ConversionArguments *)convArgs);
 }
 
@@ -2796,7 +2796,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
                 serverCount = LAN_GetServerCount((ui_netSource)->current.integer);
                 {
                     char tempString[64];
-                    int convArgs[10];
+                    intptr_t convArgs[10];
                     int ci;
 
                     text = UI_SafeTranslateString("EXE_GETTINGINFOFORSERVERS");
@@ -2805,7 +2805,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
                         convArgs[ci] = 0;
                     sprintf(tempString, "%d", serverCount);
                     convArgs[0] = 1;
-                    convArgs[1] = (int)tempString;
+                    convArgs[1] = (intptr_t)tempString;
                     countText = UI_ReplaceConversions(text, (ConversionArguments *)convArgs);
                 }
             }
@@ -2814,7 +2814,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
         } else {
 
             char tempString[64];
-            int convArgs[10];
+            intptr_t convArgs[10];
             int ci;
 
             I_strncpyz(tempString, Dvar_GetVariantString(va("ui_lastServerRefresh_%i", (ui_netSource)->current.integer)), 64);
@@ -2823,7 +2823,7 @@ void UI_OwnerDraw(float x, float y, float w, float h, int horzAlign, int vertAli
             for (ci = 0; ci < 10; ci++)
                 convArgs[ci] = 0;
             convArgs[0] = 1;
-            convArgs[1] = (int)tempString;
+            convArgs[1] = (intptr_t)tempString;
             text = UI_ReplaceConversions(text, (ConversionArguments *)convArgs);
 
             UI_DrawText(text, 0x7fffffff, font, rect[0], rect[1], 0, 0, scale, color, textStyle);
@@ -3775,7 +3775,7 @@ void UI_RunMenuScript(const char **args)
         char *filePtr;
         extern int __mh_execute_header;
 
-        numMovies = FS_GetFileList("video", "roq", 0, addr, (int)&__mh_execute_header);
+        numMovies = FS_GetFileList("video", "roq", 0, addr, 0x1000);
         sharedUiInfo.movieCount = numMovies;
         if (numMovies == 0)
             return;
@@ -4452,7 +4452,7 @@ check_connection_state: {
 
             const char *translated;
             char tempString[64];
-            int convArgs[10];
+            intptr_t convArgs[10];
             int ci;
 
             translated = UI_SafeTranslateString("EXE_AWAITINGCHALLENGE");
@@ -4462,7 +4462,7 @@ check_connection_state: {
 
             sprintf(tempString, "%d", cstate.connectPacketCount);
             convArgs[0] = 1;
-            convArgs[1] = (int)tempString;
+            convArgs[1] = (intptr_t)tempString;
 
             translated = UI_ReplaceConversions(translated, (ConversionArguments *)convArgs);
             if (!translated)
@@ -4489,7 +4489,7 @@ check_connection_state: {
         {
             const char *translated;
             char tempString[64];
-            int convArgs[10];
+            intptr_t convArgs[10];
             int ci;
 
             translated = UI_SafeTranslateString("EXE_AWAITINGCONNECTION");
@@ -4499,7 +4499,7 @@ check_connection_state: {
 
             sprintf(tempString, "%d", cstate.connectPacketCount);
             convArgs[0] = 1;
-            convArgs[1] = (int)tempString;
+            convArgs[1] = (intptr_t)tempString;
 
             translated = UI_ReplaceConversions(translated, (ConversionArguments *)convArgs);
             if (!translated)

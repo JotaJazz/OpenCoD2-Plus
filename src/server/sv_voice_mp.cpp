@@ -78,7 +78,8 @@ void SV_PreGameUserVoice( client_t *cl, msg_t *msg )
 
 		if ( voicePacket.dataSize <= 0 || voicePacket.dataSize >= MAX_VOICE_PACKET_DATA )
 		{
-			Com_Printf("Received invalid voice packet of size %i from %s\n", voicePacket.dataSize, cl->name);
+			if ( SV_ReportBadPacket() )
+				Com_Printf("Received invalid voice packet of size %i from %s\n", voicePacket.dataSize, cl->name);
 			return;
 		}
 
@@ -131,7 +132,8 @@ void SV_UserVoice( client_t *cl, msg_t *msg )
 
 		if ( voicePacket.dataSize <= 0 || voicePacket.dataSize >= MAX_VOICE_PACKET_DATA )
 		{
-			Com_Printf("Received invalid voice packet of size %i from %s\n", voicePacket.dataSize, cl->name);
+			if ( SV_ReportBadPacket() )
+				Com_Printf("Received invalid voice packet of size %i from %s\n", voicePacket.dataSize, cl->name);
 			return;
 		}
 

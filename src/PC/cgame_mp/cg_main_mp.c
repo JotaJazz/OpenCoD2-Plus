@@ -129,6 +129,11 @@ extern const dvar_t *cg_drawMaterial;
 extern const dvar_t *cg_drawSnapshot;
 extern const dvar_t *cg_drawCrosshair;
 extern const dvar_t *cg_hudCompassSize;
+const dvar_t *cg_drawCompass;
+const dvar_t *cg_hudCompassOffsetX;
+const dvar_t *cg_hudCompassOffsetY;
+const dvar_t *cg_drawSpectatedPlayerName;
+const dvar_t *sensitivity_MG;
 extern const dvar_t *cg_hudCompassMaxRange;
 extern const dvar_t *cg_hudCompassMinRange;
 extern const dvar_t *cg_hudCompassMinRadius;
@@ -370,7 +375,7 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum);
 
 void CG_GetEntityOrientation(int entnum, vec_t *origin_out, vec3_t *axis_out)
 {
-    char *ent = (char *)cg_entities + entnum * 548;
+    char *ent = (char *)&((centity_t *)cg_entities)[entnum];
     vec_t *origin = (vec_t *)((centity_t *)ent)->lerpOrigin;
     origin_out[0] = origin[0];
     origin_out[1] = origin[1];
@@ -604,21 +609,20 @@ void CG_Shutdown(void)
     CL_FreeWeaponInfoMemory();
     FX_FreeSystem();
 
-    cgBase = (byte *)cg;
-    for (i = 0; i < 64; ++i, cgBase += 0x4b8) {
-        struct XAnimTree_s *tree = ((cg_t *)cgBase)->bgs.clientinfo[0].pXAnimTree;
+    /* by index, as CG_InitXAnimTrees: 1.3's 0x4b8 stride is x86's sizeof(clientInfo_t) */
+    for (i = 0; i < 64; ++i) {
+        struct XAnimTree_s *tree = cg->bgs.clientinfo[i].pXAnimTree;
         if (tree) {
             XAnimFreeTree(tree, 0);
-            ((cg_t *)cgBase)->bgs.clientinfo[0].pXAnimTree = NULL;
+            cg->bgs.clientinfo[i].pXAnimTree = NULL;
         }
     }
 
-    cgsBase = (byte *)cgs;
-    for (i = 0; i < 8; ++i, cgsBase += 0x4b8) {
-        struct XAnimTree_s *tree = ((cgs_t *)cgsBase)->corpseinfo[0].pXAnimTree;
+    for (i = 0; i < 8; ++i) {
+        struct XAnimTree_s *tree = cgs->corpseinfo[i].pXAnimTree;
         if (tree) {
             XAnimFreeTree(tree, 0);
-            ((cgs_t *)cgsBase)->corpseinfo[0].pXAnimTree = NULL;
+            cgs->corpseinfo[i].pXAnimTree = NULL;
         }
     }
 
@@ -702,7 +706,7 @@ void CG_GetDObjOrientation(int dobjHandle, orientation_t *orient)
     const byte *cent;
 
     if ((unsigned int)dobjHandle <= 0x3ff) {
-        cent = (const byte *)cg_entities + dobjHandle * 548;
+        cent = (const byte *)&((centity_t *)cg_entities)[dobjHandle];
         orient->origin[0] = ((centity_t *)cent)->lerpOrigin[0];
         orient->origin[1] = ((centity_t *)cent)->lerpOrigin[1];
         orient->origin[2] = ((centity_t *)cent)->lerpOrigin[2];
@@ -835,7 +839,7 @@ int CG_PlayEntitySoundAlias(int entitynum, snd_alias_list_t *aliasList)
 {
     const vec_t *origin;
 
-    origin = (const vec_t *)((const byte *)cg_entities + entitynum * 548 + 0x108);
+    origin = (const vec_t *)((const byte *)&((centity_t *)cg_entities)[entitynum] + 0x108);  /* nextState, the same on x64 */
     return CG_PlayPickedAlias(Com_PickSoundAliasFromList(aliasList), entitynum, origin, 0);
 }
 
@@ -928,6 +932,12 @@ static inline __attribute__((always_inline)) void CG_RegisterDvars(void)
     cg_drawCrosshairNamesPosX = Dvar_RegisterInt("cg_drawCrosshairNamesPosX", 0x12c, 0, 0x280, 0x1000);
     cg_drawCrosshairNamesPosY = Dvar_RegisterInt("cg_drawCrosshairNamesPosY", 0xb4, 0, 0x1e0, 0x1000);
     cg_hudCompassSize = Dvar_RegisterFloat("cg_hudCompassSize", 1.0f, 0.0f, FLT_MAX, 0x1001);
+    /* not 1.3's: the options CoD2x gave players */
+    cg_drawCompass = Dvar_RegisterBool_mac("cg_drawCompass", 1, 0x1001);
+    cg_hudCompassOffsetX = Dvar_RegisterFloat("cg_hudCompassOffsetX", 0.0f, -640.0f, 640.0f, 0x1001);
+    cg_hudCompassOffsetY = Dvar_RegisterFloat("cg_hudCompassOffsetY", 0.0f, -480.0f, 480.0f, 0x1001);
+    cg_drawSpectatedPlayerName = Dvar_RegisterBool_mac("cg_drawSpectatedPlayerName", 1, 0x1001);
+    sensitivity_MG = Dvar_RegisterFloat("sensitivity_MG", 1.0f, 0.01f, 10.0f, 0x1001);
     cg_hudCompassMaxRange = Dvar_RegisterFloat("cg_hudCompassMaxRange", 1500.0f, 0.0f, FLT_MAX, 0x1001);
     cg_hudCompassMinRange = Dvar_RegisterFloat("cg_hudCompassMinRange", 0.0f, 0.0f, FLT_MAX, 0x1001);
     cg_hudCompassMinRadius = Dvar_RegisterFloat("cg_hudCompassMinRadius", 0.0f, 0.0f, FLT_MAX, 0x1001);
@@ -1078,27 +1088,24 @@ static inline __attribute__((always_inline)) void CG_InitBgsCallbacks(void)
 
 static inline __attribute__((always_inline)) void CG_InitXAnimTrees(void)
 {
-    byte *cgBase = (byte *)cg;
-    byte *cgsBase = (byte *)cgs;
-    void *anims = (*(void **)&((cg_t *)cgBase)->bgs.generic_human.tree.anims);
-    byte *clientTree = (byte *)(((char *)cgBase + offsetof(cg_t, bgs.clientinfo[0].pXAnimTree)));
-    byte *cgsTree = (byte *)(((char *)cgsBase + offsetof(cgs_t, corpseinfo[0].pXAnimTree)));
+    void *anims = (*(void **)&((cg_t *)cg)->bgs.generic_human.tree.anims);
     int i;
 
-    for (i = 0; i < 64; i++, clientTree += 0x4b8)
-        *(void **)clientTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
+    /* by index: 1.3's 0x4b8 stride is x86's sizeof(clientInfo_t) */
+    for (i = 0; i < 64; i++)
+        ((cg_t *)cg)->bgs.clientinfo[i].pXAnimTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
 
-    for (i = 0; i < 8; i++, cgsTree += 0x4b8)
-        *(void **)cgsTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
+    for (i = 0; i < 8; i++)
+        ((cgs_t *)cgs)->corpseinfo[i].pXAnimTree = XAnimCreateTree((XAnim *)anims, (Alloc_t)Hunk_AllocXAnimClient);
 }
 
 static inline __attribute__((always_inline)) void CG_ClearEntityDObjHandles(void)
 {
-    byte *ent = (byte *)cg_entities;
-    int offset;
+    int i;
 
-    for (offset = 0; offset < 0x89000; offset += 0x224)
-        *(int *)(ent + offset + 0x220) = 0;
+    /* 1.3's 0x224 stride and 0x220 offset are x86's centity_t */
+    for (i = 0; i < 1024; i++)
+        ((centity_t *)cg_entities)[i].localClientNum = 0;
 }
 
 void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum)

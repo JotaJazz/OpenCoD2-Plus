@@ -336,8 +336,8 @@ int DObjHasContents(DObj *obj, int contentmask)
 
 void DObjSetModel(DObj *obj, const XModel *model)
 {
-    obj->skel = (DSkel *)(*(int *)model + 0x14);
-    obj->numBones = (unsigned char)*(unsigned short *)*(int *)model;
+    obj->skel = (DSkel *)(*(char **)model + offsetof(XModelParts, skel));
+    obj->numBones = (unsigned char)*(unsigned short *)*(char **)model;
     obj->models[0] = (XModel *)model;
 }
 
@@ -475,7 +475,9 @@ int DObjGetSurfaces(const DObj *obj, DSurface *surfaces, int *partBits, char *lo
                     (surfPartBits[i] >> invTargBit) | (surfPartBits[i + 1] << targBit);
             }
 
-            partBits[targWord + numBoneBits] |= surfPartBits[numBoneBits] >> invTargBit;
+            /* the bits shifted past the last word are zero when it is partBits[4] (128 bones at most) */
+            if (targWord + numBoneBits < 4)
+                partBits[targWord + numBoneBits] |= surfPartBits[numBoneBits] >> invTargBit;
         } else if (numBoneBits >= 0) {
             int i;
 
@@ -904,7 +906,7 @@ void DObjCreate(DObjModel_s *dobjModels, unsigned int numModels, XAnimTree_s *tr
         unsigned char *pAge;
         unsigned char nextAge;
 
-        obj->animToModel = (unsigned short *)((char *)tree + 8 + animBytes);
+        obj->animToModel = &tree->infoArray[animCount];  /* infoArray is at +8 on 32 bits, +12 on x64 */
         pAge = (unsigned char *)obj->animToModel + animBytes;
         nextAge = (unsigned char)(pAge[0] + 1);
         if (!nextAge) {

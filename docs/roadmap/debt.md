@@ -7,15 +7,17 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Risk | Impact | Notes |
 |---|---|---|
-| MSVC build unchecked | may not build or may diverge | not covered by `build_check.py`; compiles C with the reconstructed VM and server |
-| Engine's server/game/collision still used by MSVC, web, x64 | bugs fixed in CoD2rev-Plus remain there | simpler collision: boxes not capsules, no 0.125 gap, sight traces against box entities a placeholder |
-| x64 client | does not compile as C++, does not run | `COD2_X64`: about 100 pointer casts to `int`, 32-bit data blobs, the bridge's 4-byte slots, and `mss32.dll` on Windows ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)); the 64-bit dedicated server does not depend on it |
-| Miles mixer crash with `snd_khz 22` | `mss32.dll` overflows an unsigned division (0xc0000095) on a negative volume delta at 2x rate | not known whether 1.3 does it too; `jugar.bat` sets `snd_khz 44`, not a code fix |
-| Possible overruns in CoD2rev-Plus's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
+| Dead `!COD2_PLUS_SCRIPT` / `!COD2_PLUS_SERVER` branches | engine code no build compiles (41 sites) | every build defines these since the engine's server and VM were removed ([ADR 0015](../architecture/adr/0015-msvc-abi-client-on-the-bridge.md)) |
+| The script bridge module has no ABI asserts | a script crossing whose type changes size between ABIs (`long double`, `time_t` on the MSVC runtime) would miscall at run time; none crosses today | only `server` and `client_server` have `test/<module>_abi*.txt`; hand-writing a `script` ABI file in that format would add them |
+| Web build not run | its page may not reach a game: 65 symbols link undefined (`test/web_undefined.txt`, `CG_Init` among them) | `build_check.py web` builds it; nothing runs it in a browser |
+| x64 clients not fully checked against the 32-bit ones | on Windows the view was closer and bluer (before the 2026-11-03 fixes; not rechecked) | Linux x64 draws effects and lights `mp_toujane` as 32-bit (`fx_test.py`, eye-level screenshots, llvmpipe); Windows only under a 64-bit Wine, which keeps data below 4 GB. Translucent effects sort by material address, so overlaps can blend in another order. The save-game `Archive` code still uses x86 offsets (unused in MP). The Windows client builds without libcod: `src/libcod/gsc_memory.cpp` keeps pointers in `long`, 4 bytes on Win64 (to fix in OpenCoD2-Plus Server) ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
+| Possible overruns in OpenCoD2-Plus Server's copies | unconfirmed; fixes go there first | `src/qcommon/msg_mp.cpp` reads a playerstate's field count unchecked, `src/stringed/stringed_hooks.cpp` may copy past its buffer as the engine's did; `src/server`, `src/game` and `src/libcod` were not audited |
 | A cut HTTP download on Windows | checked on Linux only | `CL_WWWDownload` compares the bytes received with the server's size; not run against WinINet |
 | A Windows dedicated server on IPX loses a byte of its address | replies to the wrong node | `altPort` overlays `ipx[9]` to keep `netadr_t` at 20 bytes; `win_net.cpp` writes it for every protocol |
-| Client and server movement differ by 1 ULP on some frames | none measurable | CoD2rev-Plus's `bgame` moved literals to float (`0.001f`, `0.4f`, `0.65f`), `src/PC/bgame` keeps doubles; far below `prediction_test.py`'s 0.1 miss |
-| `r_gfxApi d3d12` shows a black screen | experimental: use `vulkan` | on an RTX 5080 the device works: every call succeeds and the back buffer holds the frame (read back at frames 30 and 150), but nothing reaches the screen. Suspect presentation in the SDL window; not tried: `Windowed` 0, another swap effect. A menu screenshot came back black, unexplained |
+| Client and server movement differ by 1 ULP on some frames | none measurable | OpenCoD2-Plus Server's `bgame` moved literals to float (`0.001f`, `0.4f`, `0.65f`), `src/PC/bgame` keeps doubles; far below `prediction_test.py`'s 0.1 miss |
+| `r_gfxApi d3d12` is full screen only | a windowed `d3d12` cannot be had | windowed D3D9On12 presents nothing on an RTX 5080 (discard, copy and flip; the back buffer holds the frame): `d3d12` always asks for exclusive full screen at the desktop's refresh, which shows it. The console logs a Present result other than S_OK. Not tried on other GPUs |
+| `prediction_test.py --maxfps 60` gives about 500 misses of 1 unit in some runs | unknown | also at 20 Hz on the vendored server, and 0 in other runs of the same setup; 2026-11-02 against `main`'s server: 0 in two runs, 1.3's client 1 and 0; Windows sessions show few, so it may be the Linux client under llvmpipe |
+| Water has no automated check | its waves could stop again unseen | checked by screenshots in `sps_island`, a custom map. `mp_harbor` shows its water from the spectator spot turned 180° left (`com_maxfps 20`, `cl_yawspeed 90`, `+left` 40 frames), but two frames of it differ little more with the waves than without: its snow (not behind `fx_enable`) moves too, `r_drawWater` is a cheat dvar the command line does not set, and the turn lands a little differently each run |
 | Real Direct3D 9 path tested mostly under Wine | a driver may differ | users test natively on Windows |
 
 ## Accepted debt
@@ -25,21 +27,23 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | `cod2_linux` keeps the GL device (stand-in shaders) | `cod2_linux_vk` has the game's shaders but needs DXVK, vkd3d-shader and a Vulkan device |
 | `fxRestart` takes hunk memory each time until the next map load | developer command; many restarts on one map end in a drop error |
 | Server browser's find-player list indexes 1-based (`ui_main_mp.c`) | nothing starts that search, in the original either |
-| Windows dedicated server prints only to its window, shows a message box on fatal errors | CoD2rev-Plus's `src/win32`; scripts read the console log |
+| Windows dedicated server prints only to its window, shows a message box on fatal errors | OpenCoD2-Plus Server's `src/win32`; scripts read the console log |
 
 ## Known gaps
 
 | Gap | Where | Notes |
 |---|---|---|
 | Snow's `particle_cloud_outdoor` shader does not compile under Wine | Wine's d3dx9 cannot flatten an `if` | Microsoft's d3dx9 compiles it |
+| MSVC client has no sound | `src/Mac/Tools/MacMSS.c` | it links the Mac port's stubs, not `src/snd_sdl/`: `AIL_startup` answers 0 |
 | MSVC client has no HTTP download | `src/win32/win32_stubs.c` | its curl stubs answer 0, so a redirected download fails and the server drops the client; the MinGW client uses `win_wininet.c` |
+| Reverb tuned by numbers only | `src/snd_sdl/snd_reverb.c` | public EAX presets at a measured gain; not compared by ear with Miles |
+| MP3 lengths are estimates | `src/snd_sdl/snd_stream.c` | from the first frame's bitrate: stock `073.mp3`, which is VBR, is off by up to 51%. Miles estimates from a bitrate too |
 | Particle clouds look faint at low resolutions | flakes are 1.5 units, the GPU samples the 1×1 mip of their 4×4 texture | matches the data; not compared with the original at runtime |
 
 ## Deferred decisions
 
 | Decision | Waiting on |
 |---|---|
-| Move MSVC, web and x64 off `src/PC/server_mp` | porting the bridge to those toolchains ([ADR 0003](../architecture/adr/0003-keep-server-mp-for-msvc-web-x64.md)) |
 | An OpenGL 4.5 Core device | a new device behind `IDirect3DDevice9`: the Mac port's is legacy GL. vkd3d-shader turned all 194 shader compilations of a `mp_toujane` load into SPIR-V, which needs `GL_ARB_gl_spirv`; its GLSL target is experimental and off by default |
 | Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 

@@ -15,7 +15,7 @@ static centity_t *cg_triggerEntities[256];
 extern int CM_PointContents(const vec_t *point, unsigned int model);
 extern int CM_TransformedPointContents(const vec_t *point, unsigned int model, const vec_t *origin, const vec_t *angles);
 extern int CM_ContentsOfModel(unsigned int model);
-extern void CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
+extern int CM_BoxTrace(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, unsigned int model, int brushmask);
 extern clipHandle_t CM_TempBoxModel(const vec_t *mins, const vec_t *maxs, int contents);
 extern int CM_TransformedBoxTraceExternal(trace_t *results, const vec_t *start, const vec_t *end, const vec_t *mins, const vec_t *maxs, clipHandle_t model, int brushmask, const vec_t *origin, const vec_t *angles);
 extern float CM_RadiusOfModel(unsigned int model);
@@ -24,6 +24,7 @@ extern qboolean CL_GetUserCmd(int cmdNumber, usercmd_t *ucmd);
 extern void PM_UpdateViewAngles(playerState_t *ps, float msec, usercmd_t *cmd, byte handler);
 extern const float LerpAngle(const float from, const float to, const float frac);
 extern void Pmove(pmove_t *pm);
+extern int cl_plusRules;
 extern void CG_TransitionPlayerState(playerState_t *ps, playerState_t *ops);
 extern void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *es, int, int);
 extern void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec_t *result);
@@ -239,7 +240,8 @@ static void CG_PredDiffCompare(const playerState_t *server)
     d = fabsf(((const playerState_t *)a)->origin[0] - server->origin[0]) +
         fabsf(((const playerState_t *)a)->origin[1] - server->origin[1]) +
         fabsf(((const playerState_t *)a)->origin[2] - server->origin[2]);
-    if (d == 0.0f)
+    /* COD2_TRACE_PREDDIFF=all: any field predicted otherwise, not only a moved origin */
+    if (d == 0.0f && (getenv("COD2_TRACE_PREDDIFF")[0] != 'a' || !memcmp(a, b, 0x26a8)))
         return;
     Com_Printf("PredDiff t=%d origin %.5f\n", server->commandTime, (double)d);
     for (i = 0; i < cg_numSolidEntities; i++) {
@@ -290,6 +292,7 @@ void CG_PredictPlayerState(void)
 
     cg_pmove[0].ps = ps;
     cg_pmove[0].handler = 0;
+    cg_pmove[0].plusRules = cl_plusRules;
 
     {
         int mask;

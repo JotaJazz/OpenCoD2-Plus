@@ -51,11 +51,6 @@ void CL_Netchan_Decode(byte *data, int size)
     int challenge;
     int index;
     int i;
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int x64DecodeTraceCount;
-    byte beforeTrace[16];
-    int beforeTraceLen;
-#endif
 
     clc_base = *(byte **)clc_ptr;
 
@@ -72,12 +67,6 @@ void CL_Netchan_Decode(byte *data, int size)
     key ^= (byte)challenge;
 
     index = 0;
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    beforeTraceLen = size < (int)sizeof(beforeTrace) ? size : (int)sizeof(beforeTrace);
-    for (i = 0; i < beforeTraceLen; ++i) {
-        beforeTrace[i] = data[i];
-    }
-#endif
     for (i = 0; i < size; i++) {
         byte ch;
 
@@ -94,32 +83,6 @@ void CL_Netchan_Decode(byte *data, int size)
         data[i] ^= key;
     }
 
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    if (x64DecodeTraceCount < 12) {
-        FILE *f = fopen("x64_netchan_trace.txt", "a");
-        if (f) {
-            fprintf(f,
-                    "cldec[%d] size=%d relAck=%d seq=%d challenge=%d keyEnd=%02x string=\"%.48s\" before:",
-                    x64DecodeTraceCount,
-                    size,
-                    reliableAcknowledge,
-                    ((clientConnection_t *)clc_base)->serverMessageSequence,
-                    challenge,
-                    key,
-                    string);
-            for (i = 0; i < beforeTraceLen; ++i) {
-                fprintf(f, " %02x", beforeTrace[i]);
-            }
-            fprintf(f, " after:");
-            for (i = 0; i < beforeTraceLen; ++i) {
-                fprintf(f, " %02x", data[i]);
-            }
-            fprintf(f, "\n");
-            fclose(f);
-        }
-        x64DecodeTraceCount++;
-    }
-#endif
 }
 
 void CL_Netchan_TransmitNextFragment(netchan_t *chan)

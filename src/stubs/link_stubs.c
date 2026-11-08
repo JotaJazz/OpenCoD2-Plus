@@ -537,7 +537,7 @@ char g_deadChat_ptr[64] __attribute__((aligned(4))) = { 0 };
 char g_enemylookDist[64] __attribute__((aligned(4))) = { 0 };
 
 char GetComponentVersion[64] __attribute__((aligned(4))) = { 0 };
-#if !defined(_M_X64)  /* x64: real kernel32 GetCurrentProcess (Mac PSN stub collides by name) */
+#if !defined(_M_X64) || defined(__MINGW32__)  /* MSVC x64: real kernel32 GetCurrentProcess (Mac PSN stub collides by name); MinGW links these as 32 bits does */
 int GetCurrentProcess(void *psn)
 {
     (void)psn;
@@ -594,8 +594,6 @@ void G_SpawnTriggerHurt(int numBrushModels)
 char g_sv_running_ptr[64] __attribute__((aligned(4))) = { 0 };
 
 void *g_trace_zero_ptr __attribute__((aligned(4))) = (void *)vec3_origin;
-char g_unknown_195f22c[64] __attribute__((aligned(4))) = { 0 };
-char g_unknown_195f230[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateHoldTime[64] __attribute__((aligned(4))) = { 0 };
 char g_useActivateReuseTime[64] __attribute__((aligned(4))) = { 0 };
 char g_vidConfig[64] __attribute__((aligned(4))) = { 0 };
@@ -705,7 +703,6 @@ char SetWindowResizeLimits[64] __attribute__((aligned(4))) = { 0 };
 char SetWRefCon[64] __attribute__((aligned(4))) = { 0 };
 char ShowControl[64] __attribute__((aligned(4))) = { 0 };
 
-char _snd_local_listener[64] __attribute__((aligned(4))) = { 0 };
 char speex_nb_mode_ptr[64] __attribute__((aligned(4))) = { 0 };
 char speex_quality_ptr[64] __attribute__((aligned(4))) = { 0 };
 char speex_uwb_mode_ptr[64] __attribute__((aligned(4))) = { 0 };
@@ -834,8 +831,16 @@ void CDirect3DDevice_CreateAndSetFixedFunctionVAO(void)
 }
 #undef VAO_X16
 
+#if defined(_MSC_VER)
+/* the MSVC ABI has no Itanium exceptions; only the Mac port's Apple events throw */
+void *__cxa_allocate_exception(unsigned int thrown_size) { (void)thrown_size; return 0; }
+void __cxa_throw(void *thrown, void *tinfo, void (*dest)(void *)) { (void)thrown; (void)tinfo; (void)dest; abort(); }
+/* the blobs' Mach-O image base, absolute as GNU ld's --defsym gives it */
+__asm__(".globl ___mh_execute_header\n.set ___mh_execute_header, 0x1000\n");
+#else
 extern void *__cxa_allocate_exception(unsigned int thrown_size);
 extern void __cxa_throw(void *thrown, void *tinfo, void (*dest)(void *));
+#endif
 void *cxa_allocate_exception(unsigned int thrown_size)
 {
     return __cxa_allocate_exception(thrown_size);

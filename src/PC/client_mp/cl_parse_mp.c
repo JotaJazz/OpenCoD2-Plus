@@ -48,7 +48,8 @@ char *svc_strings[256] = {
     "svc_download",
     "svc_snapshot",
     "svc_EOF",
-    /* [8 .. 255] implicitly NULL */
+    "svc_snapshotPlus",
+    /* [9 .. 255] implicitly NULL */
 };
 
 extern void *cl;
@@ -65,7 +66,7 @@ extern const dvar_t *cl_shownuments;
 void CL_SystemInfoChanged(void);
 void CL_ParseGamestate(msg_t *msg);
 void CL_ParseDownload(msg_t *msg);
-void CL_ParseSnapshot(msg_t *msg);
+void CL_ParseSnapshot(msg_t *msg, int plus);
 void CL_ParseServerMessage(msg_t *msg);
 
 extern void LargeLocal_LargeLocal(const LargeLocal *_this, int size);
@@ -102,6 +103,11 @@ extern char *MSG_ReadString(msg_t *msg);
 extern char *MSG_ReadBigString(msg_t *msg);
 extern void MSG_ReadData(msg_t *msg, void *data, int len);
 extern void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to);
+#ifdef COD2_PLUS
+extern int msg_plusSnapshotTime;
+#else
+static int msg_plusSnapshotTime;  /* CoD2rev-Plus's msg defines it only in its 1.3 Plus build */
+#endif
 extern qboolean MSG_ReadDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int number);
 extern qboolean MSG_ReadDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, int number);
 extern void MSG_Init(msg_t *buf, byte *data, int length);
@@ -112,6 +118,11 @@ extern fileHandle_t FS_SV_FOpenFileWrite(const char *filename);
 extern void FS_SV_Rename(const char *from, const char *to);
 extern int FS_Write(const void *buffer, int len, fileHandle_t h);
 extern void FS_FCloseFile(fileHandle_t h);
+
+/* the server sends Plus snapshots, so it plays by the Plus rules (pmove_t's
+   plusRules, docs/architecture/plus-protocol.md's version 123 in
+   OpenCoD2-Plus Server), and the prediction follows them */
+int cl_plusRules;
 
 static int CL_ShowNetValue(void)
 {
@@ -619,7 +630,7 @@ static byte *CL_SnapSlot(byte *base, int messageNum)
     return base + 0x495e0 + idx * 0x26d8;
 }
 
-void CL_ParseSnapshot(msg_t *msg)
+void CL_ParseSnapshot(msg_t *msg, int plus)
 {
     LargeLocal newSnap_large_local;
     clSnapshot_t *newSnap;
@@ -646,6 +657,8 @@ void CL_ParseSnapshot(msg_t *msg)
     newSnap->serverCommandNum = clc->serverCommandSequence;
 
     newSnap->serverTime = MSG_ReadLong(msg);
+    if (plus)
+        msg_plusSnapshotTime = newSnap->serverTime;
 
     newSnap->messageNum = clc->serverMessageSequence;
 
@@ -1018,9 +1031,6 @@ void CL_ParseServerMessage(msg_t *msg)
     byte *msgCompressed_buf;
     msg_t msgCompressed;
     int cmd;
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int x64TraceCount;
-#endif
 
     LargeLocal_LargeLocal(&msgCompressed_buf_large_local, MAX_MSG_DECOMPRESS_BYTES);
     msgCompressed_buf = (byte *)LargeLocal_GetBuf(&msgCompressed_buf_large_local);
@@ -1040,22 +1050,7 @@ void CL_ParseServerMessage(msg_t *msg)
                                                       msg->cursize - msg->readcount,
                                                       MAX_MSG_DECOMPRESS_BYTES);
 
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    if (x64TraceCount < 16) {
-        FILE *f = fopen("x64_msg_trace.txt", x64TraceCount ? "a" : "w");
-        if (f) {
-            int i;
-            fprintf(f, "msg[%d] srcSize=%d srcRead=%d decSize=%d first:",
-                    x64TraceCount, msg->cursize, msg->readcount, msgCompressed.cursize);
-            for (i = 0; i < msgCompressed.cursize && i < 32; i++) {
-                fprintf(f, " %02x", msgCompressed_buf[i]);
-            }
-            fprintf(f, "\n");
-            fclose(f);
-        }
-        x64TraceCount++;
-    }
-#endif
+    msg_plusSnapshotTime = 0; /* an error may have left a snapshot unfinished */
 
     while (!msgCompressed.overflowed) {
 
@@ -1105,8 +1100,16 @@ void CL_ParseServerMessage(msg_t *msg)
             break;
         case 6:
 
-            CL_ParseSnapshot(&msgCompressed);
+            CL_ParseSnapshot(&msgCompressed, 0);
+            cl_plusRules = 0;
             break;
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
+        case 8: /* the message says its format, so demos need nothing more */
+            CL_ParseSnapshot(&msgCompressed, 1);
+            cl_plusRules = 1;
+            msg_plusSnapshotTime = 0; /* the local server writes with it too */
+            break;
+#endif
         default:
 
             Com_Error(1, "\x15"

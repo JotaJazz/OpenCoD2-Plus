@@ -41,7 +41,7 @@ extern int Cmd_Argc(void);
 extern char *Cmd_Argv(int arg);
 extern void Com_Printf(const char *fmt, ...);
 extern int I_stricmp(const char *s0, const char *s1);
-extern int I_strnicmp(const char *s0, const char *s1, size_t n);
+extern int I_strnicmp(const char *s0, const char *s1, int n);
 extern int Com_AddToString(const char *add, char *msg, int len, int maxlen, qboolean mayAddQuotes);
 extern void CL_Netchan_SendOOBPacket(int len, const void *data, netadr_t to);
 extern qboolean NET_StringToAdr(const char *s, netadr_t *a);
@@ -657,13 +657,13 @@ void CL_ServersResponsePacket(netadr_t from, msg_t *msg)
 
     numservers = 0;
 
-    while ((unsigned int)(buffptr + 1) < (unsigned int)buffend) {
+    while ((uintptr_t)(buffptr + 1) < (uintptr_t)buffend) {
         if (*buffptr == '\\')
             break;
         buffptr++;
     }
 
-    while ((unsigned int)(buffptr + 1) < (unsigned int)(buffend - 6)) {
+    while ((uintptr_t)(buffptr + 1) < (uintptr_t)(buffend - 6)) {
 
         ip[0] = buffptr[1];
         ip[1] = buffptr[2];

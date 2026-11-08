@@ -215,19 +215,19 @@ Bool FX_GetBoltingFrame(const PrimitiveTemplate *primTemp, const FxBoltInfo *bol
     }
 
     acquired = FxBoltFrame_Acquire(bolt);
-    newFrame = (FxBoltFrame *)(void *)(size_t)acquired._placeholder;
-    oldFrame = (FxBoltFrame *)(void *)(size_t)boltFrame->_placeholder;
+    newFrame = acquired.value;
+    oldFrame = boltFrame->value;
 
     if (oldFrame != newFrame) {
 
         if (oldFrame) {
             FxBoltFrame_Release(oldFrame);
-            boltFrame->_placeholder = 0;
+            boltFrame->value = NULL;
         }
         if (newFrame) {
 
             newFrame->refCount += 1;
-            boltFrame->_placeholder = (int)(size_t)(void *)newFrame;
+            boltFrame->value = newFrame;
         }
     }
 
@@ -235,7 +235,7 @@ Bool FX_GetBoltingFrame(const PrimitiveTemplate *primTemp, const FxBoltInfo *bol
         FxBoltFrame_Release(newFrame);
     }
 
-    curFrame = (FxBoltFrame *)(void *)(size_t)boltFrame->_placeholder;
+    curFrame = boltFrame->value;
     if (!curFrame) {
         return 0;
     }
@@ -254,7 +254,7 @@ void FxScheduler_CreateEffect(const FxScheduler *_this, const EffectTemplate *fx
     int primType;
 
     memset(&prim, 0, sizeof(prim));
-    boltFrame._placeholder = 0;
+    boltFrame.value = NULL;
 
     AxisCopy( (vec3_t (*))((const vec_t *)axis), (vec3_t (*))((vec_t *)ax));
 
@@ -278,15 +278,6 @@ void FxScheduler_CreateEffect(const FxScheduler *_this, const EffectTemplate *fx
     if (primType > 12) {
         goto cleanup;
     }
-
-#if defined(COD2_X64)
-    /* x64 TODO: the reconstructed C++ effect-class vtables (Particle/Light/Cloud/... in
-       FxPrimitives.c) still use x86 vtable addresses (e.g. Particle_Particle hardcodes
-       *(int*)this = 0x32ffc8) and 4-byte vtable entries, so the virtual create/update
-       dispatch in the FX_Add* creators faults. Skip particle-primitive creation until
-       those vtables are reconstructed for x64 -- effects are cosmetic; gameplay runs. */
-    goto cleanup;
-#endif
 
     switch (primType) {
     case 0:
@@ -330,8 +321,8 @@ void FxScheduler_CreateEffect(const FxScheduler *_this, const EffectTemplate *fx
     }
 
 cleanup:
-    if (boltFrame._placeholder) {
-        FxBoltFrame_Release((FxBoltFrame *)(void *)(size_t)boltFrame._placeholder);
+    if (boltFrame.value) {
+        FxBoltFrame_Release(boltFrame.value);
     }
 }
 
@@ -423,16 +414,6 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
     numAdded = 0;
     seedOffset = 0;
 
-#if defined(COD2_X64)
-    /* x64: guard a corrupt/truncated fx (bullet impacts reach here via
-       CG_BulletHitEvent) before iterating fx->mPrimitives -- effects are cosmetically
-       skipped in FxScheduler_CreateEffect anyway (x64 C++ vtable TODO). */
-    if ((uintptr_t)fx + 0x100000000ULL < 0x200000000ULL ||
-        (uintptr_t)fx >= 0x800000000000ULL ||
-        (unsigned)fx->mPrimitiveCount > 64u)
-        return;
-#endif
-
     for (i = 0; i < fx->mPrimitiveCount; i++) {
         int count;
         int t;
@@ -506,7 +487,7 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
 
             if (delay > 0) {
 
-                ScheduledEffect *sfx = (ScheduledEffect *)__Znam(0x50);
+                ScheduledEffect *sfx = (ScheduledEffect *)__Znam(COD2_SIZEOF_1_3(ScheduledEffect, 0x50));
                 if (!sfx)
                     continue;
                 memset(sfx, 0, sizeof(ScheduledEffect));
@@ -538,7 +519,7 @@ void FxScheduler_PlayEffect(const FxScheduler *_this, const EffectTemplate *fx, 
                 /* onto the list FX_AddScheduledEffects walks, as FxScheduler's
                  * restore does: it went into the count, and the effect was
                  * lost */
-                sfx->mScheduledNext = (int)(size_t)((FxScheduler *)_this)->mScheduledHead;
+                sfx->mScheduledNext = ((FxScheduler *)_this)->mScheduledHead;
                 ((FxScheduler *)_this)->mScheduledHead = sfx;
                 ((FxScheduler *)_this)->mScheduledCount += 1;
             } else {
@@ -566,7 +547,7 @@ void FxScheduler_Clean(const FxScheduler *_this, unsigned char bRemoveTemplates,
     int foundTemplateToPreserve;
 
     while ((sfx = ((FxScheduler *)_this)->mScheduledHead) != NULL) {
-        ((FxScheduler *)_this)->mScheduledHead = (ScheduledEffect *)(size_t)sfx->mScheduledNext;
+        ((FxScheduler *)_this)->mScheduledHead = sfx->mScheduledNext;
         __ZdaPv(sfx);
     }
     ((FxScheduler *)_this)->mScheduledCount = 0;
@@ -934,7 +915,7 @@ void FxScheduler_Archive(const FxScheduler *_this, FxArchive *arch)
         FxArchive_ReadData(arch, &pendingCount, 4);
 
         for (i = 0; i < pendingCount; i++) {
-            ScheduledEffect *newSfx = (ScheduledEffect *)__Znam(0x50);
+            ScheduledEffect *newSfx = (ScheduledEffect *)__Znam(COD2_SIZEOF_1_3(ScheduledEffect, 0x50));
             if (newSfx) {
                 memset(newSfx, 0, sizeof(ScheduledEffect));
             }
@@ -947,7 +928,7 @@ void FxScheduler_Archive(const FxScheduler *_this, FxArchive *arch)
                 if (fx && primIndex >= 0 && primIndex < fx->mPrimitiveCount &&
                     fx->mPrimitives[primIndex] != NULL) {
 
-                    newSfx->mScheduledNext = (int)(size_t)sched_self->mScheduledHead;
+                    newSfx->mScheduledNext = sched_self->mScheduledHead;
                     sched_self->mScheduledHead = newSfx;
                     sched_self->mScheduledCount += 1;
                 } else {
@@ -967,7 +948,7 @@ void FxScheduler_Archive(const FxScheduler *_this, FxArchive *arch)
             sfx = sched->mScheduledHead;
             while (sfx) {
                 ScheduledEffect_Archive(sfx, arch);
-                sfx = (ScheduledEffect *)(size_t)sfx->mScheduledNext;
+                sfx = sfx->mScheduledNext;
             }
         }
     }

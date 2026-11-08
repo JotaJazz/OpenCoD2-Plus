@@ -1,4 +1,4 @@
-# Written by scripts/engine_abi.py --module server from build/check-linux/cod2_linux; see its docstring for the format.
+# The engine side's 1.3 ABI of the server module's crossings, kept by hand; format in scripts/engine_abi.py.
 BG_AddPredictableEventToPlayerstate v0 4,4,4
 BG_AmmoForWeapon i4 4
 BG_CalculateViewAngles v0 4,4
@@ -233,7 +233,7 @@ MSG_ReadStringLine i4 4
 MSG_SetDefaultUserCmd v0 4,4
 MSG_WriteBigString v0 4,4,4,4,4,4
 MSG_WriteBits v0 4,4,4
-MSG_WriteBitsCompress i4 4,4,4
+MSG_WriteBitsCompress i4 4,4,4,4
 MSG_WriteByte v0 4,4
 MSG_WriteData v0 4,4,4
 MSG_WriteDeltaEntity v0 4,4,4,4

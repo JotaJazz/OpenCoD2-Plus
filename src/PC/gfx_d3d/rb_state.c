@@ -1352,10 +1352,12 @@ void RB_SetWorldMatrixForEntity(const GfxEntity *re)
     RB_FinalizeWorldMatrixChange(activeMatrices, re->scale);
 }
 
-const GfxViewportBehavior s_viewportBehaviorForRenderTarget[12] = {
+/* one per target: PINGPONG_1 (12) read past a 12-entry table */
+const GfxViewportBehavior s_viewportBehaviorForRenderTarget[R_RENDERTARGET_COUNT] = {
     (GfxViewportBehavior)0, (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)0,
     (GfxViewportBehavior)0, (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)1,
-    (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)1 };
+    (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)1, (GfxViewportBehavior)1,
+    (GfxViewportBehavior)1 };
 
 const byte s_filterTable[16] = { 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0 };
 

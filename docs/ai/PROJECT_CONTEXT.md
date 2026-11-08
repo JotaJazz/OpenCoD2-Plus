@@ -10,16 +10,16 @@ Stable identity of the project. Changes rarely; live state is in
 | Name | opencod2-plus |
 | What | reconstruction of Call of Duty 2 multiplayer (versions 1.3 and 1.0): client and dedicated server |
 | Fork of | opencod2/opencod2 (engine reconstruction) |
-| Integrates | CoD2rev-Plus (server, script VM, game, core, xanim, libcod), vendored unchanged |
-| Platforms | Linux (32-bit x86), Windows (MinGW cross-compiled; MSVC native), web (Emscripten), x64 (in progress) |
-| Languages | C sources compiled as C++ (gnu++17), CoD2rev-Plus C++, Python 3 scripts, CMake |
+| Integrates | OpenCoD2-Plus Server (server, script VM, game, core, xanim, libcod), vendored unchanged |
+| Platforms | Linux (32-bit x86), Windows (MinGW cross-compiled; MSVC ABI with clang), web (Emscripten), x64 (in progress) |
+| Languages | C sources compiled as C++ (gnu++17), OpenCoD2-Plus Server C++, Python 3 scripts, CMake |
 | Game data | not included; users supply their own Call of Duty 2 |
 
 ## Goal
 
 One public repository with a client and a server that keep the Call of Duty 2
 community playing: compatible with the original 1.3 servers and clients, with
-the dedicated server on CoD2rev-Plus's maintained code.
+the dedicated server on OpenCoD2-Plus Server's maintained code.
 
 ## Non-goals
 
@@ -33,7 +33,7 @@ the dedicated server on CoD2rev-Plus's maintained code.
 |---|---|
 | P1 | The original 1.3 binaries define correct behavior; fixes cite the address they follow. |
 | P2 | Vendored code is copied byte for byte; fixes go upstream first. |
-| P3 | Every engine ↔ CoD2rev-Plus crossing is generated and type-checked (ABI files for the server and client bridges). |
+| P3 | Every engine ↔ OpenCoD2-Plus Server crossing is generated and type-checked (ABI files for the server and client bridges). |
 | P4 | Every claim is backed by a test or a check (`scripts/`). |
 | P5 | The code is the source of truth; docs follow it. |
 

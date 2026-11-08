@@ -16,9 +16,65 @@ extern r_global_permanent_t rgp;
 extern struct DxState dxState;
 #include <math.h>
 #include "imports.h"
+
+/* 1.3's offsets, read by field so x64 lays them out its own way */
+COD2_ASSERT_FIELD(GfxWorld, smodelLightingImage, 0x10c);
+COD2_ASSERT_FIELD(GfxWorld, outdoorImage, 0x200);
+COD2_ASSERT_FIELD(GfxWorld, outdoorLookupMatrix, 0x1c0);
+COD2_ASSERT_FIELD(dvar_t, current, 8);
+
+extern void RB_UploadWaterTexture(GfxImage *image, water_t *water);
+extern GfxImage r_sceneDepthImage;
+extern IDirect3DSurface9 *Image_GetSurface(GfxImage *image);
+
+/* r_water reads the scene's depth through floatZ: a water material must not write it at the same time */
+static int RB_WaterReadsDepth(const Material *material)
+{
+    int i;
+    if (!r_sceneDepthImage.texture.basemap || !material)
+        return 0;
+    for (i = 0; i < material->textureCount; i++) {
+        if (material->textures[i].semantic == 5)
+            return 1;
+    }
+    return 0;
+}
+
+/* not 1.3's: r_water refracts what lies under the water. Before the first water surface of a draw
+   list, the scene drawn so far is copied into resolvedScene (renderTargets[2], which 1.3 fills only
+   for its late post effects, rb_backend.c); RB_RenderDrawSurfList clears the flag. Only with the
+   scene's depth (r_water's INTZ), which the shader needs to tell what is under the water. */
+int rb_waterSceneCopied;
+
+static void RB_CopySceneForWater(const Material *material)
+{
+#ifdef GFX_REAL_D3D9
+    IDirect3DSurface9 *dest;
+    void *device = dx_g->device;
+
+    HRESULT hr;
+
+    if (rb_waterSceneCopied || dxState.renderTargetId != R_RENDERTARGET_FRAME_BUFFER ||
+        !dxState.renderTargetSurface || !RB_WaterReadsDepth(material))
+        return;
+    rb_waterSceneCopied = 1;
+    dest = Image_GetSurface((GfxImage *)dx_g->renderTargets[R_RENDERTARGET_RESOLVED_SCENE].image);
+    if (!dest)
+        return;
+    /* IDirect3DDevice9::StretchRect, as RB_ApplyLatePostEffectsCmd does */
+    hr = ((HRESULT(D3DVTCC *)(void *, void *, void *, void *, void *, int))(*(void ***)device)[0x88 / 4])(
+        device, dxState.renderTargetSurface, NULL, dest, NULL, 2);
+    ((HRESULT(D3DVTCC *)(void *))((*(void ***)dest)[2]))((void *)dest);
+    if (hr >= 0)
+        ((r_backEndGlobals_t *)imp_backEnd)->resolvedSceneTarget = R_RENDERTARGET_RESOLVED_SCENE;
+#else
+    (void)material;
+#endif
+}
 extern refimport_t ri;
 extern int alwaysfails;
 #include "bytematch.h"
+#include "Mac/DirectX_9/d3d_heads.h"
 
 extern void RB_ChangeAlphaStageState(int stageIndex, int texStageBits);
 extern void RB_ChangeColorStageState(int stageIndex, int texStageBits);
@@ -83,142 +139,6 @@ void RB_EndSurface(void);
 
 extern int g_tess_since_begin;
 int g_begin_surface_calls = 0;
-
-static int RB_MaterialNameContains(const Material *material, const char *needle)
-{
-    const char *name;
-    const char *hay;
-    const char *n;
-
-    if (!material || !needle || !*needle) {
-        return 0;
-    }
-
-    name = material->info.name;
-    if (!name) {
-        return 0;
-    }
-
-    for (hay = name; *hay; ++hay) {
-        n = needle;
-        while (*n && hay[n - needle] == *n) {
-            ++n;
-        }
-        if (!*n) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-static void RB_X64TraceEndSurface(const char *stage, const Material *material,
-                                  const MaterialTechnique *technique, const materialCommands_t *mc)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 160 || !RB_MaterialNameContains(material, "fonts/gamefonts")) {
-        return;
-    }
-
-    f = fopen("x64_surface_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    {
-        const MaterialPassDx9 *pass = technique ? &technique->passArray.dx9[0] : NULL;
-        const MaterialTextureDef *tex = material && material->textureCount > 0 ? &material->textures[0] : NULL;
-        const GfxImage *image = tex && tex->semantic != 5 ? tex->u.image : NULL;
-
-        fprintf(f,
-                "surface[%d] %s mat=%p name=%s techType=%d tech=%p passCount=%u flags=0x%x idx=%d verts=%d optIdx=%d decl=%d viewportNull=%d texCount=%u tex0=%s texState=0x%x texSem=%d img=%p imgName=%s imgSem=%d imgSize=%ux%u imgTex=%p vArgs=%u pArgs=%u vs=%s ps=%s\n",
-                traceCount,
-                stage ? stage : "<null>",
-                (const void *)material,
-                material && material->info.name ? material->info.name : "<null>",
-                mc ? mc->techType : -1,
-                (const void *)technique,
-                technique ? (unsigned)technique->passCount : 0,
-                technique ? (unsigned)technique->flags : 0,
-                mc ? mc->indexCount : -1,
-                mc ? mc->vertexCount : -1,
-                mc ? mc->optimizedIndexCount : -1,
-                mc ? mc->declType : -1,
-                dxState.viewportIsNull,
-                material ? (unsigned)material->textureCount : 0,
-                tex && tex->name ? tex->name : "<null>",
-                tex ? (unsigned)tex->samplerState : 0,
-                tex ? (int)tex->semantic : -1,
-                (const void *)image,
-                image && image->name ? image->name : "<null>",
-                image ? (int)image->semantic : -1,
-                image ? image->width : 0,
-                image ? image->height : 0,
-                image ? (void *)image->texture.basemap : NULL,
-                pass ? (unsigned)pass->vertexArgCount : 0,
-                pass ? (unsigned)pass->pixelArgCount : 0,
-                pass && pass->vertexShader && pass->vertexShader->name ? pass->vertexShader->name : "<null>",
-                pass && pass->pixelShader && pass->pixelShader->name ? pass->pixelShader->name : "<null>");
-    }
-    fclose(f);
-    traceCount++;
-#else
-    (void)stage;
-    (void)material;
-    (void)technique;
-    (void)mc;
-#endif
-}
-
-static void RB_X64TraceSampler(const char *stage, const Material *material, int argType, int dest,
-                               const char *sourceName, int codeTexture, GfxImage *image, int samplerState)
-{
-#if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
-    static int traceCount;
-    FILE *f;
-
-    if (traceCount >= 80 || !RB_MaterialNameContains(material, "fonts/gamefonts")) {
-        return;
-    }
-
-    f = fopen("x64_sampler_trace.txt", traceCount ? "a" : "w");
-    if (!f) {
-        return;
-    }
-
-    fprintf(f,
-            "sampler[%d] %s mat=%s type=%d dest=%d source=%s code=%d state=0x%x image=%p imageName=%s mapType=%d semantic=%d size=%ux%u tex=%p\n",
-            traceCount,
-            stage ? stage : "<null>",
-            material && material->info.name ? material->info.name : "<null>",
-            argType,
-            dest,
-            sourceName ? sourceName : "<null>",
-            codeTexture,
-            samplerState,
-            (void *)image,
-            image && image->name ? image->name : "<null>",
-            image ? image->mapType : -1,
-            image ? image->semantic : -1,
-            image ? image->width : 0,
-            image ? image->height : 0,
-            image ? (void *)image->texture.basemap : NULL);
-    fclose(f);
-    traceCount++;
-#else
-    (void)stage;
-    (void)material;
-    (void)argType;
-    (void)dest;
-    (void)sourceName;
-    (void)codeTexture;
-    (void)image;
-    (void)samplerState;
-#endif
-}
 
 /* the last surface begun and who began it, for the crash report */
 volatile struct RbBeginDbg {
@@ -488,7 +408,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         char *surfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!surfs || !(*(void **)&((GfxWorld *)surfs)->smodelLightingImage))
             Com_Error(1, "Sampler 'smodelLighting' is only valid in a map.\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x10c);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->smodelLightingImage;
         *samplerState = 0x72;
         return;
     }
@@ -517,11 +437,11 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
             lmapIdx = ((materialCommands_t *)tess)->lmapIndex;
         }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        *image = *(void **)((*(char **)&((GfxWorld *)drawSurfs)->lightmaps) + lmapIdx * 16 + codeTexture * 4 - 0x20);
+        *image = (void *)((GfxWorld *)drawSurfs)->lightmaps[lmapIdx][codeTexture - 8];
         *samplerState = 0x32;
 
         {
-            int mode = *(int *)((char *)*(void **)imp_r_lightMap + 8);
+            int mode = ((const dvar_t *)*(void **)imp_r_lightMap)->current.integer;
             if (mode == 1) {
                 *image = (*(void **)&((r_global_permanent_t *)rgp)->whiteImage);
                 *samplerState = 1;
@@ -551,14 +471,25 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
 
     case 15:
         idx = backEnd->resolvedSceneTarget;
+        /* 1.3 never gets here without a resolved scene (techFlags & 2 skips the technique); r_water's
+           sceneColorSampler, bound by name, does when there was no copy: black, past the array */
+        if (idx >= R_RENDERTARGET_COUNT) {
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->blackImage);
+            *samplerState = 0x32;
+            return;
+        }
         *image = (void *)((DxGlobals *)dx)->renderTargets[idx].image;
         *samplerState = 0x32;
         return;
 
     case 16: {
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
-        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage))
-            R_Error(1, "Tried to use 'sampler.sky' when it isn't valid\n");
+        if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->skyImage)) {
+            /* not 1.3's error: r_water's skySampler on a map without a sky gets the water's own cube */
+            *image = (*(void **)&((r_global_permanent_t *)rgp)->waterColorImage);
+            *samplerState = 0x32;
+            return;
+        }
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         *image = (*(void **)&((GfxWorld *)drawSurfs)->skyImage);
         *samplerState = ((GfxWorld *)drawSurfs)->skySamplerState;
@@ -580,7 +511,7 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
     }
 
     case 19: {
-        int sc_on = *(byte *)((char *)*(void **)imp_sc_enable + 8);
+        int sc_on = ((const dvar_t *)*(void **)imp_sc_enable)->current.enabled;
         if (sc_on) {
             char *entity = (char *)backEnd->currentEntity;
             if (*(int *)entity > 2 || (*(byte *)(entity + 5) & 1)) {
@@ -598,13 +529,14 @@ static void RB_GetTextureFromCode_impl(int codeTexture, void **image, byte *samp
         drawSurfs = (*(char **)&((r_global_permanent_t *)rgp)->world);
         if (!drawSurfs || !(*(void **)&((GfxWorld *)drawSurfs)->outdoorImage))
             R_Error(1, "Tried to use 'sampler.outdoor' when it isn't valid\n");
-        *image = *(void **)((char *)(*(char **)&((r_global_permanent_t *)rgp)->world) + 0x200);
+        *image = (void *)((GfxWorld *)(*(char **)&((r_global_permanent_t *)rgp)->world))->outdoorImage;
         *samplerState = 0x32;
         return;
     }
 
     case 21:
-        *image = NULL;
+        /* 1.3 binds nothing here on PC; with r_water, the scene's INTZ depth (r_rendertarget.c) */
+        *image = RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material) ? (void *)&r_sceneDepthImage : NULL;   /* only water stops writing it */
         *samplerState = 0x31;
         return;
 
@@ -768,8 +700,9 @@ static void RB_SetupLighting_impl(void)
             backEnd->codeConsts[25][2] = smodel->smodelLightingLookupScale[2];
             backEnd->codeConsts[25][3] = 0.0f;
 
-            backEnd->codeConsts[24][0] = (*(float *)&((GfxEntity *)entity)->lighting.dx7.colorForDir);
-            backEnd->codeConsts[24][1] = ((GfxEntity *)entity)->lighting.dx7.sunVisibility;
+            /* 1.3 read these through the dx7 view, which overlaps baseCoords only on x86 */
+            backEnd->codeConsts[24][0] = ((GfxEntity *)entity)->lighting.baseCoords[0];
+            backEnd->codeConsts[24][1] = ((GfxEntity *)entity)->lighting.baseCoords[1];
             backEnd->codeConsts[24][2] = ((GfxEntity *)entity)->lighting.baseCoords[2];
             backEnd->codeConsts[24][3] = 0.0f;
         }
@@ -1116,10 +1049,10 @@ static const float *RB_GetCodeMatrix_impl(int source, int firstRow)
             biasWorld[1] += downBias;
 
             MatrixTransformVector44((float *)(biasWorld),
-                                    (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (float *)(biasResult));
+                                    ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (float *)(biasResult));
 
             MatrixMultiply44((vec4_t *)(worldMat),
-                             (vec4_t *)((char *)(*(void **)&((r_global_permanent_t *)rgp)->world) + 0x1c0), (vec4_t *)(codeMatrix));
+                             ((GfxWorld *)(*(void **)&((r_global_permanent_t *)rgp)->world))->outdoorLookupMatrix, (vec4_t *)(codeMatrix));
 
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][0])) += biasResult[0];
             *(float *)((char *)am + offsetof(GfxCodeMatrices, worldOutdoorLookup.matrix[0].m[3][1])) += biasResult[1];
@@ -1282,6 +1215,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);
@@ -1501,6 +1436,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
             if (((r_backEndGlobals_t *)backEnd)->projection2D)
                 stateBits[1] &= 0xffffffcf;
+            if (RB_WaterReadsDepth(((materialCommands_t *)RB_TessBase())->material))
+                stateBits[1] &= ~1;   /* depth write, RB_STATE1_DEPTH_WRITE in rb_state.c */
 
             if (stateBits[0] != dxState.refStateBits[0]) {
                 RB_ChangeState_0(stateBits[0]);
@@ -1746,8 +1683,6 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
                         byte samplerState = 0;
 
                         RB_GetTextureFromCode_impl(codeTexture, &image, &samplerState);
-                        RB_X64TraceSampler("code", ((materialCommands_t *)RB_TessBase())->material,
-                                           type, entry->dest, NULL, codeTexture, (GfxImage *)image, samplerState);
 #ifdef GFX_REAL_D3D9
                         if (getenv("REALD3D9_SAMPLOG")) {
                             static int spl = 0;
@@ -1784,6 +1719,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
 
                                         MaterialWaterDef *water = texDef->u.water;
                                         image = water->map->image;
+                                        /* 1.3 (gfx_d3d_mp_x86_s.dll 0x1003a2db) runs this frame's waves into the map as it binds it */
+                                        RB_UploadWaterTexture((GfxImage *)image, water->map);
                                     } else {
                                         image = texDef->u.image;
                                     }
@@ -1800,12 +1737,8 @@ static BM_NOINLINE void __attribute_regparm__(3) RB_DrawSingleTechnique(Material
                         }
 
                         if (image) {
-                            RB_X64TraceSampler("material", ((materialCommands_t *)RB_TessBase())->material,
-                                               type, destSampler, textureName, -1, (GfxImage *)image, samplerState);
                             RB_SetSampler(destSampler, samplerState, (GfxImage *)(image));
                         } else {
-                            RB_X64TraceSampler("material-null", ((materialCommands_t *)RB_TessBase())->material,
-                                               type, destSampler, textureName, -1, NULL, samplerState);
                         }
                         break;
                     }
@@ -1929,48 +1862,27 @@ void RB_EndSurface(void)
         goto cleanup;
     }
 
-#if defined(COD2_X64)
-    /* x64 TODO: some fonts present a truncated (32-bit) Material* via font->material
-       (see the X64_FONT_WHITE workaround in RB_DrawTextWithCursor_impl). A truncated
-       ptr is either zero-extended (high32==0) or sign-extended (high32==0xffffffff);
-       `p + 0x1_0000_0000 < 0x2_0000_0000` catches both. Guard the deref so an editable
-       text field / chat draw doesn't crash on a bad material or techniqueSet. */
-    if ((uintptr_t)material + 0x100000000ULL < 0x200000000ULL) {
-        g_rb_endsurface_nomaterial++;
-        goto cleanup;
-    }
-#endif
-
     {
-        uintptr_t ts = (uintptr_t)material->techniqueSet;   /* was unsigned int -> truncated ptr on x64 */
-        if (!ts || ts < 0x08000000u) {
+        if (!material->techniqueSet) {
             g_rb_endsurface_notechnique++;
             goto cleanup;
         }
-#if defined(COD2_X64)
-        if (ts + 0x100000000ULL < 0x200000000ULL) {
-            g_rb_endsurface_notechnique++;
-            goto cleanup;
-        }
-#endif
     }
     technique = material->techniqueSet->techniques[(*(MaterialTechniqueType *)&((materialCommands_t *)tess)->techType)];
 
     g_rb_endsurface_count++;
-    RB_X64TraceEndSurface("loaded", material, technique, (const materialCommands_t *)tess);
 
     if (!technique) {
-        RB_X64TraceEndSurface("skip-notech", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_notechnique++;
         goto cleanup;
     }
 
     backEnd = (r_backEndGlobals_t *)imp_backEnd;
+    RB_CopySceneForWater(material);
     if (backEnd->viewportIsDirty)
         RB_UpdateViewport();
 
     if (dxState.viewportIsNull) {
-        RB_X64TraceEndSurface("skip-viewport", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_dxstate++;
         goto cleanup;
     }
@@ -1979,14 +1891,12 @@ void RB_EndSurface(void)
     if (techFlags & 1) {
         if (backEnd->resolvedPostSunTarget == 0xe) {
             g_rb_endsurface_flag1skip++;
-            RB_X64TraceEndSurface("skip-flag1", material, technique, (const materialCommands_t *)tess);
             goto cleanup;
         }
     }
     if (techFlags & 2) {
         if (backEnd->resolvedSceneTarget == 0xe) {
             g_rb_endsurface_flag2skip++;
-            RB_X64TraceEndSurface("skip-flag2", material, technique, (const materialCommands_t *)tess);
             goto cleanup;
         }
     }
@@ -2033,7 +1943,6 @@ void RB_EndSurface(void)
 
     indexCount = ((materialCommands_t *)tess)->indexCount;
     if (indexCount == 0) {
-        RB_X64TraceEndSurface("skip-index0", material, technique, (const materialCommands_t *)tess);
         g_rb_endsurface_idxzero++;
         g_rb_tess_type_idxzero[g_rb_last_tess_type]++;
         diag_idxzero(tess);
@@ -2115,7 +2024,7 @@ void RB_EndSurface(void)
                         ((void(D3DVTCC *)(void *, int, void *))vtable[0x104 / 4])(device, 0, d3dTexture);
 
                         {
-                            unsigned int texID = *(unsigned int *)((byte *)d3dTexture + 0x54);
+                            unsigned int texID = ((const D3DTextureHead *)d3dTexture)->texIDStorage;
                             unsigned int texTarget = (*(int *)image == 5)
                                                          ? RB_GL_TEXTURE_CUBE_MAP
                                                          : RB_GL_TEXTURE_2D;
@@ -2150,7 +2059,6 @@ void RB_EndSurface(void)
     }
 
     g_rb_endsurface_draw++;
-    RB_X64TraceEndSurface("draw", material, technique, (const materialCommands_t *)tess);
     RB_DrawTechnique((*(MaterialVertexDeclType *)&((materialCommands_t *)tess)->declType), &args);
 
     tess = RB_TessBase();

@@ -29,7 +29,7 @@ __attribute__((used)) UInt32 holdrand[2] = {
     0x89abcdef,
     0,
 };
-#define holdrand (*(unsigned long *)holdrand)
+#define holdrand (*(UInt32 *)holdrand)  /* 1.3: 32 bits; unsigned long is 8 bytes on LP64 */
 
 const qboolean VecNCompareCustomEpsilon(const vec_t *v0, const vec_t *v1, vec_t epsilon, int coordCount);
 float randomf(void);

@@ -1146,7 +1146,7 @@ typedef int CGDataProvider;
 typedef int CGImage;
 typedef int CSpecArray;
 typedef int Exop;
-typedef int FxImpactEntry;
+typedef intptr_t FxImpactEntry;   /* an effect pointer: pointer-sized on x64 */
 typedef int HighPart;
 typedef int LocalizeEntry;
 typedef int LowPart;
@@ -1228,6 +1228,10 @@ typedef int bb;
 typedef int blens;
 #if !defined(__cplusplus) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L)
 typedef _Bool bool; /* 1 byte, like C++ bool and the original binary's bool */
+#ifndef true
+#define true 1   /* the C build (MSVC) compiles code written for C++ */
+#define false 0
+#endif
 #endif
 
 typedef int boolean;
@@ -3184,7 +3188,11 @@ typedef _D3DXSHADER_CONSTANTINFO D3DXSHADER_CONSTANTINFO;
 
 typedef int DCTELEM;
 
+#ifdef COD2_X64
+typedef unsigned int DWORD;  /* 32 bits, as on Windows and in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int DWORD;
+#endif
 typedef OpaqueDialogPtr * DialogPtr;
 
 typedef __EventLoopTimer * EventLoopTimerRef;
@@ -3200,14 +3208,34 @@ typedef float Float32;
 typedef double Float64;
 typedef void (*Free_t)(void *, int);   /* real Free(ptr,size) sig; byte-neutral fn-ptr */
 typedef GDevice * GDPtr;
+#ifdef COD2_X64
+typedef unsigned int GLbitfield;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLbitfield;
+#endif
 
 typedef unsigned char GLboolean;
+#ifdef COD2_X64
+typedef unsigned int GLenum;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLenum;
+#endif
 typedef float GLfloat;
+#ifdef COD2_X64
+typedef int GLint;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long int GLint;
+#endif
+#ifdef COD2_X64
+typedef int GLsizei;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long int GLsizei;
+#endif
+#ifdef COD2_X64
+typedef unsigned int GLuint;  /* GL's 32 bits; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int GLuint;
+#endif
 
 typedef unsigned int GfxDrawSurfSort;
 
@@ -3231,7 +3259,11 @@ typedef HCURSOR__ * HCURSOR;
 typedef HINSTANCE__ * HINSTANCE;
 
 typedef long unsigned int HPROENUM;
+#ifdef COD2_X64
+typedef uintptr_t HPROVIDER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef long unsigned int HPROVIDER;
+#endif
 typedef _SAMPLE * HSAMPLE;
 typedef _STREAM * HSTREAM;
 
@@ -3324,7 +3356,11 @@ typedef OpaqueRgnHandle * RgnHandle;
 typedef short int SHORT;
 
 typedef short int SInt16;
+#ifdef COD2_X64
+typedef int SInt32;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long int SInt32;
+#endif
 
 typedef long long int SInt64;
 typedef signed char SInt8;
@@ -3357,14 +3393,22 @@ typedef TrackType * * Track;
 typedef short unsigned int UINT16;
 typedef unsigned int UINT32;
 
+#ifdef COD2_X64
+typedef unsigned int UINT4;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int UINT4;
+#endif
 
 typedef unsigned char UINT8;
 
 typedef unsigned int UINT_PTR;
 
 typedef short unsigned int UInt16;
+#ifdef COD2_X64
+typedef unsigned int UInt32;  /* 32 bits, as in 1.3; long is 8 bytes on LP64 */
+#else
 typedef long unsigned int UInt32;
+#endif
 
 typedef long long unsigned int UInt64;
 
@@ -3658,7 +3702,11 @@ typedef UInt32 ByteCount;
 typedef UInt32 CFStringEncoding;
 
 typedef UInt32 FourCharCode;
+#ifdef COD2_X64
+typedef uintptr_t HDIGDRIVER;  /* a Miles handle holds a pointer; long is 4 bytes on Win64 */
+#else
 typedef UInt32 HDIGDRIVER;
+#endif
 
 typedef UInt32 ItemCount;
 typedef UInt32 LSKindID;
@@ -4965,7 +5013,7 @@ struct FxGfxEntity {
 
 struct Effect {
 
-    int _vptr$Effect;
+    void *_vptr$Effect;
     vec3_t origin;
     int field_0x10;
     vec3_t axis[2];
@@ -6844,10 +6892,10 @@ struct _D3DMATRIX {
     union { struct { float _11; float _12; float _13; float _14; float _21; float _22; float _23; float _24; float _31; float _32; float _33; float _34; float _41; float _42; float _43; float _44; }; float m[4][4]; };
 };
 
-struct GfxCodeMatrix {
+struct COD2_ALIGNED(16) GfxCodeMatrix {
     D3DMATRIX matrix[4];
     Bool valid[4];
-} COD2_ALIGNED(16);
+};
 
 struct GfxCodeMatrices {
     float worldScale;
@@ -7631,7 +7679,7 @@ struct cplane_s {
 
 struct cspField_t {
     const char *szName;
-    int iOffset;
+    ptrdiff_t iOffset;   /* CoD2rev-Plus's: 8 bytes on x64 */
     int iFieldType;
 };
 
@@ -9426,8 +9474,14 @@ struct scrVmDebugPub_t {
 };
 
 struct scr_anim_s {
-    short unsigned int index;
-    short unsigned int tree;
+    /* CoD2rev-Plus's: while it links an anim, the VM keeps a code position here (8 bytes on x64) */
+    union {
+        struct {
+            short unsigned int index;
+            short unsigned int tree;
+        };
+        const char *linkPointer;
+    };
 };
 
 struct scr_animtree_t {
@@ -10322,20 +10376,20 @@ struct gentity_s {
     qboolean unlinkAfterEvent;
     int clipmask;
     int processedFrame;
-    int parent;
+    struct gentity_s *parent;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     int nextthink;
     int health;
     int maxHealth;
     int damage;
     int count;
-    int chain;
+    struct gentity_s *chain;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     union { struct item_ent_t item; struct trigger_ent_t trigger; struct mover_ent_t mover; struct corpse_ent_t corpse; struct grenade_ent_t grenade; };
-    int tagInfo;
-    int tagChildren;
+    struct tagInfo_s *tagInfo;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
+    struct gentity_s *tagChildren;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
     byte attachModelNames[7];
     scr_string_t attachTagNames[7];
     int useCount;
-    int nextFree;
+    struct gentity_s *nextFree;   /* a pointer, as CoD2rev-Plus: 8 bytes on x64 */
 };
 
 int COD2_GEntityHandle(const gentity_t *ent);
