@@ -55,6 +55,7 @@ docs/superpowers/
 # Linux real Direct3D 9 deps (scripts/build_linux_vk_deps.sh)
 third_party/linux-vk/
 third_party/linux-vk64/
+*_d3d9.log
 third_party/linux-x64/
 third_party/mingw64/
 third_party/mingw64-sdl2/
