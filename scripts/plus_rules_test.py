@@ -39,6 +39,12 @@ scripted usercmds and reads its playerstate from the snapshots:
   second back, as a killcam: the bot's origin must be from the newest frame
   at least a second old. Stock counted sv_fps frames a second, 960 ms at
   sv_fps 60.
+- lean rewind: a second client 600 ms behind, down the sights with no
+  spread, shoots at where the player's head was while it leaned, after it
+  let go of the lean: the antilag must hit the head, which only the Plus
+  build's pose rewind does. A shot into the wall over the head first measures
+  how far the bullet leaves from the view. It sets g_antilag 1, which a game
+  folder's config can turn off.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the other checks fail: that is how they catch the bugs.
@@ -54,6 +60,7 @@ RCON = 'plusrules'
 BUTTON_ATTACK, BUTTON_RELOAD, BUTTON_LEANLEFT, BUTTON_LEANRIGHT = 1, 16, 64, 128  # q_shared.h
 PRONE, CROUCH = 256, 512  # BUTTON_PRONE, BUTTON_CROUCH: the stance held
 BUTTON_USE = 8
+BUTTON_ADS = 4096  # q_shared.h
 EF_TURRET_ACTIVE = 0x300  # bg_public.h
 STANCE_EVENTS = {140, 141, 142}  # EV_STANCE_FORCE_STAND, _CROUCH, _PRONE
 WEAPON_READY, WEAPON_FIRING = 0, 3     # bg_public.h weaponstate_t
@@ -68,7 +75,7 @@ GAMETYPE = '''main()
 	level.callbackStartGameType = ::Callback_StartGameType;
 	level.callbackPlayerConnect = ::Callback_PlayerConnect;
 	level.callbackPlayerDisconnect = ::Callback_Nothing;
-	level.callbackPlayerDamage = ::Callback_Nothing;
+	level.callbackPlayerDamage = ::Callback_PlayerDamage;
 	level.callbackPlayerKilled = ::Callback_Nothing;
 }
 
@@ -77,12 +84,18 @@ GAMETYPE = '''main()
 plustest_move(base)
 {
 	t0 = getTime();
-	setCvar("plustest_move", t0 + " " + base[0]);
+	setCvar("plustest_move", t0 + " " + base[0] + " " + self getEntityNumber());
 	for(;;)
 	{
 		self setOrigin(base + ((getTime() - t0) * 0.1, 0, 0));
 		wait 1 / getCvarInt("sv_fps");
 	}
+}
+
+// records where a bullet hit; the damage is not applied
+Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
+{
+	setCvar("plustest_hit", sHitLoc);
 }
 
 Callback_Nothing(a, b, c, d, e, f, g, h, i, j)
@@ -104,6 +117,10 @@ Callback_StartGameType()
 	setCvar("plustest_aim", "");
 	setCvar("plustest_pitch", "");
 	setCvar("plustest_killcam", "");
+	setCvar("plustest_duel", "");
+	setCvar("plustest_head", "");
+	setCvar("plustest_fire", "");
+	setCvar("plustest_hit", "");
 }
 
 Callback_PlayerConnect()
@@ -180,6 +197,58 @@ weapons()
 			self.psoffsettime = 0;
 			logPrint("plustest killcam " + self.spectatorclient + "\\n");
 		}
+		// plustest_duel (rcon): the player goes to a spawn point with 200 units
+		// clear in front, away from the turret of mg_clip; the second client
+		// (entity 1) stands there, facing the player, and shoots with no spread. plustest_head
+		// records where the player's head is (plustest_pos: head, then the
+		// shooter's eye); plustest_aim turns the shooter to plustest_up units
+		// above it, plus plustest_dp and plustest_dy degrees; plustest_fire
+		// has it shoot
+		if(self getEntityNumber() == 0 && getCvar("plustest_duel") != "")
+		{
+			setCvar("plustest_duel", "");
+			players = getentarray("player", "classname");
+			for(i = 0; i < players.size; i++)
+				if(players[i] getEntityNumber() == 1)
+					level.plustest_shooter = players[i];
+			spawnpoints = getentarray("mp_dm_spawn", "classname");
+			for(i = 0; i < spawnpoints.size; i++)
+			{
+				forward = anglesToForward((0, spawnpoints[i].angles[1], 0));
+				eye = spawnpoints[i].origin + (0, 0, 60);
+				if(i != 1 && bulletTrace(eye, eye + maps\\mp\\_utility::vectorScale(forward, 240), false, undefined)["fraction"] == 1)
+					break;
+			}
+			self setOrigin(spawnpoints[i].origin);
+			self setPlayerAngles((0, spawnpoints[i].angles[1], 0));
+			wait 0.5;
+			forward = anglesToForward((0, self.angles[1], 0));
+			level.plustest_shooter setOrigin(self.origin + maps\\mp\\_utility::vectorScale(forward, 200));
+			level.plustest_shooter setPlayerAngles((0, self.angles[1] + 180, 0));
+			level.plustest_shooter setWeaponSpreadScale(0);
+			logPrint("plustest duel\\n");
+		}
+		if(self getEntityNumber() == 0 && getCvar("plustest_head") != "")
+		{
+			setCvar("plustest_head", "");
+			level.plustest_headpos = self getTagOrigin("j_head");
+			h = level.plustest_headpos;
+			e = level.plustest_shooter getEye();
+			setCvar("plustest_pos", h[0] + " " + h[1] + " " + h[2] + " " + e[0] + " " + e[1] + " " + e[2]);
+		}
+		if(self getEntityNumber() == 0 && getCvar("plustest_aim") == "head")
+		{
+			setCvar("plustest_aim", "");
+			shooter = level.plustest_shooter;
+			target = level.plustest_headpos + (0, 0, getCvarFloat("plustest_up"));
+			shooter setPlayerAngles(vectorToAngles(target - shooter getEye()) + (getCvarFloat("plustest_dp"), getCvarFloat("plustest_dy"), 0));
+		}
+		if(self getEntityNumber() == 0 && getCvar("plustest_fire") != "")
+		{
+			setCvar("plustest_fire", "");
+			setCvar("plustest_hit", "none");
+			level.plustest_shooter forceShot();
+		}
 		// plustest_pitch (rcon) sets the player's pitch, on a turret too
 		if(getCvar("plustest_pitch") != "")
 		{
@@ -218,6 +287,8 @@ class Player(cod2client.Client):
     weapon of the last one."""
     weapon = 0
     script = ()
+    lag = 0  # ms its commands' serverTime stays behind the server's
+    hold = 0  # buttons held in every command
 
     def _parse(self, sequence, data):
         # the commands follow the server's clock, which clamps commands that
@@ -236,12 +307,14 @@ class Player(cod2client.Client):
             self.script = self.script[1:]
         else:
             buttons = 0
+        buttons |= self.hold
         # MSG_ReadDeltaUsercmdKey against the null command; a field left
         # unchanged keeps the previous command's value, so all are sent
         payload.bits(CLC_MOVE_NO_DELTA, 3)
         payload.byte(1)                                  # command count
         payload.bits(0, 1)                               # absolute server time
-        payload.long(self.server_time)
+        command_time = self.server_time - self.lag
+        payload.long(command_time)
         payload.bits(1 ^ (key & 1), 1)                   # something changed
         payload.bits(1 ^ (key & 1), 1)                   # not only buttons, angles and move
         payload.bits((buttons & BUTTON_ATTACK) ^ (key & 1), 1)
@@ -249,7 +322,7 @@ class Player(cod2client.Client):
         payload.bits(0, 1)                               # yaw unchanged
         payload.bits(1, 1)
         payload.bits(0 ^ (key & 0xf), 4)                 # no move keys
-        key ^= self.server_time
+        key ^= command_time
         payload.bits(0, 1)                               # roll unchanged
         payload.bits(1, 1)
         payload.bits((buttons >> 1) ^ (key & 0x3ffff), 18)
@@ -337,10 +410,20 @@ def check_prone_peek(port, player, other, check):
               f'leaned up to {leaned:.2f}, back at up to {fastest * 280:.2f} per 280 ms')
 
 
+def take_turret(port, player):
+    """Has the player take the turret, twice if the first useTurret did not
+    take (now and then it does not); the playerstates until it is on."""
+    for _ in range(2):
+        smoke_test.rcon(port, RCON, 'set plustest_turret 1')
+        on = frames_until(player, lambda s: s and s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+        if on and on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE:
+            break
+    return on
+
+
 def check_mg_clip(port, player, other, check):
     settle(player, other)
-    smoke_test.rcon(port, RCON, 'set plustest_turret 1')
-    on = frames_until(player, lambda s: s and s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+    on = take_turret(port, player)
     check('mg clip: the player takes the turret', bool(on) and on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE)
     if not on or not on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE:
         return
@@ -424,8 +507,7 @@ def check_mg_rate(port, player, other, check):
     """Manned, the MG fires once a fireTime at any sv_fps; left, it turns back
     to its rest at the same speed."""
     settle(player, other)
-    smoke_test.rcon(port, RCON, 'set plustest_turret 1')
-    on = frames_until(player, lambda s: s and s[-1].get('eFlags', 0) & EF_TURRET_ACTIVE, 5)
+    on = take_turret(port, player)
     if not on or not on[-1].get('eFlags', 0) & EF_TURRET_ACTIVE:
         check('mg rate: the player takes the turret', False)
         return
@@ -506,12 +588,12 @@ def check_archive_time(port, player, other, check):
     frame = 1000 // player.fps
     smoke_test.rcon(port, RCON, 'set plustest_killcam 1')
     player.read_frames(4.5, False)
-    m = re.search(r'"plustest_move" is: ?"(\d+) (-?[\d.]+)', smoke_test.rcon(port, RCON, 'plustest_move'))
+    m = re.search(r'"plustest_move" is: ?"(\d+) (-?[\d.]+) (\d+)', smoke_test.rcon(port, RCON, 'plustest_move'))
     behind = []
     if m:
-        t0, base = int(m.group(1)), float(m.group(2))
+        t0, base, bot = int(m.group(1)), float(m.group(2)), int(m.group(3))
         for f in player.read_frames(2, False):
-            if f['ps'].get('clientNum') == 1:
+            if f['ps'].get('clientNum') == bot:
                 behind.append(f['server_time'] - (t0 + (f['ps'].get('origin[0]', 0) - base) / 0.1))
     behind.sort()
     middle = behind[len(behind) // 2] if behind else None
@@ -521,11 +603,97 @@ def check_archive_time(port, player, other, check):
           f'{middle if middle is None else round(middle)} ms back, {1000 - frame} to 1000 expected')
 
 
-# in this order: the turret mg_clip spawns stays in front of the player, and
-# shotgun_spread's pellets would hit it
+def pump(players, seconds):
+    """Keeps every client sending commands for that long."""
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        for p in players:
+            p.read_frames(0.03, False)
+
+
+def check_lean_rewind(port, player, other, check):
+    """A second client, 600 ms of lag behind, shoots at where the player's
+    head was while it leaned, after the player let go of the lean: the
+    antilag must put the head back where the shooter saw it."""
+    m = re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(port, RCON, 'sv_serverid'))
+    shooter = Player(port)
+    shooter.lag = 600
+    try:
+        if shooter.connect(118, 'plustest2') is not None or not shooter.request_gamestate(int(m.group(1))):
+            check('lean rewind: a second client joins', False)
+            return
+        shooter.enter_game(int(m.group(1)), 1.0)
+        # down the sights: the hip's idle sway moves a bullet off the view
+        shooter.weapon, shooter.hold = other, BUTTON_ADS
+        settle(player, other)
+        pump([player, shooter], 2)
+        # a game folder's config can turn it off
+        smoke_test.rcon(port, RCON, 'set g_antilag 1')
+        smoke_test.rcon(port, RCON, 'set plustest_duel 1')
+        pump([player, shooter], 1.5)
+        def shot():
+            """Fires; where it hit the player, and the impacts on the world."""
+            smoke_test.rcon(port, RCON, 'set plustest_fire 1')
+            impacts = set()
+            deadline = time.time() + 1.0
+            while time.time() < deadline:
+                for f in player.read_frames(0.03, False):
+                    impacts |= {tuple(e['pos.trBase']) for e in f['entities'].values()
+                                if e.get('eType', 0) - ET_EVENTS in range(EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT + 1)}
+                shooter.read_frames(0.03, False)
+            hit = re.search(r'"plustest_hit" is: ?"([^"^]*)', smoke_test.rcon(port, RCON, 'plustest_hit'))
+            return (hit.group(1) if hit else None), impacts
+
+        def angles(v):
+            return -math.degrees(math.atan2(v[2], math.hypot(v[0], v[1]))), math.degrees(math.atan2(v[1], v[0]))
+
+        def aim(up, dp, dy):
+            for name, value in (('plustest_up', up), ('plustest_dp', dp), ('plustest_dy', dy), ('plustest_aim', 'head')):
+                smoke_test.rcon(port, RCON, f'set {name} {value}')
+            # the gun follows a turn of the view over a while
+            pump([player, shooter], 1.0)
+
+        for side, lean in (('left', BUTTON_LEANLEFT), ('right', BUTTON_LEANRIGHT)):
+            player.script = tuple([(lean, other)] * 140)
+            pump([player, shooter], 1.5)
+            smoke_test.rcon(port, RCON, 'set plustest_head 1')
+            pump([player, shooter], 0.2)
+            pos = re.search(r'"plustest_pos" is: ?"([^"^]*)', smoke_test.rcon(port, RCON, 'plustest_pos'))
+            pos = [float(x) for x in pos.group(1).split()] if pos else None
+            # the bullet leaves a few degrees off the view (the gun's own
+            # angles): one over the head, into the wall, measures by how much
+            aim(40, 0, 0)
+            _, impacts = shot()
+            if not pos or len(impacts) != 1:
+                check(f'lean rewind: a shot over the head leaning {side} hits the wall once', False, f'{impacts}')
+                player.script = ()
+                continue
+            head, eye = pos[:3], pos[3:]
+            wanted = angles([h - e for h, e in zip(head[:2] + [head[2] + 40], eye)])
+            went = angles([i - e for i, e in zip(next(iter(impacts)), eye)])
+            dp, dy = wanted[0] - went[0], wanted[1] - went[1]
+            # the aim, with the player still leaning: it must hit the head
+            aim(0, dp, dy)
+            held, _ = shot()
+            while player.script:
+                pump([player, shooter], 0.1)
+            # let go: the lean comes back over about half a second
+            pump([player, shooter], 0.25)
+            hit, _ = shot()
+            check(f'lean rewind: a shot at the head leaning {side} {shooter.lag} ms ago hits it',
+                  held in ('head', 'helmet') and hit in ('head', 'helmet'),
+                  f'hit {hit}; still leaning, {held}; the gun {dp:.1f} and {dy:.1f} degrees off')
+            pump([player, shooter], 1.0)
+    finally:
+        shooter.close()
+
+
+# in this order: the turret mg_clip spawns stays in front of the player, where
+# shotgun_spread's pellets would hit it; lean_rewind moves the player away
+# from it, and leaves a second client that archive_time's bot must not take
 CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
           'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate,
-          'archive_time': check_archive_time}
+          'lean_rewind': check_lean_rewind, 'archive_time': check_archive_time}
 
 
 def main():

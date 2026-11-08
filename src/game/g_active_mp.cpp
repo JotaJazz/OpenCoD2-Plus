@@ -1445,6 +1445,10 @@ void ClientEndFrame( gentity_t *ent )
 		}
 	}
 
+#ifdef COD2_PLUS
+	G_PlusRecordPose(ent);
+#endif
+
 	ent->client->buttonsSinceLastFrame = 0;
 }
 

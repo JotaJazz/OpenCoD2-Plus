@@ -10,6 +10,11 @@ open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 - For zPAM Plus's translations (`localizedstrings/zpam.str`): on an English install, `loc_language` 1–4 (French to Spanish) now keeps the `localized_english` files in use instead of falling back to English. Sounds stay English, and the chosen language's `.str` lines apply; the stock `.str` files already carry Spanish. A real localized install is unchanged. `language_test.py` fails on the old client.
 - Russian and Polish were left out, as the stock fonts only have Windows-1252 glyphs. No menu entry was added: the stock MP menus have no language list, and zPAM can offer one with `uiScript updateLanguage` (it sets `loc_language`, then `vid_restart`).
 
+## 2026-11-07 — OpenCoD2-Plus Server 1551c01: the antilag rewinds the pose
+
+- Brought the vendored files up to 1551c01: in `COD2_PLUS`, `G_PlusRecordPose` keeps each player's pose per frame and the antilag sets it with the origin (the lean, yaw, aim and stance flags of the hitboxes stayed in the present). Server code only; the Plus version stays 123.
+- Done on a temporary branch in a separate worktree, as another session had `ui-bind-x64` checked out; `scripts/vendor_check.py` passes, the dedicated server builds and the unit tests were run.
+
 ## 2026-11-07 — OpenCoD2-Plus Server 53281a5: the archive at 62.5 Hz
 
 - Brought the vendored files up to 53281a5: `SV_GetCachedSnapshot` counts whole frames, so the antilag and the killcam go back the time asked at `sv_fps` 60 (960 ms a second before). Server code only; the Plus version stays 123.
