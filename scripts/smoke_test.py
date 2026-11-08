@@ -19,6 +19,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFIX = b'\xff\xff\xff\xff'
 
 
+def log_lines(path, timed=False):
+    """A log's lines, without the time each one starts with, as in " 1:23 K;..."."""
+    if not os.path.exists(path):
+        return []
+    lines = open(path, encoding='latin-1').read().splitlines()
+    return lines if timed else [re.sub(r'^\s*\d+:\d+ ', '', l) for l in lines]
+
+
 def query(port, command, timeout=2.0):
     """Sends a connectionless command and returns the reply as (header, info dict), or None."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -108,6 +116,14 @@ def check_client(port, protocol, password, game_log, check):
         reply = client.download(server_id, 'main/zz_smoke_download.iwd')
         check('mod iwd download starts', refused not in reply and b'PK\x03\x04' in reply)
 
+        # each donedl answers with a full gamestate, so a flood of them is capped
+        before = client.state.gamestate_count
+        client.commands(server_id, ['donedl'] * 40)
+        for sequence, data in client.receive(2.0):
+            client._parse(sequence, data)
+        sent = client.state.gamestate_count - before
+        check('donedl flood gets a few gamestates', 1 <= sent <= 5, f'{sent} of 40')
+
         client.enter_game(server_id, 2.0)
         ping = (players(port) or {}).get('smokeclient')
         check('client enters the game', ping is not None and 0 <= ping < 999, f'ping {ping}')
@@ -139,14 +155,8 @@ def check_client(port, protocol, password, game_log, check):
         # line, and a say right after a userinfo must not be flood protected
         client.commands(server_id, ['userinfo "\\name\\smokelog\nfakename\\rate\\25000\\snaps\\20"',
                                     'say "smokesay\nK;fakekill"'])
-        def game_log_lines():
-            if not os.path.exists(game_log):
-                return []
-            # each line starts with the time, as in " 1:23 say;..."
-            return [re.sub(r'^\s*\d+:\d+ ', '', l)
-                    for l in open(game_log, encoding='latin-1').read().splitlines()]
-        said = wait_for(lambda: any('smokesay' in l for l in game_log_lines()))
-        lines = game_log_lines()
+        said = wait_for(lambda: any('smokesay' in l for l in log_lines(game_log)))
+        lines = log_lines(game_log)
         check('say right after userinfo runs', said)
         check('no line break in names', wait_for(lambda: listed('smokelogfakename')), ', '.join(players(port) or {}))
         check('no fake lines in the game log', said and not any(
@@ -232,6 +242,7 @@ def check_master(args, check):
     password = secrets.token_hex(8)
     master = FakeMaster()
     unused = free_port()
+    alt_port = 0 if args.protocol == 118 else free_port()   # net_altPort exists only in the 1.0 build
     hostname = 'cod2rev master test'
     server = None
     with tempfile.TemporaryDirectory(prefix='cod2rev_master_') as home:
@@ -252,6 +263,8 @@ def check_master(args, check):
                      '+set', 'logfileRotate', '2',
                      '+set', 'dedicated', '2',
                      '+set', 'net_port', str(port),
+                     '+set', 'net_altPort', str(alt_port),
+                     '+set', 'sv_cracked', '1',
                      '+set', 'sv_hostname', hostname,
                      '+set', 'rcon_password', password,
                      '+set', 'sv_master1', f'127.0.0.1:{master.port}',
@@ -272,6 +285,10 @@ def check_master(args, check):
                 return
             server_addr = beat[0]
             check('heartbeat comes from net_port', server_addr[1] == port, f'from port {server_addr[1]}')
+            if alt_port:
+                beat = master.receive(lambda t: t.startswith('heartbeat '), 5)
+                check('second heartbeat comes from net_altPort', beat is not None and beat[0][1] == alt_port,
+                      f'from port {beat[0][1]}' if beat else 'nothing received')
 
             status = master.receive(lambda t: t.startswith('statusResponse'), 10)
             check('status sent to the master on its own', status is not None and f'\\mapname\\{args.map}' in status[1])
@@ -285,15 +302,35 @@ def check_master(args, check):
             status = master.receive(lambda t: t.startswith('statusResponse') and 'mastercheck' in t, 5)
             check('master getstatus reply', status is not None and '\\sv_maxclients\\' in status[1])
 
+            if alt_port:
+                master.send(alt_port, 'getinfo altcheck')
+                info = master.receive(lambda t: t.startswith('infoResponse') and 'altcheck' in t, 5)
+                check('net_altPort announces protocol 118', info is not None and info[0][1] == alt_port
+                      and '\\protocol\\118\\' in info[1])
+                master.send(alt_port, 'getstatus altcheck')
+                status = master.receive(lambda t: t.startswith('statusResponse') and 'altcheck' in t, 5)
+                check('net_altPort status is 1.3', status is not None and status[0][1] == alt_port
+                      and '\\shortversion\\1.3\\' in status[1] and '\\protocol\\118\\' in status[1])
+                master.send(port, 'getinfo maincheck')
+                info = master.receive(lambda t: t.startswith('infoResponse') and 'maincheck' in t, 5)
+                check('net_port still announces its own protocol', info is not None and '\\protocol\\115\\' in info[1])
+                check_alt_client(alt_port, password, port, check)
+
             # "heartbeat" sends one at once instead of after HEARTBEAT_MSEC
             rcon(port, password, 'heartbeat')
             check('heartbeat command sends one now', master.receive(lambda t: t.startswith('heartbeat '), 5) is not None)
+            if alt_port:
+                check('heartbeat command sends one from net_altPort', master.receive(lambda t: t.startswith('heartbeat '), 5) is not None)
 
             # SIGTERM quits as the quit command does
             server.send_signal(signal.SIGTERM)
             flat = master.receive(lambda t: t.startswith('heartbeat '), 10)
             check('flatline heartbeat on SIGTERM', flat is not None and flat[1] == 'heartbeat flatline\n',
                   repr(flat[1]) if flat else 'nothing received')
+            if alt_port:
+                flat = master.receive(lambda t: t.startswith('heartbeat '), 5)
+                check('flatline heartbeat from net_altPort', flat is not None and flat[0][1] == alt_port
+                      and flat[1] == 'heartbeat flatline\n', repr(flat[1]) if flat else 'nothing received')
             try:
                 server.wait(timeout=10)
             except subprocess.TimeoutExpired:
@@ -335,6 +372,71 @@ def check_console_log(path, check):
     check('sv_logRcon 0 hides rcon commands', 'Rcon from' in text and 'smokehidden' not in text)
 
 
+def check_challenge_during_queries(port, check):
+    """A burst of queries, which share a low global limit, must not stop a player joining."""
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        for _ in range(50):
+            s.sendto(PREFIX + b'getinfo x', ('127.0.0.1', port))
+    reply = query(port, 'getchallenge', timeout=0.09)
+
+    check('getchallenge survives a query burst', reply is not None and reply[0].startswith('challengeResponse'))
+
+
+def check_alt_client(alt_port, password, port, check):
+    """A 1.3 client joins through net_altPort. Its socket only hears that port,
+    so a reply from net_port would not reach it."""
+    server_id = int(re.search(r'"sv_serverid" is: ?"(-?\d+)', rcon(port, password, 'sv_serverid')).group(1))
+    client = cod2client.Client(alt_port)
+    client.sock.connect(client.addr)
+    try:
+        refused = client.connect(118, 'smokealt')
+        check('1.3 client connects through net_altPort', refused is None, refused or '')
+        if refused is not None:
+            return
+        got = client.request_gamestate(server_id)
+        check('net_altPort client receives the gamestate', got)
+        if not got:
+            return
+        client.enter_game(server_id, 1.0)
+        frames = client.read_frames(1.0)
+        check('net_altPort client parses snapshots', frames and client.parsed_clean == client.parsed,
+              f'{len(frames)} snapshots, {client.parsed_clean} of {client.parsed} messages clean')
+    finally:
+        client.close()
+
+
+def check_connect_limit(port, protocol, check):
+    """A local proxy's players, all from 127.0.0.1, get in together; a flood from another address is cut."""
+    joined = []
+    for i in range(12):
+        client = cod2client.Client(port)
+        joined.append(client)
+        try:
+            refused = client.connect(protocol, f'smokejoin{i}')
+        except OSError as e:
+            refused = f'no reply ({e})'
+        if refused is not None:
+            break
+    check('clients joining together connect', refused is None, refused or '')
+    for client in joined:
+        client.close()
+
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.bind(('127.0.0.2', 0))
+        s.settimeout(0.5)
+        for _ in range(200):
+            s.sendto(PREFIX + b'connect "\\protocol\\%d\\challenge\\1\\qport\\7\\name\\x"' % protocol,
+                     ('127.0.0.1', port))
+        replies = 0
+        try:
+            while True:
+                s.recvfrom(65535)
+                replies += 1
+        except OSError:
+            pass
+    check('connect flood is limited', replies <= 15, f'{replies} of 200')
+
+
 def check_game_log_rotation(path, check):
     """g_logRotateSize: the oversized games_mp.log was kept as .1 and a new one started."""
     rotated = path + '.1'
@@ -352,7 +454,8 @@ def check_strict_port(args, port, check):
              '+set', 'fs_homepath', home,
              '+set', 'dedicated', '1',
              '+set', 'net_port', str(port),
-             '+set', 'net_strictPort', '1'],
+             '+set', 'net_strictPort', '1',
+             '+set', 'logfile', '2'],
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         try:
             out = server.communicate(timeout=30)[0].decode('latin-1')
@@ -361,6 +464,9 @@ def check_strict_port(args, port, check):
             out = server.communicate()[0].decode('latin-1')
         check('net_strictPort stops on a busy port', server.returncode not in (None, 0) and 'net_strictPort' in out,
               f'exit code {server.returncode}')
+        log_path = os.path.join(home, 'main', 'console_mp_server.log')
+        log = open(log_path, encoding='latin-1').read() if os.path.exists(log_path) else ''
+        check('fatal error reaches the log', 'FATAL' in log and 'net_strictPort' in log)
 
 
 def free_port():
@@ -457,6 +563,9 @@ def main():
 
                 if protocol.isdigit():
                     check_client(port, int(protocol), password, os.path.join(home, 'main', 'games_mp.log'), check)
+                    check_connect_limit(port, int(protocol), check)
+                    check_challenge_during_queries(port, check)
+
 
                 time.sleep(2)
                 check('server still running', server.poll() is None)

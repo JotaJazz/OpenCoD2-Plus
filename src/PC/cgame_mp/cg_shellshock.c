@@ -95,13 +95,14 @@ static inline int float_seconds_to_ms(float val)
     return (int)floorf(val * 1000.0f + 0.5f);
 }
 
-/* migrated from the ILP32 data blob to typed C (x64 port Stage 2). */
+/* migrated from the ILP32 data blob to typed C (x64 port Stage 2); the
+   29 dvars a .shock file sets, as the 1.3 binary's table (0x5d89c8):
+   cg_shock_viewKickFadeTime is not one of them (a file without it loads) */
 const char *cg_shock_dvar_names[30] = {
     "cg_shock_screenBlendTime",
     "cg_shock_screenBlendFadeTime",
     "cg_shock_viewKickPeriod",
     "cg_shock_viewKickRadius",
-    "cg_shock_viewKickFadeTime",
     "cg_shock_sound",
     "cg_shock_soundFadeInTime",
     "cg_shock_soundFadeOutTime",

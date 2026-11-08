@@ -2847,7 +2847,7 @@ void Scr_EvalEquality( VariableValue *value1, VariableValue *value2 )
 
 	case VAR_FLOAT:
 		value1->type = VAR_INTEGER;
-		value1->u.intValue = I_fabs(value1->u.floatValue - value2->u.floatValue) < 0.000001;
+		value1->u.intValue = I_fabs(value1->u.floatValue - value2->u.floatValue) < FLT_EPSILON;
 		break;
 
 	case VAR_INTEGER:
@@ -4682,6 +4682,23 @@ void Scr_CastWeakerStringPair( VariableValue *value1, VariableValue *value2 )
 		return;
 	}
 
+	// int64 (libcod's handles and 64-bit numbers) with an int: compute as
+	// int64, so "handle == 0" works; without this the int64 was refused or,
+	// in the string pair, read as the int it overlaps and turned into a float
+	if ( type1 == VAR_INT64 && type2 == VAR_INTEGER )
+	{
+		value2->type = VAR_INT64;
+		value2->u.int64Value = (long int)value2->u.intValue;
+		return;
+	}
+
+	if ( type1 == VAR_INTEGER && type2 == VAR_INT64 )
+	{
+		value1->type = VAR_INT64;
+		value1->u.int64Value = (long int)value1->u.intValue;
+		return;
+	}
+
 	if ( type1 < type2 )
 	{
 		switch ( type1 )
@@ -4783,6 +4800,23 @@ void Scr_CastWeakerPair( VariableValue *value1, VariableValue *value2 )
 
 	if ( type1 == type2 )
 	{
+		return;
+	}
+
+	// int64 (libcod's handles and 64-bit numbers) with an int: compute as
+	// int64, so "handle == 0" works; without this the int64 was refused or,
+	// in the string pair, read as the int it overlaps and turned into a float
+	if ( type1 == VAR_INT64 && type2 == VAR_INTEGER )
+	{
+		value2->type = VAR_INT64;
+		value2->u.int64Value = (long int)value2->u.intValue;
+		return;
+	}
+
+	if ( type1 == VAR_INTEGER && type2 == VAR_INT64 )
+	{
+		value1->type = VAR_INT64;
+		value1->u.int64Value = (long int)value1->u.intValue;
 		return;
 	}
 

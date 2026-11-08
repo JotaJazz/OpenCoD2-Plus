@@ -8,26 +8,181 @@
 
 typedef void *(__stdcall *PFN_Direct3DCreate9)(UINT SDKVersion);
 
-void *RealD3D9_Direct3DCreate9(void)
-{
-    static HMODULE d3d9mod;
-    static PFN_Direct3DCreate9 pCreate;
-    void *iface;
+/* Direct3D 9 on Direct3D 12, in d3d9.dll since Windows 10 (d3d9on12.h) */
+typedef struct {
+    BOOL Enable9On12;
+    void *pD3D12Device;
+    void *ppD3D12Queues[2];
+    UINT NumQueues;
+    UINT NodeMask;
+} D3D9ON12_ARGS;
+typedef void *(__stdcall *PFN_Direct3DCreate9On12)(UINT SDKVersion, D3D9ON12_ARGS *pOverrideList, UINT NumOverrideEntries);
 
-    if (!pCreate) {
-        d3d9mod = LoadLibraryA("d3d9.dll");
-        if (!d3d9mod) {
-            fprintf(stderr, "[real-d3d9] LoadLibrary(d3d9.dll) failed\n");
-            return NULL;
-        }
-        pCreate = (PFN_Direct3DCreate9)GetProcAddress(d3d9mod, "Direct3DCreate9");
-        if (!pCreate) {
-            fprintf(stderr, "[real-d3d9] GetProcAddress(Direct3DCreate9) failed\n");
-            return NULL;
+/* r_gfxApi's values */
+enum { GFX_API_D3D9, GFX_API_VULKAN, GFX_API_D3D12 };
+
+/* an interface with an adapter, or NULL */
+static void *RealD3D9_Usable(void *iface)
+{
+    /* IUnknown's three and RegisterSoftwareDevice, then GetAdapterCount */
+    void **vtbl = iface ? *(void ***)iface : NULL;
+
+    if (iface && !((UINT(__stdcall *)(void *))vtbl[4])(iface)) {
+        ((ULONG(__stdcall *)(void *))vtbl[2])(iface);
+        return NULL;
+    }
+    return iface;
+}
+
+static void *RealD3D9_CreateFrom(HMODULE d3d9mod)
+{
+    PFN_Direct3DCreate9 pCreate = d3d9mod ? (PFN_Direct3DCreate9)GetProcAddress(d3d9mod, "Direct3DCreate9") : NULL;
+
+    return pCreate ? RealD3D9_Usable(pCreate(32)) : NULL;
+}
+
+/* the Vulkan API types this asks for, for 32-bit Windows */
+typedef struct {
+    int sType;
+    const void *pNext;
+    const char *pApplicationName;
+    unsigned int applicationVersion;
+    const char *pEngineName;
+    unsigned int engineVersion;
+    unsigned int apiVersion;
+} GfxVkApplicationInfo;
+typedef struct {
+    int sType;
+    const void *pNext;
+    unsigned int flags;
+    const GfxVkApplicationInfo *pApplicationInfo;
+    unsigned int enabledLayerCount;
+    const char *const *ppEnabledLayerNames;
+    unsigned int enabledExtensionCount;
+    const char *const *ppEnabledExtensionNames;
+} GfxVkInstanceCreateInfo;
+#    define GFX_VK_API_1_3 ((1u << 22) | (3u << 12))
+
+/* whether a device has Vulkan 1.3. DXVK throws out of Direct3DCreate9 without
+ * one, and a client saved on vulkan would then die at every start. */
+static int RealD3D9_HasVulkan13(HMODULE vulkan)
+{
+    typedef void *(__stdcall * PFN_GetProc)(void *, const char *);
+    typedef int(__stdcall * PFN_CreateInstance)(const GfxVkInstanceCreateInfo *, const void *, void **);
+    typedef int(__stdcall * PFN_EnumerateDevices)(void *, unsigned int *, void **);
+    typedef void(__stdcall * PFN_GetProperties)(void *, void *);
+    typedef void(__stdcall * PFN_DestroyInstance)(void *, const void *);
+    PFN_GetProc getProc = (PFN_GetProc)GetProcAddress(vulkan, "vkGetInstanceProcAddr");
+    PFN_CreateInstance createInstance;
+    PFN_EnumerateDevices enumerateDevices;
+    PFN_GetProperties getProperties;
+    PFN_DestroyInstance destroyInstance;
+    GfxVkApplicationInfo app;
+    GfxVkInstanceCreateInfo info;
+    void *instance = NULL;
+    void *devices[16];
+    unsigned int count = 16;
+    unsigned int i;
+    int found = 0;
+
+    createInstance = getProc ? (PFN_CreateInstance)getProc(NULL, "vkCreateInstance") : NULL;
+    if (!createInstance)
+        return 0;
+    memset(&app, 0, sizeof(app));
+    app.sType = 0; /* VK_STRUCTURE_TYPE_APPLICATION_INFO */
+    app.apiVersion = GFX_VK_API_1_3;
+    memset(&info, 0, sizeof(info));
+    info.sType = 1; /* VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO */
+    info.pApplicationInfo = &app;
+    if (createInstance(&info, NULL, &instance) != 0 || !instance)
+        return 0;
+
+    enumerateDevices = (PFN_EnumerateDevices)getProc(instance, "vkEnumeratePhysicalDevices");
+    getProperties = (PFN_GetProperties)getProc(instance, "vkGetPhysicalDeviceProperties");
+    destroyInstance = (PFN_DestroyInstance)getProc(instance, "vkDestroyInstance");
+    if (enumerateDevices && getProperties && enumerateDevices(instance, &count, devices) >= 0) {
+        for (i = 0; i < count && i < 16 && !found; i++) {
+            /* VkPhysicalDeviceProperties starts with apiVersion */
+            unsigned int properties[256];
+
+            getProperties(devices[i], properties);
+            found = properties[0] >= GFX_VK_API_1_3;
         }
     }
-    iface = pCreate(32 );
-    fprintf(stderr, "[real-d3d9] Direct3DCreate9 -> %p\n", iface);
+    if (destroyInstance)
+        destroyInstance(instance, NULL);
+    return found;
+}
+
+static HMODULE s_dxvkModule;
+
+/* DXVK's d3d9.dll, in dxvk/ next to the executable: Direct3D 9 over Vulkan */
+static void *RealD3D9_CreateVulkan(void)
+{
+    char path[MAX_PATH];
+    char *slash;
+    HMODULE vulkan = LoadLibraryA("vulkan-1.dll");
+
+    if (!vulkan || !RealD3D9_HasVulkan13(vulkan))
+        return NULL;
+    if (!GetModuleFileNameA(NULL, path, sizeof(path)) || !(slash = strrchr(path, '\\'))
+        || (size_t)(slash - path) + sizeof("\\dxvk\\d3d9.dll") > sizeof(path))
+        return NULL;
+    strcpy(slash, "\\dxvk\\d3d9.dll");
+    s_dxvkModule = LoadLibraryA(path);
+    return RealD3D9_CreateFrom(s_dxvkModule);
+}
+
+/* d3d9.dll by name, unless that would answer with DXVK's module, already
+ * loaded under the same name: then the system's, by its path */
+static HMODULE RealD3D9_LoadD3D9(void)
+{
+    char path[MAX_PATH];
+    UINT length;
+
+    if (!s_dxvkModule)
+        return LoadLibraryA("d3d9.dll");
+    length = GetSystemDirectoryA(path, sizeof(path));
+    if (!length || length + sizeof("\\d3d9.dll") > sizeof(path))
+        return NULL;
+    strcpy(path + length, "\\d3d9.dll");
+    return LoadLibraryA(path);
+}
+
+static void *RealD3D9_CreateD3D12(void)
+{
+    D3D9ON12_ARGS args;
+    HMODULE d3d9mod = RealD3D9_LoadD3D9();
+    PFN_Direct3DCreate9On12 pCreate;
+
+    pCreate = d3d9mod ? (PFN_Direct3DCreate9On12)GetProcAddress(d3d9mod, "Direct3DCreate9On12") : NULL;
+    if (!pCreate)
+        return NULL;
+    memset(&args, 0, sizeof(args));
+    args.Enable9On12 = TRUE;
+    return RealD3D9_Usable(pCreate(32, &args, 1));
+}
+
+/* the API r_gfxApi asks for, or plain Direct3D 9 if that cannot run here */
+void *RealD3D9_Direct3DCreate9(int api)
+{
+    extern void Com_Printf(const char *, ...);
+    static const char *const names[] = { "Direct3D 9", "Vulkan (DXVK)", "Direct3D 12 (D3D9On12)" };
+    void *iface = NULL;
+
+    if (api == GFX_API_VULKAN)
+        iface = RealD3D9_CreateVulkan();
+    else if (api == GFX_API_D3D12)
+        iface = RealD3D9_CreateD3D12();
+    if (iface) {
+        Com_Printf("Graphics API: %s\n", names[api]);
+        return iface;
+    }
+    if (api != GFX_API_D3D9)
+        Com_Printf("^3%s is not available here, using Direct3D 9\n", names[api]);
+    iface = RealD3D9_CreateFrom(RealD3D9_LoadD3D9());
+    if (iface)
+        Com_Printf("Graphics API: %s\n", names[GFX_API_D3D9]);
     return iface;
 }
 
@@ -77,7 +232,7 @@ static int RealD3D9_DxvkHasAdapter(PFN_Direct3DCreate9 pCreate)
     return 0;
 }
 
-void *RealD3D9_Direct3DCreate9(void)
+void *RealD3D9_Direct3DCreate9(int api)
 {
     extern void *Sys_LoadLibraryNextToExe(const char *name);
     static PFN_Direct3DCreate9 pCreate;
@@ -140,7 +295,7 @@ void *RealD3D9_CreateGameWindow(int w, int h, int fullscreen)
     return hwnd;
 }
 
-void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h)
+void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h, int swapInterval)
 {
     unsigned char *p = (unsigned char *)ppOut;
     memset(p, 0, 56);
@@ -155,7 +310,8 @@ void RealD3D9_FillPresentParams(void *ppOut, void *hwnd, int w, int h)
     *(int *)(p + 36) = 1;
     *(unsigned int *)(p + 40) = 75;
 
-    *(unsigned int *)(p + 52) = 0;
+    /* D3DPRESENT_INTERVAL_ONE or _IMMEDIATE: the default, 0, waits for the display */
+    *(unsigned int *)(p + 52) = swapInterval ? 1 : 0x80000000u;
 }
 
 #endif

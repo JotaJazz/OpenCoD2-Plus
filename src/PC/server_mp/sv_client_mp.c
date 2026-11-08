@@ -84,7 +84,7 @@ extern void MSG_WriteShort(msg_t *msg, int c);
 extern void MSG_WriteLong(msg_t *msg, int c);
 extern void MSG_WriteString(msg_t *msg, const char *s);
 extern void MSG_WriteData(msg_t *buf, const void *data, int length);
-extern int MSG_ReadBitsCompress(byte *from, byte *to, int size);
+extern int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern int MSG_ReadBits(msg_t *msg, int bits);
 extern int MSG_ReadLong(msg_t *msg);
 extern char *MSG_ReadString(msg_t *msg);
@@ -1571,9 +1571,10 @@ void SV_ExecuteClientMessage(client_t *cl, msg_t *msg)
     int serverId;
 
     MSG_Init(&msgCompressed, msgCompressed_buf, sizeof(msgCompressed_buf));
-    msgCompressed.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount,
-                                                 msgCompressed_buf,
-                                                 msg->cursize - msg->readcount);
+    msgCompressed.cursize = MSG_ReadBitsCompressLimit(msg->data + msg->readcount,
+                                                      msgCompressed_buf,
+                                                      msg->cursize - msg->readcount,
+                                                      sizeof(msgCompressed_buf));
 
     serverId = *(int *)imp_sv_serverId_value;
     SV_ExecDbg("", cl->serverId, serverId, cl->state);

@@ -1,6 +1,7 @@
-// Objectives for the simple bots: SD (plant, guard, defuse) and CTF (steal,
-// capture, defend, return). Each life a bot draws a role; the role gives
-// _bots_nav a goal and, on arrival, an action. Other gametypes are untouched.
+// Objectives for the simple bots: SD (plant, guard, defuse), CTF (steal,
+// capture, defend, return) and HQ (take or hold the radio). Each life a bot
+// draws a role; the role gives _bots_nav a goal and, on arrival, an action.
+// Other gametypes are untouched.
 
 init()
 {
@@ -30,6 +31,117 @@ init()
 		level.botObjMode = "ctf";
 		precomputeTo(level.botFlags["allies"].home_origin);
 		precomputeTo(level.botFlags["axis"].home_origin);
+	}
+	else if(gametype == "hq")
+	{
+		// a map's script spawns them; hq_setup, a frame later, falls back to these
+		radios = level.radio;
+		if(!isDefined(radios))
+			radios = getentarray("hqradio", "targetname");
+		if(radios.size < 3)
+			return;
+		level.botObjMode = "hq";
+		reachable = [];
+		for(i = 0; i < radios.size; i++)
+		{
+			precomputeTo(radios[i].origin);
+			radios[i].botReachable = radioReachable(radios[i]);
+			if(radios[i].botReachable)
+				reachable[reachable.size] = radios[i];
+		}
+		maps\mp\bots\_bots_nav::debugLog("BOTOBJ radios " + reachable.size + " of " + radios.size);
+
+		// a neutral radio never goes away, so one no bot can take would end
+		// the game here; hq_setup, still to run, needs 3
+		if(reachable.size >= 3)
+			level.radio = reachable;
+		level thread logRadios();
+	}
+}
+
+// A radio on a roof or on a floor the graph has cut off can't be reached. Graphs
+// come in islands, so a quarter of the spawn points is enough.
+radioReachable(radio)
+{
+	if(!isDefined(level.botGraph))
+		return false;
+
+	node = graphFindClosestNode(level.botGraph, radio.origin);
+	if(!isDefined(node))
+		return false;
+
+	origin = graphGetNodeOrigin(level.botGraph, node);
+	if(abs(origin[2] - radio.origin[2]) > level.zradioradius)
+		return false;
+
+	spawns = getentarray("mp_tdm_spawn", "classname");
+	found = 0;
+	for(i = 0; i < spawns.size; i++)
+	{
+		if(pathExists(spawns[i].origin, node))
+			found++;
+	}
+	return found > 0 && found * 4 >= spawns.size;
+}
+
+pathExists(from, node)
+{
+	start = graphFindClosestNode(level.botGraph, from);
+	if(!isDefined(start))
+		return false;
+
+	path = graphFindPath(level.botGraph, start, node);
+	return isDefined(path) && path.size && path[path.size - 1] == node;
+}
+
+// Once a life and radio: a bot on another island than the radio plays on.
+canReachRadio(radio)
+{
+	if(!isDefined(self.botRadioChecked) || self.botRadioChecked != radio)
+	{
+		self.botRadioChecked = radio;
+		self.botRadioReach = false;
+		node = graphFindClosestNode(level.botGraph, radio.origin);
+		if(isDefined(node))
+			self.botRadioReach = pathExists(self.origin, node);
+	}
+	return self.botRadioReach;
+}
+
+// The radio on the map now: between two of them, for 15 s, there is none.
+activeRadio()
+{
+	if(!isDefined(level.radio))
+		return undefined;
+
+	for(i = 0; i < level.radio.size; i++)
+	{
+		if(isDefined(level.radio[i].hidden) && !level.radio[i].hidden)
+			return level.radio[i];
+	}
+	return undefined;
+}
+
+// The stock script logs nothing when a radio changes hands.
+logRadios()
+{
+	last = "none";
+	skipped = undefined;
+	for(;;)
+	{
+		wait 0.5;
+		radio = activeRadio();
+		if(!isDefined(radio))
+			continue;
+		if(!radio.botReachable && (!isDefined(skipped) || skipped != radio))
+		{
+			skipped = radio;
+			maps\mp\bots\_bots_nav::debugLog("BOTOBJ radio skipped");
+		}
+		if(radio.team == last)
+			continue;
+		last = radio.team;
+		maps\mp\bots\_bots_nav::debugLog("BOTOBJ radio " + last);
 	}
 }
 
@@ -82,6 +194,7 @@ resetObjective()
 	self.botObjGoalAt = -1;
 	self.botHadFlag = false;
 	self.botReturnPos = undefined;
+	self.botRadioChecked = undefined;
 
 	if(!isDefined(level.botObjMode))
 		return;
@@ -98,6 +211,12 @@ resetObjective()
 			role = "hunter";
 		else
 			self.botZone = level.botZones[randomInt(level.botZones.size)];
+	}
+	else if(level.botObjMode == "hq")
+	{
+		role = "radio";
+		if(randomInt(4) == 0 && self teamHasRole("radio"))
+			role = "hunter";
 	}
 	else
 	{
@@ -156,6 +275,9 @@ computeGoal()
 	if(level.botObjMode == "sd")
 		return self sdGoal();
 
+	if(level.botObjMode == "hq")
+		return self hqGoal();
+
 	return self ctfGoal();
 }
 
@@ -212,26 +334,52 @@ sdGoal()
 	return undefined;
 }
 
-// A spot near center to watch from: a graph node within 400 units, changed
-// every 15-25 s, facing an enemy spawn point.
-guardSpot(center)
+// The radio only counts players inside it: holding it is standing watch there.
+// One that is ours is watched from around it.
+hqGoal()
 {
+	radio = activeRadio();
+	if(self.botRole != "radio" || !isDefined(radio) || !radio.botReachable || !self canReachRadio(radio))
+		return undefined;
+
+	if(radio.team == self.pers["team"])
+		return self guardSpot(radio.origin);
+
+	return self guardSpot(radio.origin, radio.radius * 0.6, level.zradioradius - 16);
+}
+
+// A spot near center to watch from: a graph node within radius units (400 if
+// not given) and maxHeight of its height if given, changed every 15-25 s,
+// facing an enemy spawn point.
+guardSpot(center, radius, maxHeight)
+{
+	if(!isDefined(radius))
+		radius = 400;
+
 	now = getTime();
 	self.botGuarding = true;
 
 	if(isDefined(self.botGuardPos) && now < self.botGuardUntil && isDefined(self.botGuardCenter)
-		&& distanceSquared(self.botGuardCenter, center) < 1)
+		&& distanceSquared(self.botGuardCenter, center) < 1 && self.botGuardRadius == radius)
 		return self.botGuardPos;
 
 	self.botGuardCenter = center;
+	self.botGuardRadius = radius;
 	self.botGuardUntil = now + 15000 + randomInt(10000);
 	self.botGuardPos = center;
 
 	if(isDefined(level.botGraph))
 	{
-		near = graphGetAllNodes(level.botGraph, center, 400 * 400);
-		if(isDefined(near) && near.size)
-			self.botGuardPos = graphGetNodeOrigin(level.botGraph, near[randomInt(near.size)]);
+		near = graphGetAllNodes(level.botGraph, center, radius * radius);
+		spots = [];
+		for(i = 0; isDefined(near) && i < near.size; i++)
+		{
+			origin = graphGetNodeOrigin(level.botGraph, near[i]);
+			if(!isDefined(maxHeight) || abs(origin[2] - center[2]) <= maxHeight)
+				spots[spots.size] = origin;
+		}
+		if(spots.size)
+			self.botGuardPos = spots[randomInt(spots.size)];
 	}
 
 	spawns = self maps\mp\bots\_bots_nav::enemySpawns();
@@ -435,6 +583,13 @@ ctfGoal()
 	// ours lies on the ground: touching it sends it home
 	self.botReturnPos = own.origin;
 	return own.origin;
+}
+
+abs(value)
+{
+	if(value < 0)
+		return 0 - value;
+	return value;
 }
 
 flagCarrier(flag)

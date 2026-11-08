@@ -46,7 +46,7 @@ def load_allowlist(path):
 
 
 def mangled_symbols(nm, path):
-    out = subprocess.run([nm, '-g', '--defined-only', path], capture_output=True, text=True).stdout
+    out = subprocess.run([nm, '-g', '--defined-only', path], capture_output=True, text=True, check=True).stdout
     return [line.split()[-1] for line in out.splitlines() if line.split() and MANGLED.match(line.split()[-1])]
 
 
@@ -59,6 +59,9 @@ def main():
 
     names, regexes = load_allowlist(args.allowlist)
     found = 0
+    if not os.path.isdir(args.build_dir):
+        print(f'no build at {args.build_dir}')
+        return 1
     for path in sorted(objects(args.build_dir)):
         for symbol in mangled_symbols(args.nm, path):
             if symbol not in names and not any(r.search(symbol) for r in regexes):

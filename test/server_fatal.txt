@@ -70,6 +70,7 @@ MSG_ReadDeltaPlayerstate
 MSG_ReadDeltaEntity
 MSG_ReadDeltaClient
 MSG_ReadBitsCompress
+MSG_ReadBitsCompressLimit
 Com_GetClientDObj
 CM_TransformedBoxTraceExternal
 CM_BoxTrace

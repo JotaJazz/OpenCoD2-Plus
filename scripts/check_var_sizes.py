@@ -30,12 +30,16 @@ def declared(readelf, path):
     if run.returncode != 0:
         raise RuntimeError(f'{readelf} failed on {path}: {run.stderr.strip()[:200]}')
     dies = {}
-    cur = None
+    cur = array = None
     for line in run.stdout.splitlines():
         m = DIE.match(line)
         if m:
-            cur = {'tag': m.group(3), 'depth': int(m.group(1)), 'attrs': {}}
+            cur = {'tag': m.group(3), 'depth': int(m.group(1)), 'attrs': {}, 'bounds': []}
             dies[int(m.group(2), 16)] = cur
+            if cur['tag'] == 'DW_TAG_array_type':
+                array = cur
+            elif cur['tag'] == 'DW_TAG_subrange_type' and array and cur['depth'] == array['depth'] + 1:
+                array['bounds'].append(cur)
             continue
         m = ATTR.match(line)
         if m and cur is not None:
@@ -56,6 +60,14 @@ def declared(readelf, path):
             return int(m.group(1), 0) if m else None
         if d['tag'] in ('DW_TAG_typedef', 'DW_TAG_const_type', 'DW_TAG_volatile_type') and 'DW_AT_type' in a:
             return size(ref(a['DW_AT_type']), seen + 1)
+        if d['tag'] == 'DW_TAG_array_type' and 'DW_AT_type' in a:
+            n = size(ref(a['DW_AT_type']), seen + 1)
+            for bound in d['bounds']:
+                m = re.search(r'(0x[0-9a-f]+|\d+)\s*$', bound['attrs'].get('DW_AT_upper_bound', ''))
+                if not m or not n:
+                    return None
+                n *= int(m.group(1), 0) + 1
+            return n if d['bounds'] else None
         return None  # arrays of unknown bound, functions
 
     found = []
@@ -87,7 +99,8 @@ def main():
     defined = {}
     for line in run.stdout.splitlines():
         f = line.split()
-        if len(f) == 4 and f[2] in 'bBdDrRgGsS':
+        # only globals: a static of the same name is another variable
+        if len(f) == 4 and f[2] in 'BDRGS':
             defined[f[3]] = int(f[1], 16)
     objs = list(objects(args.build_dir))
     if not objs:

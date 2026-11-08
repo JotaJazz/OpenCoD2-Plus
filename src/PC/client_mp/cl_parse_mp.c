@@ -105,7 +105,7 @@ extern void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerStat
 extern qboolean MSG_ReadDeltaEntity(msg_t *msg, entityState_t *from, entityState_t *to, int number);
 extern qboolean MSG_ReadDeltaClient(msg_t *msg, clientState_t *from, clientState_t *to, int number);
 extern void MSG_Init(msg_t *buf, byte *data, int length);
-extern int MSG_ReadBitsCompress(byte *from, byte *to, int size);
+extern int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
 extern char *va(const char *format, ...);
 extern void I_strncpyz(char *dest, const char *src, int destsize);
 extern fileHandle_t FS_SV_FOpenFileWrite(const char *filename);
@@ -230,7 +230,7 @@ void CL_ParseGamestate(msg_t *msg)
         if (cmd == 2) {
 
             i = MSG_ReadShort(msg);
-            if (i > 0x7ff) {
+            if (i < 0 || i > 0x7ff) {
                 Com_Error(1, "\x15"
                              "configstring > MAX_CONFIGSTRINGS");
             }
@@ -272,6 +272,9 @@ void CL_ParseGamestate(msg_t *msg)
 
     clc = (clientConnection_t *)*clc_ptr;
     clc->clientNum = MSG_ReadLong(msg);
+    if ((unsigned int)clc->clientNum >= 64) {
+        Com_Error(1, "\x15" "CL_ParseGamestate: bad client number");
+    }
 
     clc->checksumFeed = MSG_ReadLong(msg);
 
@@ -341,6 +344,11 @@ void CL_ParseDownload(msg_t *msg)
     }
 
     size = MSG_ReadShort(msg);
+
+    /* not in 1.3: FS_Write takes a negative size as a huge one */
+    if (size < 0 || size > MAX_MSGLEN) {
+        Com_Error(1, "CL_ParseDownload: bad download block size %i", size);
+    }
 
     if (size > 0) {
 
@@ -456,6 +464,8 @@ void CL_ParseWWWDownload(msg_t *msg)
 {
     char toOSPath[256];
     char *fs_homepath = Dvar_GetString("fs_homepath");
+    /* a longer name would lose its extension in originalDownloadName */
+    int nameFits = strlen(cls.downloadName) < sizeof(cls.originalDownloadName);
 
     I_strncpyz(cls.originalDownloadName, cls.downloadName, sizeof(cls.originalDownloadName));
     I_strncpyz(cls.downloadName, MSG_ReadString(msg), sizeof(cls.downloadName));
@@ -464,7 +474,7 @@ void CL_ParseWWWDownload(msg_t *msg)
 
 #    if COD2_FEATURE_NET_HARDENING && COD2_FEATURE_WWW_DOWNLOAD
 
-    if (!(cls.downloadFlags & 0x2) && !NetHardening_ValidUrl(cls.downloadName)) {
+    if (!NetHardening_ValidUrl(cls.downloadName)) {
         Com_Printf("WARNING: refusing wwwdl redirect to non-http(s) URL '%s'\n",
                    cls.downloadName);
         CL_AddReliableCommand("wwwdl fail");
@@ -472,8 +482,8 @@ void CL_ParseWWWDownload(msg_t *msg)
         cls.wwwDlInProgress = 0;
         return;
     }
-    if (cls.originalDownloadName[0] &&
-        !NetHardening_ValidDownloadName(cls.originalDownloadName, 1)) {
+    if (!nameFits || (cls.originalDownloadName[0] &&
+                      !NetHardening_ValidDownloadName(cls.originalDownloadName, 1))) {
         Com_Printf("WARNING: refusing malicious wwwdl local name '%s'\n",
                    cls.originalDownloadName);
         CL_AddReliableCommand("wwwdl fail");
@@ -529,6 +539,11 @@ void CL_WWWDownload(void)
 
     DL_DownloadLoop();
     st = DL_GetStatus();
+    /* WinINet ends a cut transfer as a finished one */
+    if (st == DL_STATUS_DONE && !DL_DLIsMotd() && cls.downloadSize > 0 && DL_BytesReceived() != cls.downloadSize)
+        st = DL_STATUS_FAILED;
+    if (!DL_DLIsMotd())
+        *(int *)((*download_ui_ptr) + 0x14) = DL_BytesReceived();
 
     if (st == DL_STATUS_IN_PROGRESS || st == DL_STATUS_IDLE)
         return;
@@ -1020,9 +1035,10 @@ void CL_ParseServerMessage(msg_t *msg)
 
     MSG_Init(&msgCompressed, msgCompressed_buf, MAX_MSG_DECOMPRESS_BYTES);
 
-    msgCompressed.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount,
-                                                 msgCompressed_buf,
-                                                 msg->cursize - msg->readcount);
+    msgCompressed.cursize = MSG_ReadBitsCompressLimit(msg->data + msg->readcount,
+                                                      msgCompressed_buf,
+                                                      msg->cursize - msg->readcount,
+                                                      MAX_MSG_DECOMPRESS_BYTES);
 
 #if defined(COD2_X64) || defined(_M_X64) || defined(__x86_64__)
     if (x64TraceCount < 16) {

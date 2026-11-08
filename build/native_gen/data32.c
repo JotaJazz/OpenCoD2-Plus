@@ -1485,7 +1485,8 @@ struct _d32_uiInfo __attribute__((aligned(4))) uiInfo = {
 /* etaText: migrated to home .c (plan 4g); skipped. */
 struct _d32_dlText __attribute__((aligned(4))) dlText = {
     { 69, 88, 69, 95, 68, 79, 87, 78, 76, 79, 65, 68 },
-    (void *)((char *)&scrMemTreeGlob + 517961),
+    /* "ING\0" of "EXE_DOWNLOADING" (0x5ddc44): text, not a pointer */
+    (void *)0x00474e49,
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 /* g_qport: migrated to home .c (plan 4g); skipped. */

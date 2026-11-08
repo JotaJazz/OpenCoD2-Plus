@@ -372,8 +372,11 @@ void CG_SetupWeaponDef(void)
         if (!*scan)
             break;
 
-        if (*scan != ' ')
+        if (*scan != ' ') {
+            if (iNumFiles == 0x7f)
+                break;
             pszFiles[iNumFiles++] = scan;
+        }
     }
 
     for (i = 0; i < iNumFiles; i++) {
@@ -894,7 +897,7 @@ void CG_RegisterItems(void)
     int itemCount;
     int i;
 
-    strcpy(items, CL_GetConfigString(8));
+    I_strncpyz(items, CL_GetConfigString(8), sizeof(items));
     itemCount = *(int *)imp_bg_numItems;
 
     for (i = 1; i < itemCount; i++) {

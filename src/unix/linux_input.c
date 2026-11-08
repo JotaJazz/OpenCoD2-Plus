@@ -87,6 +87,18 @@ extern void Linux_ResetMouseDelta(void);
 #define K_KP_EQUALS  0xc7
 #define K_MOUSE1     0xc8
 
+/* the text the console key types on this layout (a Spanish layout's masculine ordinal or bar) */
+static int s_skipConsoleChar;
+
+static int sdl_to_keynum(SDL_Keycode sym);
+
+/* the key left of 1 opens the console on any layout: by position, as 1.3's
+ * scancode table (0x29) */
+static int sdl_key(const SDL_Keysym *keysym)
+{
+    return keysym->scancode == SDL_SCANCODE_GRAVE ? '`' : sdl_to_keynum(keysym->sym);
+}
+
 static int sdl_to_keynum(SDL_Keycode sym)
 {
     switch (sym) {
@@ -225,7 +237,9 @@ int SDL_PumpInputEvents(void)
             break;
         }
         case SDL_KEYDOWN: {
-            int k = sdl_to_keynum(ev.key.keysym.sym);
+            int k = sdl_key(&ev.key.keysym);
+            /* any other key too: this one may have typed nothing */
+            s_skipConsoleChar = ev.key.keysym.scancode == SDL_SCANCODE_GRAVE;
             if (k) {
                 Sys_QueEvent(0, SE_KEY, k, 1, 0, 0);
                 ++inputEventCount;
@@ -238,7 +252,7 @@ int SDL_PumpInputEvents(void)
             break;
         }
         case SDL_KEYUP: {
-            int k = sdl_to_keynum(ev.key.keysym.sym);
+            int k = sdl_key(&ev.key.keysym);
             if (k) {
                 Sys_QueEvent(0, SE_KEY, k, 0, 0, 0);
                 ++inputEventCount;
@@ -247,6 +261,10 @@ int SDL_PumpInputEvents(void)
         }
         case SDL_TEXTINPUT:
 
+            if (s_skipConsoleChar) {
+                s_skipConsoleChar = 0;
+                break;
+            }
             if (ev.text.text[0]) {
                 CCallOfDutyEngine_DoTextInput(get_engine(),
                                               (unsigned char)ev.text.text[0]);

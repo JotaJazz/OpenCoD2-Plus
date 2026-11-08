@@ -45,6 +45,7 @@ static struct sockaddr	socksRelayAddr;
 static SOCKET	ip_socket;
 static SOCKET	socks_socket;
 static SOCKET	ipx_socket;
+static SOCKET	alt_socket;
 
 #define	MAX_IPS		16
 static	int		numIP;
@@ -140,6 +141,7 @@ void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
 
 
 void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
+	a->altPort = 0;
 	if (s->sa_family == AF_INET) {
 		a->type = NA_IP;
 		*(int *)&a->ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
@@ -249,12 +251,15 @@ qboolean Sys_GetPacket( netadr_t *net_from, msg_t *net_message ) {
 	int		protocol;
 	int		err;
 
-	for( protocol = 0 ; protocol < 2 ; protocol++ )	{
+	for( protocol = 0 ; protocol < 3 ; protocol++ )	{
 		if( protocol == 0 ) {
 			net_socket = ip_socket;
 		}
-		else {
+		else if( protocol == 1 ) {
 			net_socket = ipx_socket;
+		}
+		else {
+			net_socket = alt_socket;
 		}
 
 		if( !net_socket ) {
@@ -295,6 +300,7 @@ qboolean Sys_GetPacket( netadr_t *net_from, msg_t *net_message ) {
 			SockadrToNetadr( &from, net_from );
 			net_message->readcount = 0;
 		}
+		net_from->altPort = protocol == 2;
 
 		if( ret == net_message->maxsize ) {
 			Com_Printf( "Oversize packet from %s\n", NET_AdrToString (*net_from) );
@@ -326,7 +332,7 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		net_socket = ip_socket;
 	}
 	else if( to.type == NA_IP ) {
-		net_socket = ip_socket;
+		net_socket = to.altPort ? alt_socket : ip_socket;
 	}
 	else if( to.type == NA_IPX ) {
 		net_socket = ipx_socket;
@@ -726,6 +732,29 @@ void NET_GetLocalAddress( void ) {
 NET_OpenIP
 ====================
 */
+/*
+====================
+NET_OpenAltPort
+
+A second port for the server lists of ALT_PORT_VERSION. It serves the same
+game, only the build with clients of both versions has it.
+====================
+*/
+static void NET_OpenAltPort( const char *ip )
+{
+#if PROTOCOL_VERSION == 115  // these files build without LIBCOD
+	dvar_t	*altPort = Dvar_RegisterInt( "net_altPort", 0, 0, UINT16_MAX, DVAR_LATCH );
+
+	if ( !altPort->current.integer ) {
+		return;
+	}
+	alt_socket = NET_IPSocket( ip, altPort->current.integer );
+	if ( !alt_socket ) {
+		Com_Printf( "WARNING: Couldn't open net_altPort %i\n", altPort->current.integer );
+	}
+#endif
+}
+
 void NET_OpenIP( void ) {
 	dvar_t	*ip;
 	dvar_t	*port;
@@ -749,6 +778,7 @@ void NET_OpenIP( void ) {
 				NET_OpenSocks( port->current.integer );
 			}
 			NET_GetLocalAddress();
+			NET_OpenAltPort( ip->current.string );
 			return;
 		}
 	}
@@ -926,6 +956,11 @@ void NET_Config( qboolean enableNetworking ) {
 		if ( ip_socket && ip_socket != INVALID_SOCKET ) {
 			closesocket( ip_socket );
 			ip_socket = 0;
+		}
+
+		if ( alt_socket && alt_socket != INVALID_SOCKET ) {
+			closesocket( alt_socket );
+			alt_socket = 0;
 		}
 
 		if ( socks_socket && socks_socket != INVALID_SOCKET ) {

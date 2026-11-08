@@ -16,6 +16,7 @@ extern const char *CL_GetConfigString(int index);
 extern char *Info_ValueForKey(const char *s, const char *key);
 extern void Dvar_SetStringByName(const char *dvarName, const char *value);
 extern void Dvar_SetFromStringByName(const char *dvarName, const char *value);
+extern int NetHardening_ServerMaySetCvar(const char *key);
 extern const char *GetBspExtension(void);
 extern int Com_sprintf(char *dest, int size, const char *fmt, ...);
 extern void Com_Printf(const char *fmt, ...);
@@ -153,6 +154,12 @@ void CG_ParseCodinfo(void)
         if (*key == '\0') {
             break;
         }
+#if COD2_FEATURE_NET_HARDENING
+        if (!NetHardening_ServerMaySetCvar(key)) {
+            Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", key);
+            continue;
+        }
+#endif
         Dvar_SetFromStringByName(key, CL_GetConfigString(i + 0x60));
     }
 }
@@ -484,6 +491,12 @@ static void __attribute_regparm__(2) CG_SetClientDvarFromServer(const char *dvar
     } else if (stricmp(dvarname, (const char *)"g_scriptMainMenu") == 0) {
         I_strncpyz(cg->scriptMainMenu, value, sizeof(cg->scriptMainMenu));
     } else {
+#if COD2_FEATURE_NET_HARDENING
+        if (!NetHardening_ServerMaySetCvar(dvarname)) {
+            Com_Printf("WARNING: server tried to set protected cvar '%s' - ignored\n", dvarname);
+            return;
+        }
+#endif
         Dvar_SetFromStringByName(dvarname, value);
     }
 }
@@ -544,6 +557,9 @@ static void CG_DeactivateChannelVolCmd(void)
     fval = (float)(int)floorf((float)atof(CG_Argv(2)) * 1000.0f + 0.5f);
     fadeTime = (fval > 0.0f) ? (int)fval : 0;
 
+    if ((unsigned int)prio >= 4)
+        return;
+
     SND_DeactivateChannelVolumes(prio, fadeTime);
 }
 
@@ -566,6 +582,9 @@ static void CG_SetChannelVolCmd(void)
     fval = (float)(int)floorf((float)atof(CG_Argv(3)) * 1000.0f + 0.5f);
     fadeTime = (fval > 0.0f) ? (int)fval : 0;
 
+    if ((unsigned int)prio >= 4 || (unsigned int)shockIndex >= 16)
+        return;
+
     SND_SetChannelVolumes(prio, cgs->shellshockParms[shockIndex].sound.channelvolume, fadeTime);
 }
 
@@ -585,6 +604,9 @@ static void CG_DeactivateReverbCmd(void)
     prio = atoi(CG_Argv(1));
     fval = (float)(int)floorf((float)atof(CG_Argv(2)) * 1000.0f + 0.5f);
     fadeTime = (fval > 0.0f) ? (int)fval : 0;
+
+    if ((unsigned int)prio >= 3)
+        return;
 
     SND_DeactivateEnvironmentEffects(prio, fadeTime);
 }
@@ -961,6 +983,9 @@ static void CG_ReverbCmd(void)
         Com_Printf("ERROR: CG_ReverbCmd called with %i args (should be 6)\n", argc);
         return;
     }
+
+    if ((unsigned int)atoi(CG_Argv(1)) >= 3)
+        return;
 
     SND_SetEnvironmentEffects(
         atoi(CG_Argv(1)),

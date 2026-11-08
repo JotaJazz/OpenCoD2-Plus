@@ -35,7 +35,7 @@ def link_objects(build_dir, target):
 
 
 def strong_globals(nm, path):
-    out = subprocess.run([nm, '-g', '--defined-only', path], capture_output=True, text=True).stdout
+    out = subprocess.run([nm, '-g', '--defined-only', path], capture_output=True, text=True, check=True).stdout
     return {p[-1] for p in (line.split() for line in out.splitlines())
             if len(p) >= 3 and p[-2] in STRONG and not MANGLED.match(p[-1])}
 

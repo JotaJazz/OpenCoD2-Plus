@@ -13,9 +13,11 @@ top of it.
 | Linux real Direct3D 9 | `scripts/build_linux_vk_deps.sh`, then `-DCOD2_LINUX_DXVK=ON` | `cod2_linux_vk` with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it |
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
+| Windows client on Vulkan | `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE`, then Options > Graphics or `+set r_gfxApi vulkan` ([ADR 0011](../architecture/adr/0011-graphics-apis-behind-direct3d-9.md)) | `dxvk/d3d9.dll` |
 | MSVC | `cmake --preset msvc-client` (`CMakePresets.json`, `cmake/win32-msvc.cmake`) | `cod2_win32.exe`, C, reconstructed VM/server |
 | Web | `emcmake cmake -S . -B build/web` | see the top of `CMakeLists.txt` |
-| x64 | `-DCOD2_X64=ON` | compiles, does not run |
+| Linux dedicated, 64-bit | `cmake -S cmake/lnxded64 -B build/check-linux-x64` (`-DCOD2_PROTOCOL=115` for 1.0) | `cod2_lnxded`, CoD2rev-Plus's sources only, no multilib needed |
+| x64 engine | `-DCOD2_X64=ON` | does not compile as C++ yet ([ADR 0010](../architecture/adr/0010-64-bit-dedicated-server-without-the-engine.md)) |
 
 ## build_check.py
 
@@ -25,6 +27,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | Variant | Flags |
 |---|---|
 | `linux`, `linux-10` | native, 1.3 / 1.0 |
+| `linux-x64`, `linux-x64-10` | 64-bit dedicated server (`cmake/lnxded64`), 1.3 / 1.0; only the glibc and library checks apply |
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
@@ -41,7 +44,13 @@ Checks it runs (each a script in `scripts/`):
 | `check_bgame_names.py` | Linux client | a plain bgame name is left where `eng_` should apply |
 | `bgame_plus_consts.py --check` | Linux | `bg_plus_consts.h` differs from CoD2rev-Plus's values |
 | `check_c_decls.py` | Linux | a call's types differ from the definition's (DWARF); pointers by what they point to (float, integer, struct; `void *` matches any) |
-| `check_var_sizes.py` | Linux | a global is used as larger than the binary defines it |
+| `check_var_sizes.py` | Linux | a global, array or not, is used as larger than the binary defines it |
+| `check_c_linkage.py` | `linux`, `linux-10` | a C++-mangled name is not in `test/c_linkage_allowlist.txt` |
+| `layout_parity.py` | `linux`, `linux-10`, `mingw` | a type in `test/layout_parity_types.txt` lays out differently from CoD2rev-Plus's |
+| `gen_script_bridge.py` | `all` only | `src/compat` differs from what the generator writes |
+
+A variant skipped for lack of SDL2 or DXVK fails the run unless `--allow-skip`
+is given.
 
 Gotcha: an executable whose mtime is newer than its inputs is not relinked,
 even if a previous link was cut short. If a binary is suspiciously small,
@@ -57,6 +66,10 @@ layer, SDL2 input and HTTP download reference GL, X11, SDL2 and curl but are
 never called there: `src/unix/linux_ded_stubs.c` (Linux) and
 `src/win32/win32_stubs.c` (MinGW) stand in for them, each returning 0. When the
 glibc/client-library check fails, the missing stub goes there.
+
+The MinGW client downloads redirected files (`sv_wwwBaseURL`) through WinINet:
+`src/win32/win_wininet.c` implements the part of libcurl's API that
+`src/PC/qcommon/dl_main.c` calls, so the download logic is the Linux client's.
 
 Linux builds use `_FILE_OFFSET_BITS=64`: the 32-bit `readdir` fails with
 `EOVERFLOW` on file systems with large inode numbers (Windows drives under WSL).

@@ -44,6 +44,9 @@ extern void Com_Printf(const char *fmt, ...);
 extern const dvar_t **dvar_nopredict;
 extern const dvar_t **dvar_synchronous;
 extern const dvar_t **dvar_developer;
+/* the prediction messages, as 1.3 (0x4debaf..0x4deea7); dvar_developer
+   above is an alias of the same dvar */
+extern const dvar_t *cg_showmiss;
 extern const dvar_t **dvar_autoPickup;
 extern const dvar_t **dvar_errorDecay;
 
@@ -186,6 +189,72 @@ static void CG_TracePredictedAnim(const playerState_t *before, const playerState
     fprintf(stderr, "Prediction anim miss: t=%d legs %d %d torso %d %d origin %.2f\n", again->commandTime,
             before->legsAnim, again->legsAnim, before->torsoAnim, again->torsoAnim, (double)originMiss);
 }
+/* COD2_TRACE_PREDDIFF: the playerstate the client predicted for each
+   commandTime, compared with the server's when a snapshot for that time
+   arrives; where the origins differ, every 4-byte word of the two states
+   that differs; for finding which part of the move the client computes
+   unlike the server */
+#define PREDDIFF_RING 64
+static byte cg_predDiffStates[PREDDIFF_RING][0x26a8];
+static int cg_predDiffTimes[PREDDIFF_RING];
+static int cg_predDiffLastSnap;
+
+static int CG_PredDiffEnabled(void)
+{
+    static int enabled = -1;
+
+    if (enabled < 0) {
+        enabled = getenv("COD2_TRACE_PREDDIFF") != NULL;
+        if (enabled)
+            Com_Printf("PredDiff: trace on\n");
+    }
+    return enabled;
+}
+
+static void CG_PredDiffStore(const playerState_t *ps)
+{
+    int slot;
+
+    if (!CG_PredDiffEnabled())
+        return;
+    slot = ps->commandTime & (PREDDIFF_RING - 1);
+    cg_predDiffTimes[slot] = ps->commandTime;
+    memcpy(cg_predDiffStates[slot], ps, 0x26a8);
+}
+
+static void CG_PredDiffCompare(const playerState_t *server)
+{
+    const unsigned int *a, *b;
+    int slot, i, shown;
+    float d;
+
+    if (!CG_PredDiffEnabled() || server->commandTime == cg_predDiffLastSnap)
+        return;
+    cg_predDiffLastSnap = server->commandTime;
+    slot = server->commandTime & (PREDDIFF_RING - 1);
+    if (cg_predDiffTimes[slot] != server->commandTime)
+        return;
+    a = (const unsigned int *)cg_predDiffStates[slot];
+    b = (const unsigned int *)server;
+    d = fabsf(((const playerState_t *)a)->origin[0] - server->origin[0]) +
+        fabsf(((const playerState_t *)a)->origin[1] - server->origin[1]) +
+        fabsf(((const playerState_t *)a)->origin[2] - server->origin[2]);
+    if (d == 0.0f)
+        return;
+    Com_Printf("PredDiff t=%d origin %.5f\n", server->commandTime, (double)d);
+    for (i = 0; i < cg_numSolidEntities; i++) {
+        const entityState_t *es = &cg_solidEntities[i]->nextState;
+        Com_Printf("  solid %d type %d at %.2f %.2f %.2f\n", es->number, es->eType, (double)es->pos.trBase[0],
+                (double)es->pos.trBase[1], (double)es->pos.trBase[2]);
+    }
+    for (i = 0, shown = 0; i < 0x26a8 / 4 && shown < 48; i++) {
+        if (a[i] == b[i])
+            continue;
+        Com_Printf("  +0x%04x client %08x %g server %08x %g\n", i * 4, a[i], (double)*(const float *)&a[i],
+                b[i], (double)*(const float *)&b[i]);
+        shown++;
+    }
+}
 
 void CG_PredictPlayerState(void)
 {
@@ -242,8 +311,8 @@ void CG_PredictPlayerState(void)
     {
         usercmd_t oldestCmd;
         if (!CL_GetUserCmd(oldest, &oldestCmd)) {
-            if (dvar_get_int_safe(dvar_developer) != 0)
-                Com_Printf("CG_PredictPlayerState: CMD_BACKUP exceeded\n");
+            if (cg_showmiss->current.integer)
+                Com_Printf("exceeded PACKET_BACKUP on commands\n");
             goto cleanup;
         }
     }
@@ -254,6 +323,7 @@ void CG_PredictPlayerState(void)
 
     nextSnap = cg->nextSnap;
     memcpy(ps, &nextSnap->ps, REAL_PS_SIZE);
+    CG_PredDiffCompare(&nextSnap->ps);
 
     cg->physicsTime = nextSnap->serverTime;
 
@@ -294,14 +364,14 @@ void CG_PredictPlayerState(void)
 
             ps->delta_angles[1] += (int)(deltaAngles[1] * (65536.0f / 360.0f)) & 0xffff;
 
-            if (dvar_get_int_safe(dvar_developer) != 0) {
+            if (cg_showmiss->current.integer) {
 
                 float *oldOrig = &((playerState_t *)oldPlayerState)->origin[0];
                 isMatch = (oldOrig[0] == oldOrigin[0] &&
                            oldOrig[1] == oldOrigin[1] &&
                            oldOrig[2] == oldOrigin[2]);
                 if (!isMatch) {
-                    Com_Printf("CG_PredictPlayerState: prediction not matched\n");
+                    Com_Printf("prediction error\n");
                 }
             }
 
@@ -315,7 +385,7 @@ void CG_PredictPlayerState(void)
                 float *predictedError;
                 float errorDecayVal;
 
-                if (dvar_get_int_safe(dvar_developer) != 0)
+                if (cg_showmiss->current.integer)
                     Com_Printf("Prediction miss: %f\n", (double)len);
 
                 errorDecayVal = dvar_get_float_safe(dvar_errorDecay);
@@ -335,7 +405,7 @@ void CG_PredictPlayerState(void)
                     if (t < 0.0f)
                         t = 0.0f;
 
-                    if (t > 0.0f && dvar_get_int_safe(dvar_developer) != 0)
+                    if (t > 0.0f && cg_showmiss->current.integer)
                         Com_Printf("Double prediction decay: %f\n", (double)t);
 
                     predictedError[0] *= t;
@@ -352,6 +422,7 @@ void CG_PredictPlayerState(void)
         }
 
         Pmove(&cg_pmove[0]);
+        CG_PredDiffStore(ps);
 
         {
             int pm_type;
@@ -404,7 +475,7 @@ void CG_PredictPlayerState(void)
 
 postPredict:
 
-    if (dvar_get_int_safe(dvar_developer) > 1) {
+    if (cg_showmiss->current.integer > 1) {
         Com_Printf("[%i : %i] ", cg_pmove[0].cmd.serverTime, cg->time);
     }
 
@@ -419,8 +490,8 @@ postPredict:
             ps->origin, deltaAngles);
     } else {
 
-        if (dvar_get_int_safe(dvar_developer) != 0)
-            Com_Printf("not moved\n");
+        if (cg_showmiss->current.integer)
+            Com_Printf("no prediction run\n");
     }
 
     CG_TransitionPlayerState(ps, (playerState_t *)oldPlayerState);

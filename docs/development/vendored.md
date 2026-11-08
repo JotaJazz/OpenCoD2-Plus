@@ -19,7 +19,8 @@ here ([ADR 0005](../architecture/adr/0005-fix-vendored-code-upstream-first.md)).
 
 ## Taking new upstream commits
 
-Same as step 2 for each upstream commit that touches a vendored path, then
+Same as step 2 for each upstream commit that touches a vendored path (a range
+with merges cannot go through `git am`: copy the files at the new revision), then
 steps 3–5. A new file CoD2rev-Plus adds and the build needs is added to
 `test/vendored_files.txt`.
 

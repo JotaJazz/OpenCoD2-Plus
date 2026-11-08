@@ -26,7 +26,7 @@
 
 ## Ce qui fonctionne aujourd'hui
 
-- **Le jeu en ligne sur les serveurs publics 1.3** avec le client Windows, avec l'éclairage d'origine : Direct3D 9 et les shaders du jeu lui-même.
+- **Le jeu en ligne sur les serveurs publics 1.3** avec le client Windows, avec l'éclairage d'origine : Direct3D 9 et les shaders du jeu lui-même. Les mods d'un serveur se téléchargent en HTTP quand il les propose (`sv_wwwBaseURL`), sous Windows aussi.
 - **Héberger une partie depuis le client**, que vos amis peuvent rejoindre, avec des bots si vous le souhaitez (libcod).
 - **Un serveur dédié pour la 1.3 et la 1.0**, basé sur [CoD2rev-Plus](https://github.com/JotaJazz/CoD2rev-Plus) : sous Linux, il passe tout le test de fumée de CoD2rev-Plus.
 - **Un client Linux**, et un autre sur Vulkan (DXVK) qui dessine lui aussi avec les shaders du jeu lui-même.
@@ -162,6 +162,8 @@ python3 scripts/rcon_drop_test.py /path/to/CoD2 --protocol 118
 python3 scripts/anim_builtins_test.py /path/to/CoD2 --protocol 118
 python3 scripts/prediction_test.py /path/to/CoD2 --protocol 118
 python3 scripts/fx_test.py /path/to/CoD2 --protocol 118
+python3 scripts/hud_align_test.py /path/to/CoD2 --protocol 118
+python3 scripts/www_download_test.py /path/to/CoD2
 python3 scripts/bots_test.py /path/to/CoD2 --binary build/check-linux/cod2_lnxded
 python3 scripts/http_test.py /path/to/CoD2 --binary build/check-linux/cod2_lnxded
 python3 scripts/vendor_check.py /path/to/CoD2rev-Plus   # files copied from CoD2rev-Plus are unchanged
@@ -175,6 +177,8 @@ python3 -m unittest discover -s test
 - `anim_builtins_test.py` exécute `getAnimLength`, `animHasNotetrack`, `getMoveDelta` et `getAngleDelta` depuis le script de niveau d'un mod de test.
 - `prediction_test.py` compte les erreurs de prédiction d'un vrai client (avec une clé CD) qui marche, s'accroupit, se couche, saute et tire ; `--max-misses` fixe combien il en admet.
 - `fx_test.py` fait jouer à un vrai client (avec une clé CD) un sprite, un impact de balle et deux explosions devant lui, et vérifie que chacun change la capture d'écran.
+- `hud_align_test.py` donne à un vrai client (avec une clé CD) trois carrés de couleur avec des paires `horzAlign`/`vertAlign` différentes, comme le titre d'une killcam, et vérifie sur une capture que chacun se place là où la 1.3 le met.
+- `www_download_test.py` fait rejoindre à un client un serveur dont il n'a pas le mod et le lui fait télécharger depuis un serveur HTTP local ; `--wine DIR/wine.sh --binary build/check-mingw-client/cod2_win32.exe` lance le client Windows, `--disconnect` laisse le serveur lui demander de partir, télécharger et revenir.
 - `bots_test.py` et `http_test.py` sont ceux de CoD2rev-Plus, sans modification, pour libcod : les bots de `mods/bots` doivent trouver leurs chemins, enregistrer et relire leur graphe et se battre sur une vraie carte ; `httpFetch` et `webSocket*` doivent fonctionner avec des serveurs locaux HTTP, HTTPS, WS et WSS (ils nécessitent `openssl`). Passez-leur `--binary build/check-linux/cod2_lnxded`.
 - `scripts/cxx_errors.py` compte les erreurs C++ d'un module (`--return-type` trouve les fonctions non void qui peuvent se terminer sans return, ce qui est indéfini en C++) ; `scripts/gen_script_bridge.py --module script|server|client_server` régénère le pont vers la machine virtuelle de scripts ou vers le serveur, et `scripts/engine_abi.py --module server` enregistre, avec gdb, l'ABI du moteur par rapport à laquelle le pont vérifie (`test/server_abi.txt`).
 

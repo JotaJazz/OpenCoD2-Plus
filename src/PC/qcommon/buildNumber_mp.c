@@ -2,7 +2,7 @@
 #include "imports.h"
 #include "cod2_feature_config.h"
 
-extern char buf[128];
+extern char buf[64];
 
 char *getBuildNumber(void)
 {

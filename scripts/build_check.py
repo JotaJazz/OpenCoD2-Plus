@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-x64|linux-x64-10|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|all ...] [--c [--cxx-dirs "a;b"]]
 
 linux is the default 1.3 build, linux-10 the 1.0 one, mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
@@ -47,14 +47,23 @@ for _v in ('mingw', 'mingw-client'):
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
 # the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
 VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+# the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
+VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
+VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
 LINUX_VK_DXVK = os.path.join(ROOT, 'third_party', 'linux-vk', 'lib', 'libdxvk_d3d9.so.0')
 # the MinGW client links the static SDL2 the user supplies
+LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
+
+
+def is_x64(variant):
+    return variant.startswith('linux-x64')
 
 
 def build(variant, extra):
     build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
-    configure = subprocess.run(['cmake', '-S', ROOT, '-B', build_dir] + VARIANTS[variant] + extra,
+    source = os.path.join(ROOT, 'cmake', 'lnxded64') if is_x64(variant) else ROOT
+    configure = subprocess.run(['cmake', '-S', source, '-B', build_dir] + VARIANTS[variant] + ([] if is_x64(variant) else extra),
                                cwd=ROOT, capture_output=True, text=True)
     if configure.returncode != 0:
         return ['cmake configure failed'] + configure.stdout.splitlines()[-10:] + configure.stderr.splitlines()[-10:]
@@ -116,7 +125,7 @@ def duplicates(variant, build_dir):
             run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', script), build_dir, target,
                                   '--nm', nm] + extra, capture_output=True, text=True)
             if run.returncode != 0:
-                errors += [f'{target}: {line}' for line in run.stdout.splitlines()[:-1]]
+                errors += [f'{target}: {line}' for line in failure_lines(run, script)]
         executable = os.path.join(build_dir, (target + '_vk' if variant == 'linux-vk' and target == 'cod2_linux' else target)
                                   + ('.exe' if variant.startswith('mingw') else ''))
         if os.path.exists(executable):
@@ -129,7 +138,57 @@ def duplicates(variant, build_dir):
                                   executable] + bridges + ['--nm', nm, '--prefix', prefix],
                                  capture_output=True, text=True)
             if run.returncode != 0:
-                errors += [f'{target}: import calls data: {line}' for line in run.stdout.splitlines()[:-1]]
+                errors += [f'{target}: import calls data: {line}' for line in failure_lines(run, 'check_bridge_symbols.py')]
+    return errors
+
+
+def failure_lines(run, script):
+    """What a failed script printed, but its summary line; a script that
+    crashed printed only to stderr."""
+    return run.stdout.splitlines()[:-1] or (run.stderr.strip().splitlines() or [f'{script} failed'])[-3:]
+
+
+def layout_parity(variant):
+    """The structures laid out differently from CoD2rev-Plus's."""
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'layout_parity.py'), '--variant', variant],
+                         capture_output=True, text=True)
+    if run.returncode == 0:
+        return []
+    return [l for l in run.stdout.splitlines() if not l.startswith('ok ')] \
+        or (run.stderr.strip().splitlines() or ['layout_parity.py failed'])[-3:]
+
+
+def c_linkage(build_dir):
+    """The C++-mangled names no allowlist expects."""
+    run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_c_linkage.py'), build_dir],
+                         capture_output=True, text=True)
+    return [] if run.returncode == 0 else failure_lines(run, 'check_c_linkage.py')
+
+
+def bridge_drift():
+    """The bridge files that differ from what the generator writes. Needs the
+    builds of `all`; src/compat is left as it was."""
+    import gen_script_bridge
+    compat = os.path.join(ROOT, 'src', 'compat')
+    saved = {}
+    for name in sorted(os.listdir(compat)):
+        with open(os.path.join(compat, name), 'rb') as f:
+            saved[name] = f.read()
+    errors = []
+    try:
+        for module in gen_script_bridge.MODULES:
+            run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'gen_script_bridge.py'),
+                                  '--module', module], capture_output=True, text=True)
+            if run.returncode != 0:
+                errors += [f'{module}: {line}' for line in failure_lines(run, 'gen_script_bridge.py')]
+        for name, data in saved.items():
+            with open(os.path.join(compat, name), 'rb') as f:
+                if f.read() != data:
+                    errors.append(f'{name} differs from the generator\'s output')
+    finally:
+        for name, data in saved.items():
+            with open(os.path.join(compat, name), 'wb') as f:
+                f.write(data)
     return errors
 
 
@@ -182,6 +241,7 @@ def main():
     ap.add_argument('variants', nargs='*', default=['linux'], choices=list(VARIANTS) + ['all'])
     ap.add_argument('--cxx-dirs', help='passed as -DCOD2_CXX_DIRS (empty when omitted)')
     ap.add_argument('--c', action='store_true', help='builds C instead of C++ (-DCOD2_CXX_ALL=OFF)')
+    ap.add_argument('--allow-skip', action='store_true', help='a variant whose dependencies are missing is no failure')
     ap.add_argument('--old-script', action='store_true', help='src/PC/script instead of CoD2rev-Plus\'s VM (-DCOD2_PLUS_SCRIPT=OFF)')
     args = ap.parse_args()
 
@@ -191,21 +251,28 @@ def main():
     extra.append('-DCOD2_PLUS_SCRIPT=' + ('OFF' if args.old_script else 'ON'))
 
     failed = False
+    skipped = False
     for variant in variants:
         if variant.startswith('mingw-client') and not os.path.exists(SDL2_MINGW):
             print(f'skip {variant} (no {os.path.relpath(SDL2_MINGW, ROOT)})')
+            skipped = True
             continue
         if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):
             print(f'skip {variant} (no {os.path.relpath(LINUX_VK_DXVK, ROOT)}: scripts/build_linux_vk_deps.sh)')
+            skipped = True
             continue
         errors = build(variant, extra)
         build_dir = os.path.join(ROOT, 'build', 'check-' + variant)
         if not errors and variant.startswith('linux'):
             errors = glibc_too_new(build_dir) + client_libraries(build_dir)
-        if not errors:
+        if not errors and not is_x64(variant):
             errors = duplicates(variant, build_dir)
-        if not errors and variant.startswith('linux'):
+        if not errors and variant.startswith('linux') and not is_x64(variant):
             errors = bgame_names(build_dir) + bgame_plus_consts() + c_decls(build_dir) + var_sizes(build_dir)
+        if not errors and variant in ('linux', 'linux-10'):
+            errors = c_linkage(build_dir)
+        if not errors and variant in LAYOUT_VARIANTS:
+            errors = layout_parity(variant)
         if errors:
             failed = True
             print(f'FAIL {variant} ({len(errors)} errores)')
@@ -213,6 +280,15 @@ def main():
                 print('    ' + line)
         else:
             print(f'ok {variant}')
+    if 'all' in args.variants and not failed:
+        errors = bridge_drift()
+        for line in errors:
+            print('    ' + line)
+        if errors:
+            failed = True
+    if skipped and not args.allow_skip:
+        print('FAIL: variants skipped (--allow-skip accepts that)')
+        failed = True
     return 1 if failed else 0
 
 

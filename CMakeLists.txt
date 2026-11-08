@@ -148,6 +148,9 @@ if(COD2_FEATURE_CFLAGS MATCHES "COD2_PATCH_10")
 else()
   set(COD2_PROTOCOL 118)
 endif()
+if(COD2_FEATURE_CFLAGS AND (EMSCRIPTEN OR COD2_WIN_MSVC))
+  message(FATAL_ERROR "COD2_FEATURE_CFLAGS is not applied on the web and MSVC builds")
+endif()
 
 # cod2_plus_script(): the OBJECT library with CoD2rev-Plus's script sources and
 # the generated bridge in src/compat (scripts/gen_script_bridge.py), and the
@@ -340,8 +343,7 @@ file(GLOB_RECURSE WEB_MAC_C   RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/Mac/
 file(GLOB_RECURSE WEB_STUBS_C RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/stubs/*.c")
 file(GLOB         WEB_ROOT_C  RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WEB_C ${WEB_PC_C} ${WEB_MAC_C} ${WEB_STUBS_C} ${WEB_ROOT_C})
-# native asm-data .c, and the blobs replaced by the generated web versions.
-list(FILTER WEB_C EXCLUDE REGEX "^src/(data|import_pointers|literals|bss|rodata|strings)\\.c$")
+# the stubs the generated web versions replace.
 list(FILTER WEB_C EXCLUDE REGEX "^src/stubs/(link_stubs|missing_c_syms)\\.c$")
 # the Linux platform layer + bundled zlib + web glue are added explicitly.
 list(APPEND WEB_C
@@ -445,10 +447,11 @@ set(COD2_WIN_LINK
 set(COD2_WIN_LIBS ws2_32 winmm z stdc++ winpthread dbghelp)
 
 if(COD2_WIN32_CLIENT)
+  list(APPEND COD2_WIN_LINK -Wl,--large-address-aware)  # DXVK maps its staging memory into the process
   add_compile_definitions(W32_CLIENT)
   include_directories(${COD2_SRC_DIR}/win32/sdl2/include)
   list(APPEND COD2_WIN_LINK -L${COD2_SRC_DIR}/win32/sdl2/lib)
-  list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid
+  list(APPEND COD2_WIN_LIBS SDL2 opengl32 imm32 ole32 oleaut32 version uuid wininet
        setupapi shell32 dinput8 gdi32 advapi32 user32 kernel32 winmm ws2_32)
   set(W32_EXE cod2_win32)
   if(COD2_PLUS_CLIENT_SERVER)
@@ -476,7 +479,6 @@ file(GLOB_RECURSE W_STUBS_C CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${CO
 file(GLOB_RECURSE W_WIN_C   CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/win32/*.c")
 file(GLOB         W_ROOT_C  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} "${COD2_SRC_DIR}/*.c")
 set(WIN_C ${W_PC_C} ${W_MAC_C} ${W_STUBS_C} ${W_WIN_C} ${W_ROOT_C})
-list(FILTER WIN_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
 list(FILTER WIN_C EXCLUDE REGEX "^src/stubs/(cpp_trampoline|agl_stubs)\\.c$")
 # the MSVC build's shims (its own dirent, SDL2 stubs, link glue): with MinGW
 # their readdir replaced the C runtime's, whose struct dirent differs, so
@@ -542,7 +544,9 @@ elseif(COD2_PLUS_SCRIPT)
   set(COD2_W32_SERVER_OBJS $<TARGET_OBJECTS:cod2_plus_script_game> $<TARGET_OBJECTS:cod2_plus_script_core>)
 endif()
 cod2_cxx_sources(WIN_C ${WIN_C})
-add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS})
+enable_language(RC)
+add_executable(${W32_EXE} ${WIN_C} ${WIN_ASM_GEN} ${COD2_SCRIPT_OBJS} ${COD2_W32_SERVER_OBJS}
+  ${COD2_SRC_DIR}/win32/opencod2.rc)
 if(COD2_LIBCOD_CLIENT)
   # the engine's Com_Frame and Com_EventLoop (common.c) work for libcod
   target_compile_definitions(${W32_EXE} PRIVATE COD2_PLUS_LIBCOD=1)
@@ -680,8 +684,6 @@ file(GLOB         COD2_ROOT_ASM  CONFIGURE_DEPENDS RELATIVE ${CMAKE_SOURCE_DIR} 
 set(ALL_ASM ${COD2_PC_ASM} ${COD2_STUBS_ASM} ${COD2_ROOT_ASM})
 
 list(FILTER ALL_C EXCLUDE REGEX "(^|/)(inflate|infblock|infcodes|inffast|inftrees|infutil|adler32|zutil)\\.c$")
-list(FILTER ALL_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
-list(FILTER ALL_ASM EXCLUDE REGEX "^src/(data|import_pointers|literals|vtables)\\.S$|^src/stubs/cpp_trampoline\\.S$")
 
 list(APPEND ALL_C
   src/blobs/bss.c src/unix/linux_common.c src/unix/linux_input.c src/unix/linux_net.c src/unix/sysdiff_statehash.c)

@@ -1304,11 +1304,7 @@ displayContextDef_t cgDC;
 BSSINT old_com_frameTime;
 unsigned int frame_msec;
 unsigned char re_0121c6a0[352];
-#if COD2_IS_PATCH_13
 ping_t cl_pinglist[16];
-#else
-unsigned char cl_pinglist[16704];
-#endif
 Bool g_waitingForServer;
 /* as large as the clientStatic_t the client uses: the 1.0 binary's size
    (2755264) is 162 KB short of it, and cls.debug, among others, lay over
@@ -1464,11 +1460,7 @@ const dvar_t *con_miniconlines;
 const dvar_t *con_minicontime;
 const dvar_t *con_boldgamemessagetime;
 const dvar_t *con_gamemessagetime;
-#if COD2_IS_PATCH_13
 unsigned char cl_serverStatusList[0x20280];
-#else
-unsigned char cl_serverStatusList[131680];
-#endif
 qboolean scr_initialized;
 MarkVertAssemblyBuffer markVerts;
 MarkPoly cg_markPolys[1024];

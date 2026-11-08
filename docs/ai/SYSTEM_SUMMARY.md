@@ -1,6 +1,6 @@
 # System summary (live snapshot)
 
-Last updated: 2026-10-21. Update in the same commit as the change that makes
+Last updated: 2026-10-31. Update in the same commit as the change that makes
 a line wrong.
 
 ## Repository
@@ -47,7 +47,7 @@ cod2rad/             upstream tool (not built by default)
 | Renderer | real D3D9 on Windows; GL elsewhere | [../architecture/renderer.md](../architecture/renderer.md) |
 | Effects | all primitives per 1.3 | [../architecture/effects.md](../architecture/effects.md) |
 | Sound (Windows) | game's `mss32.dll` | not testable under Wine |
-| Online play | CD key auth, HTTP downloads | 1.3 servers |
+| Online play | CD key auth, HTTP downloads (curl on Linux, WinINet on Windows) | 1.3 servers; prediction measured against 1.3 on a modded server; hostile input bounded ([../architecture/client.md](../architecture/client.md#what-a-server-cannot-do)) |
 
 Open items: [../roadmap/debt.md](../roadmap/debt.md).
 
@@ -58,7 +58,7 @@ Open items: [../roadmap/debt.md](../roadmap/debt.md).
 | Build + static checks | `python3 scripts/build_check.py all` |
 | Unit tests | `python3 -m unittest discover -s test` |
 | Docs check | `python3 scripts/check_docs.py` |
-| Runtime tests | [../development/testing.md](../development/testing.md) |
+| Runtime tests | [../development/testing.md](../development/testing.md); `scripts/hostile_server_test.py` for malformed server input |
 | Regenerate bridge | `python3 scripts/gen_script_bridge.py --module <m>` |
 | Wine for the Windows client | `scripts/portable_wine.sh DIR` |
 

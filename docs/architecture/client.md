@@ -36,6 +36,24 @@ parser, which was already 1.3's and parses alike
 (`scripts/anim_script_test.py` compares the two).
 cgame loads its own weapons and mantle anims, as with a remote server.
 
+## What a server cannot do
+
+A server is not trusted; 1.3 trusted it. With `COD2_FEATURE_NET_HARDENING` (on
+in every build), `NetHardening_ServerMaySetCvar` (`src/PC/qcommon/net_hardening.c`)
+decides which dvars a server sets through systeminfo, `v` and the codinfo
+configstrings: dvars flagged SYSTEMINFO or CODINFO always (the physics prediction
+needs, such as `jump_height` and `player_*`, are CODINFO), never `activeAction`,
+`nextdemo`, the download switches, `fs_`, `sv_`, `net_`, `rcon` and `in_` names,
+or other read-only and init dvars. A download's local name must be a relative
+`.iwd` without `..`, and a redirect's URL `http` or `https`. A transfer shorter
+than the size the server gave counts as failed.
+
+Numbers that are wider on the wire than the arrays they index are bounded where
+they enter: `MSG_ReadBitsCompressLimit`, `MSG_ReadDeltaPlayerstate` and
+`CL_ParseGamestate` drop the client; `CL_GetSnapshot` drops an entity or a
+playerstate value only a hostile server sends, before cgame sees it.
+`scripts/hostile_server_test.py` sends a real client each of these.
+
 ## Server commands
 
 `CL_GetServerCommand` (`src/PC/client_mp/cl_cgame_mp.c`) handles some letters

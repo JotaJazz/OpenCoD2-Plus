@@ -525,7 +525,7 @@ void SVC_Info( netadr_t from )
 	// echo back the parameter to status. so servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
-	Info_SetValueForKey( infostring, "protocol", va( "%i", PROTOCOL_VERSION ) );
+	Info_SetValueForKey( infostring, "protocol", va( "%i", from.altPort ? ALT_PORT_PROTOCOL : PROTOCOL_VERSION ) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->current.string );
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->current.string );
 
@@ -679,6 +679,12 @@ void SVC_Status( netadr_t from )
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
+
+	if ( from.altPort )
+	{
+		Info_SetValueForKey( infostring, "protocol", va( "%i", ALT_PORT_PROTOCOL ) );
+		Info_SetValueForKey( infostring, "shortversion", ALT_PORT_VERSION );
+	}
 
 	// add "demo" to the sv_keywords if restricted
 	if ( Dvar_GetBool( "fs_restrict" ) )

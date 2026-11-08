@@ -2575,6 +2575,13 @@ void Scr_AmbientPlay()
 		Scr_Error(va("ambientPlay: fade time must be >= 0\n"));
 	}
 
+#ifdef LIBCOD
+	if ( !g_ambientSound->current.boolean )
+	{
+		return;
+	}
+#endif
+
 	SV_SetConfigstring(CS_AMBIENT, va("n\\%s\\t\\%i", name, level.time + iFadeTime));
 }
 
@@ -2929,6 +2936,13 @@ void Scr_SetFog( const char *cmd, float start, float density, float heightDensit
 	{
 		Scr_Error(va("%s: transition time must be >= 0 seconds", cmd));
 	}
+
+#ifdef LIBCOD
+	if ( !g_fog->current.boolean )
+	{
+		return;
+	}
+#endif
 
 	G_setfog(va("%g %g %g %g %g %g %.0f", start, density, heightDensity, r, g, b, fTime * 1000));
 }
@@ -3736,6 +3750,13 @@ void ScrCmd_PlayLoopSound( scr_entref_t entref )
 {
 	gentity_t *pEnt = GetEntity(entref);
 	unsigned char soundIndex = G_SoundAliasIndex(Scr_GetString(0));
+
+#ifdef LIBCOD
+	if ( Libcod_IsHiddenLoopSound(Scr_GetString(0)) )
+	{
+		return;
+	}
+#endif
 
 	pEnt->r.broadcastTime = -1;
 	pEnt->s.loopSound = soundIndex;
@@ -4962,6 +4983,12 @@ void Scr_PlayLoopedFX()
 
 	ent->s.eType = ET_LOOP_FX;
 	ent->r.svFlags |= SVF_BROADCAST;
+#ifdef LIBCOD
+	if ( Libcod_IsHiddenMapFx(fxId) )
+	{
+		ent->r.svFlags |= SVF_NOCLIENT;
+	}
+#endif
 	ent->s.fxId = fxId;
 	assert(ent->s.eventParm2 == fxId);
 
@@ -5299,7 +5326,7 @@ gentity_t *Scr_PlayFXEntity()
 		Scr_PlayFX_Error("playFx called an up direction 0 or 180 degrees from forward", fxId);
 	}
 
-	if ( vecLength < 0.99900001 )
+	if ( vecLength < 0.999f )
 	{
 		VectorScale(axis[1], 1.0 / vecLength, axis[1]);
 		Vec3Cross(axis[0], axis[1], axis[2]);

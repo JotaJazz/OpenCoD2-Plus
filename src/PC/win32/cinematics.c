@@ -16,8 +16,6 @@ extern void Com_DPrintf(const char *fmt, ...);
 extern void SND_StopSounds(snd_stopsounds_arg_t);
 extern void SND_EndRawSamples(void);
 extern void Sys_EndStreamedFile(fileHandle_t);
-extern void Sys_BeginStreamedFile(fileHandle_t, int);
-extern void Sys_StreamedRead(void *, int, int, fileHandle_t);
 extern void FS_FCloseFile(fileHandle_t);
 extern int FS_FOpenFileRead(const char *, fileHandle_t *, int);
 extern char *va(const char *fmt, ...);
@@ -697,7 +695,6 @@ int ROQ_PlayCinematic(const char *arg, int x, int y, int w, int h, int systemBit
         cinTable[currentHandle].roqF1 = (signed char)cin.file[14];
     }
 
-    Sys_BeginStreamedFile(cinTable[currentHandle].iFile, 0x10000);
     cinTable[currentHandle].letterBox = 1;
 
     Com_DPrintf("trFMV::play(), playing %s\n", arg);
@@ -815,8 +812,7 @@ static void RoQReset(void)
         FS_FCloseFile(cinTable[h].iFile);
         cinTable[currentHandle].iFile = 0;
         FS_FOpenFileRead(cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, 1);
-        Sys_BeginStreamedFile(cinTable[currentHandle].iFile, 0x10000);
-        Sys_StreamedRead(cin.file, 0x10, 1, cinTable[currentHandle].iFile);
+        FS_Read(cin.file, 0x10, cinTable[currentHandle].iFile);
 
         t = CL_ScaledMilliseconds();
         cinTable[currentHandle].startTime = t;
@@ -975,7 +971,7 @@ frame_loop:
         goto after_parse;
     }
 
-    Sys_StreamedRead(cin.file, cinTable[h].RoQFrameSize + 8, 1, cinTable[h].iFile);
+    FS_Read(cin.file, cinTable[h].RoQFrameSize + 8, cinTable[h].iFile);
     h = currentHandle;
 
     if (cinTable[h].RoQPlayed >= cinTable[h].ROQSize) {

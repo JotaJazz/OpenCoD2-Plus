@@ -1,5 +1,5 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: 1094533
+# revision: 642bc91
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
@@ -492,3 +492,5 @@ src/libcod/sqlite/sqlite3.h
 src/libcod/sqlite/sqlite3ext.h
 src/libcod/yyjson/yyjson.c
 src/libcod/yyjson/yyjson.h
+src/misc/sse_mathfun.h
+src/universal/com_shared.cpp

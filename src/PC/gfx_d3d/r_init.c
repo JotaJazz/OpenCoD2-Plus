@@ -232,6 +232,10 @@ static Bool R_DisplayModeLess(const _D3DDISPLAYMODE *mode0, const _D3DDISPLAYMOD
     return mode0->RefreshRate < mode1->RefreshRate;
 }
 
+#ifdef GFX_REAL_D3D9
+static void *s_realWindow; /* what a lost device resets with */
+#endif
+
 static HRESULT R_CreateDevice_impl(HWND hwnd, DWORD behavior, void *d3dpp)
 {
     /* Typed field access: the original used (byte*)&dx + 12 (adapterIndex) and
@@ -756,13 +760,15 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
 #ifdef GFX_REAL_D3D9
 
         {
-            extern void *RealD3D9_Direct3DCreate9(void);
+            extern void *RealD3D9_Direct3DCreate9(int api);
+            extern const dvar_t *r_gfxApi;
             extern void *RealD3D9_CreateGameWindow(int, int, int);
             extern void Sys_GetDesktopSize(int *width, int *height);
             extern const dvar_t *r_fullscreen;
             int fullscreen = r_fullscreen->current.enabled;
             int shapeWidth, shapeHeight;
-            extern void RealD3D9_FillPresentParams(void *, void *, int, int);
+            extern void RealD3D9_FillPresentParams(void *, void *, int, int, int);
+            extern const dvar_t *r_swapInterval;
             extern void R_GetModeSize(int *width, int *height);
             int width, height;
             void *hwnd;
@@ -773,13 +779,22 @@ static void R_BeginRegistration_impl(vidConfig_t *vidConfigOut)
             /* the mode r_mode names, as the fake device's path */
             R_GetModeSize(&width, &height);
             if (!dx.d3d9)
-                dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9();
+                dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9(r_gfxApi->current.integer);
             if (!dx.d3d9)
                 R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
             hwnd = RealD3D9_CreateGameWindow(width, height, fullscreen);
-            RealD3D9_FillPresentParams(pp, hwnd, width, height);
+            RealD3D9_FillPresentParams(pp, hwnd, width, height, r_swapInterval->current.enabled);
+            s_realWindow = hwnd;
             hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
             ri_printf(0, "REAL CreateDevice hr=0x%x device=%p\n", (unsigned)hr, (void *)dx.device);
+            if ((hr < 0 || !dx.device) && r_gfxApi->current.integer) {
+                ri_printf(0, "^3r_gfxApi could not make a device, using Direct3D 9\n");
+                ((ULONG(D3DVTCC *)(void *))(*(void ***)dx.d3d9)[2])(dx.d3d9);
+                dx.d3d9 = (IDirect3D9 *)RealD3D9_Direct3DCreate9(0);
+                if (!dx.d3d9)
+                    R_Error(ERR_FATAL, "Couldn't initialize Direct3D 9 (see the console)");
+                hr = R_CreateDevice_impl((HWND)hwnd, 0x40, pp);
+            }
             if (hr < 0 || !dx.device)
                 R_Error(ERR_FATAL, "Couldn't create the Direct3D 9 device: %s", R_ErrorDescription(hr));
 
@@ -967,6 +982,18 @@ aa_done:;
         d3dpp[7] = 1;
         d3dpp[12] = 0;
     }
+
+#ifdef GFX_REAL_D3D9
+    /* the real structure, as the device was made: the rest of the above is laid
+     * out for the fake device, and to a real one is a bad window and flags */
+    {
+        extern void RealD3D9_FillPresentParams(void *, void *, int, int, int);
+
+        RealD3D9_FillPresentParams(d3dpp, s_realWindow, backBufWidth, backBufHeight, swapInterval);
+        d3dpp[4] = dx.multiSampleType;
+        d3dpp[5] = dx.multiSampleQuality;
+    }
+#endif
 
     R_ReleaseForShutdownOrReset();
 

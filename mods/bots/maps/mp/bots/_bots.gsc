@@ -4,9 +4,10 @@
 // sight it follows what it last saw or heard shooting, patrols towards the
 // enemy side, and after 20 s without contact heads for the nearest enemy. In a
 // fight (_bots_combat.gsc) it aims down the sight at range, throws grenades at
-// mid range and knifes up close. In SD and CTF (_bots_obj.gsc) each life a bot
+// mid range and knifes up close. In SD, CTF and HQ (_bots_obj.gsc) each life a bot
 // draws a role: plant, guard, defuse or protect the bomb, or steal, capture,
-// defend or return flags; SD in dual bomb mode is played by hunters only.
+// defend or return flags, or take or hold the radio; SD in dual bomb mode is
+// played by hunters only.
 // Movement and firing use the libcod bot and graph functions, so this only
 // works on a server built with libcod.
 //
@@ -212,7 +213,10 @@ playLife()
 				continue;
 
 			self maps\mp\bots\_bots_combat::fight(self.botTarget, skill);
-			self.botPath = undefined;
+			// the fight moved the bot off its path: search again soon, but an
+			// enemy flickering in and out of sight must not cost a search a tick
+			if(self.botRepathAt > now + 500)
+				self.botRepathAt = now + 500;
 			checkPos = self.origin;
 			checkAt = now + 1000;
 			continue;
@@ -283,7 +287,8 @@ playLife()
 
 		self lookAt((0, yaw, 0));
 		self setWalkDir("none");
-		self setWalkDir("forward");
+		if(!isDefined(goalPos) || !(self maps\mp\bots\_bots_combat::nearOwnGrenade(goalPos)))
+			self setWalkDir("forward");
 	}
 }
 

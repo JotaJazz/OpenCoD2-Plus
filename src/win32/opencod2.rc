@@ -1,0 +1,2 @@
+// icon 1: win_syscon asks for it by number and SDL takes the first icon of the executable
+1 ICON "opencod2.ico"

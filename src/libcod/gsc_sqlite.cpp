@@ -12,6 +12,7 @@
 #define MAX_SQLITE_ROW_LENGTH 256
 #define MAX_SQLITE_TASKS 512
 #define MAX_SQLITE_DB_STORES 128
+#define SQLITE_MAX_CELL_LENGTH 64999
 
 #define SQLITE_TIMEOUT 4000
 
@@ -134,7 +135,9 @@ void *async_sqlite_query_handler(void*)
 			if (task->done || task->remove)
 				continue;
 
-			if (task->store == NULL || task->store->closed || libcodLevelGeneration != task->store->levelId)
+			// a query of the last level still runs: it may be a write the
+			// script counts on, and only its callback belongs to the level
+			if (task->store == NULL || task->store->closed)
 			{
 				task->remove = true;
 				continue;
@@ -522,14 +525,17 @@ void sqlite_db_store_cleanup()
 
 			for (current_task = first_async_sqlite_task; current_task != NULL; current_task = current_task->next)
 			{
-				if (current_task->store == store && current_task->running)
+				if (current_task->store != store)
+					continue;
+
+				// sqlite_close drops what is queued, a level change doesn't
+				if (current_task->running || (!store->closed && !current_task->done && !current_task->remove))
 					busy = true;
 			}
 
-			// the worker is running a query on it, close it on a later call
+			// the worker still needs it, close it on a later call
 			if (busy)
 			{
-				store->closed = true;
 				sqlite_db_store_cleanup_pending = true;
 				continue;
 			}
@@ -618,6 +624,7 @@ void gsc_sqlite_open()
 	char error[COD2_MAX_STRINGLENGTH];
 	int rc = sqlite3_open(osPath, &db);
 
+
 	// a failed open still allocates a handle that must be closed
 	if (rc != SQLITE_OK)
 	{
@@ -627,6 +634,9 @@ void gsc_sqlite_open()
 		stackPushUndefined();
 		return;
 	}
+
+	// ATTACH and VACUUM INTO take a path of their own, past the checks above
+	sqlite3_limit(db, SQLITE_LIMIT_ATTACHED, 0);
 
 	rc = sqlite3_busy_timeout(db, SQLITE_TIMEOUT);
 
@@ -730,9 +740,10 @@ void gsc_sqlite_query()
 			{
 				const unsigned char *text = sqlite3_column_text(statement, i);
 
-				// NULL as "", like the async queries, so later columns keep their index
+				// NULL as "", like the async queries, so later columns keep their index;
+				// a string of 64 KB would end the map
 				if (text != NULL)
-					stackPushString(reinterpret_cast<const char*>(text));
+					stackPushString(std::string(reinterpret_cast<const char*>(text), strnlen(reinterpret_cast<const char*>(text), SQLITE_MAX_CELL_LENGTH)).c_str());
 				else
 					stackPushString("");
 

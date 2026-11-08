@@ -140,8 +140,20 @@ typedef struct
 	int type;
 	byte ip[4];
 	unsigned short port;
-	byte ipx[10];
+	union
+	{
+		byte ipx[10];
+		struct
+		{
+			byte ipxHead[9];
+			byte altPort;   // through net_altPort: replies leave by that socket; shares ipx[9] so that netadr_t stays 20 bytes
+		};
+	};
 } netadr_t;
+
+// What net_altPort announces, as the 1.0 build also plays with 1.3 clients
+#define ALT_PORT_PROTOCOL 118
+#define ALT_PORT_VERSION "1.3"
 
 void NET_Init( void );
 void NET_Shutdown( void );

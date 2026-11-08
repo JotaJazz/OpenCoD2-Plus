@@ -23,7 +23,9 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/view_weapon_test.py` | a real client leans, crouches and jumps; its view weapon (traced with `COD2_TRACE_VIEWWEAPON`) moves sideways, to the stance offset and dips on landing as 1.3's; hits every 4 s kick the view within `v_dmg_pitch`/`v_dmg_roll` (`COD2_TRACE_VIEWDAMAGE`); walking, the eye bobs along the view's right (`COD2_TRACE_VIEWBOB`); firing, reloading and melee move the camera by `tag_camera` (`COD2_TRACE_VIEWANIM`); a jump in place keeps `xyspeed` at 0; after 30 s shellshocks: the client keeps running and the shaken view stays a rotation (`COD2_TRACE_PERTURB`) | yes |
 | `scripts/server_eye_test.py` | a walking player's eye on the server (libcod `getViewOrigin`, where shots start) bobs sideways; thrown straight up mid-walk with its horizontal velocity cleared, it stays over the origin, as 1.3 (horizontal speed 0) | no |
 | `scripts/anim_script_test.py` | in a local game the engine's animation script (cgame's prediction) and CoD2rev-Plus's (the server's) parse the same animations (flags, movetype, duration, speed) and pick the same legs and torso animations, timers and durations for every weapon, stance, aim, pitch, state, movetype and event (`COD2_CHECK_ANIMSCRIPT`) | yes |
-| `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); legs and torso that change when predicted again stay under `--max-anim-misses` (6; `COD2_TRACE_PREDANIM`: the spawn's weapon and the landing's MOVETYPE condition, which the playerstate does not carry); `--moves CFG`, `--spot` | yes |
+| `scripts/prediction_test.py` | prediction misses while moving, mantling, firing stay under `--max-misses` (60); legs and torso that change when predicted again stay under `--max-anim-misses` (6; `COD2_TRACE_PREDANIM`: the spawn's weapon and the landing's MOVETYPE condition, which the playerstate does not carry); `--moves CFG`, `--spot`; `--delay MS` relays the packets through a UDP relay that holds each MS ms each way (online ping), `--maxfps N` sets the client's frame rate (default 20) | yes |
+| `scripts/www_download_test.py GAME` | a client joins a 1.3 server whose mod it lacks: it fetches the mod's `.iwd` over HTTP (`sv_wwwBaseURL`, a local HTTP server), keeps it byte for byte and joins; `--disconnect` (`sv_wwwDlDisconnected 1`: leave, download, reconnect); `--wine WINE --binary EXE` runs the Windows client (WinINet) | yes |
+| `scripts/hud_align_test.py` | hud elements land where their `horzAlign`/`vertAlign` and `alignX`/`alignY` put them: three colored boxes (center_safearea/top centered, right/bottom, left/middle) found in a screenshot | yes |
 | `scripts/fx_test.py` | effects change the picture; no effect or material fails to load | yes |
 | `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (CoD2rev-Plus's test, `mods/bots`) | no |
@@ -39,7 +41,8 @@ the scripts pick the binary from `--protocol` (`--binary` overrides it).
 | Note | Detail |
 |---|---|
 | Minimal client | `scripts/hit_location_test.py`'s client sends pitch, move keys and buttons every command: a field left unchanged keeps the server's previous command's value |
-| Prediction misses | `cg_showmiss 1` is read as `dvar_developer` in the reconstruction; running into another player always misses (the client clips players with a box one unit smaller per side, as the original) |
+| Prediction misses | `cg_showmiss 1` prints them, with 1.3's messages (`prediction error`, `Prediction miss`); running into another player always misses (the client clips players at their interpolated origin with a box one unit smaller per side, as the original). `COD2_TRACE_PREDDIFF=1` prints, for each snapshot whose origin differs from what the client predicted for that time, every 4-byte word of the playerstate that differs and the solid entities around |
+| Game folder | `GAME` must hold only the stock `.iwd`: files downloaded from servers into `main` make local games drop with `FS_PureServerSetReferencedIwds: count mismatch` (`systeminfo` passes 1024 bytes, as 1.3); a folder of links to the stock files works |
 | Bots flake | "search paths sparingly" failed 2 runs in 5 with the client as host, on one bot-second; it is the tail of the same behavior as the dedicated server |
 | `layout_parity.py` | runs nothing: values are read from the compiled objects with `objcopy`, so MinGW needs no Wine |
 | UI trace | `MTRACE=1` prints the open menus to the console |
@@ -56,22 +59,24 @@ plus:
 
 | Script | Checks |
 |---|---|
-| `scripts/layout_parity.py` | types in `test/layout_parity_types.txt` lay out alike in this repo and CoD2rev-Plus (1.3, 1.0, MinGW) |
-| `scripts/check_c_linkage.py BUILD` | no unexpected C++-mangled names (`test/c_linkage_allowlist.txt`) |
 | `scripts/vendor_check.py PLUS_CHECKOUT` | vendored files equal CoD2rev-Plus at `test/vendored_files.txt`'s revision |
 | `scripts/check_docs.py` | docs: links, repository paths, personal data, memory stages |
 | `python3 -m unittest discover -s test` | unit tests of the scripts |
 
 ## Full suite (before merging a phase)
 
-1. `python3 scripts/build_check.py all`
+1. `python3 scripts/build_check.py all` (a skipped variant fails it; `--allow-skip` accepts that)
 2. `python3 -m unittest discover -s test` and `python3 scripts/check_docs.py`
 3. For P in 118 and 115: `opencod2_smoke.py`, `two_players`, `map_reload`,
    `rcon_drop`, `anim_builtins`, `hit_location` (plain and `--listen`),
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
-   `prediction`.
+   `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`.
+   `hostile_server_test.py` (118 only: a fake server sends malformed messages).
    `shader_compile_test.py` when the `linux-vk` build exists.
 4. `bots_test.py` and `http_test.py` with `--binary build/check-linux/cod2_lnxded`.
+5. `www_download_test.py` plain, with `--disconnect`, `--http-404` and `--truncate` (118 only).
+
+A `skipped:` line means a test did not run: a run with skips does not count for a merge.
 
 ## Ad-hoc client checks
 

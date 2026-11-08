@@ -80,6 +80,7 @@ resetNav()
 	self.botPathIndex = 0;
 	self.botPathGoal = -1;
 	self.botRepathAt = 0;
+	self.botGoalRepathAt = 0;
 	self.botBlocked = [];
 	self.botBlockedUntil = 0;
 	self.botStuckCount = 0;
@@ -114,7 +115,9 @@ navYaw(goalPos)
 	if(!isDefined(goalNode))
 		return self yawTo(goalPos);
 
-	if(!isDefined(self.botPath) || now >= self.botRepathAt || goalNode != self.botPathGoal)
+	if(!isDefined(self.botPath) || now >= self.botRepathAt)
+		self repath(goalNode, now);
+	else if(goalNode != self.botPathGoal && self goalMovedEnough(goalNode, now))
 		self repath(goalNode, now);
 
 	// no path, or the end of a partial one: straight on from here
@@ -160,10 +163,22 @@ navYaw(goalPos)
 	return self yawTo(nodePos);
 }
 
+// A moving goal (an enemy, a flag carrier) passes from node to node several
+// times a second: follow it twice a second, but at once when it jumps far (a
+// new enemy or objective)
+goalMovedEnough(goalNode, now)
+{
+	if(now >= self.botGoalRepathAt || self.botPathGoal < 0)
+		return true;
+
+	return distance(graphGetNodeOrigin(level.botGraph, goalNode), graphGetNodeOrigin(level.botGraph, self.botPathGoal)) > 256;
+}
+
 repath(goalNode, now)
 {
 	self.botPathGoal = goalNode;
 	self.botRepathAt = now + 3000;
+	self.botGoalRepathAt = now + 500;
 	self.botPathIndex = 0;
 	self.botPath = undefined;
 	self startProgress(now);
@@ -302,11 +317,20 @@ pickPatrolPos()
 	if(isDefined(level.botGraph))
 	{
 		count = graphGetNodeCount(level.botGraph);
+		start = graphFindClosestNode(level.botGraph, self.origin);
 		pos = undefined;
 		for(i = 0; i < 8; i++)
 		{
-			pos = graphGetNodeOrigin(level.botGraph, randomInt(count));
-			if(distanceSquared(self.origin, pos) > 1000 * 1000)
+			node = randomInt(count);
+			pos = graphGetNodeOrigin(level.botGraph, node);
+			if(distanceSquared(self.origin, pos) <= 1000 * 1000)
+				continue;
+
+			// upper floors and cellars can be cut off from the rest of the
+			// graph, and a path that doesn't reach them ends at their closest
+			// node; a bot would then stand there until the patrol times out
+			path = graphFindPath(level.botGraph, start, node);
+			if(isDefined(path) && path.size && path[path.size - 1] == node)
 				break;
 		}
 		return pos;

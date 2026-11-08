@@ -2521,7 +2521,9 @@ Lc6:
             goto L183;
         goto Lmain0;
     }
-    t = cls.realtime - clc_p->connectTime;
+    /* since the last packet, as 1.3 (0x40f480); connectTime here dropped every
+     * session cl_timeout seconds after it connected */
+    t = cls.realtime - clc_p->lastPacketTime;
     if ((float)t <= cl_timeout->current.value * 1000.0f)
         goto Lmain0;
     cl_p->timeoutcount += 1;

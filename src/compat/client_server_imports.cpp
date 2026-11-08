@@ -74,12 +74,12 @@ static_assert(cod2_abi_slot<float*>() == 4, "AngleVectors: parameter 3 differs f
 extern "C" decltype(AngleVectors(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) cod2c_AngleVectors(float const* a0, float* a1, float* a2, float* a3) __asm__(COD2_SYM("AngleVectors"));
 decltype(AngleVectors(std::declval<float const*>(), std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) AngleVectors(float const* a0, float* a1, float* a2, float* a3) { return cod2c_AngleVectors(a0, a1, a2, a3); }
 
-static_assert(cod2_abi_class<decltype(AnglesSubtract(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>()))>() == 'v', "AnglesSubtract: return class differs from the engine");
-static_assert(cod2_abi_slot<float const*>() == 4, "AnglesSubtract: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<float const*>() == 4, "AnglesSubtract: parameter 1 differs from the engine");
+static_assert(cod2_abi_class<decltype(AnglesSubtract(std::declval<float*>(), std::declval<float*>(), std::declval<float*>()))>() == 'v', "AnglesSubtract: return class differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AnglesSubtract: parameter 0 differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "AnglesSubtract: parameter 1 differs from the engine");
 static_assert(cod2_abi_slot<float*>() == 4, "AnglesSubtract: parameter 2 differs from the engine");
-extern "C" decltype(AnglesSubtract(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>())) cod2c_AnglesSubtract(float const* a0, float const* a1, float* a2) __asm__(COD2_SYM("AnglesSubtract"));
-decltype(AnglesSubtract(std::declval<float const*>(), std::declval<float const*>(), std::declval<float*>())) AnglesSubtract(float const* a0, float const* a1, float* a2) { return cod2c_AnglesSubtract(a0, a1, a2); }
+extern "C" decltype(AnglesSubtract(std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) cod2c_AnglesSubtract(float* a0, float* a1, float* a2) __asm__(COD2_SYM("AnglesSubtract"));
+decltype(AnglesSubtract(std::declval<float*>(), std::declval<float*>(), std::declval<float*>())) AnglesSubtract(float* a0, float* a1, float* a2) { return cod2c_AnglesSubtract(a0, a1, a2); }
 
 static_assert(cod2_abi_class<decltype(AnglesToAxis(std::declval<float const*>(), std::declval<float (*) [3]>()))>() == 'v', "AnglesToAxis: return class differs from the engine");
 static_assert(cod2_abi_slot<float const*>() == 4, "AnglesToAxis: parameter 0 differs from the engine");
@@ -101,12 +101,12 @@ static_assert(cod2_abi_slot<float>() == 4, "BoxDistSqrdExceeds: parameter 3 diff
 extern "C" cod2_abi_int<decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())), 4> cod2c_BoxDistSqrdExceeds(float const* a0, float const* a1, float const* a2, float a3) __asm__(COD2_SYM("BoxDistSqrdExceeds"));
 decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())) BoxDistSqrdExceeds(float const* a0, float const* a1, float const* a2, float a3) { return (decltype(BoxDistSqrdExceeds(std::declval<float const*>(), std::declval<float const*>(), std::declval<float const*>(), std::declval<float>())))cod2c_BoxDistSqrdExceeds(a0, a1, a2, a3); }
 
-static_assert(cod2_abi_class<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s*>()))>() == 'i' || cod2_abi_class<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s*>()))>() == 'v', "BoxOnPlaneSide: return class differs from the engine");
+static_assert(cod2_abi_class<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s const*>()))>() == 'i' || cod2_abi_class<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s const*>()))>() == 'v', "BoxOnPlaneSide: return class differs from the engine");
 static_assert(cod2_abi_slot<float*>() == 4, "BoxOnPlaneSide: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<float*>() == 4, "BoxOnPlaneSide: parameter 1 differs from the engine");
-static_assert(cod2_abi_slot<cplane_s*>() == 4, "BoxOnPlaneSide: parameter 2 differs from the engine");
-extern "C" cod2_abi_int<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s*>())), 4> cod2c_BoxOnPlaneSide(float* a0, float* a1, cplane_s* a2) __asm__(COD2_SYM("BoxOnPlaneSide"));
-decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s*>())) BoxOnPlaneSide(float* a0, float* a1, cplane_s* a2) { return (decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s*>())))cod2c_BoxOnPlaneSide(a0, a1, a2); }
+static_assert(cod2_abi_slot<cplane_s const*>() == 4, "BoxOnPlaneSide: parameter 2 differs from the engine");
+extern "C" cod2_abi_int<decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s const*>())), 4> cod2c_BoxOnPlaneSide(float* a0, float* a1, cplane_s const* a2) __asm__(COD2_SYM("BoxOnPlaneSide"));
+decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s const*>())) BoxOnPlaneSide(float* a0, float* a1, cplane_s const* a2) { return (decltype(BoxOnPlaneSide(std::declval<float*>(), std::declval<float*>(), std::declval<cplane_s const*>())))cod2c_BoxOnPlaneSide(a0, a1, a2); }
 
 static_assert(cod2_abi_class<decltype(CL_Disconnect())>() == 'v', "CL_Disconnect: return class differs from the engine");
 extern "C" decltype(CL_Disconnect()) cod2c_CL_Disconnect() __asm__(COD2_SYM("CL_Disconnect"));
@@ -536,10 +536,10 @@ static_assert(cod2_abi_slot<float>() == 4, "DiffTrackAngle: parameter 6 differs 
 extern "C" decltype(DiffTrackAngle(std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) cod2c_DiffTrackAngle(float a0, float a1, float a2, float a3, float a4, float a5, float a6) __asm__(COD2_SYM("DiffTrackAngle"));
 decltype(DiffTrackAngle(std::declval<float>(), std::declval<float>(), std::declval<float>(), std::declval<float>())) DiffTrackAngle(float a0, float a1, float a2, float a3) { return cod2c_DiffTrackAngle(a0, a1, a2, a3, 0.0f, 0.0f, 0.0f); }
 
-static_assert(cod2_abi_class<decltype(DirToByte(std::declval<float const*>()))>() == 'i' || cod2_abi_class<decltype(DirToByte(std::declval<float const*>()))>() == 'v', "DirToByte: return class differs from the engine");
-static_assert(cod2_abi_slot<float const*>() == 4, "DirToByte: parameter 0 differs from the engine");
-extern "C" cod2_abi_int<decltype(DirToByte(std::declval<float const*>())), 1> cod2c_DirToByte(float const* a0) __asm__(COD2_SYM("DirToByte"));
-decltype(DirToByte(std::declval<float const*>())) DirToByte(float const* a0) { return (decltype(DirToByte(std::declval<float const*>())))cod2c_DirToByte(a0); }
+static_assert(cod2_abi_class<decltype(DirToByte(std::declval<float*>()))>() == 'i' || cod2_abi_class<decltype(DirToByte(std::declval<float*>()))>() == 'v', "DirToByte: return class differs from the engine");
+static_assert(cod2_abi_slot<float*>() == 4, "DirToByte: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(DirToByte(std::declval<float*>())), 1> cod2c_DirToByte(float* a0) __asm__(COD2_SYM("DirToByte"));
+decltype(DirToByte(std::declval<float*>())) DirToByte(float* a0) { return (decltype(DirToByte(std::declval<float*>())))cod2c_DirToByte(a0); }
 
 static_assert(cod2_abi_class<decltype(Dvar_AddFlags(std::declval<dvar_s*>(), std::declval<int>()))>() == 'v', "Dvar_AddFlags: return class differs from the engine");
 static_assert(cod2_abi_slot<dvar_s*>() == 4, "Dvar_AddFlags: parameter 0 differs from the engine");
@@ -1765,11 +1765,11 @@ static_assert(cod2_abi_slot<float const*>() == 4, "vectopitch: parameter 0 diffe
 extern "C" decltype(vectopitch(std::declval<float const*>())) cod2c_vectopitch(float const* a0) __asm__(COD2_SYM("vectopitch"));
 decltype(vectopitch(std::declval<float const*>())) vectopitch(float const* a0) { return cod2c_vectopitch(a0); }
 
-static_assert(cod2_abi_class<decltype(vectosignedyaw(std::declval<float*>()))>() == 'f', "vectosignedyaw: return class differs from the engine");
-static_assert(cod2_abi_size<decltype(vectosignedyaw(std::declval<float*>()))>() == 4, "vectosignedyaw: return size differs from the engine");
-static_assert(cod2_abi_slot<float*>() == 4, "vectosignedyaw: parameter 0 differs from the engine");
-extern "C" decltype(vectosignedyaw(std::declval<float*>())) cod2c_vectosignedyaw(float* a0) __asm__(COD2_SYM("vectosignedyaw"));
-decltype(vectosignedyaw(std::declval<float*>())) vectosignedyaw(float* a0) { return cod2c_vectosignedyaw(a0); }
+static_assert(cod2_abi_class<decltype(vectosignedyaw(std::declval<float const*>()))>() == 'f', "vectosignedyaw: return class differs from the engine");
+static_assert(cod2_abi_size<decltype(vectosignedyaw(std::declval<float const*>()))>() == 4, "vectosignedyaw: return size differs from the engine");
+static_assert(cod2_abi_slot<float const*>() == 4, "vectosignedyaw: parameter 0 differs from the engine");
+extern "C" decltype(vectosignedyaw(std::declval<float const*>())) cod2c_vectosignedyaw(float const* a0) __asm__(COD2_SYM("vectosignedyaw"));
+decltype(vectosignedyaw(std::declval<float const*>())) vectosignedyaw(float const* a0) { return cod2c_vectosignedyaw(a0); }
 
 static_assert(cod2_abi_class<decltype(vectoyaw(std::declval<float const*>()))>() == 'f', "vectoyaw: return class differs from the engine");
 static_assert(cod2_abi_size<decltype(vectoyaw(std::declval<float const*>()))>() == 4, "vectoyaw: return size differs from the engine");

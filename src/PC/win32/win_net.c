@@ -341,6 +341,9 @@ qboolean Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
     struct sockaddr from;
     int err;
 
+    /* the bytes this leaves unset include altPort, which CoD2rev-Plus's server reads */
+    memset(net_from, 0, sizeof(*net_from));
+
     for (protocol = 0; protocol <= 1; protocol++) {
         if (protocol == 0) {
             net_socket = ip_socket;

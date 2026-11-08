@@ -94,6 +94,14 @@ static void PushSavedValueArray(SavedValue *values, int count)
  * not call itself again.
  */
 static bool runningEventCallback;
+static bool runningDPrintf;
+
+// A Com_Error unwinds past the callbacks, which leaves these set
+void Libcod_ResetCallbackGuards()
+{
+	runningEventCallback = false;
+	runningDPrintf = false;
+}
 
 void Libcod_PlayerEvent(const playerState_t *ps, int event, int eventParm)
 {
@@ -422,15 +430,14 @@ void Libcod_MapItemsCallbacks()
  */
 void Libcod_DPrintf(const char *message)
 {
-	static bool running;
-
-	if ( !codecallback_dprintf || running || !Sys_IsMainThread() || !Scr_IsSystemActive() )
+	// Scr_AddString would clear the parameters of a builtin that is running
+	if ( !codecallback_dprintf || runningDPrintf || !Sys_IsMainThread() || !Scr_IsSystemActive() || scrVmPub.outparamcount )
 		return;
 
-	running = true;
+	runningDPrintf = true;
 	Scr_AddString(message);
 	Scr_FreeThread(Scr_ExecThread(codecallback_dprintf, 1));
-	running = false;
+	runningDPrintf = false;
 }
 
 /*

@@ -24,6 +24,8 @@ extern const dvar_t *r_skinCache;
 extern const dvar_t *r_fullscreen;
 extern const dvar_t *r_monitor;
 extern const dvar_t *r_mode;
+const dvar_t *r_gfxApi;
+static const char *gfxApiNames[] = { "d3d9", "vulkan", "d3d12", NULL };
 extern const dvar_t *r_displayRefresh;
 extern const dvar_t *r_rendererPreference;
 extern const dvar_t *r_rendererInUse;
@@ -551,6 +553,8 @@ void R_RegisterDvars(void)
 
     R_EnumDisplayModes();
     r_mode = ri.Dvar_RegisterEnum("r_mode", s_displayModeNames, 0, 0x2021);
+    /* taken when a device is made: at the start and at vid_restart */
+    r_gfxApi = ri.Dvar_RegisterEnum("r_gfxApi", gfxApiNames, 0, 0x2021);
 
     r_displayRefresh = ri.Dvar_RegisterEnum("r_displayRefresh", s_displayRefreshNames, 0, 0x2021);
 

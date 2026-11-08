@@ -52,7 +52,7 @@ extern "C" {
 #endif
 
 #ifndef COD2_FEATURE_NET_HARDENING
-  #define COD2_FEATURE_NET_HARDENING 0
+  #define COD2_FEATURE_NET_HARDENING 1
 #endif
 
 #if COD2_IS_PATCH_13

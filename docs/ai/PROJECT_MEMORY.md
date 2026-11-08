@@ -5,6 +5,76 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-01 — final review of plus before main
+
+- `r_gfxApi vulkan` died at every start on a device without Vulkan 1.3, since DXVK throws out of `Direct3DCreate9` and the menu saves the choice. The client now asks Vulkan first, and falls back when the layer cannot make a device.
+- `R_RecoverLostDevice` handed a real device the fake device's layout: a bad window and flags on any lost device. It now resets with what the device was made with.
+- A module named `d3d9.dll` stays loaded, so going back from DXVK reached DXVK again: after DXVK the system's is loaded by its path. `r_gfxApi` applies at `vid_restart`, not once per process as first recorded.
+
+## 2026-10-31 — the console, the lagometer and cg_drawFPS against 1.3
+
+- The console opened full because the key code read `keys['`'].binding`, always set; 1.3 (`0x40bc6e`) tests `keys[K_SHIFT].down`: only Shift gives the full console.
+- The lagometer drew every sample at `x = -7`, one column over its black background; 1.3 draws `-7 - i`, clamps the snapshot bars to 24 and colours them by the snapshot's flag.
+- `colorWhiteFaded` and its two siblings were zero, so `cg_drawFPS` and the other developer overlays drew with alpha 0: the values are in 1.3's data (`0x59e08c`, `0x59e09c`, `0x59e0ac`).
+
+## 2026-10-31 — the console key, r_swapInterval and the API in the menu
+
+- SDL gives a key by what it types, so a Spanish layout never sent `` ` `` and the console could not open: that key now goes by position, as 1.3's scancode table.
+- The real device always asked for the default present interval, which waits for the display: `r_swapInterval` did nothing and `com_maxfps` stopped at the refresh rate.
+- The menu's rendering method item picks `r_gfxApi`, patched when the file loads: a pure server refuses a menu in an iwd of ours. `d3d12` is not offered: a black screen cannot be left from the menu.
+
+## 2026-10-31 — d3d12 is black on the screen, not in the back buffer
+
+- A black menu screenshot first pointed at rendering. A readback through a temporary tracing client showed otherwise on an RTX 5080: no refused call, a real frame at frame 30, a clear and a triangle at 150. Frame 120 reads black on Wine too, so one sample proves little: read several.
+- Replacing the device's vtable with a 119-entry copy crashes inside `d3d9.dll`; patch the table in place. `d3d12` stays experimental, `vulkan` covers the same machines.
+
+## 2026-10-31 — r_gfxApi: Vulkan and Direct3D 12 behind Direct3D 9
+
+- The renderer talks only to `IDirect3DDevice9`, so the Windows client picks what stands behind it: `d3d9`, `vulkan` (DXVK) or `d3d12` (D3D9On12), falling back to `d3d9`. A native backend per API was rejected: the renderer is 38,000 lines.
+- Wine loads its builtin `d3d9` even from a full path: testing DXVK there needs `WINEDLLOVERRIDES=d3d9=n`. A log line saying "Vulkan" proved nothing until then.
+- DXVK ran the 32-bit process out of its 2 GB on lavapipe, so the executable is large address aware.
+
+## 2026-10-31 — vendor sync 9e26dd4, a 64-bit dedicated server, an icon
+
+- CoD2rev-Plus moved 65 commits: its `netadr_t` grew with `altPort`, which the engine shares by value and inside `netchan_t`, so `altPort` now overlays `ipx[9]` and the struct stays 20 bytes. Growing the engine's was rejected: its layouts are pinned to 1.3. Its removed `Sys_BeginStreamedFile`/`Sys_StreamedRead` were an `FS_Read`; cinematics call that.
+- `cmake/lnxded64` builds the dedicated server at 64 bits from CoD2rev-Plus's sources alone. The engine's `COD2_X64` no longer compiles as C++ and stays a known gap: ADR 0010.
+- `docs/icon.svg` and `src/win32/opencod2.ico` go in both MinGW executables; SDL takes the client's window icon from there. The Linux client has none.
+
+## 2026-10-31 — the client's clock stays in step
+
+- `CL_SetCGameTime` marked `extrapolatedSnapshot` with its comparison inverted (1.3 `0x4031a5` is `>=`): every snapshot took 2 ms off the clock until it was 100 ms behind, then `CL_AdjustTimeDelta` averaged it forward, a visible jump about every 2.3 seconds, in every online game since the reconstruction. `hostile_server_test.py client_clock_steady` went from 13 jumps in 30 s to 2 at the start. The earlier online prediction gap against 1.3 may have come from this; it was not measured again.
+
+## 2026-10-31 — sessions no longer end at cl_timeout
+
+- `CL_CheckTimeout`'s path in `CL_Frame` measured from `connectTime`, not `lastPacketTime` as 1.3 (`0x40f480`): every online session ended "timed out" 200 seconds after connecting, however well the network ran, which also explains why every traced session lasted about 3 minutes. `hostile_server_test.py` has `timeout_keeps_playing` and `timeout_when_silent`.
+
+## 2026-10-31 — the filter let the server's physics through again
+
+- The filter refused every CHEAT dvar, so a server's `jump_height`, `friction`, `player_*` and `bg_*` never reached the client, whose prediction then ran other physics: seen as stutter on a public server, whose log listed 52 refused dvars. CODINFO and cheat dvars pass now; `hostile_server_test.py` has `codinfo_dvars_apply`.
+
+## 2026-10-31 — audit: a server is not trusted; checks that fail; dead sources removed
+
+- `COD2_FEATURE_NET_HARDENING` was off in every build. A server could run console commands through `activeAction`, write outside the game's folder over HTTP and crash the client in a dozen ways; `scripts/hostile_server_test.py` reproduced them on a real client before the fixes. The dvar rule lets SYSTEMINFO dvars through: blocking `fs_` and `sv_` outright, as the old code did, would have broken mod servers.
+- `build_check.py` now fails on a skip, a crashed script and bridge drift, and runs `layout_parity` and `check_c_linkage`; `check_var_sizes.py` reads arrays, which found `cl_pinglist` and `cl_serverStatusList` short in 1.0 and `buf` declared larger than defined.
+- `third_party/libjpeg-turbo`, four stale `src/blobs` files and the gamepad and rumble sources are gone; `cod2rad/` stays by decision. Rejected: reworking the gamepad `#if` blocks. Left open: the debt list's CoD2rev-Plus entries, and WinINet's cut transfers.
+
+## 2026-10-28 — online prediction measured against 1.3; hud alignment
+
+- Same server (Titan), `cg_showmiss 1`: the original client missed 26 times (median 1.6, max 9.6), ours 53 (median 1.8) plus bursts of up to 32 units while rubbing another player. Collision with players (`0x4de2f0`, interpolated origin, box one unit smaller), the `centity_t` layout and the frame's order (`0x4d002d`..`0x4d0047`) are 1.3's; the misses far from players have the server moving slower than predicted, likely the mod's speed scale, which the playerstate does not carry. No client bug found; `COD2_TRACE_PREDDIFF` (per-word playerstate diff) kept as a tool. The prediction messages are 1.3's (`dvar_developer` was an alias of `cg_showmiss`).
+- The killcam's title and timer were drawn at the screen's edges, half way down: hud elements read `alignScreen`'s horizontal from bits 0-2 and vertical from 3-5, the other way round from the server (and 1.3, `0x4dd04b`); pairs like left/top look the same either way. Materials with `alignX` center or right went off screen too: without a label `labelWidth` was never set and a material's width adds it (1.3 zeroes it, `0x4dd715`). `scripts/hud_align_test.py` failed on both, passes now.
+
+## 2026-10-28 — shell shock files and the download label, as 1.3
+
+- After downloading the Titan mod the client dropped with "couldn't register shell shock 'medical'": the table of dvars a `.shock` file sets had `cg_shock_viewKickFadeTime` at index 4, so of the 29 read `cg_shock_mouse_fadeTime` was left out and a file without the former was refused; 1.3's table (`0x5d89c8`) has neither that dvar nor the gap. Fixed in `cg_shellshock.c` and `data.S`; a local game with such a file failed before and loads now.
+- The download label still read `EXE_DOWNLOA...`: the builds take `dlText` from the generated blobs (`build/win_gen/data.win.S`, `build/native_gen/data32.c`, also `src/blobs/data.S` and `build/web_gen/data.c`), where the blob's `"ING\0"` had been taken for a pointer (`scrMemTreeGlob+517961`); only `src/blobs/data.c` was fixed before. `test/test_blob_tables.py` pins the label in the blobs and the shock table.
+- Not changed: a local game over a `main` folder holding many downloaded `.iwd` drops with `FS_PureServerSetReferencedIwds: count mismatch`, because `systeminfo` passes 1024 bytes and loses `sv_referencedIwds`; 1.3's `Info_SetValueForKey_Big` has the same 1024 limit (`0x44b14b`).
+
+## 2026-10-28 — HTTP downloads on Windows, SD stopwatch, loading screen names
+
+- The Windows client never downloaded over HTTP: MinGW linked `win32_stubs.c`'s curl stubs (`curl_multi_init` answered 0), so every redirected download failed, the client sent `wwwdl fail` and `bbl8r` as 1.3 does (`0x414055`) and servers that ask for it dropped it; the slow downloads seen before were servers' UDP fallback. `src/win32/win_wininet.c` gives `dl_main.c` libcurl's calls on WinINet (1.3 itself uses libwww over WSOCK32); `scripts/www_download_test.py` (a local HTTP server) passes on Linux and under Wine, failed with the old exe. The bytes received now reach `cl_downloadCount`, as 1.3's read callback does (`0x4b58e0`): the bar stayed at 0% on both clients.
+- Online screenshots: the download box showed `EXE_DOWNLOAD` over the file name (the key is `EXE_DOWNLOADING`, `0x5ddc44`); SD's stopwatch drew a checkered diamond, its hand looked up as `<face>_hand` instead of `<face>needle` (`0x4dda60`); the loading screen showed `sd` and `mp_carentan`: it compared the gametype with the display name and never took the map's `longname` (`0x539211` uses the menus' lookups, `0x532d90`, `0x532cd0`).
+- Left open: the online view jumps (the traced session was too short; `COD2_TRACE_PREDDIFF` stays uncommitted); the MSVC client still has the curl stubs.
+
 ## 2026-10-25 — checks pass on Ubuntu 26.04 in Spanish
 
 - glibc 2.43 gave i386's `acosf`, `asinf`, `atan2f`, `log10f` and `sqrtf` new versions, raising the Linux binaries' floor past 2.34: `glibc_compat.h` binds them to `GLIBC_2.0` (`.symver`) and is now force-included in C too (speex calls `sqrtf`); its `<features.h>` part stays C++-only, since included first in C it hid sqlite3.c's `mremap`.

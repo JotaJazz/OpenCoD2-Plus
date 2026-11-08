@@ -52,6 +52,7 @@ netadr_t	net_local_adr;
 
 int			ip_socket;
 int			ipx_socket;
+int			alt_socket;
 
 #define	MAX_IPS		16
 static	int		numIP;
@@ -87,6 +88,7 @@ void SockadrToNetadr (struct sockaddr_in *s, netadr_t *a)
 	*(int *)&a->ip = *(int *)&s->sin_addr;
 	a->port = s->sin_port;
 	a->type = NA_IP;
+	a->altPort = 0;
 }
 
 char	*NET_BaseAdrToString (netadr_t a)
@@ -165,12 +167,14 @@ qboolean	Sys_GetPacket (netadr_t *net_from, msg_t *net_message)
 	int		protocol;
 	int		err;
 
-	for (protocol = 0 ; protocol < 2 ; protocol++)
+	for (protocol = 0 ; protocol < 3 ; protocol++)
 	{
 		if (protocol == 0)
 			net_socket = ip_socket;
-		else
+		else if (protocol == 1)
 			net_socket = ipx_socket;
+		else
+			net_socket = alt_socket;
 
 		if (!net_socket)
 			continue;
@@ -180,6 +184,7 @@ qboolean	Sys_GetPacket (netadr_t *net_from, msg_t *net_message)
 			, 0, (struct sockaddr *)&from, &fromlen);
 
 		SockadrToNetadr (&from, net_from);
+		net_from->altPort = protocol == 2;
 		// bk000305: was missing
 		net_message->readcount = 0;
 
@@ -221,7 +226,7 @@ qboolean	Sys_SendPacket( int length, const void *data, netadr_t to )
 	}
 	else if (to.type == NA_IP)
 	{
-		net_socket = ip_socket;
+		net_socket = to.altPort ? alt_socket : ip_socket;
 	}
 	else if (to.type == NA_IPX)
 	{
@@ -506,6 +511,29 @@ int NET_IPSocket (const char *net_interface, int port)
 NET_OpenIP
 ====================
 */
+/*
+====================
+NET_OpenAltPort
+
+A second port for the server lists of ALT_PORT_VERSION. It serves the same
+game, only the build with clients of both versions has it.
+====================
+*/
+static void NET_OpenAltPort( const char *ip )
+{
+#if PROTOCOL_VERSION == 115  // these files build without LIBCOD
+	dvar_t	*altPort = Dvar_RegisterInt( "net_altPort", 0, 0, UINT16_MAX, DVAR_LATCH );
+
+	if ( !altPort->current.integer ) {
+		return;
+	}
+	alt_socket = NET_IPSocket( ip, altPort->current.integer );
+	if ( !alt_socket ) {
+		Com_Printf( "WARNING: Couldn't open net_altPort %i\n", altPort->current.integer );
+	}
+#endif
+}
+
 // bk001204 - prototype needed
 void NET_OpenIP (void)
 {
@@ -526,6 +554,7 @@ void NET_OpenIP (void)
 			port->current.integer = port->current.integer + i;
 			port->latched.integer = port->latched.integer + i;
 			NET_GetLocalAddress();
+			NET_OpenAltPort( ip->current.string );
 			return;
 		}
 	}
@@ -561,6 +590,10 @@ void	NET_Shutdown (void)
 		close(ip_socket);
 		ip_socket = 0;
 	}
+	if (alt_socket) {
+		close(alt_socket);
+		alt_socket = 0;
+	}
 }
 
 
@@ -591,8 +624,10 @@ void NET_Sleep(int msec)
 	if (stdin_active)
 		FD_SET(0, &fdset); // stdin is processed too
 	FD_SET(ip_socket, &fdset); // network socket
+	if (alt_socket)
+		FD_SET(alt_socket, &fdset);
 	timeout.tv_sec = msec/1000;
 	timeout.tv_usec = (msec%1000)*1000;
-	select(ip_socket+1, &fdset, NULL, NULL, &timeout);
+	select((ip_socket > alt_socket ? ip_socket : alt_socket)+1, &fdset, NULL, NULL, &timeout);
 }
 

@@ -333,7 +333,6 @@ SV_UnlinkEntity v0 4
 SV_XModelDebugBoxes v0 4
 SV_XModelGet i4 4
 SV_inSnapshot i4 4,4
-Sys_BeginStreamedFile v0 4,4
 Sys_EndStreamedFile v0 4
 Sys_GetClipboardData i4 -
 Sys_GetValue i4 4
@@ -343,7 +342,6 @@ Sys_Milliseconds i4 -
 Sys_QueEvent v0 4,4,4,4,4,4
 Sys_SetValue v0 4,4
 Sys_ShowIP v0 -
-Sys_StreamedRead i4 4,4,4,4
 XAnimBlend v0 4,4,4,4,4,4
 XAnimCalcAbsDelta v0 4,4,4,4
 XAnimClearTreeGoalWeights v0 4,4,4

@@ -124,147 +124,81 @@ void gsc_player_set_userinfo(scr_entref_t id)
 	stackPushBool(qtrue);
 }
 
-void gsc_player_button_ads(scr_entref_t id)
+static bool gsc_player_isclient(scr_entref_t id, const char *function)
 {
 	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
 	{
-		stackError("gsc_player_button_ads() entity %i is not a player", id.entnum);
+		stackError("%s() entity %i is not a player", function, id.entnum);
 		stackPushUndefined();
-		return;
+		return false;
 	}
+	return true;
+}
 
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_ADS ? qtrue : qfalse);
+void gsc_player_button_ads(scr_entref_t id)
+{
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_ADS ? qtrue : qfalse);
 }
 
 void gsc_player_button_left(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_left() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.rightmove == BUTTON_MOVELEFT ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.rightmove == BUTTON_MOVELEFT ? qtrue : qfalse);
 }
 
 void gsc_player_button_right(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_right() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.rightmove == BUTTON_MOVERIGHT ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.rightmove == BUTTON_MOVERIGHT ? qtrue : qfalse);
 }
 
 void gsc_player_button_forward(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_forward() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.forwardmove == BUTTON_FORWARD ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.forwardmove == BUTTON_FORWARD ? qtrue : qfalse);
 }
 
 void gsc_player_button_back(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_back() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.forwardmove == BUTTON_BACK ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.forwardmove == BUTTON_BACK ? qtrue : qfalse);
 }
 
 void gsc_player_button_leanleft(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_leanleft() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_LEANLEFT ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_LEANLEFT ? qtrue : qfalse);
 }
 
 void gsc_player_button_leanright(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_leanright() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_LEANRIGHT ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_LEANRIGHT ? qtrue : qfalse);
 }
 
 void gsc_player_button_reload(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_reload() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_RELOAD ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_RELOAD ? qtrue : qfalse);
 }
 
 void gsc_player_button_jump(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_jump() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_JUMP ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_JUMP ? qtrue : qfalse);
 }
 
 void gsc_player_button_frag(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_frag() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_FRAG ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_FRAG ? qtrue : qfalse);
 }
 
 void gsc_player_button_smoke(scr_entref_t id)
 {
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("gsc_player_button_smoke() entity %i is not a player", id.entnum);
-		stackPushUndefined();
-		return;
-	}
-
-	client_t *client = &svs.clients[id.entnum];
-	stackPushBool(client->lastUsercmd.buttons & BUTTON_SMOKE ? qtrue : qfalse);
+	if (gsc_player_isclient(id, __func__))
+		stackPushBool(svs.clients[id.entnum].lastUsercmd.buttons & BUTTON_SMOKE ? qtrue : qfalse);
 }
 
 void gsc_player_stance_get(scr_entref_t id)
@@ -1342,17 +1276,6 @@ void gsc_player_getuserinfo(scr_entref_t id)
 
 // Methods below are named and behave as in zk_libcod
 
-static bool gsc_player_isclient(scr_entref_t id, const char *function)
-{
-	if (id.classnum != CLASS_NUM_ENTITY || id.entnum >= MAX_CLIENTS)
-	{
-		stackError("%s() entity %i is not a player", function, id.entnum);
-		stackPushUndefined();
-		return false;
-	}
-	return true;
-}
-
 static void gsc_player_setmuted(scr_entref_t id, const char *function, bool muted)
 {
 	int other;
@@ -1587,8 +1510,19 @@ void gsc_player_playscriptanimation(scr_entref_t id)
 	stackPushInt(BG_AnimScriptEvent(&self->client->ps, (scriptAnimEventTypes_t)event, isContinue != 0, force != 0));
 }
 
-// Sends one configstring to this player only. The next gamestate (map change,
-// reconnect) brings back the value every player has.
+// Sends a configstring to this player only; the next gamestate (map
+// change, reconnect) brings back the value every player has
+static bool gsc_player_sendconfigstring(scr_entref_t id, int index, const char *value)
+{
+	client_t *cl = &svs.clients[id.entnum];
+
+	if (cl->state < CS_PRIMED)
+		return false;
+
+	SV_SendConfigstring(cl, index, value);
+	return true;
+}
+
 void gsc_player_setconfigstringforplayer(scr_entref_t id)
 {
 	int index;
@@ -1611,15 +1545,7 @@ void gsc_player_setconfigstringforplayer(scr_entref_t id)
 		return;
 	}
 
-	client_t *cl = &svs.clients[id.entnum];
-	if (cl->state < CS_PRIMED)
-	{
-		stackPushBool(qfalse);
-		return;
-	}
-
-	SV_SendConfigstring(cl, index, value);
-	stackPushBool(qtrue);
+	stackPushBool(gsc_player_sendconfigstring(id, index, value));
 }
 
 // Reliable commands sent to this player and not acknowledged yet; the
@@ -2115,19 +2041,6 @@ void gsc_player_enableearthquakes(scr_entref_t id)
 	bool old = !libcodClients[id.entnum].noEarthquakes;
 	libcodClients[id.entnum].noEarthquakes = false;
 	stackPushBool(old);
-}
-
-// Sends a configstring to this player only; the next gamestate (map
-// change, reconnect) brings back the value every player has
-static bool gsc_player_sendconfigstring(scr_entref_t id, int index, const char *value)
-{
-	client_t *cl = &svs.clients[id.entnum];
-
-	if (cl->state < CS_PRIMED)
-		return false;
-
-	SV_SendConfigstring(cl, index, value);
-	return true;
 }
 
 void gsc_player_setnorthyawforplayer(scr_entref_t id)

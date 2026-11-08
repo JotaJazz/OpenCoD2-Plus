@@ -116,6 +116,8 @@ void Libcod_FreeEntity(int entityNum);
 bool Libcod_SkipCollision(int clientNum, int otherNum);
 bool Libcod_IsNotSolidFor(int entityNum, int clientNum);
 bool Libcod_IsSilencedEvent(int entityNum, int event);
+bool Libcod_IsHiddenMapFx(int fxId);
+bool Libcod_IsHiddenLoopSound(const char *alias);
 
 bool Libcod_RunEntityGravity(gentity_t *ent);
 void Libcod_EnableGravity(gentity_t *ent, bool bounce, bool locational, bool alignToGround);

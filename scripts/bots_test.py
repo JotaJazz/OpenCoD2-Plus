@@ -8,9 +8,10 @@ BOTNAV and BOTCOMBAT lines to games_mp.log. The map is loaded twice: the first
 load must build and save the waypoint graph, the second must read it back.
 Exits with 0 when every check passes.
 """
-import argparse, glob, os, re, secrets, shutil, subprocess, sys, tempfile, time, zipfile
+import argparse, os, re, secrets, shutil, subprocess, sys, tempfile, time
 
-from smoke_test import free_port, query, rcon
+from install_bots import read_game_script
+from smoke_test import free_port, log_lines, query, rcon
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOD = 'bottest'
@@ -52,21 +53,22 @@ HOOK = 'thread maps\\mp\\bots\\_bots::init();'
 SD_SCRIPT = 'maps/mp/gametypes/sd.gsc'
 
 
-def stock_sd(game_dir):
-    """The stock sd.gsc from the game's iwds (the last iwd wins, as in the game)."""
-    text = None
-    for iwd in sorted(glob.glob(os.path.join(game_dir, 'main', 'iw_*.iwd'))):
-        with zipfile.ZipFile(iwd) as z:
-            if SD_SCRIPT in z.namelist():
-                text = z.read(SD_SCRIPT).decode('latin-1')
-    return text
-
-
-def log_lines(path):
-    if not os.path.exists(path):
-        return []
-    # each line starts with the game time, as in " 1:23 K;..."
-    return [re.sub(r'^\s*\d+:\d+ ', '', l) for l in open(path, encoding='latin-1').read().splitlines()]
+def stock_defuse_race(lines):
+    """Indexes of the errors stock sd.gsc raises when the defuser dies on the
+    last tick of a defuse: it still defuses, then destroys the progress bars
+    the death already removed (sd.gsc lines 1925 and 1926). A stock bug, about
+    one SD run in twenty."""
+    known = set()
+    for i, line in enumerate(lines):
+        if not (line.startswith('A;') and line.endswith(';bomb_defuse')):
+            continue
+        num = line.split(';')[2]
+        if not any(k.startswith('K;') and k.split(';')[2] == num for k in lines[max(0, i - 6):i]):
+            continue
+        for j in range(i + 1, min(len(lines), i + 4)):
+            if lines[j].startswith('BOTERROR') and 'removed entity is not an entity' in lines[j]:
+                known.add(j)
+    return known
 
 
 def wait_lines(path, pattern, count, seconds):
@@ -84,7 +86,7 @@ def main():
     ap.add_argument('--binary', default=os.path.join(ROOT, 'bin', 'cod2rev_lnxded'))
     ap.add_argument('--map', default='mp_toujane')
     ap.add_argument('--gametype', default='tdm')
-    ap.add_argument('--seconds', type=int, help='play time on the first load (default: 180, SD 240, CTF 300)')
+    ap.add_argument('--seconds', type=int, help='play time on the first load (default: 180, SD 240, CTF and HQ 300)')
     ap.add_argument('--bombmode', type=int, choices=(0, 1, 2),
                     help='SD bomb mode: stock SD always plays 0, so a copy with this mode is installed')
     ap.add_argument('--keep', help='copy games_mp.log and the server log to this folder')
@@ -92,7 +94,7 @@ def main():
                     help='start with a garbage waypoint file, which must be rebuilt')
     args = ap.parse_args()
     if args.seconds is None:
-        args.seconds = {'sd': 240, 'ctf': 300}.get(args.gametype, 180)
+        args.seconds = {'sd': 240, 'ctf': 300, 'hq': 300}.get(args.gametype, 180)
     fights = args.gametype in ('tdm', 'dm')
     if fights and args.seconds < 120:
         ap.error('the combat checks need --seconds 120 or more')
@@ -117,8 +119,8 @@ def main():
             f.write(text)
 
         if args.bombmode is not None:
-            sd = stock_sd(args.game_dir)
-            if sd is None or 'level.bombmode = 0;' not in sd:
+            sd, _ = read_game_script(args.game_dir, SD_SCRIPT)
+            if 'level.bombmode = 0;' not in sd:
                 ap.error('no stock sd.gsc with level.bombmode in the game folder')
             path = os.path.join(home, MOD, *SD_SCRIPT.split('/'))
             sd = sd.replace('level.bombmode = 0;', f'level.bombmode = {args.bombmode};')
@@ -188,7 +190,7 @@ def main():
         # a moving goal (an enemy, a flag carrier) must not make a bot search
         # every tick (10 a second); a few goal changes in a row are normal
         repaths = {}
-        for raw in open(game_log, encoding='latin-1').read().splitlines() if os.path.exists(game_log) else []:
+        for raw in log_lines(game_log, timed=True):
             m = re.match(r'^\s*(\d+):(\d+) BOTNAV (\d+) repath', raw)
             if m:
                 key = (m.group(3), int(m.group(1)) * 60 + int(m.group(2)))
@@ -196,7 +198,7 @@ def main():
         busiest = max(repaths.values(), default=0)
         check('bots search paths sparingly', 0 < busiest <= 6, f'at most {busiest} searches by a bot in a second')
         goals = {l.split()[3] for l in lines if re.match(r'BOTNAV \d+ goal ', l)}
-        # in SD and CTF most bots play the objective instead of patrolling
+        # in SD, CTF and HQ most bots play the objective instead of patrolling
         if fights:
             check('bots choose patrol and hint goals', {'patrol', 'hint'} <= goals, ', '.join(sorted(goals)))
         else:
@@ -205,7 +207,7 @@ def main():
         # should rarely get stuck on the same node again; the game time
         # prefix gives the seconds
         stuck = []
-        for raw in open(game_log, encoding='latin-1').read().splitlines() if os.path.exists(game_log) else []:
+        for raw in log_lines(game_log, timed=True):
             m = re.match(r'^\s*(\d+):(\d+) BOTNAV (\d+) stuck (\d+)', raw)
             if m:
                 stuck.append((int(m.group(1)) * 60 + int(m.group(2)), m.group(3), m.group(4)))
@@ -240,6 +242,14 @@ def main():
             check('bots take steal and defend roles', {'steal', 'defend'} <= roles, ', '.join(sorted(roles)))
             check('bots pick up the enemy flag', 'pickup' in events, f'{events.count("pickup")} pickups')
             print(f'     {events.count("capture")} captures, {events.count("return")} returns')
+        if args.gametype == 'hq':
+            radios = [l.split()[2] for l in lines if l.startswith('BOTOBJ radio ')]
+            check('bots take the radio role', 'radio' in roles, ', '.join(sorted(roles)))
+            # a first radio the graph can't reach stays there until a player takes it
+            check('bots capture radios', 'skipped' in radios[:1] or any(t in ('allies', 'axis') for t in radios),
+                  f'{sum(t in ("allies", "axis") for t in radios)} captures')
+            print(f'     {radios.count("none")} radios neutral again, {radios.count("skipped")} skipped,'
+                  f' {", ".join(l.split(maxsplit=1)[1] for l in lines if l.startswith("BOTOBJ radios "))[:40]}')
         kills = [l for l in lines if l.startswith('K;')]
         check('bots kill each other', len(kills) >= 5, f'{len(kills)} kills')
         nade_kills = sum(1 for l in kills if 'MOD_GRENADE_SPLASH' in l)
@@ -251,7 +261,14 @@ def main():
         allowed_nades = max(2, len(kills) // 20)
         check('few grenade suicides', self_nades <= allowed_nades, f'{self_nades} of at most {allowed_nades}')
 
-        errors = [l for l in lines if l.startswith('BOTERROR')]
+        stock = stock_defuse_race(lines)
+        if stock:
+            print(f'     {len(stock)} errors of the stock sd.gsc defuse race left out')
+        errors = [l for i, l in enumerate(lines) if l.startswith('BOTERROR') and i not in stock]
+        if args.gametype == 'hq':
+            # hq_obj_think reads level.radio[level.nextradio - 1] with nextradio 0;
+            # outside developer mode the value is undefined and the script goes on
+            errors = [l for l in errors if 'array index -1 out of range' not in l]
         allowed = 1 if args.corrupt_cache else 0
         check('no script errors', len(errors) <= allowed, '; '.join(errors[:3]))
 

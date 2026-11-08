@@ -113,7 +113,6 @@ set(MSVC_C ${M_PC_C} ${M_MAC_C} ${M_STUBS_C} ${M_WIN_C} ${M_ROOT_C})
 
 # native-asm data .c and cpp_trampoline/agl_stubs excluded as on MinGW. The
 # bundled zlib IS kept (MinGW used -lz; MSVC has no system zlib, so compile it).
-list(FILTER MSVC_C EXCLUDE REGEX "^src/(data|import_pointers|literals)\\.c$")
 # zlib_alloc.c (zcalloc/zcfree -> Z_MallocInternal) duplicates the stock zlib
 # zutil.c, which already defines them; excluded so the link needs no
 # /FORCE:MULTIPLE. (zutil.c == current behavior; routing zlib through the engine

@@ -310,6 +310,8 @@ int MSG_ReadBits(msg_t *msg, int bits);
 int MSG_ReadBit(msg_t *msg);
 int MSG_WriteBitsCompress(byte *from, byte *to, int size);
 int MSG_ReadBitsCompress(byte *from, byte *to, int size);
+int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize);
+extern void Com_Error(int level, const char *fmt, ...);
 void MSG_WriteByte(msg_t *msg, int c);
 void MSG_WriteData(msg_t *buf, const void *data, int length);
 int MSG_ReadByte(msg_t *msg);
@@ -542,24 +544,26 @@ int MSG_WriteBitsCompress(byte *from, byte *to, int size)
     return (bit + 7) >> 3;
 }
 
-int MSG_ReadBitsCompress(byte *from, byte *to, int size)
+/* Not in 1.3: two bits can decode to a byte, so a message of MAX_MSGLEN bytes
+ * from a hostile server overruns a buffer of the same size. */
+int MSG_ReadBitsCompressLimit(byte *from, byte *to, int size, int maxsize)
 {
     int bits = size * 8;
     int get;
     int bit = 0;
     byte *data = to;
 
-    if (__builtin_expect(bits > 0, 0)) {
-        do {
-
-            Huff_offsetReceive((nodetype *)msgHuff.decompressor.tree, &get, from, &bit);
-            *data++ = (byte)get;
-        } while (bits > bit);
-
-        return (int)(data - to);
+    while (bit < bits && data - to < maxsize) {
+        Huff_offsetReceive((nodetype *)msgHuff.decompressor.tree, &get, from, &bit);
+        *data++ = (byte)get;
     }
 
-    return 0;
+    return (int)(data - to);
+}
+
+int MSG_ReadBitsCompress(byte *from, byte *to, int size)
+{
+    return MSG_ReadBitsCompressLimit(from, to, size, 0x7fffffff);
 }
 
 static inline __attribute__((always_inline)) void MSG_WriteByte_core(msg_t *msg, int c)
@@ -1316,6 +1320,10 @@ void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to
     }
 
     lc = MSG_ReadByte_core(msg);
+    /* not in 1.3, whose table ends at the same place */
+    if (lc > (int)(sizeof(playerStateFields) / sizeof(playerStateFields[0]))) {
+        Com_Error(1, "\x15" "MSG_ReadDeltaPlayerstate: bad field count %i", lc);
+    }
     if (lc > 0) {
         for (i = 0; i < lc; ++i) {
             MSG_ReadDeltaPlayerstateField(msg, (byte *)from, (byte *)to, &playerStateFields[i], print);

@@ -39,6 +39,10 @@ sv_rconLockTime seconds. A correct password clears the counter. Addresses on the
 server machine itself (127.x.x.x) and those in sv_rconWhitelist are never locked.
 sv_rconMaxAttempts 0 disables the lock.
 
+The global limit runs before the password is compared, or spoofed guesses that
+each come from a new address would only be limited by bandwidth. So a flood
+holds up every address but those in sv_rconWhitelist and local tools.
+
 ==============================================================================
 */
 #define MAX_RCON_TRACKED 64
@@ -74,9 +78,11 @@ static rconAttempt_t *SV_RconAttemptForAddress( netadr_t from, bool create )
 		return NULL;
 	}
 
-	// Take a free slot, otherwise recycle the least recently seen address,
-	// preferring addresses that aren't currently locked
+	// Take a free slot, otherwise recycle the address with the fewest recent
+	// failures and the least recently seen of those, preferring addresses that
+	// aren't currently locked, so that bad guesses from others can't reset one
 	rconAttempt_t *slot = NULL;
+	int window = sv_rconLockTime->current.integer * 1000;
 
 	for ( i = 0; i < MAX_RCON_TRACKED; i++ )
 	{
@@ -104,9 +110,15 @@ static rconAttempt_t *SV_RconAttemptForAddress( netadr_t from, bool create )
 				slot = entry;
 			}
 		}
-		else if ( entry->lastSeen - slot->lastSeen < 0 )
+		else
 		{
-			slot = entry;
+			int entryFailures = now - entry->firstFailureTime > window ? 0 : entry->failures;
+			int slotFailures = now - slot->firstFailureTime > window ? 0 : slot->failures;
+
+			if ( entryFailures < slotFailures || ( entryFailures == slotFailures && entry->lastSeen - slot->lastSeen < 0 ) )
+			{
+				slot = entry;
+			}
 		}
 	}
 
@@ -153,6 +165,13 @@ static bool SV_RconIsExempt( netadr_t from )
 	// so are the admin's addresses, which spoofed bad guesses could lock out
 	return NET_IsLocalAddress( from ) || ( from.type == NA_IP && from.ip[0] == 127 ) || SV_RconIsWhitelisted( from );
 }
+
+#if LIBCOD_COMPILE_RATELIMITER == 1
+static bool SV_RconSkipsGlobalLimit( netadr_t from )
+{
+	return SV_RconIsWhitelisted( from ) || ( !sv_limitLocalRcon->current.boolean && SV_RconIsExempt( from ) );
+}
+#endif
 
 static bool SV_RconIsLocked( netadr_t from )
 {
@@ -268,7 +287,7 @@ void SVC_RemoteCommand( netadr_t from, msg_t *msg )
 #if LIBCOD_COMPILE_RATELIMITER == 1
 	static leakyBucket_t bucket;
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
-	if ( SVC_RateLimitAddress( from, 10, 1000, sv_limitLocalRcon->current.boolean ) )
+	if ( !SV_RconIsWhitelisted( from ) && SVC_RateLimitAddress( from, 10, 1000, sv_limitLocalRcon->current.boolean ) )
 	{
 		if ( !Libcod_SpamCallback( "RCON:ADDRESS", from ) )
 			Com_DPrintf( "SVC_RemoteCommand: rate limit from %s exceeded, dropping request\n", NET_AdrToString( from ) );
@@ -276,38 +295,34 @@ void SVC_RemoteCommand( netadr_t from, msg_t *msg )
 	}
 #endif
 
-	// Ignore locked addresses before they can use up the global limits below
+	// Ignore locked addresses before they can use up the global limit below
 	if ( SV_RconIsLocked( from ) )
 	{
 		Com_DPrintf( "SVC_RemoteCommand: %s is locked out, dropping request\n", NET_AdrToString( from ) );
 		return;
 	}
 
+#if LIBCOD_COMPILE_RATELIMITER == 1
+	// Make DoS via rcon and guessing from many addresses impractical
+	if ( !SV_RconSkipsGlobalLimit( from ) && SVC_RateLimit( &bucket, 10, 1000 ) )
+	{
+		Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
+		return;
+	}
+#endif
+
 	const char *password = Cmd_Argv( 1 );
 
 	valid = strlen( rcon_password->current.string ) &&
 	        !I_strcmpConstantTime( password, rcon_password->current.string );
 
-	// Count every guess, also those the global limits below drop, or
-	// requests from many addresses would keep each one from being locked
 	if ( rcon_password->current.string[0] )
 	{
 		SV_RconRegisterResult( from, valid );
 	}
 
-	// The global limits only apply to wrong passwords, so that bad requests
-	// sent from many addresses can't keep the admin from using rcon
 	if ( !valid )
 	{
-#if LIBCOD_COMPILE_RATELIMITER == 1
-		// Make DoS via rcon impractical
-		if ( SVC_RateLimit( &bucket, 10, 1000 ) )
-		{
-			Com_DPrintf( "SVC_RemoteCommand: rate limit exceeded, dropping request\n" );
-			return;
-		}
-#endif
-
 		// TTimo - show_bug.cgi?id=534
 		time = Com_Milliseconds();
 		if ( lasttime && time - lasttime < 500 )
