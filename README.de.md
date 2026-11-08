@@ -55,7 +55,6 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 
 ```sh
 ./cod2_linux +set fs_basepath /path/to/CoD2 +connect IP:port
-./cod2_linux_vk +set fs_basepath /path/to/CoD2 +connect IP:port   # with the game's own shaders (Vulkan)
 ```
 
 Ohne `+connect` öffnet der Client das Hauptmenü, wo Sie auch Ihr eigenes Spiel starten können. Ein dedizierter Server für Ihr lokales Netz:
@@ -90,10 +89,12 @@ Die Engine ist eine 32-Bit-x86-Binärdatei. Auf einem 64-Bit-System mit Debian o
 sudo dpkg --add-architecture i386 && sudo apt update
 sudo apt install build-essential gcc-multilib g++-multilib cmake \
      libsdl2-dev:i386 libgl1-mesa-dev:i386 libx11-dev:i386 \
-     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386
+     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386 \
+     meson ninja-build libvulkan1:i386
 ```
 
 ```sh
+scripts/build_linux_vk_deps.sh
 cmake -S . -B build-native
 cmake --build build-native -j
 # -> build-native/cod2_linux    (client)
@@ -102,7 +103,7 @@ cmake --build build-native -j
 
 Zum Bauen beider werden die Bibliotheken des Clients gebraucht, aber `cod2_lnxded` läuft nur mit den 32-Bit-Versionen von libc, libm, libz und libstdc++.
 
-`cod2_linux` zeichnet mit Ersatz-Shadern (keine Sonne, weißer Himmel). Für die Shader des Spiels selbst baue `cod2_linux_vk`: `scripts/build_linux_vk_deps.sh` baut DXVK native und vkd3d-shader (32 Bit, aus festgelegten Versionen; es braucht außerdem `meson`, `ninja` und `libvulkan1:i386`), danach mit `-DCOD2_LINUX_DXVK=ON` in einem eigenen Build-Verzeichnis konfigurieren. Es braucht ein Vulkan-Gerät.
+`cod2_linux` zeichnet mit den Shadern des Spiels selbst über Vulkan: `scripts/build_linux_vk_deps.sh` baut DXVK native und vkd3d-shader (32 Bit, aus festgelegten Versionen), und der Build kopiert sie daneben. Es braucht ein Vulkan-Gerät. `-DCOD2_LINUX_DXVK=OFF` baut es stattdessen auf dem GL-Gerät, ohne dieses Skript, mit Ersatz-Shadern (keine Sonne, weißer Himmel).
 
 ### Windows (Cross-Kompilierung unter Linux mit MinGW)
 

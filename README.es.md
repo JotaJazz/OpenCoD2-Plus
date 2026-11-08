@@ -55,7 +55,6 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 
 ```sh
 ./cod2_linux +set fs_basepath /path/to/CoD2 +connect IP:port
-./cod2_linux_vk +set fs_basepath /path/to/CoD2 +connect IP:port   # con los shaders del propio juego (Vulkan)
 ```
 
 Sin `+connect` el cliente abre el menú principal, donde también puedes crear tu propia partida. Un servidor dedicado para tu red local:
@@ -90,10 +89,12 @@ El motor es un binario x86 de 32 bits. En un Debian o Ubuntu de 64 bits hacen fa
 sudo dpkg --add-architecture i386 && sudo apt update
 sudo apt install build-essential gcc-multilib g++-multilib cmake \
      libsdl2-dev:i386 libgl1-mesa-dev:i386 libx11-dev:i386 \
-     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386
+     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386 \
+     meson ninja-build libvulkan1:i386
 ```
 
 ```sh
+scripts/build_linux_vk_deps.sh
 cmake -S . -B build-native
 cmake --build build-native -j
 # -> build-native/cod2_linux    (client)
@@ -102,7 +103,7 @@ cmake --build build-native -j
 
 Las bibliotecas del cliente hacen falta para compilar los dos, pero `cod2_lnxded` se ejecuta solo con libc, libm, libz y libstdc++ de 32 bits.
 
-`cod2_linux` dibuja con shaders provisionales (sin sol, cielo blanco). Para los shaders del propio juego, compila `cod2_linux_vk`: `scripts/build_linux_vk_deps.sh` compila DXVK native y vkd3d-shader (32 bits, de versiones fijadas; además necesita `meson`, `ninja` y `libvulkan1:i386`), y luego configura con `-DCOD2_LINUX_DXVK=ON` en su propio directorio de compilación. Necesita un dispositivo Vulkan.
+`cod2_linux` dibuja con los shaders del propio juego sobre Vulkan: `scripts/build_linux_vk_deps.sh` compila DXVK native y vkd3d-shader (32 bits, de versiones fijadas), y la compilación los copia junto a él. Necesita un dispositivo Vulkan. `-DCOD2_LINUX_DXVK=OFF` lo compila en cambio sobre el dispositivo GL, sin ese script, con shaders provisionales (sin sol, cielo blanco).
 
 ### Windows (cruzado desde Linux con MinGW)
 

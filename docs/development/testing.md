@@ -30,7 +30,7 @@ LAN mode with a temporary home, so `GAME` is only read.
 | `scripts/stability_test.py` | a client archives 3000 dvars and reads them back from a config over 64 KB, and past the pool's end `set` only prints; with `--wine CMD --binary cod2_win32.exe`, `com_freezeWatch` reports the `freeze` command's stall, the client goes on, and 0 turns it off | yes |
 | `scripts/fx_test.py` | effects change the picture; no effect or material fails to load | yes |
 | `scripts/msvc_run_test.py --exe EXE` | from WSL, a Windows client (MinGW or MSVC ABI) on Windows loads mp_toujane in a local game, its cgame starts, the gametype script talks to it, frames are drawn, and it keeps running `--linger` s with no crash report | yes |
-| `scripts/shader_compile_test.py GAME` | `cod2_linux_vk` compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
+| `scripts/shader_compile_test.py GAME` | `cod2_linux` (DXVK) compiles the game's shaders (150 at least, none fails but `distortion.hlsl`) and draws mp_toujane | yes |
 | `scripts/bots_test.py --binary B` | libcod bots (OpenCoD2-Plus Server's test, `mods/bots`) | no |
 | `scripts/climb_sound_test.py GAME` | a real client (`COD2_TRACE_SOUND`: each alias it plays) hears `weap_raise` from a minimal Plus client that mantles, as the climber does (Plus 123; the climber's cgame played it alone) | yes |
 | `scripts/plus_rules_test.py GAME --binary B` | the Plus 123 rules (OpenCoD2-Plus Server's test, vendored) against a minimal Plus client: fast reload, prone peek, MG clip; 1.3 Plus builds only | no |
@@ -47,6 +47,7 @@ the scripts pick the binary from `--protocol` (`--binary` overrides it).
 
 | Note | Detail |
 |---|---|
+| Windows off the desktop | `scripts/headless.sh COMMAND...` runs the tests' clients in a virtual KWin (`kwin_wayland --virtual`, with its own Xwayland): they draw on the GPU (DXVK picks it over llvmpipe) and take neither the screen nor the mouse. KDE only |
 | Minimal client | `scripts/hit_location_test.py`'s client sends pitch, move keys and buttons every command: a field left unchanged keeps the server's previous command's value |
 | Prediction misses | `cg_showmiss 1` prints them, with 1.3's messages (`prediction error`, `Prediction miss`); running into another player always misses (the client clips players at their interpolated origin with a box one unit smaller per side, as the original). `COD2_TRACE_PREDDIFF=1` prints, for each snapshot whose origin differs from what the client predicted for that time, every 4-byte word of the playerstate that differs and the solid entities around |
 | Game folder | `GAME` must hold only the stock `.iwd`: files downloaded from servers into `main` make local games drop with `FS_PureServerSetReferencedIwds: count mismatch` (`systeminfo` passes 1024 bytes, as 1.3); a folder of links to the stock files works |
@@ -79,7 +80,7 @@ plus:
    `contact` (plain and `--listen`), `listen`, `fx`, `client_view`,
    `prediction`, `view_weapon`, `hud_align`, `anim_script`, `server_eye`, `sound`, `climb_sound` (118 only).
    `hostile_server_test.py` (118 only: a fake server sends malformed messages).
-   `shader_compile_test.py` when the `linux-vk` build exists.
+   `shader_compile_test.py`.
 4. `bots_test.py`, `http_test.py` and `plus_rules_test.py` with `--binary build/check-linux/cod2_lnxded`.
 5. `www_download_test.py` plain, with `--disconnect`, `--http-404` and `--truncate` (118 only).
 

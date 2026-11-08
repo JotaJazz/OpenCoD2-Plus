@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Configures and builds each variant into build/check-<variant>/ and reports the errors.
 
-    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|web|all ...] [--c [--cxx-dirs "a;b"]]
+    python3 scripts/build_check.py [linux|linux-10|linux-13|linux-gl|linux-x64|linux-x64-10|linux-client-x64|mingw-client-x64|mingw|mingw-10|mingw-client|mingw-client-10|mingw-client-gl|msvc-client|web|all ...] [--c [--cxx-dirs "a;b"]]
 
-linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one, mingw the Windows
+linux is the default 1.3 build (1.3 Plus), linux-13 stock 1.3 (-DCOD2_PLUS_PROTOCOL=OFF), linux-10 the 1.0 one;
+their client is on DXVK, so they need scripts/build_linux_vk_deps.sh's libraries,
+and linux-gl builds it on the GL device (-DCOD2_LINUX_DXVK=OFF). mingw the Windows
 cross-compile of the dedicated server and mingw-client that of the client
 (cod2_win32.exe), skipped without the static SDL2 under src/win32/sdl2/lib;
 the client draws with the real d3d9 and d3dx9's HLSL compiler, and
@@ -39,12 +41,13 @@ os.environ['LC_ALL'] = 'C'  # binutils' output is parsed in English
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GLIBC_MAX = (2, 34)
-LINUX_BINARIES = ('cod2_linux', 'cod2_linux_vk', 'cod2_lnxded')
+LINUX_BINARIES = ('cod2_linux', 'cod2_lnxded')
 CLIENT_LIBRARIES = ('libGL.', 'libX11.', 'libSDL2', 'libcurl.')
 
 VARIANTS = {
-    'linux': [],
-    'linux-10': ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10'],
+    # the Linux client on DXVK, the default: needs scripts/build_linux_vk_deps.sh's libraries
+    'linux': ['-DCOD2_LINUX_DXVK=ON'],
+    'linux-10': ['-DCOD2_LINUX_DXVK=ON', '-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10'],
     'mingw': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake'],
     'mingw-client': ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake', '-DCOD2_WIN32_CLIENT=ON',
                      '-DCOD2_WIN32_REAL_D3D9=ON'],
@@ -52,15 +55,16 @@ VARIANTS = {
 for _v in ('mingw', 'mingw-client'):
     VARIANTS[_v + '-10'] = VARIANTS[_v] + ['-DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10']
 VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D9=OFF']
-# the Linux client on real Direct3D 9 (cod2_linux_vk) needs scripts/build_linux_vk_deps.sh's libraries
-VARIANTS['linux-vk'] = ['-DCOD2_LINUX_DXVK=ON']
+# the Linux client on the GL device
+VARIANTS['linux-gl'] = ['-DCOD2_LINUX_DXVK=OFF']
 # stock 1.3: the client and servers without CoD2 1.3 Plus (COD2_PLUS)
-VARIANTS['linux-13'] = ['-DCOD2_PLUS_PROTOCOL=OFF']
+VARIANTS['linux-13'] = ['-DCOD2_LINUX_DXVK=ON', '-DCOD2_PLUS_PROTOCOL=OFF']
+DXVK_VARIANTS = ('linux', 'linux-10', 'linux-13')
 # the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
 VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
 VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
 # the 64-bit Linux client: the engine on LP64, with scripts/linux_x64_deps.sh's SDL2 headers
-VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON']
+VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON', '-DCOD2_LINUX_DXVK=OFF']
 # the 64-bit Windows client: scripts/mingw64_deps.sh's compilers and SDL2
 VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake', '-DCOD2_X64=ON',
                                  '-DCOD2_WIN32_CLIENT=ON', '-DCOD2_WIN32_REAL_D3D9=ON']
@@ -221,8 +225,7 @@ def duplicates(variant, build_dir):
                                   '--nm', nm] + extra, capture_output=True, text=True)
             if run.returncode != 0:
                 errors += [f'{target}: {line}' for line in failure_lines(run, script)]
-        executable = os.path.join(build_dir, (target + '_vk' if variant == 'linux-vk' and target == 'cod2_linux' else target)
-                                  + ('.exe' if variant.startswith('mingw') else ''))
+        executable = os.path.join(build_dir, target + ('.exe' if variant.startswith('mingw') else ''))
         if os.path.exists(executable):
             # the imports the target links: the client's server and collision
             # with the VM's core thunks, the dedicated server's own
@@ -322,9 +325,8 @@ def c_decls(build_dir):
 
 def var_sizes(build_dir):
     """The engine's globals declared larger than they are defined."""
-    binary = 'cod2_linux_vk' if os.path.exists(os.path.join(build_dir, 'cod2_linux_vk')) else 'cod2_linux'
     run = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'check_var_sizes.py'), build_dir,
-                          '--binary', binary],
+                          '--binary', 'cod2_linux'],
                          capture_output=True, text=True)
     if run.returncode == 0:
         return []
@@ -366,7 +368,7 @@ def main():
             print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
             continue
-        if variant == 'linux-vk' and not os.path.exists(LINUX_VK_DXVK):
+        if variant in DXVK_VARIANTS and not os.path.exists(LINUX_VK_DXVK):
             print(f'skip {variant} (no {os.path.relpath(LINUX_VK_DXVK, ROOT)}: scripts/build_linux_vk_deps.sh)')
             skipped = True
             continue

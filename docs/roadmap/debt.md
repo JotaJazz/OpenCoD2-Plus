@@ -24,7 +24,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Item | Why accepted |
 |---|---|
-| `cod2_linux` keeps the GL device (stand-in shaders) | `cod2_linux_vk` has the game's shaders but needs DXVK, vkd3d-shader and a Vulkan device |
+| The GL Linux client (`-DCOD2_LINUX_DXVK=OFF`, and every x64 one) keeps stand-in shaders | the default `cod2_linux` draws the game's shaders on DXVK; the GL one is for machines without Vulkan |
 | `fxRestart` takes hunk memory each time until the next map load | developer command; many restarts on one map end in a drop error |
 | Server browser's find-player list indexes 1-based (`ui_main_mp.c`) | nothing starts that search, in the original either |
 | Windows dedicated server prints only to its window, shows a message box on fatal errors | OpenCoD2-Plus Server's `src/win32`; scripts read the console log |
@@ -45,7 +45,6 @@ Live list. Remove an entry when it is fixed (and record the fix in
 | Decision | Waiting on |
 |---|---|
 | An OpenGL 4.5 Core device | a new device behind `IDirect3DDevice9`: the Mac port's is legacy GL. vkd3d-shader turned all 194 shader compilations of a `mp_toujane` load into SPIR-V, which needs `GL_ARB_gl_spirv`; its GLSL target is experimental and off by default |
-| Make `cod2_linux_vk` the default Linux client | testing on native Linux with a GPU (under WSL Vulkan is llvmpipe); shipping DXVK and vkd3d-shader with it |
 
 ## Deliberate simplifications
 

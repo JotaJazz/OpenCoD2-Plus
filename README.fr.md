@@ -55,7 +55,6 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 
 ```sh
 ./cod2_linux +set fs_basepath /path/to/CoD2 +connect IP:port
-./cod2_linux_vk +set fs_basepath /path/to/CoD2 +connect IP:port   # with the game's own shaders (Vulkan)
 ```
 
 Sans `+connect`, le client ouvre le menu principal, d'où vous pouvez aussi lancer votre propre partie. Un serveur dédié pour votre réseau local :
@@ -90,10 +89,12 @@ Le moteur est un binaire x86 32 bits. Sur un système Debian ou Ubuntu 64 bits, 
 sudo dpkg --add-architecture i386 && sudo apt update
 sudo apt install build-essential gcc-multilib g++-multilib cmake \
      libsdl2-dev:i386 libgl1-mesa-dev:i386 libx11-dev:i386 \
-     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386
+     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386 \
+     meson ninja-build libvulkan1:i386
 ```
 
 ```sh
+scripts/build_linux_vk_deps.sh
 cmake -S . -B build-native
 cmake --build build-native -j
 # -> build-native/cod2_linux    (client)
@@ -102,7 +103,7 @@ cmake --build build-native -j
 
 Les bibliothèques du client sont nécessaires pour compiler les deux, mais `cod2_lnxded` s'exécute avec seulement libc, libm, libz et libstdc++ en 32 bits.
 
-`cod2_linux` dessine avec des shaders de remplacement (pas de soleil, ciel blanc). Pour les shaders du jeu lui-même, compilez `cod2_linux_vk` : `scripts/build_linux_vk_deps.sh` compile DXVK native et vkd3d-shader (32 bits, depuis des versions fixées ; il faut aussi `meson`, `ninja` et `libvulkan1:i386`), puis configurez avec `-DCOD2_LINUX_DXVK=ON` dans son propre répertoire de compilation. Il faut un périphérique Vulkan.
+`cod2_linux` dessine avec les shaders du jeu lui-même sur Vulkan : `scripts/build_linux_vk_deps.sh` compile DXVK native et vkd3d-shader (32 bits, depuis des versions fixées), et la compilation les copie à côté. Il faut un périphérique Vulkan. `-DCOD2_LINUX_DXVK=OFF` le compile plutôt sur le périphérique GL, sans ce script, avec des shaders de remplacement (pas de soleil, ciel blanc).
 
 ### Windows (compilation croisée depuis Linux avec MinGW)
 

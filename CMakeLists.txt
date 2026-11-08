@@ -1,7 +1,8 @@
 # =============================================================================
 # unified CMake build for all targets.
 #
-#   Native Linux (default):
+#   Native Linux (default; the client on DXVK needs scripts/build_linux_vk_deps.sh,
+#   -DCOD2_LINUX_DXVK=OFF builds it on the GL device instead):
 #     cmake -S . -B build/native && cmake --build build/native -j
 #       -> build/native/cod2_linux   build/native/cod2_lnxded
 #
@@ -625,11 +626,18 @@ else()
 # NATIVE Linux (cod2_linux + cod2_lnxded)
 # ----------------------------------------------------------------------------
 option(COD2_DEBUG "-O0, no hardening (gdb / canary-UB work; mirrors DEBUG=1)" OFF)
-option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader): cod2_linux_vk" OFF)
+# DXVK's libraries are 32-bit, so the 64-bit client stays on the GL device
+if(COD2_X64)
+  set(COD2_LINUX_DXVK_DEFAULT OFF)
+else()
+  set(COD2_LINUX_DXVK_DEFAULT ON)
+endif()
+option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader); OFF: the GL device" ${COD2_LINUX_DXVK_DEFAULT})
 set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk)
 if(COD2_LINUX_DXVK)
   if(NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libdxvk_d3d9.so.0 OR NOT EXISTS ${COD2_LINUX_VK_DIR}/include/vkd3d_shader.h)
-    message(FATAL_ERROR "COD2_LINUX_DXVK: run scripts/build_linux_vk_deps.sh first")
+    message(FATAL_ERROR "The Linux client draws on DXVK: run scripts/build_linux_vk_deps.sh first, "
+                        "or configure with -DCOD2_LINUX_DXVK=OFF for the GL device")
   endif()
   add_compile_definitions(GFX_REAL_D3D9)
   include_directories(${COD2_LINUX_VK_DIR}/include)
@@ -838,9 +846,8 @@ set_target_properties(cod2_linux cod2_lnxded PROPERTIES
 # (GFX_REAL_D3D9) as the Windows client, on DXVK native, and compiles the
 # game's shaders with vkd3d-shader; both are loaded at run time from next to
 # the executable (scripts/build_linux_vk_deps.sh builds them). The whole build
-# directory is compiled that way, and its client is named cod2_linux_vk.
+# directory is compiled that way.
 if(COD2_LINUX_DXVK)
-  set_target_properties(cod2_linux PROPERTIES OUTPUT_NAME cod2_linux_vk)
   target_link_options(cod2_linux PRIVATE "-Wl,-rpath,$ORIGIN")
   foreach(lib libdxvk_d3d9.so.0 libvkd3d-shader.so.1)
     add_custom_command(TARGET cod2_linux POST_BUILD

@@ -1,6 +1,6 @@
 # 0009. Linux client on DXVK native
 
-- Status: Accepted
+- Status: Superseded by [0017](0017-dxvk-is-the-default-linux-client.md) (the DXVK client is the default `cod2_linux`)
 - Date: 2026-10-22
 
 ## Context

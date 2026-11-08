@@ -1,6 +1,6 @@
 # System summary (live snapshot)
 
-Last updated: 2026-11-02. Update in the same commit as the change that makes
+Last updated: 2026-11-07. Update in the same commit as the change that makes
 a line wrong.
 
 ## Repository
@@ -32,10 +32,10 @@ cod2rad/             upstream tool (not built by default)
 |---|---|---|
 | `cod2_lnxded` | Linux 1.3/1.0 | works; passes OpenCoD2-Plus Server's smoke test whole; 1.3 is the Plus server unless built with `-DCOD2_PLUS_PROTOCOL=OFF` (stock 1.3) |
 | `cod2_win32_ded.exe` | MinGW 1.3/1.0 | works; smoke test under Wine with `test/smoke_expected_failures_wine.txt` |
-| `cod2_linux` | Linux 1.3/1.0 | works; GL device (stand-in shaders) |
+| `cod2_linux` | Linux 1.3/1.0 | works; real Direct3D 9 on DXVK native and vkd3d-shader (the game's shaders), the default ([ADR 0017](../architecture/adr/0017-dxvk-is-the-default-linux-client.md)) |
+| `cod2_linux` (GL) | Linux, `-DCOD2_LINUX_DXVK=OFF` | works; GL device (stand-in shaders) |
 | `cod2_linux` (x86_64) | Linux, `-DCOD2_X64=ON` | loads and plays a map on OpenCoD2-Plus Server's VM and server; effects and world lighting equal the 32-bit client's (`fx_test.py`, screenshots) |
 | `cod2_win32.exe` (x86_64) | MinGW-w64, `cmake/toolchain-mingw64.cmake` | plays on real Windows, online and in local games; real Direct3D 9; no libcod; not yet equal to the 32-bit client |
-| `cod2_linux_vk` | Linux, `-DCOD2_LINUX_DXVK=ON` | works; real Direct3D 9 on DXVK native and vkd3d-shader (the game's shaders) |
 | `cod2_win32.exe` | MinGW | works; real Direct3D 9; plays on public 1.3 servers |
 | `cod2_win32.exe` | MSVC ABI (clang, lld-link) | builds (`build_check.py msvc-client`); plays a local game on Windows (`msvc_run_test.py`); the bridge and libcod as MinGW's |
 | `cod2` (web) | Emscripten (`third_party/emsdk`) | builds on the bridge (`build_check.py web`, no libcod); 65 symbols link undefined, `CG_Init` among them; not run in a browser |

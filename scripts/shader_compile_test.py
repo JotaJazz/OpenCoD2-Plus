@@ -3,7 +3,7 @@
 
     python3 scripts/shader_compile_test.py /path/to/CoD2 [--binary PATH] [--keep DIR]
 
-Starts cod2_linux_vk (-DCOD2_LINUX_DXVK=ON) on its own game of mp_toujane with
+Starts cod2_linux (on DXVK, the default) on its own game of mp_toujane with
 REALD3D9_SHLOG=1, which logs each shader compilation, and VKD3DX_SELFTEST=1,
 which compiles a shader that includes a file the game lacks first. A config
 file takes a screenshot (TGA) once the map is up, then quits. Exits with 0
@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from hit_location_test import PREFERENCES
 from fx_test import tga
 
-DEFAULT_CLIENT = 'build/check-linux-vk/cod2_linux_vk'
+DEFAULT_CLIENT = 'build/check-linux/cod2_linux'
 MIN_SHADERS = 150
 ALLOWED_FAILURES = ('distortion.hlsl',)
 TIMEOUT = 300

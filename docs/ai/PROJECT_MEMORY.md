@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — DXVK is the default Linux client
+
+- `cod2_linux` is the DXVK client (`COD2_LINUX_DXVK` on by default, off for x64; [ADR 0017](../architecture/adr/0017-dxvk-is-the-default-linux-client.md)): `build_check.py`'s `linux`, `linux-10` and `linux-13` build it, `linux-gl` the GL one, so the runtime tests run it unchanged. Configuring without `scripts/build_linux_vk_deps.sh`'s libraries stops instead of falling back to GL. Renaming the GL client was dropped: the build directory tells them apart.
+- Tested natively on Kubuntu with an RTX 5080: the whole runtime suite passes for 118 and 115, the `--listen` hit and contact tests after a rerun. `scripts/headless.sh` runs the clients in a virtual KWin, on the GPU, off the desktop.
+- Left open, from `dev` before this change (same with the GL client and a GL-built server): `anim_script_test.py` (9 of 301 animations parsed differently) and the 1.0 smoke test's two flatline heartbeat checks.
+
 ## 2026-11-07 — cod2_linux full screen, settings kept
 
 - The GL client (`cod2_linux`) always opened in a window: its device ignored `r_fullscreen`. It now switches the display to `r_mode` and covers it, as 1.3 (`r_fullscreen` read only, `0x2040`) and the real Direct3D 9 path do.

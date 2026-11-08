@@ -55,7 +55,6 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 
 ```sh
 ./cod2_linux +set fs_basepath /path/to/CoD2 +connect IP:port
-./cod2_linux_vk +set fs_basepath /path/to/CoD2 +connect IP:port   # with the game's own shaders (Vulkan)
 ```
 
 Без `+connect` клиент открывает главное меню, где можно также создать собственную игру. Выделенный сервер для локальной сети:
@@ -90,10 +89,12 @@ cod2_win32.exe +set fs_basepath "C:\path\to\CoD2" +connect IP:port
 sudo dpkg --add-architecture i386 && sudo apt update
 sudo apt install build-essential gcc-multilib g++-multilib cmake \
      libsdl2-dev:i386 libgl1-mesa-dev:i386 libx11-dev:i386 \
-     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386
+     libcurl4-openssl-dev:i386 zlib1g-dev:i386 libstdc++6:i386 \
+     meson ninja-build libvulkan1:i386
 ```
 
 ```sh
+scripts/build_linux_vk_deps.sh
 cmake -S . -B build-native
 cmake --build build-native -j
 # -> build-native/cod2_linux    (client)
@@ -102,7 +103,7 @@ cmake --build build-native -j
 
 Библиотеки клиента нужны для сборки обоих, но `cod2_lnxded` запускается только с 32-битными libc, libm, libz и libstdc++.
 
-`cod2_linux` рисует временными шейдерами (без солнца, белое небо). Для собственных шейдеров игры соберите `cod2_linux_vk`: `scripts/build_linux_vk_deps.sh` собирает DXVK native и vkd3d-shader (32 бита, из зафиксированных версий; нужны также `meson`, `ninja` и `libvulkan1:i386`), затем настройте сборку с `-DCOD2_LINUX_DXVK=ON` в отдельном каталоге. Нужно устройство Vulkan.
+`cod2_linux` рисует собственными шейдерами игры через Vulkan: `scripts/build_linux_vk_deps.sh` собирает DXVK native и vkd3d-shader (32 бита, из зафиксированных версий), а сборка копирует их рядом с ним. Нужно устройство Vulkan. `-DCOD2_LINUX_DXVK=OFF` собирает его вместо этого на устройстве GL, без этого скрипта, с временными шейдерами (без солнца, белое небо).
 
 ### Windows (кросс-компиляция из Linux с помощью MinGW)
 

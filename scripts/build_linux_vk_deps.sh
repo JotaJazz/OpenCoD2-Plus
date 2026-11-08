@@ -1,6 +1,6 @@
 #!/bin/bash
-# Builds the two libraries the Linux client on real Direct3D 9 (cod2_linux_vk,
-# -DCOD2_LINUX_DXVK=ON) loads at run time, 32-bit, into third_party/linux-vk:
+# Builds the two libraries the Linux client on real Direct3D 9 (cod2_linux,
+# the default, -DCOD2_LINUX_DXVK=ON) loads at run time, 32-bit, into third_party/linux-vk:
 #
 #     scripts/build_linux_vk_deps.sh
 #

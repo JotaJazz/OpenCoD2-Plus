@@ -10,10 +10,10 @@ Every x86 and x64 build computes float math on SSE2 (`-msse2 -mfpmath=sse`, [ADR
 
 | Build | Configure | Outputs |
 |---|---|---|
-| Linux 1.3 | `cmake -S . -B build/check-linux` | `cod2_linux`, `cod2_lnxded`, speaking CoD2 1.3 Plus (`COD2_PLUS`, OpenCoD2-Plus Server's `make PLUS=1`): the servers take only the Plus client |
+| Linux 1.3 | `scripts/build_linux_vk_deps.sh`, then `cmake -S . -B build/check-linux` | `cod2_linux` on DXVK, with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it, and `cod2_lnxded`, speaking CoD2 1.3 Plus (`COD2_PLUS`, OpenCoD2-Plus Server's `make PLUS=1`): the servers take only the Plus client |
 | Linux stock 1.3 | `+ -DCOD2_PLUS_PROTOCOL=OFF` | same, without 1.3 Plus: the servers take any 1.3 client, the client does not announce itself as Plus; every other improvement stays |
 | Linux 1.0 | `+ -DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` | same, protocol 115 |
-| Linux real Direct3D 9 | `scripts/build_linux_vk_deps.sh`, then `-DCOD2_LINUX_DXVK=ON` | `cod2_linux_vk` with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it |
+| Linux client on GL | `+ -DCOD2_LINUX_DXVK=OFF` (no `scripts/build_linux_vk_deps.sh` needed) | `cod2_linux` on the Mac port's GL device, stand-in shaders; the default for `-DCOD2_X64=ON`, as DXVK's libraries are 32-bit |
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
 | Windows client on Vulkan | `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE`, then Options > Graphics or `+set r_gfxApi vulkan` ([ADR 0011](../architecture/adr/0011-graphics-apis-behind-direct3d-9.md)) | `dxvk/d3d9.dll` |
@@ -24,7 +24,7 @@ Every x86 and x64 build computes float math on SSE2 (`-msse2 -mfpmath=sse`, [ADR
 | Windows 64-bit client | `scripts/mingw64_deps.sh` (MinGW-w64 x86_64 and SDL2's x86_64 libraries, no root), then `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake -DCOD2_X64=ON -DCOD2_WIN32_CLIENT=ON` | `cod2_win32.exe` for x86_64, real Direct3D 9, on OpenCoD2-Plus Server's VM and server; loads maps under a 64-bit Wine (`scripts/portable_wine.sh DIR 64`), not yet equal to the 32-bit one; no libcod (it keeps pointers in `long`, 4 bytes on Win64) |
 
 The client's sound (`src/snd_sdl/`, not in any glob of `src/PC`, `src/Mac` or
-`src/stubs`) links into `cod2_linux`, `cod2_linux_vk` and `cod2_win32`, where
+`src/stubs`) links into `cod2_linux` and `cod2_win32`, where
 those files alone are `-O2`, as a mixer has a deadline. MP3 comes from
 `src/snd_sdl/minimp3.h`, one unchanged header of `lieff/minimp3` `ea99364` (CC0).
 
@@ -35,14 +35,14 @@ variant into `build/check-<variant>/` and runs the static checks.
 
 | Variant | Flags |
 |---|---|
-| `linux`, `linux-10` | native, 1.3 / 1.0 |
-| `linux-13` | native stock 1.3 (`-DCOD2_PLUS_PROTOCOL=OFF`) |
+| `linux`, `linux-10` | native, 1.3 / 1.0, the client on DXVK (skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
+| `linux-13` | native stock 1.3 (`-DCOD2_PLUS_PROTOCOL=OFF`), the client on DXVK |
 | `linux-x64`, `linux-x64-10` | 64-bit dedicated server (`cmake/lnxded64`), 1.3 / 1.0; only the glibc and library checks apply |
 | `mingw`, `mingw-10` | MinGW dedicated server |
 | `mingw-client`, `mingw-client-10` | MinGW client, real Direct3D 9 (skipped without the static SDL2) |
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
 | `mingw-client-x64` | 64-bit MinGW client (`cmake/toolchain-mingw64.cmake`, `-DCOD2_X64=ON`; skipped without `scripts/mingw64_deps.sh`'s SDL2); the three bridge checks with x86_64's `nm` and no `_` prefix |
-| `linux-vk` | Linux client on real Direct3D 9 (`-DCOD2_LINUX_DXVK=ON`; skipped without `scripts/build_linux_vk_deps.sh`'s libraries) |
+| `linux-gl` | Linux client on the GL device (`-DCOD2_LINUX_DXVK=OFF`) |
 | `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`; skipped without `scripts/linux_x64_deps.sh`'s headers); glibc and the three bridge checks apply |
 
 Checks it runs (each a script in `scripts/`):

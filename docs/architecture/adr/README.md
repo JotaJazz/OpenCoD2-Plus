@@ -16,7 +16,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0006](0006-original-1-3-binaries-are-the-reference.md) | The original 1.3 binaries are the reference | Accepted | 2026-10-20 |
 | [0007](0007-remove-the-renderer-dll-variant.md) | Remove the renderer DLL variant | Accepted | 2026-10-20 |
 | [0008](0008-windows-client-on-real-direct3d-9.md) | Windows client on real Direct3D 9 | Accepted | 2026-10-21 |
-| [0009](0009-linux-client-on-dxvk.md) | Linux client on DXVK native | Accepted | 2026-10-22 |
+| [0009](0009-linux-client-on-dxvk.md) | Linux client on DXVK native | Superseded by 0017 | 2026-10-22 |
 | [0011](0011-graphics-apis-behind-direct3d-9.md) | Graphics APIs behind Direct3D 9 | Accepted | 2026-10-31 |
 | [0010](0010-64-bit-dedicated-server-without-the-engine.md) | 64-bit dedicated server without the engine | Accepted | 2026-10-31 |
 | [0012](0012-sound-engine-behind-the-ail-calls.md) | Sound engine behind the AIL calls | Accepted | 2026-11-01 |
@@ -24,6 +24,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0014](0014-name-1-3-plus.md) | The player-facing name is "1.3 Plus" | Accepted | 2026-11-02 |
 | [0015](0015-msvc-abi-client-on-the-bridge.md) | The MSVC-ABI client is built with clang on the bridge | Accepted | 2026-11-05 |
 | [0016](0016-sse2-float-math.md) | Float math on SSE2, not x87 | Accepted | 2026-11-05 |
+| [0017](0017-dxvk-is-the-default-linux-client.md) | DXVK is the default Linux client | Accepted | 2026-11-07 |
 
 ## Template
 

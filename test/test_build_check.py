@@ -129,9 +129,16 @@ class BuildCheck(unittest.TestCase):
         self.assertEqual(build_check.web_undefined_new(log, {'CG_Init', 'Old_Gone'}), ['Brand_New'])
 
     def test_stock_13_variant(self):
-        """linux-13 is the 1.3 build without the Plus protocol."""
-        self.assertEqual(build_check.VARIANTS['linux-13'], ['-DCOD2_PLUS_PROTOCOL=OFF'])
+        """linux-13 is the 1.3 build without the Plus protocol, its client on DXVK."""
+        self.assertEqual(build_check.VARIANTS['linux-13'], ['-DCOD2_LINUX_DXVK=ON', '-DCOD2_PLUS_PROTOCOL=OFF'])
         self.assertFalse(build_check.is_x64('linux-13'))
+
+    def test_linux_client_device(self):
+        """The Linux client is on DXVK by default; linux-gl and the x64 client build it on GL."""
+        for variant in build_check.DXVK_VARIANTS:
+            self.assertIn('-DCOD2_LINUX_DXVK=ON', build_check.VARIANTS[variant])
+        self.assertEqual(build_check.VARIANTS['linux-gl'], ['-DCOD2_LINUX_DXVK=OFF'])
+        self.assertIn('-DCOD2_LINUX_DXVK=OFF', build_check.VARIANTS['linux-client-x64'])
 
 
 if __name__ == '__main__':
