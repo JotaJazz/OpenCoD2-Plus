@@ -3,6 +3,7 @@
 #if COD2_FEATURE_NET_HARDENING
 
 #    include "common_types.h"
+#    include <stdio.h>
 #    include <string.h>
 
 extern void Com_Printf(const char *fmt, ...);
@@ -80,6 +81,38 @@ int NetHardening_ValidUrl(const char *url)
         return 1;
 
     return 0;
+}
+
+/* Not in 1.3: a Plus server's redirect "plus:<name>" carries no host, as a
+ * home server does not know the address players reach it on; the file is on
+ * the server itself, over HTTP on its game port. 0 if the name is unsafe or
+ * the URL does not fit. */
+int NetHardening_PlusUrl(char *out, int size, const char *name, const unsigned char *ip, int port)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    int len;
+
+    if (!NetHardening_ValidDownloadName(name, 1))
+        return 0;
+    len = snprintf(out, size, "http://%i.%i.%i.%i:%i/", ip[0], ip[1], ip[2], ip[3], port);
+    if (len < 0 || len >= size)
+        return 0;
+    for (; *name; ++name) {
+        unsigned char c = (unsigned char)*name;
+        int plain = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+                    c == '.' || c == '_' || c == '/' || c == '-';
+        if (len + (plain ? 1 : 3) >= size)
+            return 0;
+        if (plain) {
+            out[len++] = (char)c;
+        } else {
+            out[len++] = '%';
+            out[len++] = hex[c >> 4];
+            out[len++] = hex[c & 15];
+        }
+    }
+    out[len] = '\0';
+    return 1;
 }
 
 /* Not in 1.3, which lets a server set any dvar: these run a command or decide

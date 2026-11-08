@@ -45,7 +45,9 @@ configstrings: dvars flagged SYSTEMINFO or CODINFO always (the physics predictio
 needs, such as `jump_height` and `player_*`, are CODINFO), never `activeAction`,
 `nextdemo`, the download switches, `fs_`, `sv_`, `net_`, `rcon` and `in_` names,
 or other read-only and init dvars. A download's local name must be a relative
-`.iwd` without `..`, and a redirect's URL `http` or `https`. A transfer shorter
+`.iwd` without `..`, and a redirect's URL `http` or `https`; a Plus server's `plus:<name>`, on a
+Plus connection only, becomes `http://<server ip>:<port>/<name>`
+(`NetHardening_PlusUrl`) with the same check on the name. A transfer shorter
 than the size the server gave counts as failed.
 
 Numbers that are wider on the wire than the arrays they index are bounded where

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A client joins a 1.3 server whose mod it lacks and downloads it over HTTP.
 
-    python3 scripts/www_download_test.py /path/to/CoD2 [--binary PATH] [--server PATH] [--wine WINE] [--disconnect]
+    python3 scripts/www_download_test.py /path/to/CoD2 [--binary PATH] [--server PATH | --plus-server PATH] [--wine WINE] [--disconnect]
 
 Serves a mod (one 3 MB .iwd) from a temporary home: the dedicated server runs
 it with sv_wwwDownload 1 and sv_wwwBaseURL pointing at an HTTP server this
@@ -12,7 +12,10 @@ downloads and reconnects, as most public servers ask). With --wine the client
 is a Windows one (cod2_win32.exe, which downloads through WinINet) run by the
 given wine command. --http-404 answers 404 and --truncate cuts the transfer
 at half of its Content-Length: the client must leave HTTP and fetch the .iwd
-from the server itself, whole. The client needs a CD key in ~/.cod2/preferences: without
+from the server itself, whole. --plus-server runs the given CoD2 1.3 Plus
+server (OpenCoD2-Plus Server's make PLUS=1) with sv_wwwBaseURL auto and no
+HTTP server here: the client must fetch the .iwd over HTTP from that server's
+game port (the server logs the finished transfer). The client needs a CD key in ~/.cod2/preferences: without
 one the test is skipped (exit 0). It opens a window. Only 1.3 (protocol 118)
 has redirected downloads. Exits with 0 when all of that holds.
 """
@@ -57,6 +60,7 @@ def main():
     ap.add_argument('game_dir')
     ap.add_argument('--binary', help='the client (with --wine, a Windows one)')
     ap.add_argument('--server')
+    ap.add_argument('--plus-server', help='a Plus server that serves the .iwd itself (sv_wwwBaseURL auto)')
     ap.add_argument('--wine', help='the command that runs --binary (a wine wrapper)')
     ap.add_argument('--disconnect', action='store_true', help='sv_wwwDlDisconnected 1')
     ap.add_argument('--http-404', action='store_true', help='the HTTP server answers 404')
@@ -67,10 +71,12 @@ def main():
     if not os.path.exists(PREFERENCES) or 'codkey' not in open(PREFERENCES).read():
         print(f'skipped: no CD key in {PREFERENCES}')
         return 0
+    if args.plus_server and (args.server or args.http_404 or args.truncate):
+        ap.error('--plus-server has its own server and HTTP')
     if args.wine and not args.binary:
         ap.error('--wine runs --binary, a Windows client')
     binary = os.path.abspath(args.binary or os.path.join(ROOT, DEFAULT_BINARY))
-    server_bin = os.path.abspath(args.server or os.path.join(ROOT, DEFAULT_SERVER))
+    server_bin = os.path.abspath(args.plus_server or args.server or os.path.join(ROOT, DEFAULT_SERVER))
     wine = os.path.abspath(args.wine) if args.wine and os.sep in args.wine else args.wine
     port, http_port = smoke_test.free_port(), smoke_test.free_port()
     run = Run()
@@ -83,14 +89,16 @@ def main():
             z.writestr('dltest/blob.bin', os.urandom(3 * 1024 * 1024))
         # the console reads // as a comment: the URL goes quoted, in a cfg
         with open(os.path.join(srv_home, MOD, 'wwwdl.cfg'), 'w') as f:
-            f.write(f'set sv_wwwBaseURL "http://127.0.0.1:{http_port}"\n')
+            f.write('set sv_wwwBaseURL "auto"\n' if args.plus_server else
+                    f'set sv_wwwBaseURL "http://127.0.0.1:{http_port}"\n')
         # a Windows program has no HOME: its key is read from the working folder
         os.makedirs(os.path.join(cli_home, '.cod2'))
         shutil.copy(PREFERENCES, os.path.join(cli_home, '.cod2', 'preferences'))
 
         httpd = http.server.ThreadingHTTPServer(('127.0.0.1', http_port),
                                                 functools.partial(Handler, directory=srv_home))
-        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        if not args.plus_server:
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
         server_log, client_log = os.path.join(srv_home, 'out.log'), os.path.join(cli_home, 'out.log')
         try:
             with open(server_log, 'wb') as log:
@@ -113,16 +121,22 @@ def main():
                 fetched = os.path.join(cli_home, MOD, IWD)
                 got = wait_for(lambda: os.path.exists(fetched) and os.path.getsize(fetched) == os.path.getsize(served),
                                240)
-                run.check('the client asks HTTP for the .iwd',
-                          any(f'GET /{MOD}/{IWD}' in r for r in Handler.requests),
-                          '; '.join(Handler.requests) or 'no request')
+                if args.plus_server:
+                    run.check('the Plus server sends the .iwd over HTTP',
+                              bool(wait_for(lambda: f'www: 127.0.0.1 {MOD}/{IWD} {os.path.getsize(served)} bytes'
+                                            in open(server_log, encoding='latin-1').read(), 30)))
+                else:
+                    run.check('the client asks HTTP for the .iwd',
+                              any(f'GET /{MOD}/{IWD}' in r for r in Handler.requests),
+                              '; '.join(Handler.requests) or 'no request')
                 run.check('the .iwd is kept byte for byte',
                           bool(got) and open(fetched, 'rb').read() == open(served, 'rb').read())
                 rows = wait_for(lambda: players(port), 240)
                 run.check('then the client joins the game', bool(rows))
                 run.check('the client still runs', cl.poll() is None, f'exit code {cl.poll()}')
         finally:
-            httpd.shutdown()
+            if not args.plus_server:
+                httpd.shutdown()
             for p in procs:
                 if p.poll() is None:
                     p.terminate()

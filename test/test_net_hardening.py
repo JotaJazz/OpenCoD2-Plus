@@ -4,6 +4,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROGRAM = r'''
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 extern "C" {
@@ -31,8 +32,13 @@ const dvar_t *Dvar_FindVar(const char *name)
 }
 int main(int argc, char **argv)
 {
-    /* cvar NAME | name NAME EXT | url TEXT */
-    if (!strcmp(argv[1], "cvar"))
+    /* cvar NAME | name NAME EXT | url TEXT | plus NAME SIZE */
+    if (!strcmp(argv[1], "plus")) {
+        static const unsigned char ip[4] = {1, 2, 3, 4};
+        char out[256];
+        if (NetHardening_PlusUrl(out, atoi(argv[3]), argv[2], ip, 28960))
+            printf("%s", out);
+    } else if (!strcmp(argv[1], "cvar"))
         printf("%d", NetHardening_ServerMaySetCvar(argv[2]));
     else if (!strcmp(argv[1], "name"))
         printf("%d", NetHardening_ValidDownloadName(argv[2], argv[3][0] == '1'));
@@ -102,6 +108,17 @@ class NetHardening(unittest.TestCase):
             self.assertEqual(self.ask('url', url), '1', url)
         for url in ['file:///x', '\\\\h\\s', 'calc.exe', '']:
             self.assertEqual(self.ask('url', url), '0', url)
+
+    def test_plus_url(self):
+        # a Plus server's "plus:<name>": the file over HTTP on the address the client plays on
+        self.assertEqual(self.ask('plus', 'main/zz.iwd', '256'), 'http://1.2.3.4:28960/main/zz.iwd')
+        self.assertEqual(self.ask('plus', 'mods/a b/z%z.iwd', '256'), 'http://1.2.3.4:28960/mods/a%20b/z%25z.iwd')
+        for name in ['../x.iwd', '/etc/x.iwd', 'a:b.iwd', '', 'main/x.txt']:
+            self.assertEqual(self.ask('plus', name, '256'), '', name)
+        url = 'http://1.2.3.4:28960/main/zz.iwd'
+        self.assertEqual(self.ask('plus', 'main/zz.iwd', str(len(url) + 1)), url)
+        self.assertEqual(self.ask('plus', 'main/zz.iwd', str(len(url))), '')
+        self.assertEqual(self.ask('plus', 'main/z z.iwd', str(len(url) + 2)), '')
 
 
 if __name__ == '__main__':

@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — Plus downloads from the server itself
+
+- A Plus server with `sv_wwwBaseURL auto` redirects to `plus:<name>`, as a home server does not know the address players reach it on. On a Plus connection (`cl_plusServer`, set from `connectResponse`) `CL_ParseWWWDownload` turns it into `http://<ip>:<port>/<name>` from `clc.serverAddress` (`NetHardening_PlusUrl`: the name passes `NetHardening_ValidDownloadName` as an `.iwd`, anything outside `[A-Za-z0-9._/-]` percent-encoded, a URL that does not fit `cls.downloadName` refused) and goes on through the existing redirect path; 1.3 uses the URL it reads (0x413ed2) as is. From a stock server `plus:` still fails the http(s) check.
+- `scripts/www_download_test.py --plus-server PATH` runs a CoD2rev Plus server (protocol 118, Plus 123) with no local HTTP server: the client fetched the .iwd from the server's game port, byte for byte, plain and with `--disconnect`. The client without the change fell back to UDP, and the test failed on the server's missing `www:` line.
+- Left open: IPv4 only, as the server; a player whose TCP leaves from another public IP than its UDP gets `404` and the UDP download (the server's debt).
+
 ## 2026-11-08 — review of the DXVK default
 
 - From the review: `scripts/headless.sh` exits with the command's status, says why when KWin dies, and tolerates a missing `/tmp/.X11-unix`; `build_check.py` and CMake require all three files of `scripts/build_linux_vk_deps.sh`; the configure prints which client it set up, as an old build directory keeps `COD2_LINUX_DXVK=OFF` cached.

@@ -18,6 +18,8 @@ int NetHardening_ValidDownloadName(const char *name, int require_iwd_ext);
 
 int NetHardening_ValidUrl(const char *url);
 
+int NetHardening_PlusUrl(char *out, int size, const char *name, const unsigned char *ip, int port);
+
 int NetHardening_ServerMaySetCvar(const char *key);
 
 int NetHardening_SVC_RateLimit(int nowMsec);

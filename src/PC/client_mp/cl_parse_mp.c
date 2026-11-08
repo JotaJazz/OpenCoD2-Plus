@@ -123,6 +123,9 @@ extern void FS_FCloseFile(fileHandle_t h);
    plusRules, docs/architecture/plus-protocol.md's version 123 in
    OpenCoD2-Plus Server), and the prediction follows them */
 int cl_plusRules;
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
+extern int cl_plusServer;
+#endif
 
 static int CL_ShowNetValue(void)
 {
@@ -485,6 +488,26 @@ void CL_ParseWWWDownload(msg_t *msg)
 
 #    if COD2_FEATURE_NET_HARDENING && COD2_FEATURE_WWW_DOWNLOAD
 
+#        if defined(COD2_PLUS)
+    /* not in 1.3, which uses the URL it reads (0x413ed2) as is: a Plus server
+     * serves the file itself, over HTTP on the game port it is reached on;
+     * from any other server "plus:" fails the http(s) check below */
+    if (cl_plusServer && strncmp(cls.downloadName, "plus:", 5) == 0) {
+        char url[sizeof(cls.downloadName)];
+        netadr_t *adr = &((clientConnection_t *)*clc_ptr)->serverAddress;
+
+        if (adr->type != NA_IP ||
+            !NetHardening_PlusUrl(url, sizeof(url), cls.downloadName + 5, adr->ip,
+                                  ((adr->port >> 8) | (adr->port << 8)) & 0xffff)) {
+            Com_Printf("WARNING: refusing Plus download '%s'\n", cls.downloadName);
+            CL_AddReliableCommand("wwwdl fail");
+            DL_CancelDownload();
+            cls.wwwDlInProgress = 0;
+            return;
+        }
+        I_strncpyz(cls.downloadName, url, sizeof(cls.downloadName));
+    }
+#        endif
     if (!NetHardening_ValidUrl(cls.downloadName)) {
         Com_Printf("WARNING: refusing wwwdl redirect to non-http(s) URL '%s'\n",
                    cls.downloadName);

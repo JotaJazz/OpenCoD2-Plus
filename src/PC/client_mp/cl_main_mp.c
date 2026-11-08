@@ -349,6 +349,9 @@ void CL_CheckForResend(void);
 
 /* CoD2rev-Plus's PLUS_VERSION: docs/architecture/plus-protocol.md, on its plus branch */
 #define COD2_PLUS_VERSION 123
+#if COD2_IS_PATCH_13 && defined(COD2_PLUS)
+int cl_plusServer; /* the server answered connectResponse with COD2_PLUS_VERSION */
+#endif
 void CL_LocalServers_f(void);
 void CL_PlayLogo_f(void);
 qboolean CL_UpdateDirtyPings_f(int source);
@@ -2262,7 +2265,8 @@ Bool CL_ConnectionlessPacket(netadr_t from, msg_t *msg, int time)
 
 #if COD2_IS_PATCH_13 && defined(COD2_PLUS)
         /* a stock server answers without a version; each snapshot says its own format */
-        if (atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION)
+        cl_plusServer = atoi(Cmd_Argv(1)) == COD2_PLUS_VERSION;
+        if (cl_plusServer)
             Com_Printf((const char *)"CoD2 1.3 Plus server, version %i\n", COD2_PLUS_VERSION);
 #endif
         Netchan_Setup(NS_CLIENT1, &conn->netchan, from, *(int *)imp_g_qport);
