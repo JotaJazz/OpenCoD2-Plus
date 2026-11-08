@@ -1,4 +1,7 @@
 #include "../qcommon/qcommon.h"
+#if defined(COD2_PLUS) && !defined(_WIN32)
+#include "sv_www_plus.h"
+#endif
 
 serverStatic_t svs;
 server_t sv;
@@ -65,6 +68,11 @@ dvar_t *com_expectedHunkUsage;
 dvar_t *sv_wwwDownload;
 dvar_t *sv_wwwBaseURL;
 dvar_t *sv_wwwDlDisconnected;
+#ifdef COD2_PLUS
+dvar_t *sv_wwwMaxRate;
+dvar_t *sv_wwwMaxConnections;
+dvar_t *sv_wwwMaxPerIP;
+#endif
 
 /*
 ===============
@@ -169,6 +177,12 @@ void SV_InitDvar()
 	sv_wwwDownload = Dvar_RegisterBool("sv_wwwDownload", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_wwwBaseURL = Dvar_RegisterString("sv_wwwBaseURL", "", DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
 	sv_wwwDlDisconnected = Dvar_RegisterBool("sv_wwwDlDisconnected", false, DVAR_ARCHIVE | DVAR_CHANGEABLE_RESET);
+#ifdef COD2_PLUS
+	// the limits of the HTTP downloads of sv_wwwBaseURL auto (sv_www_plus.cpp)
+	sv_wwwMaxRate = Dvar_RegisterInt("sv_wwwMaxRate", 1024, 0, 1000000, DVAR_CHANGEABLE_RESET);
+	sv_wwwMaxConnections = Dvar_RegisterInt("sv_wwwMaxConnections", 4, 1, 64, DVAR_CHANGEABLE_RESET);
+	sv_wwwMaxPerIP = Dvar_RegisterInt("sv_wwwMaxPerIP", 2, 1, 64, DVAR_CHANGEABLE_RESET);
+#endif
 }
 
 /*
@@ -745,6 +759,10 @@ void SV_Shutdown( const char *finalmsg )
 
 	Com_Printf("----- Server Shutdown -----\n");
 
+#if defined(COD2_PLUS) && !defined(_WIN32)
+	SV_WwwPlus_Stop();
+#endif
+
 	bLoading = sv.state == SS_LOADING;
 
 	if ( svs.clients )
@@ -887,6 +905,11 @@ void SV_SpawnServer( char *server )
 	client_t *cl;
 	int checksum;
 	int i;
+
+#if defined(COD2_PLUS) && !defined(_WIN32)
+	// the network is up by now; a no-op once the listener runs
+	SV_WwwPlus_Start();
+#endif
 
 	Scr_ParseGameTypeList();
 	SV_SetGametype();

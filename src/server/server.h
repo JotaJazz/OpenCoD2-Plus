@@ -75,6 +75,11 @@ extern dvar_t *sv_debugRate;
 extern dvar_t *sv_wwwDownload;
 extern dvar_t *sv_wwwBaseURL;
 extern dvar_t *sv_wwwDlDisconnected;
+#ifdef COD2_PLUS
+extern dvar_t *sv_wwwMaxRate;
+extern dvar_t *sv_wwwMaxConnections;
+extern dvar_t *sv_wwwMaxPerIP;
+#endif
 
 extern qboolean gameInitialized;
 

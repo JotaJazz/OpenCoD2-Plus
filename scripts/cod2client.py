@@ -157,6 +157,7 @@ class Client:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(timeout)
         self.qport = random.randint(1, 0xffff)
+        self.redirects = []  # block -1 redirects the server sent: {"url", "flags"}
         self.protocol = 0
         self.challenge = 0
         self.outgoing_sequence = 0
@@ -200,7 +201,7 @@ class Client:
         if not line.startswith('challengeResponse'):
             return line
         self.challenge = int(line.split()[1])
-        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\%s\\rate\\25000\\snaps\\20\\cl_voice\\1'
+        userinfo = ('\\protocol\\%d\\challenge\\%d\\qport\\%d\\name\\%s\\rate\\25000\\snaps\\20\\cl_voice\\1\\cl_wwwDownload\\1'
                     % (protocol, self.challenge, self.qport, name))
         if plus is not None:
             userinfo += '\\plus\\%d' % plus
@@ -389,12 +390,16 @@ class Client:
         of each message is the command its header says the server executed
         last, so messages sent before the download command decode too."""
         self.command(server_id, 'download %s' % name)
+        self.redirects = []
         out = []
         for sequence, data in self.receive(seconds):
             result = self._parse(sequence, data)
             if result['error']:
                 out.append(self._decode(sequence, data))
             for block, size, chunk in result['downloads']:
+                if block == -1:
+                    self.redirects.append(dict(chunk, size=size))
+                    continue
                 out.append(chunk.encode('latin-1') if isinstance(chunk, str) else chunk)
         return b''.join(out)
 

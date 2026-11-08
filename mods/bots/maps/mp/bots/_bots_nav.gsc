@@ -1,12 +1,12 @@
 // Navigation for the simple bots: one waypoint graph per map, built with the
-// libcod graph* functions and kept in waypoints/<map>_v2.graph, and A* paths
+// libcod graph* functions and kept in waypoints/<map>_v3.graph, and A* paths
 // over it. Without a graph the bots walk straight at their goal.
 
 init()
 {
 	level.botGraph = undefined;
 
-	file = "waypoints/" + getCvar("mapname") + "_v2.graph";
+	file = "waypoints/" + getCvar("mapname") + "_v3.graph";
 	graph = graphLoad(file);
 
 	if(isDefined(graph) && graphGetNodeCount(graph) > 0)

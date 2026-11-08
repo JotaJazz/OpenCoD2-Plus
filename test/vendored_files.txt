@@ -1,5 +1,5 @@
 # Files copied unchanged from CoD2rev-Plus (scripts/vendor_check.py)
-# revision: 1551c01
+# revision: 6219002
 scripts/smoke_test.py
 scripts/cod2client.py
 scripts/cod2snap.py
@@ -51,6 +51,8 @@ src/server/sv_net_chan_mp.cpp
 src/server/sv_snapshot_mp.cpp
 src/server/sv_voice_mp.cpp
 src/server/sv_world_mp.cpp
+src/server/sv_www_plus.cpp
+src/server/sv_www_plus.h
 src/stringed/stringed_public.h
 src/game/g_active_mp.cpp
 src/game/g_client_fields_mp.cpp

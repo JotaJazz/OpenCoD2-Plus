@@ -133,7 +133,7 @@ def main():
             with open(path, 'w', encoding='latin-1', newline='') as f:
                 f.write(sd)
 
-        cache = os.path.join(home, MOD, 'waypoints', args.map + '_v2.graph')
+        cache = os.path.join(home, MOD, 'waypoints', args.map + '_v3.graph')
         if args.corrupt_cache:
             os.makedirs(os.path.dirname(cache))
             with open(cache, 'wb') as f:

@@ -18,7 +18,7 @@
 //               (default 0; can be changed in the middle of a map)
 //
 // Waypoints: the first time a map is played the bots build a navigation graph
-// from its spawn points and save it as waypoints/<map>_v2.graph in the mod
+// from its spawn points and save it as waypoints/<map>_v3.graph in the mod
 // folder; later loads read that file. Delete it to have it built again.
 //
 // Installed by scripts/install_bots.py, which also hooks init() into the

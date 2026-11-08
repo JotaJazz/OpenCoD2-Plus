@@ -451,6 +451,11 @@ class ServerState:
                     out['snapshot'] = self._read_snapshot(r, op == SVC_SNAPSHOT_PLUS)
                 elif op == SVC_DOWNLOAD:
                     block = r.read_short()
+                    if block == 0xffff:  # -1, a redirect: URL, size, flags
+                        url = r.read_string()
+                        size = r.read_long()
+                        out['downloads'].append((-1, size, {'url': url, 'flags': r.read_long()}))
+                        continue
                     size = r.read_long() if block == 0 else None
                     if size == -1:
                         out['downloads'].append((block, size, r.read_string()))

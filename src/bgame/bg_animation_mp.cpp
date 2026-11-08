@@ -1542,13 +1542,13 @@ void BG_LerpAngles( vec3_t angles_goal, float maxAngleChange, vec3_t angles )
 
 		if ( diff > maxAngleChange )
 		{
-			angles[i] = angles[i] + maxAngleChange;
+			angles[i] += maxAngleChange;
 			continue;
 		}
 
 		if ( -maxAngleChange > diff )
 		{
-			angles[i] = angles[i] - maxAngleChange;
+			angles[i] -= maxAngleChange;
 			continue;
 		}
 
@@ -2336,24 +2336,25 @@ void BG_SetNewAnimation( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qb
 		lf->animationTime = 200;
 	}
 
-	if ( oldanim || lf != &ci->legs )
+	if ( !oldanim && lf == &ci->legs )
+	{
+		lf->animationTime = 0;
+	}
+	else
 	{
 		if ( !anim || lf->animationTime <= 0 )
 		{
-			if ( !anim || anim->moveSpeed == 0 )
+			if ( anim && anim->moveSpeed != 0.0f )
 			{
-				if ( !oldanim || oldanim->moveSpeed == 0 )
-				{
-					transitionMin = 170;
-				}
-				else
-				{
-					transitionMin = 250;
-				}
+				transitionMin = 120;
+			}
+			else if ( oldanim && oldanim->moveSpeed != 0.0f )
+			{
+				transitionMin = 250;
 			}
 			else
 			{
-				transitionMin = 120;
+				transitionMin = 170;
 			}
 		}
 
@@ -2366,10 +2367,6 @@ void BG_SetNewAnimation( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, qb
 		{
 			lf->animationTime = transitionMin;
 		}
-	}
-	else
-	{
-		lf->animationTime = 0;
 	}
 
 	if ( anim && anim->moveSpeed != 0 && XAnimIsLooped(pXAnims, animIndex) )
@@ -2561,70 +2558,63 @@ void BG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 
 	anim = lf->animation;
 
-	if ( anim->moveSpeed == 0 || !lf->oldFrameSnapshotTime )
+	if ( anim->moveSpeed != 0.0f && lf->oldFrameSnapshotTime )
+	{
+		if ( level_bgs.latestSnapshotTime != lf->oldFrameSnapshotTime )
+		{
+			if ( bNewAnim )
+			{
+				moveSpeed = I_fabs(lf->oldFramePos[2] - es->pos.trBase[2]);
+			}
+			else
+			{
+				moveSpeed = Vec3Distance(lf->oldFramePos, es->pos.trBase);
+			}
+
+			lf->animSpeedScale = (moveSpeed / ((level_bgs.latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001f)) / anim->moveSpeed;
+			lf->oldFrameSnapshotTime = level_bgs.latestSnapshotTime;
+
+			VectorCopy(es->pos.trBase, lf->oldFramePos);
+
+			if ( lf->animSpeedScale < 0.1f )
+			{
+				if ( lf->animSpeedScale < 0.01f && bNewAnim )
+					lf->animSpeedScale = 0.0f;
+				else
+					lf->animSpeedScale = 0.1f;
+			}
+			else if ( lf->animSpeedScale > 2.0f )
+			{
+				if ( anim->flags & 2 )
+				{
+					if ( lf->animSpeedScale > 4.0f )
+						lf->animSpeedScale = 4.0f;
+				}
+				else if ( anim->moveSpeed > 150.0f )
+				{
+					lf->animSpeedScale = 2.0f;
+				}
+				else if ( anim->moveSpeed < 20.0f )
+				{
+					if ( lf->animSpeedScale > 3.0f )
+						lf->animSpeedScale = 3.0f;
+				}
+				else
+				{
+					fScaleMax = 3.0f - ( anim->moveSpeed - 20.0f ) * 0.0076923077f; // 1 / 130, as 1.3 multiplies
+
+					if ( lf->animSpeedScale > fScaleMax )
+						lf->animSpeedScale = fScaleMax;
+				}
+			}
+		}
+	}
+	else
 	{
 		lf->animSpeedScale = 1.0f;
 		lf->oldFrameSnapshotTime = level_bgs.latestSnapshotTime;
 
 		VectorCopy(es->pos.trBase, lf->oldFramePos);
-	}
-	else if ( level_bgs.latestSnapshotTime != lf->oldFrameSnapshotTime )
-	{
-		if ( bNewAnim )
-		{
-			moveSpeed = I_fabs(lf->oldFramePos[2] - es->pos.trBase[2]);
-		}
-		else
-		{
-			moveSpeed = Vec3Distance(lf->oldFramePos, es->pos.trBase);
-		}
-
-		lf->animSpeedScale = (moveSpeed / ((level_bgs.latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001f)) / anim->moveSpeed;
-		lf->oldFrameSnapshotTime = level_bgs.latestSnapshotTime;
-
-		VectorCopy(es->pos.trBase, lf->oldFramePos);
-
-		if ( lf->animSpeedScale >= 0.1f )
-		{
-			if ( lf->animSpeedScale > 2.0f )
-			{
-				if ( anim->flags & 2 )
-				{
-					if ( lf->animSpeedScale > 4.0f )
-					{
-						lf->animSpeedScale = 4.0f;
-					}
-				}
-				else if ( anim->moveSpeed <= 150.0f )
-				{
-					if ( anim->moveSpeed >= 20.0f )
-					{
-						fScaleMax = 3.0f - (anim->moveSpeed - 20.0f) * 0.0076923077f; // 1 / 130, as 1.3 multiplies
-
-						if ( lf->animSpeedScale > fScaleMax )
-						{
-							lf->animSpeedScale = fScaleMax;
-						}
-					}
-					else if ( lf->animSpeedScale > 3.0f )
-					{
-						lf->animSpeedScale = 3.0f;
-					}
-				}
-				else
-				{
-					lf->animSpeedScale = 2.0f;
-				}
-			}
-		}
-		else if ( lf->animSpeedScale < 0.0099999998f && bNewAnim )
-		{
-			lf->animSpeedScale = 0;
-		}
-		else
-		{
-			lf->animSpeedScale = 0.1f;
-		}
 	}
 
 	if ( lf->animationNumber )

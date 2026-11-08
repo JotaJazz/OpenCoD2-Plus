@@ -207,6 +207,47 @@ static float Scr_FramesPerSecond()
 
 	return fps ? 1000.0f / ( 1000 / fps->current.integer ) : 20.0f;
 }
+
+/*
+==============
+Scr_PlusWaitFrames
+
+A wait takes whole frames, so at 62.5 Hz wait 0.05 took 3 (48 ms) and a loop
+of them ran 4% fast. The fraction left over carries to the thread's next
+wait, so the loop averages 50 ms.
+shortcut: a thread id reused by a new thread starts with the old one's carry,
+at most half a frame
+==============
+*/
+static float scr_waitCarry[1 << 16]; // by start thread id, an unsigned short
+
+static int Scr_PlusWaitFrames( float seconds, unsigned int localId )
+{
+	float fps = Scr_FramesPerSecond();
+	unsigned int id;
+	float frames;
+	int waitTime;
+
+	// 20 Hz keeps the stock rounding, as Plus does what stock did there
+	if ( seconds == 0 || fps <= 20 )
+	{
+		waitTime = Q_rint(seconds * fps);
+		return waitTime ? waitTime : seconds != 0;
+	}
+
+	id = GetStartLocalId(localId);
+	frames = seconds * fps + scr_waitCarry[id];
+	waitTime = Q_rint(frames);
+
+	if ( waitTime < 1 )
+	{
+		waitTime = 1;
+	}
+
+	frames -= waitTime;
+	scr_waitCarry[id] = frames < -0.5f ? -0.5f : frames > 0.5f ? 0.5f : frames;
+	return waitTime;
+}
 #endif
 
 /*
@@ -4071,7 +4112,7 @@ post_builtin:
 				}
 
 #ifdef COD2_PLUS
-				waitTime = Q_rint(fs.top->u.floatValue * Scr_FramesPerSecond());
+				waitTime = Scr_PlusWaitFrames(fs.top->u.floatValue, fs.localId);
 #else
 				waitTime = Q_rint(fs.top->u.floatValue * WAIT_FRAME_TIME);
 #endif
@@ -4090,7 +4131,7 @@ post_builtin:
 				}
 
 #ifdef COD2_PLUS
-				waitTime = Q_rint(fs.top->u.intValue * Scr_FramesPerSecond());
+				waitTime = Scr_PlusWaitFrames(fs.top->u.intValue, fs.localId);
 #else
 				waitTime = fs.top->u.intValue * WAIT_FRAME_TIME;
 #endif

@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — OpenCoD2-Plus Server 6219002: Plus batch
+
+- Brought the vendored files up to 6219002 (upstream sync, Plus HTTP downloads, the antilag's anim rewind, votes across a reconnect, exact `wait`, bots floors) and added `src/server/sv_www_plus.cpp` and `.h` to `test/vendored_files.txt`. Server code only; the Plus version stays 123.
+- The vendored code now calls four functions the engine lacks or keeps `static inline`: `Com_ParseRestOfLine` (upstream), `XAnimAllocInfo` and `XAnimFreeInfo` (the anim rewind, over the engine's `g_xAnimInfo` free list) and `Sys_StringToSockaddr` (the HTTP worker, Linux); `src/compat/client_server_missing.cpp` has them, with the server's bodies.
+- Checked: `vendor_check.py`, the dedicated variants, `linux-13` and `linux-client-x64` (with the main tree's `third_party` linked in), the unit tests. Not built: `mingw-client` and `msvc-client` (no SDL2 here); not run: the anim rewind in the client's local server.
+
 ## 2026-11-08 — Plus downloads from the server itself
 
 - A Plus server with `sv_wwwBaseURL auto` redirects to `plus:<name>`, as a home server does not know the address players reach it on. On a Plus connection (`cl_plusServer`, set from `connectResponse`) `CL_ParseWWWDownload` turns it into `http://<ip>:<port>/<name>` from `clc.serverAddress` (`NetHardening_PlusUrl`: the name passes `NetHardening_ValidDownloadName` as an `.iwd`, anything outside `[A-Za-z0-9._/-]` percent-encoded, a URL that does not fit `cls.downloadName` refused) and goes on through the existing redirect path; 1.3 uses the URL it reads (0x413ed2) as is. From a stock server `plus:` still fails the http(s) check.

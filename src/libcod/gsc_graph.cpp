@@ -264,6 +264,7 @@ static unsigned int graphCrc32(const unsigned char *data, size_t len)
 #define GRAPH_SLOPE_MIN_Z  0.7f
 #define GRAPH_FLAT_DZ      8.0f
 #define GRAPH_MAX_DROP     128.0f
+#define GRAPH_STAIR_LIFT   ( 2 * GRAPH_STEP_UP )
 #define GRAPH_EDGE_STEP    1
 #define GRAPH_EDGE_DROP    2
 
@@ -293,17 +294,86 @@ static bool graphTraceGround(float x, float y, float z, vec3_t out)
 	return true;
 }
 
-/* True when a standing player box fits at the ground point (not embedded in solid). */
-static bool graphPlayerFits(const vec3_t ground, const vec3_t mins, const vec3_t maxs)
+/*
+ * True when a standing player box fits at the ground point (not embedded in
+ * solid), and where: `at` gets the box origin. On stairs the box rests on the
+ * step ahead, above the ground under its centre, and at ground + 2 it is
+ * inside that step, so it is tried higher up too
+ */
+static bool graphBoxRest(const vec3_t ground, const vec3_t mins, const vec3_t maxs, vec3_t at)
 {
 	trace_t tr;
+	int k;
+
+	for ( k = 0; k <= 4; k++ )
+	{
+		at[0] = ground[0]; at[1] = ground[1]; at[2] = ground[2] + ( k ? k * GRAPH_STAIR_LIFT / 4 : 2.0f );
+		SV_Trace(&tr, at, (float *)mins, (float *)maxs, at, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+		if ( !tr.startsolid && !tr.allsolid )
+			return true;
+	}
+
+	return false;
+}
+
+static bool graphPlayerFits(const vec3_t ground, const vec3_t mins, const vec3_t maxs)
+{
 	vec3_t at;
 
-	at[0] = ground[0]; at[1] = ground[1]; at[2] = ground[2] + 2.0f;
+	return graphBoxRest(ground, mins, maxs, at);
+}
 
-	SV_Trace(&tr, at, (float *)mins, (float *)maxs, at, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+/*
+ * True when a player walking from a to b gets there the way pmove moves him:
+ * in 8-unit moves, each one lifted by the step height and then lowered back
+ * onto the ground. One straight sweep cannot climb stairs: the box, lifted
+ * once by 18, runs into the steps ahead, so stairs between floors went
+ * unlinked.
+ */
+static bool graphStepWalk(const vec3_t a, const vec3_t b, const vec3_t mins, const vec3_t maxs)
+{
+	trace_t tr;
+	vec3_t pos;
+	vec3_t end;
+	float dx = b[0] - a[0];
+	float dy = b[1] - a[1];
+	float dist = sqrtf(dx * dx + dy * dy);
+	int moves = (int)ceilf(dist / 8.0f);
+	int k;
 
-	return !tr.startsolid && !tr.allsolid;
+	if ( moves < 1 || !graphBoxRest(a, mins, maxs, pos) )
+		return false;
+
+	for ( k = 1; k <= moves; k++ )
+	{
+		float t = ( k == moves ) ? 1.0f : k * 8.0f / dist;
+		vec3_t up;
+
+		// step up, as far as the ceiling lets it
+		VectorCopy(pos, end);
+		end[2] += GRAPH_STEP_UP;
+		SV_Trace(&tr, pos, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+		if ( tr.startsolid || tr.allsolid )
+			return false;
+		Vec3Lerp(pos, end, tr.fraction, up);
+
+		// move
+		end[0] = a[0] + dx * t; end[1] = a[1] + dy * t; end[2] = up[2];
+		SV_Trace(&tr, up, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+		if ( tr.startsolid || tr.allsolid || tr.fraction < 1.0f )
+			return false;
+
+		// and down onto the ground, which must be there and not too steep
+		VectorCopy(end, up);
+		end[2] = pos[2] - GRAPH_STEP_UP;
+		SV_Trace(&tr, up, (float *)mins, (float *)maxs, end, ENTITYNUM_NONE, GRAPH_TRACE_MASK, 0, NULL, 0);
+		if ( tr.fraction >= 1.0f || tr.normal[2] < GRAPH_SLOPE_MIN_Z )
+			return false;
+		Vec3Lerp(up, end, tr.fraction, pos);
+	}
+
+	// the box rests on or above the ground under its centre
+	return pos[2] > b[2] - GRAPH_FLAT_DZ && pos[2] < b[2] + GRAPH_STAIR_LIFT + 1.0f;
 }
 
 /* True when a player box can travel from a to b unobstructed (both lifted by the
@@ -397,7 +467,8 @@ static void graphLinkNodesTyped(AStarGraph *graph, int a, int b, const vec3_t mi
 	// Walkable both ways (flat, step or a ramp) -> a two-way link, but only where
 	// the ground carries it: a walk edge is type 0, which skipEdgeTypes cannot
 	// filter, so one over a void leaves a bot no way around it
-	if ( ab && ba && graphSegmentSupported(graph->nodes[a].origin, graph->nodes[b].origin) )
+	if ( ( ab && ba && graphSegmentSupported(graph->nodes[a].origin, graph->nodes[b].origin) )
+		|| ( graphStepWalk(graph->nodes[a].origin, graph->nodes[b].origin, mins, maxs) && graphStepWalk(graph->nodes[b].origin, graph->nodes[a].origin, mins, maxs) ) )
 	{
 		if ( graphFindEdgeIndex(graph, a, b) < 0 )
 		{
@@ -2340,6 +2411,24 @@ static unsigned long long graphCellKey(float x, float y, float step)
 	return ((unsigned long long)cx << 32) | cy;
 }
 
+// A grid cell holds a node per floor, and per side of a wall that crosses it.
+// With one node a cell, a floor took the cells above or below it first and a
+// room the cells its wall shares with the next one, so stairs and doors there
+// had no nodes and a floor with a spawn of its own came out as a separate graph
+typedef std::unordered_map<unsigned long long, std::vector<int> > GraphCells;
+
+// The cell's node on the floor of `z`: one less than a player's height away
+static int graphCellNode(AStarGraph *graph, const std::vector<int> &cell, float z, float height)
+{
+	for ( size_t i = 0; i < cell.size(); i++ )
+	{
+		if ( fabsf(graph->nodes[cell[i]].origin[2] - z) < height )
+			return cell[i];
+	}
+
+	return -1;
+}
+
 static unsigned long long graphPairKey(int a, int b)
 {
 	if ( a > b )
@@ -2348,17 +2437,96 @@ static unsigned long long graphPairKey(int a, int b)
 	return ((unsigned long long)(unsigned int)a << 32) | (unsigned int)b;
 }
 
+// Where the flood looks for a neighbour, in grid steps from the grid point
+static const float graphFloodOffsets[][2] = {
+	{ 0, 0 }, { 0.25f, 0 }, { -0.25f, 0 }, { 0, 0.25f }, { 0, -0.25f },
+	{ 0.5f, 0 }, { -0.5f, 0 }, { 0, 0.5f }, { 0, -0.5f }
+};
+
+/*
+ * One neighbour point of the flood: links cur with the nodes already in its
+ * cell and, when none on its floor is reached from cur, adds a node there. Returns
+ * 1 for a new node (the last one), 0 when cur has its neighbour on this floor
+ * or the graph is full, -1 when there is nothing to stand on or no way there.
+ */
+static int graphFloodSample(AStarGraph *graph, GraphCells &cellToNode, std::unordered_set<unsigned long long> &linked, unsigned int cur, float x, float y, int maxNodes, float step, vec3_t playerMins, vec3_t playerMaxs)
+{
+	vec3_t curOrigin;
+	vec3_t ground;
+	int other;
+	bool climb;
+	GraphNode node;
+
+	VectorCopy(graph->nodes[cur].origin, curOrigin);
+	std::vector<int> &cell = cellToNode[graphCellKey(x, y, step)];
+
+	// Both nodes of a pair see each other as neighbours; the
+	// link is the same from either side, so trace it once
+	for ( size_t i = 0; i < cell.size(); i++ )
+	{
+		other = cell[i];
+
+		if ( other != (int)cur && linked.insert(graphPairKey((int)cur, other)).second )
+			graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
+	}
+
+	// from higher up too, or a stair a step ahead starts the trace inside it;
+	// only climbing gets there, as one straight sweep rises onto any ledge
+	climb = !graphTraceGround(x, y, curOrigin[2], ground);
+	if ( climb && !graphTraceGround(x, y, curOrigin[2] + GRAPH_STAIR_LIFT, ground) )
+		return -1;
+
+	// A cell over a wall has a node on each side: the floor's node there
+	// stands for this point only when cur reaches it
+	for ( size_t i = 0; i < cell.size(); i++ )
+	{
+		const float *at = graph->nodes[cell[i]].origin;
+
+		if ( fabsf(at[2] - ground[2]) >= playerMaxs[2] )
+			continue;
+		if ( cell[i] != (int)cur && ( graphFindEdgeIndex(graph, cur, cell[i]) >= 0 || graphFindEdgeIndex(graph, cell[i], cur) >= 0 ) )
+			return 0;
+		if ( cell[i] == (int)cur || Square(at[0] - ground[0]) + Square(at[1] - ground[1]) < Square(step * 0.25f) )
+			return -1;
+	}
+
+	if ( (int)graph->nodes.size() >= maxNodes )
+		return 0;
+
+	if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
+		return -1;
+	if ( ( climb || !graphWalkable(curOrigin, ground, playerMins, playerMaxs) ) && !graphStepWalk(curOrigin, ground, playerMins, playerMaxs) )
+		return -1;
+
+	VectorCopy(ground, node.origin);
+	node.type = 0;
+	node.removed = false;
+	graph->nodes.push_back(node);
+	other = (int)graph->nodes.size() - 1;
+
+	linked.insert(graphPairKey((int)cur, other));
+	graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
+
+	// and with the other side, in case a door joins them
+	for ( size_t i = 0; i < cell.size(); i++ )
+	{
+		if ( cell[i] != (int)cur && linked.insert(graphPairKey(other, cell[i])).second )
+			graphLinkNodesTyped(graph, other, cell[i], playerMins, playerMaxs);
+	}
+	cell.push_back(other);
+
+	return 1;
+}
+
 /*
  * Breadth-first flood from the queued nodes: a walkable grid neighbour gets a node,
  * and every pair of neighbours gets typed links. Returns the nodes added.
  */
-static int graphFlood(AStarGraph *graph, std::unordered_map<unsigned long long, int> &cellToNode, std::vector<unsigned int> &queue, int maxNodes, float step, vec3_t playerMins, vec3_t playerMaxs)
+static int graphFlood(AStarGraph *graph, GraphCells &cellToNode, std::vector<unsigned int> &queue, int maxNodes, float step, vec3_t playerMins, vec3_t playerMaxs)
 {
-	vec3_t ground;
 	std::unordered_set<unsigned long long> linked;
 	size_t head;
 	int added = 0;
-	unsigned long long cellKey;
 
 	head = 0;
 	while ( head < queue.size() )
@@ -2374,55 +2542,27 @@ static int graphFlood(AStarGraph *graph, std::unordered_map<unsigned long long, 
 		{
 			for ( dx = -1; dx <= 1; dx++ )
 			{
-				float nx;
-				float ny;
-				std::unordered_map<unsigned long long, int>::iterator it;
+				size_t k;
 
 				if ( dx == 0 && dy == 0 )
 					continue;
 
-				nx = curOrigin[0] + dx * step;
-				ny = curOrigin[1] + dy * step;
-				cellKey = graphCellKey(nx, ny, step);
-
-				it = cellToNode.find(cellKey);
-				if ( it != cellToNode.end() )
+				// A grid point next to a wall or on a narrow stair has no room
+				// for the box, so the passage is tried a quarter and half a
+				// step to the sides too: on the grid alone doorways and
+				// stairwells were missed and floors came out cut off
+				for ( k = 0; k < sizeof(graphFloodOffsets) / sizeof(graphFloodOffsets[0]); k++ )
 				{
-					int other = it->second;
+					int result = graphFloodSample(graph, cellToNode, linked, cur, curOrigin[0] + dx * step + graphFloodOffsets[k][0] * step, curOrigin[1] + dy * step + graphFloodOffsets[k][1] * step, maxNodes, step, playerMins, playerMaxs);
 
-					// Both nodes of a pair see each other as neighbours; the
-					// link is the same from either side, so trace it once
-					if ( other != (int)cur && linked.insert(graphPairKey((int)cur, other)).second )
-						graphLinkNodesTyped(graph, (int)cur, other, playerMins, playerMaxs);
-					continue;
-				}
-
-				if ( (int)graph->nodes.size() >= maxNodes )
-					continue;
-
-				if ( !graphTraceGround(nx, ny, curOrigin[2], ground) )
-					continue;
-				if ( !graphPlayerFits(ground, playerMins, playerMaxs) )
-					continue;
-				if ( !graphWalkable(curOrigin, ground, playerMins, playerMaxs) )
-					continue;
-
-				{
-					GraphNode node;
-					int nid;
-
-					VectorCopy(ground, node.origin);
-					node.type = 0;
-					node.removed = false;
-					graph->nodes.push_back(node);
-					nid = (int)graph->nodes.size() - 1;
-					cellToNode[cellKey] = nid;
-
-					linked.insert(graphPairKey((int)cur, nid));
-					graphLinkNodesTyped(graph, (int)cur, nid, playerMins, playerMaxs);
-
-					queue.push_back((unsigned int)nid);
-					added++;
+					if ( result < 0 )
+						continue;
+					if ( result > 0 )
+					{
+						queue.push_back((unsigned int)graph->nodes.size() - 1);
+						added++;
+					}
+					break;
 				}
 			}
 		}
@@ -2451,7 +2591,7 @@ void gsc_graph_autodiscover()
 	vec3_t playerMins = { -15, -15, 0 };
 	vec3_t playerMaxs = { 15, 15, 72 };
 	vec3_t ground;
-	std::unordered_map<unsigned long long, int> cellToNode;
+	GraphCells cellToNode;
 	std::vector<unsigned int> queue;
 	int added = 0;
 	unsigned int started;
@@ -2524,7 +2664,7 @@ void gsc_graph_autodiscover()
 		node.type = 0;
 		node.removed = false;
 		graph->nodes.push_back(node);
-		cellToNode[cellKey] = (int)graph->nodes.size() - 1;
+		cellToNode[cellKey].push_back((int)graph->nodes.size() - 1);
 		queue.push_back((unsigned int)graph->nodes.size() - 1);
 		added = 1;
 	}
@@ -2567,7 +2707,7 @@ void gsc_graph_autodiscover_ex()
 	vec3_t playerMins = { -15, -15, 0 };
 	vec3_t playerMaxs = { 15, 15, 72 };
 	vec3_t ground;
-	std::unordered_map<unsigned long long, int> cellToNode;
+	GraphCells cellToNode;
 	std::vector<unsigned int> queue;
 	int added = 0;
 	unsigned int started;
@@ -2661,8 +2801,7 @@ void gsc_graph_autodiscover_ex()
 			continue;
 
 		cellKey = graphCellKey(graph->nodes[i].origin[0], graph->nodes[i].origin[1], step);
-		if ( cellToNode.find(cellKey) == cellToNode.end() )
-			cellToNode[cellKey] = (int)i;
+		cellToNode[cellKey].push_back((int)i);
 	}
 
 	// the seed is a node too, so a full graph gets none
@@ -2677,7 +2816,7 @@ void gsc_graph_autodiscover_ex()
 	// grows all of them evenly until the node cap is reached
 	for ( size_t i = 0; i + 2 < seeds.size(); i += 3 )
 	{
-		std::unordered_map<unsigned long long, int>::iterator it;
+		int other;
 
 		if ( !graphTraceGround(seeds[i], seeds[i + 1], seeds[i + 2], ground) || !graphPlayerFits(ground, playerMins, playerMaxs) )
 		{
@@ -2686,9 +2825,9 @@ void gsc_graph_autodiscover_ex()
 		}
 
 		cellKey = graphCellKey(ground[0], ground[1], step);
-		it = cellToNode.find(cellKey);
+		other = graphCellNode(graph, cellToNode[cellKey], ground[2], playerMaxs[2]);
 
-		if ( it == cellToNode.end() )
+		if ( other < 0 )
 		{
 			GraphNode node;
 
@@ -2699,14 +2838,14 @@ void gsc_graph_autodiscover_ex()
 			node.type = 0;
 			node.removed = false;
 			graph->nodes.push_back(node);
-			cellToNode[cellKey] = (int)graph->nodes.size() - 1;
+			cellToNode[cellKey].push_back((int)graph->nodes.size() - 1);
 			queue.push_back((unsigned int)graph->nodes.size() - 1);
 			added++;
 		}
-		else if ( std::find(queue.begin(), queue.end(), (unsigned int)it->second) == queue.end() )
+		else if ( std::find(queue.begin(), queue.end(), (unsigned int)other) == queue.end() )
 		{
 			// Seed cell already has a node (an earlier call or another seed) - flood out from it
-			queue.push_back((unsigned int)it->second);
+			queue.push_back((unsigned int)other);
 		}
 	}
 

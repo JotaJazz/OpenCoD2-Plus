@@ -502,6 +502,101 @@ extern "C" void CM_SaveLump( int lumpnum, byte *newLump, int size, int *checksum
 	Com_Error(ERR_FATAL, "CM_SaveLump is not in this build");
 }
 
+// universal/q_parse.cpp, with a buffer of its own: the engine has
+// Com_ParseOnLine, not the parse thread info CoD2rev-Plus keeps the line in
+const char *Com_ParseRestOfLine( const char **data_p )
+{
+	static char line[MAX_TOKEN_CHARS];
+	const char *token;
+
+	line[0] = 0;
+	while ( 1 )
+	{
+		token = Com_ParseOnLine( data_p );
+		if ( !token[0] )
+		{
+			break;
+		}
+		if ( line[0] )
+		{
+			Q_strncat( line, MAX_TOKEN_CHARS, " " );
+		}
+		Q_strncat( line, MAX_TOKEN_CHARS, token );
+	}
+
+	return line;
+}
+
+#ifdef COD2_PLUS
+// xanim/xanim.cpp, for the Plus antilag's rewind of a player's anim tree: the
+// engine's XAnimAllocInfoForTree and XAnimFreeInfoToList are static inline,
+// over the same g_xAnimInfo free list
+XAnimInfo* XAnimAllocInfo( XAnimTree_s *tree, unsigned int infoIndex )
+{
+	unsigned int next = g_xAnimInfo->next;
+
+	if ( !next )
+	{
+		Com_Error(ERR_DROP, "exceeded maximum number of anim info");
+	}
+
+	g_xAnimInfo->next = g_xAnimInfo[next].next;
+	g_xAnimInfo[g_xAnimInfo->next].prev = 0;
+
+	tree->infoArray[infoIndex] = next;
+	return &g_xAnimInfo[next];
+}
+
+// xanim/xanim.cpp, with XAnimClearServerNotify
+void XAnimFreeInfo( XAnimTree_s *tree, unsigned int infoIndex )
+{
+	XAnimInfo *info = &g_xAnimInfo[infoIndex];
+
+	(void)tree;
+	if ( info->notifyName )
+	{
+		SL_RemoveRefToString( info->notifyName );
+		info->notifyName = 0;
+	}
+	info->notifyIndex = -1;
+
+	info->prev = 0;
+	info->next = g_xAnimInfo->next;
+
+	g_xAnimInfo[g_xAnimInfo->next].prev = infoIndex;
+	g_xAnimInfo->next = infoIndex;
+}
+#endif
+
+#if defined(COD2_PLUS) && !defined(_WIN32)
+#include <arpa/inet.h>
+#include <netdb.h>
+
+// unix/unix_net.cpp, for the Plus server's own HTTP downloads
+// (server/sv_www_plus.cpp), which bind the game's net_ip
+qboolean Sys_StringToSockaddr( const char *s, struct sockaddr *sadr )
+{
+	struct hostent *h;
+
+	memset (sadr, 0, sizeof(*sadr));
+	((struct sockaddr_in *)sadr)->sin_family = AF_INET;
+	((struct sockaddr_in *)sadr)->sin_port = 0;
+
+	if ( s[0] >= '0' && s[0] <= '9' )
+	{
+		*(int *)&((struct sockaddr_in *)sadr)->sin_addr = inet_addr(s);
+	}
+	else
+	{
+		if ( !(h = gethostbyname(s)) )
+			return qfalse;
+		*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
+	}
+
+	return qtrue;
+}
+#endif
+
 #ifdef LIBCOD
 // What libcod calls of CoD2rev-Plus's platform code (src/unix/unix_threads.cpp,
 // src/win32/win_threads.cpp), which the client does not link: its critical

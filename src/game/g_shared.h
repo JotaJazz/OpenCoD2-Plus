@@ -1197,6 +1197,10 @@ enum hintType_t
 };
 
 #ifdef COD2_PLUS
+// a player's tree had 6 entries active at most in plus_rules_test (stances,
+// their changes, leans); a frame with more is not rewound
+#define PLUS_POSE_ANIMS 16
+
 // what a player's hitboxes take besides the origin, kept for each frame so
 // the antilag can rewind it too (G_PlusRecordPose, g_weapon_mp.cpp)
 struct plusPose_t
@@ -1213,6 +1217,14 @@ struct plusPose_t
 	float lerpLean;
 	vec3_t playerAngles;
 	controller_info_t control;
+	// the XAnim tree's active entries, by index: -1 when more than fit
+	int numAnims;
+	struct
+	{
+		uint16_t index;
+		uint16_t infoIndex;
+		XAnimState state;
+	} anims[PLUS_POSE_ANIMS];
 };
 #endif
 
@@ -1223,6 +1235,9 @@ struct AntilagClientStore
 #ifdef COD2_PLUS
 	plusPose_t realPoses[MAX_CLIENTS];
 	bool poseMoved[MAX_CLIENTS];
+	// the tree's entries the rewind set: index, infoIndex
+	int rewoundAnims[MAX_CLIENTS];
+	uint16_t rewound[MAX_CLIENTS][PLUS_POSE_ANIMS][2];
 #endif
 };
 

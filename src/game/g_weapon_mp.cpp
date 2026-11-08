@@ -600,6 +600,7 @@ void gunrandom( float *x, float *y )
 
 #ifdef COD2_PLUS
 static void G_PlusSetPose( gentity_t *ent, const plusPose_t *pose );
+static void G_PlusRestoreAnims( XAnimTree_s *tree, const plusPose_t *now, int numRewound, const uint16_t (*rewound)[2] );
 #endif
 
 /*
@@ -631,7 +632,13 @@ void G_AntiLag_RestoreClientPos( AntilagClientStore *antilagStore )
 
 #ifdef COD2_PLUS
 		if ( antilagStore->poseMoved[client] )
+		{
 			G_PlusSetPose(&g_entities[client], &antilagStore->realPoses[client]);
+
+			if ( antilagStore->rewoundAnims[client] >= 0 )
+				G_PlusRestoreAnims(level_bgs.clientinfo[client].pXAnimTree, &antilagStore->realPoses[client],
+				                   antilagStore->rewoundAnims[client], antilagStore->rewound[client]);
+		}
 #endif
 	}
 
@@ -685,6 +692,141 @@ static void G_PlusGetPose( gentity_t *ent, plusPose_t *pose )
 	pose->lerpLean = ci->lerpLean;
 	VectorCopy(ci->playerAngles, pose->playerAngles);
 	pose->control = ci->control;
+
+	XAnimTree_s *tree = ci->pXAnimTree;
+	pose->numAnims = 0;
+
+	for ( unsigned int i = 0; i < tree->anims->size; i++ )
+	{
+		unsigned int infoIndex = tree->infoArray[i];
+
+		if ( !infoIndex )
+			continue;
+
+		if ( pose->numAnims == PLUS_POSE_ANIMS )
+		{
+			pose->numAnims = -1;
+			return;
+		}
+
+		pose->anims[pose->numAnims].index = i;
+		pose->anims[pose->numAnims].infoIndex = infoIndex;
+		pose->anims[pose->numAnims].state = g_xAnimInfo[infoIndex].state;
+		pose->numAnims++;
+	}
+}
+
+/*
+===============
+G_PlusRewindAnims
+
+Plus: puts back the tree's entries of then, with their states: the stance's
+animation is the tree's, so a player who crouched since kept the crouch with
+the flags of standing. The entries of now that then lacks are taken out, not
+freed, for the restore; those of then that now lacks get a new info. Returns
+how many entries it set, in rewound
+===============
+*/
+static int G_PlusRewindAnims( XAnimTree_s *tree, const plusPose_t *then, const plusPose_t *now, uint16_t (*rewound)[2] )
+{
+	int k, j;
+
+	for ( k = 0; k < then->numAnims; k++ )
+	{
+		if ( then->anims[k].index >= tree->anims->size )
+			return -1; // of another tree
+	}
+
+	for ( k = 0; k < now->numAnims; k++ )
+		tree->infoArray[now->anims[k].index] = 0;
+
+	// both are in the order of the index
+	for ( k = 0, j = 0; k < then->numAnims; k++ )
+	{
+		unsigned int index = then->anims[k].index;
+		XAnimInfo *info;
+
+		while ( j < now->numAnims && now->anims[j].index < index )
+			j++;
+
+		if ( j < now->numAnims && now->anims[j].index == index )
+		{
+			tree->infoArray[index] = now->anims[j].infoIndex;
+			info = &g_xAnimInfo[now->anims[j].infoIndex];
+		}
+		else
+		{
+			info = XAnimAllocInfo(tree, index);
+			info->notifyChild = 0;
+			info->notifyIndex = -1;
+			info->notifyName = 0;
+			info->notifyType = 0;
+		}
+
+		info->state = then->anims[k].state;
+		rewound[k][0] = index;
+		rewound[k][1] = tree->infoArray[index];
+	}
+
+	return then->numAnims;
+}
+
+/*
+===============
+G_PlusRestoreAnims
+===============
+*/
+static void G_PlusRestoreAnims( XAnimTree_s *tree, const plusPose_t *now, int numRewound, const uint16_t (*rewound)[2] )
+{
+	unsigned int i;
+	int k, j;
+
+	// the tree holds what the rewind set unless the shot changed it: a
+	// script it ran may have dropped the player, which clears the tree
+	for ( i = 0, k = 0; i < tree->anims->size; i++ )
+	{
+		if ( !tree->infoArray[i] )
+			continue;
+
+		if ( k == numRewound || rewound[k][0] != i || rewound[k][1] != tree->infoArray[i] )
+			break;
+
+		k++;
+	}
+
+	bool intact = i == tree->anims->size && k == numRewound;
+
+	if ( intact )
+	{
+		// free the infos the rewind added
+		for ( k = 0, j = 0; k < numRewound; k++ )
+		{
+			while ( j < now->numAnims && now->anims[j].index < rewound[k][0] )
+				j++;
+
+			if ( j == now->numAnims || now->anims[j].index != rewound[k][0] )
+				XAnimFreeInfo(tree, rewound[k][1]);
+
+			tree->infoArray[rewound[k][0]] = 0;
+		}
+	}
+
+	for ( j = 0; j < now->numAnims; j++ )
+	{
+		if ( intact )
+		{
+			tree->infoArray[now->anims[j].index] = now->anims[j].infoIndex;
+			g_xAnimInfo[now->anims[j].infoIndex].state = now->anims[j].state;
+			continue;
+		}
+
+		for ( k = 0; k < numRewound && rewound[k][0] != now->anims[j].index; k++ )
+			;
+
+		// taken out by the rewind, it is in no tree now
+		if ( k == numRewound )
+			XAnimFreeInfo(tree, now->anims[j].infoIndex);
+	}
 }
 
 static void G_PlusSetPose( gentity_t *ent, const plusPose_t *pose )
@@ -798,9 +940,16 @@ void G_AntiLagRewindClientPos( int gameTime, AntilagClientStore *antilagStore )
 
 		if ( pose )
 		{
-			G_PlusGetPose(&g_entities[client], &antilagStore->realPoses[client]);
+			plusPose_t *now = &antilagStore->realPoses[client];
+
+			G_PlusGetPose(&g_entities[client], now);
 			G_PlusSetPose(&g_entities[client], pose);
 			antilagStore->poseMoved[client] = true;
+			antilagStore->rewoundAnims[client] = -1;
+
+			if ( pose->numAnims >= 0 && now->numAnims >= 0 )
+				antilagStore->rewoundAnims[client] = G_PlusRewindAnims(level_bgs.clientinfo[client].pXAnimTree,
+				                                                       pose, now, antilagStore->rewound[client]);
 		}
 #endif
 	}

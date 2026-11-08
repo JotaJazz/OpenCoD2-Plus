@@ -1,5 +1,8 @@
 #include "../qcommon/qcommon.h"
 #include "../qcommon/netchan.h"
+#if defined(COD2_PLUS) && !defined(_WIN32)
+#include "sv_www_plus.h"
+#endif
 
 /*
 =================
@@ -1392,6 +1395,28 @@ void SV_WWWRedirectClient( client_t *cl, msg_t *msg )
 
 	FS_FCloseFile(handle); // don't keep open, we only care about the size
 
+#if defined(COD2_PLUS) && !defined(_WIN32)
+	if ( SV_WwwPlus_IsAuto() )
+	{
+		// the client turns plus: into the address it plays on; the server behind a
+		// router does not know it. Only a Plus client may be sent it, and only for
+		// a file that the grant lets this server serve
+		if ( cl->plusVersion != PLUS_VERSION || !SV_WwwPlus_Grant(cl->netchan.remoteAddress, cl->downloadName, downloadSize) )
+		{
+			cl->wwwFallback = qtrue; // the UDP download, as after wwwdl fail
+			return;
+		}
+		I_strncpyz(cl->downloadURL, va("plus:%s", cl->downloadName), sizeof(cl->downloadURL));
+	}
+	else
+#elif defined(COD2_PLUS)
+	if ( !I_stricmp(sv_wwwBaseURL->current.string, "auto") )
+	{
+		// no HTTP worker on Windows: auto redirects nobody, the UDP download follows
+		cl->wwwFallback = qtrue;
+		return;
+	}
+#endif
 	I_strncpyz(cl->downloadURL, va("%s/%s", sv_wwwBaseURL->current.string, cl->downloadName), sizeof(cl->downloadURL));
 	Com_Printf("Redirecting client '%s' to %s\n", cl->name, cl->downloadURL);
 
@@ -1501,6 +1526,9 @@ void SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 		if (!cl->wwwFallback)
 		{
 			SV_WWWRedirectClient(cl, msg);
+#ifdef COD2_PLUS
+			if (!cl->wwwFallback) // no grant or not a Plus client: the UDP download below
+#endif
 			return;
 		}
 	}
@@ -2522,7 +2550,13 @@ static void SV_WWWDownload_f( client_t *cl )
 	}
 
 	// below for messages that only happen during/after download
+#ifdef COD2_PLUS
+	// a client that refuses the redirect URL sends fail without an ack (the Plus 123
+	// client refuses plus:); fall back to the UDP download rather than drop it
+	if ( !cl->clientDownloadingWWW && Q_stricmp( subcmd, "fail" ) && Q_stricmp( subcmd, "chkfail" ) )
+#else
 	if ( !cl->clientDownloadingWWW )
+#endif
 	{
 		Com_Printf("SV_WWWDownload: unexpected wwwdl '%s' for client '%s'\n", subcmd, cl->name);
 		SV_DropClient(cl, "PC_PATCH_1_1_UNEXPECTEDDOWLOADMESSAGE");

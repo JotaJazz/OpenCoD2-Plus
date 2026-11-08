@@ -1,4 +1,7 @@
 #include "../qcommon/qcommon.h"
+#if defined(COD2_PLUS) && !defined(_WIN32)
+#include "sv_www_plus.h"
+#endif
 
 /*
 ================
@@ -1255,6 +1258,10 @@ void SV_Frame( int msec )
 
 		SV_ArchiveSnapshot();
 	}
+
+#if defined(COD2_PLUS) && !defined(_WIN32)
+	SV_WwwPlus_Frame();
+#endif
 
 	// check timeouts
 #ifdef LIBCOD

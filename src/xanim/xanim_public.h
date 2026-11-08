@@ -676,6 +676,7 @@ XAnim_s* XAnimCreateAnims(const char *debugName, int size, void *(*Alloc)(int));
 void *Hunk_AllocXAnimTreePrecache(int size);
 XAnimParts_s *XAnimFindData(const char *name);
 XAnimInfo* XAnimGetInfo(XAnimTree_s *tree, unsigned int infoIndex);
+XAnimInfo* XAnimAllocInfo(XAnimTree_s *tree, unsigned int infoIndex);
 void XAnimFreeInfo(XAnimTree_s *tree, unsigned int infoIndex);
 unsigned int XAnimGetAnimTreeSize(const XAnim_s *anims);
 const char* XAnimGetAnimName(const XAnim_s *anims, unsigned int animIndex);

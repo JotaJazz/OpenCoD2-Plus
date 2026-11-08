@@ -45,6 +45,10 @@ scripted usercmds and reads its playerstate from the snapshots:
   build's pose rewind does. A shot into the wall over the head first measures
   how far the bullet leaves from the view. It sets g_antilag 1, which a game
   folder's config can turn off.
+- stance rewind: the same client shoots at where the player's head was
+  before it crouched, went prone or stood up from a crouch, once its head
+  has left it: the antilag must rewind the animation of the stance, not only its
+  flags, which only the Plus build does.
 
 Exits with 0 when every check passes. On a build without the rules (any
 build but make PLUS=1) the other checks fail: that is how they catch the bugs.
@@ -121,6 +125,29 @@ Callback_StartGameType()
 	setCvar("plustest_head", "");
 	setCvar("plustest_fire", "");
 	setCvar("plustest_hit", "");
+	setCvar("plustest_wait", "");
+	level thread waits();
+}
+
+// plustest_wait (rcon) times 40 x wait 0.05 and 4 x wait 1 into plustest_waited
+waits()
+{
+	for(;;)
+	{
+		if(getCvar("plustest_wait") != "")
+		{
+			setCvar("plustest_wait", "");
+			t = getTime();
+			for(i = 0; i < 40; i++)
+				wait 0.05;
+			short = getTime() - t;
+			t = getTime();
+			for(i = 0; i < 4; i++)
+				wait 1;
+			setCvar("plustest_waited", short + " " + (getTime() - t));
+		}
+		wait 0.05;
+	}
 }
 
 Callback_PlayerConnect()
@@ -611,89 +638,203 @@ def pump(players, seconds):
             p.read_frames(0.03, False)
 
 
-def check_lean_rewind(port, player, other, check):
-    """A second client, 600 ms of lag behind, shoots at where the player's
-    head was while it leaned, after the player let go of the lean: the
-    antilag must put the head back where the shooter saw it."""
-    m = re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(port, RCON, 'sv_serverid'))
-    shooter = Player(port)
-    shooter.lag = 600
-    try:
-        if shooter.connect(118, 'plustest2') is not None or not shooter.request_gamestate(int(m.group(1))):
-            check('lean rewind: a second client joins', False)
-            return
-        shooter.enter_game(int(m.group(1)), 1.0)
-        # down the sights: the hip's idle sway moves a bullet off the view
-        shooter.weapon, shooter.hold = other, BUTTON_ADS
-        settle(player, other)
-        pump([player, shooter], 2)
-        # a game folder's config can turn it off
-        smoke_test.rcon(port, RCON, 'set g_antilag 1')
-        smoke_test.rcon(port, RCON, 'set plustest_duel 1')
-        pump([player, shooter], 1.5)
-        def shot():
-            """Fires; where it hit the player, and the impacts on the world."""
-            smoke_test.rcon(port, RCON, 'set plustest_fire 1')
-            impacts = set()
-            deadline = time.time() + 1.0
-            while time.time() < deadline:
-                for f in player.read_frames(0.03, False):
-                    impacts |= {tuple(e['pos.trBase']) for e in f['entities'].values()
-                                if e.get('eType', 0) - ET_EVENTS in range(EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT + 1)}
-                shooter.read_frames(0.03, False)
-            hit = re.search(r'"plustest_hit" is: ?"([^"^]*)', smoke_test.rcon(port, RCON, 'plustest_hit'))
-            return (hit.group(1) if hit else None), impacts
+class Duel:
+    """A second client, 600 ms of lag behind, that stands in front of the
+    player, down the sights with no spread (plustest_duel). It joins once: a
+    client that leaves keeps its slot until it times out."""
+    shooter = None
 
+    def __init__(self, port, player, other):
+        self.port, self.player = port, player
+        if Duel.shooter is None:
+            m = re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(port, RCON, 'sv_serverid'))
+            shooter = Player(port)
+            shooter.lag = 600
+            if shooter.connect(118, 'plustest2') is not None or not shooter.request_gamestate(int(m.group(1))):
+                shooter.close()
+                return
+            shooter.enter_game(int(m.group(1)), 1.0)
+            # down the sights: the hip's idle sway moves a bullet off the view
+            shooter.weapon, shooter.hold = other, BUTTON_ADS
+            Duel.shooter = shooter
+            settle(player, other)
+            self.pump(2)
+            # a game folder's config can turn it off
+            smoke_test.rcon(port, RCON, 'set g_antilag 1')
+            smoke_test.rcon(port, RCON, 'set plustest_duel 1')
+            self.pump(1.5)
+        self.shooter = Duel.shooter
+
+    def pump(self, seconds):
+        pump([self.player, Duel.shooter], seconds)
+
+    def shot(self):
+        """Fires; where it hit the player, and the impacts on the world."""
+        smoke_test.rcon(self.port, RCON, 'set plustest_fire 1')
+        impacts = set()
+        deadline = time.time() + 1.0
+        while time.time() < deadline:
+            for f in self.player.read_frames(0.03, False):
+                impacts |= {tuple(e['pos.trBase']) for e in f['entities'].values()
+                            if e.get('eType', 0) - ET_EVENTS in range(EV_BULLET_HIT_SMALL, EV_SHOTGUN_HIT + 1)}
+            self.shooter.read_frames(0.03, False)
+        hit = re.search(r'"plustest_hit" is: ?"([^"^]*)', smoke_test.rcon(self.port, RCON, 'plustest_hit'))
+        return (hit.group(1) if hit else None), impacts
+
+    def aim(self, up, dp, dy):
+        for name, value in (('plustest_up', up), ('plustest_dp', dp), ('plustest_dy', dy), ('plustest_aim', 'head')):
+            smoke_test.rcon(self.port, RCON, f'set {name} {value}')
+        # the gun follows a turn of the view over a while
+        self.pump(1.0)
+
+    def aim_at_head(self):
+        """Records where the player's head is and aims at it; the gun's
+        offset, or None if the shot over the head missed the wall."""
+        smoke_test.rcon(self.port, RCON, 'set plustest_head 1')
+        self.pump(0.2)
+        pos = re.search(r'"plustest_pos" is: ?"([^"^]*)', smoke_test.rcon(self.port, RCON, 'plustest_pos'))
+        pos = [float(x) for x in pos.group(1).split()] if pos else None
+        # the bullet leaves a few degrees off the view (the gun's own
+        # angles): one over the head, into the wall, measures by how much
+        self.aim(40, 0, 0)
+        _, impacts = self.shot()
+        if not pos or len(impacts) != 1:
+            return None
         def angles(v):
             return -math.degrees(math.atan2(v[2], math.hypot(v[0], v[1]))), math.degrees(math.atan2(v[1], v[0]))
+        head, eye = pos[:3], pos[3:]
+        wanted = angles([h - e for h, e in zip(head[:2] + [head[2] + 40], eye)])
+        went = angles([i - e for i, e in zip(next(iter(impacts)), eye)])
+        dp, dy = wanted[0] - went[0], wanted[1] - went[1]
+        self.aim(0, dp, dy)
+        return dp, dy
 
-        def aim(up, dp, dy):
-            for name, value in (('plustest_up', up), ('plustest_dp', dp), ('plustest_dy', dy), ('plustest_aim', 'head')):
-                smoke_test.rcon(port, RCON, f'set {name} {value}')
-            # the gun follows a turn of the view over a while
-            pump([player, shooter], 1.0)
 
-        for side, lean in (('left', BUTTON_LEANLEFT), ('right', BUTTON_LEANRIGHT)):
-            player.script = tuple([(lean, other)] * 140)
-            pump([player, shooter], 1.5)
-            smoke_test.rcon(port, RCON, 'set plustest_head 1')
-            pump([player, shooter], 0.2)
-            pos = re.search(r'"plustest_pos" is: ?"([^"^]*)', smoke_test.rcon(port, RCON, 'plustest_pos'))
-            pos = [float(x) for x in pos.group(1).split()] if pos else None
-            # the bullet leaves a few degrees off the view (the gun's own
-            # angles): one over the head, into the wall, measures by how much
-            aim(40, 0, 0)
-            _, impacts = shot()
-            if not pos or len(impacts) != 1:
-                check(f'lean rewind: a shot over the head leaning {side} hits the wall once', False, f'{impacts}')
-                player.script = ()
-                continue
-            head, eye = pos[:3], pos[3:]
-            wanted = angles([h - e for h, e in zip(head[:2] + [head[2] + 40], eye)])
-            went = angles([i - e for i, e in zip(next(iter(impacts)), eye)])
-            dp, dy = wanted[0] - went[0], wanted[1] - went[1]
-            # the aim, with the player still leaning: it must hit the head
-            aim(0, dp, dy)
-            held, _ = shot()
-            while player.script:
-                pump([player, shooter], 0.1)
-            # let go: the lean comes back over about half a second
-            pump([player, shooter], 0.25)
-            hit, _ = shot()
-            check(f'lean rewind: a shot at the head leaning {side} {shooter.lag} ms ago hits it',
-                  held in ('head', 'helmet') and hit in ('head', 'helmet'),
-                  f'hit {hit}; still leaning, {held}; the gun {dp:.1f} and {dy:.1f} degrees off')
-            pump([player, shooter], 1.0)
+def check_lean_rewind(port, player, other, check):
+    """The shooter shoots at where the player's head was while it leaned,
+    after the player let go of the lean: the antilag must put the head back
+    where the shooter saw it."""
+    duel = Duel(port, player, other)
+    if not duel.shooter:
+        check('lean rewind: a second client joins', False)
+        return
+    for side, lean in (('left', BUTTON_LEANLEFT), ('right', BUTTON_LEANRIGHT)):
+        player.script = tuple([(lean, other)] * 140)
+        duel.pump(1.5)
+        offset = duel.aim_at_head()
+        if not offset:
+            check(f'lean rewind: a shot over the head leaning {side} hits the wall once', False)
+            player.script = ()
+            continue
+        # with the player still leaning: it must hit the head
+        held, _ = duel.shot()
+        while player.script:
+            duel.pump(0.1)
+        # let go: the lean comes back over about half a second
+        duel.pump(0.25)
+        hit, _ = duel.shot()
+        check(f'lean rewind: a shot at the head leaning {side} {duel.shooter.lag} ms ago hits it',
+              held in ('head', 'helmet') and hit in ('head', 'helmet'),
+              f'hit {hit}; still leaning, {held}; the gun {offset[0]:.1f} and {offset[1]:.1f} degrees off')
+        duel.pump(1.0)
+
+
+def check_stance_rewind(port, player, other, check):
+    """The shooter shoots at where the player's head was before it changed
+    stance, once the player's head has left it: the antilag must rewind the
+    stance's animation too, not only its flags. On the server going down
+    holds the head a little over standing for about 450 ms (crouch) or 700 ms
+    (prone) before it drops, and standing up raises it at once, so each shot
+    comes when the 600 ms ago it rewinds to still has the head there."""
+    duel = Duel(port, player, other)
+    if not duel.shooter:
+        check('stance rewind: a second client joins', False)
+        return
+    for name, before, after, wait in (('stand to crouch', 0, CROUCH, 0.75), ('stand to prone', 0, PRONE, 0.9),
+                                      ('crouch to stand', CROUCH, 0, 0.35)):
+        player.hold = before
+        duel.pump(2.5)
+        offset = duel.aim_at_head()
+        if not offset:
+            check(f'stance rewind: {name}, a shot over the head hits the wall once', False)
+            continue
+        held, _ = duel.shot()
+        player.hold = after
+        duel.pump(wait)
+        hit, _ = duel.shot()
+        check(f'stance rewind: {name}, a shot at the head {duel.shooter.lag} ms ago hits it',
+              held in ('head', 'helmet') and hit in ('head', 'helmet'),
+              f'hit {hit}; before, {held}; the gun {offset[0]:.1f} and {offset[1]:.1f} degrees off')
+    player.hold = 0
+    duel.pump(2.5)
+
+
+def check_vote_reconnect(port, player, other, check):
+    """A player who voted and reconnects in the same vote cannot vote again
+    (ClientConnect clears the whole client). With two more clients the vote
+    neither passes nor fails while the voter is away."""
+    sid = int(re.search(r'"sv_serverid" is: ?"(-?\d+)', smoke_test.rcon(port, RCON, 'sv_serverid')).group(1))
+    clients = [Player(port) for _ in range(4)]
+    try:
+        third, fourth, voter, again = clients
+        for c, name in ((third, 'plusvote3'), (fourth, 'plusvote4'), (voter, 'plusvote')):
+            if c.connect(118, name) is not None or not c.request_gamestate(sid):
+                check('vote reconnect: the clients join', False)
+                return
+            c.enter_game(sid, 1.0)
+        player.command(sid, 'callvote map_restart')
+        pump([player, third, fourth, voter], 1)
+
+        def vote(c):
+            c.command(sid, 'vote no')
+            got = []
+            deadline = time.time() + 1.5
+            while time.time() < deadline:
+                for p in (player, third, fourth):
+                    p.read_frames(0.03, False)
+                got += [t for f in c.read_frames(0.03, False) for t in f['commands']]
+            return got
+        first = vote(voter)
+        check('vote reconnect: the first vote counts', any('GAME_VOTECAST' in t for t in first), str(first[-3:]))
+        voter.command(sid, 'disconnect')
+        pump([player, third, fourth], 1)
+        if again.connect(118, 'plusvote') is not None or not again.request_gamestate(sid):
+            check('vote reconnect: the voter joins again', False)
+            return
+        again.enter_game(sid, 1.0)
+        second = vote(again)
+        check('vote reconnect: a second vote after a reconnect is refused',
+              any('GAME_VOTEALREADYCAST' in t for t in second) and not any('GAME_VOTECAST' in t for t in second),
+              str(second[-3:]))
     finally:
-        shooter.close()
+        for c in clients:
+            c.close()
+
+
+def check_wait_time(port, player, other, check):
+    """40 x wait 0.05 take 2 s and 4 x wait 1 take 4 s, to a frame, at any
+    sv_fps: the fraction of a frame a wait leaves carries to the next."""
+    frame = 1000 // player.fps
+    smoke_test.rcon(port, RCON, 'set plustest_waited ""')
+    smoke_test.rcon(port, RCON, 'set plustest_wait 1')
+    got = None
+    deadline = time.time() + 15
+    while time.time() < deadline and not got:
+        player.read_frames(0.5, False)
+        m = re.search(r'"plustest_waited" is: ?"(\d+) (\d+)', smoke_test.rcon(port, RCON, 'plustest_waited'))
+        got = m and (int(m.group(1)), int(m.group(2)))
+    check(f'wait time: wait 0.05 and wait 1 at sv_fps {player.fps}',
+          got is not None and abs(got[0] - 2000) <= frame and abs(got[1] - 4000) <= frame, f'{got} ms')
 
 
 # in this order: the turret mg_clip spawns stays in front of the player, where
-# shotgun_spread's pellets would hit it; lean_rewind moves the player away
-# from it, and leaves a second client that archive_time's bot must not take
+# shotgun_spread's pellets would hit it; lean_rewind and stance_rewind move the
+# player away from it, and leave a second client that archive_time's bot must
+# not take
 CHECKS = {'fast_reload': check_fast_reload, 'prone_peek': check_prone_peek, 'shotgun_spread': check_shotgun_spread,
           'mg_clip': check_mg_clip, 'mg_rate': check_mg_rate, 'snapshot_rate': check_snapshot_rate,
-          'lean_rewind': check_lean_rewind, 'archive_time': check_archive_time}
+          'lean_rewind': check_lean_rewind, 'stance_rewind': check_stance_rewind,
+          'archive_time': check_archive_time, 'vote_reconnect': check_vote_reconnect, 'wait_time': check_wait_time}
 
 
 def main():
@@ -753,6 +894,8 @@ def main():
         finally:
             if player:
                 player.close()
+            if Duel.shooter:
+                Duel.shooter.close()
             if server.poll() is None:
                 server.terminate()
                 try:

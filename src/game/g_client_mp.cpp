@@ -480,6 +480,75 @@ void ClientBegin( int clientNum )
 	Scr_Notify(&g_entities[clientNum], scr_const.begin, 0);
 }
 
+#ifdef COD2_PLUS
+// ClientConnect clears the whole client, so a reconnect forgot the votes a
+// player called and the vote they cast: they could vote twice, or call three
+// more votes. A player who leaves leaves both here, by IP, for this level.
+// shortcut: a record goes to the next player from the same IP, who may be a
+// housemate; key it by more than the IP if that matters
+typedef struct
+{
+	byte ip[4];
+	int levelStart;
+	int voteTime;
+	int teamVoteCount;
+} plusVoteMemory_t;
+
+static plusVoteMemory_t plusVoteMemory[MAX_CLIENTS];
+static int plusVoteMemoryNext;
+
+static void G_PlusRememberVotes( int clientNum )
+{
+	gclient_t *client = &level.clients[clientNum];
+	plusVoteMemory_t *rec;
+	byte ip[4];
+
+	if ( !client->sess.teamVoteCount && !(client->ps.eFlags & EF_VOTED) )
+	{
+		return;
+	}
+
+	if ( !SV_GetClientIP(clientNum, ip) )
+	{
+		return;
+	}
+
+	rec = &plusVoteMemory[plusVoteMemoryNext];
+	plusVoteMemoryNext = (plusVoteMemoryNext + 1) % MAX_CLIENTS;
+	memcpy(rec->ip, ip, 4);
+	rec->levelStart = level.startTime;
+	rec->voteTime = (client->ps.eFlags & EF_VOTED) ? level.voteTime : 0;
+	rec->teamVoteCount = client->sess.teamVoteCount;
+}
+
+static void G_PlusRestoreVotes( int clientNum, const byte *ip )
+{
+	gclient_t *client = &level.clients[clientNum];
+	plusVoteMemory_t *rec;
+	int i;
+
+	for ( i = 0; i < MAX_CLIENTS; i++ )
+	{
+		rec = &plusVoteMemory[i];
+
+		if ( rec->levelStart != level.startTime || memcmp(rec->ip, ip, 4) != 0 )
+		{
+			continue;
+		}
+
+		client->sess.teamVoteCount = rec->teamVoteCount;
+
+		if ( level.voteTime && rec->voteTime == level.voteTime )
+		{
+			client->ps.eFlags |= EF_VOTED;
+		}
+
+		rec->levelStart = -1;
+		return;
+	}
+}
+#endif
+
 /*
 ===========
 ClientConnect
@@ -587,6 +656,13 @@ const char *ClientConnect( int clientNum, unsigned short scriptPersId )
 		G_FreeEntity(ent);
 		return "\x15You are banned from this server";
 	}
+
+#ifdef COD2_PLUS
+	if ( SV_GetClientIP(clientNum, ip) )
+	{
+		G_PlusRestoreVotes(clientNum, ip);
+	}
+#endif
 
 	// don't do the "xxx connected" messages if they were caried over from previous level
 	//		TAT 12/10/2002 - Don't display connected messages in single player
@@ -707,6 +783,10 @@ void ClientDisconnect( int clientNum )
 	{
 		Scr_PlayerDisconnect(ent);
 	}
+
+#ifdef COD2_PLUS
+	G_PlusRememberVotes(clientNum);
+#endif
 
 	G_FreeEntity(ent);
 	client->sess.connected = CON_DISCONNECTED;
