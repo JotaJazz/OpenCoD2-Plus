@@ -41,12 +41,15 @@ class BuildCheck(unittest.TestCase):
         self.assertIn('skip linux-client-x64', out)
 
     def test_dxvk_variants_skipped_without_its_libraries(self):
-        """linux, linux-10 and linux-13 need every file of scripts/build_linux_vk_deps.sh CMake reads."""
+        """The DXVK variants need every file of scripts/build_linux_vk_deps.sh CMake reads."""
         with tempfile.TemporaryDirectory() as tmp:
             present = os.path.join(tmp, 'libdxvk_d3d9.so.0')
             open(present, 'w').close()
-            with mock.patch.object(build_check, 'LINUX_VK_DEPS', (present, os.path.join(tmp, 'vkd3d_shader.h'))):
-                code, out = self.run_main('linux', 'linux-10', 'linux-13', '--allow-skip')
+            deps = (present, os.path.join(tmp, 'vkd3d_shader.h'))
+            with mock.patch.object(build_check, 'LINUX_VK_DEPS', deps), \
+                 mock.patch.object(build_check, 'LINUX_VK64_DEPS', deps), \
+                 mock.patch.object(build_check, 'LINUX_X64_SDL2', present):
+                code, out = self.run_main(*build_check.DXVK_VARIANTS, '--allow-skip')
         self.assertEqual(code, 0, out)
         for variant in build_check.DXVK_VARIANTS:
             self.assertIn(f'skip {variant} (no ', out)
@@ -146,11 +149,11 @@ class BuildCheck(unittest.TestCase):
         self.assertFalse(build_check.is_x64('linux-13'))
 
     def test_linux_client_device(self):
-        """The Linux client is on DXVK by default; linux-gl and the x64 client build it on GL."""
+        """The Linux client, 32- and 64-bit, is on DXVK by default; linux-gl builds it on GL."""
         for variant in build_check.DXVK_VARIANTS:
             self.assertIn('-DCOD2_LINUX_DXVK=ON', build_check.VARIANTS[variant])
         self.assertEqual(build_check.VARIANTS['linux-gl'], ['-DCOD2_LINUX_DXVK=OFF'])
-        self.assertIn('-DCOD2_LINUX_DXVK=OFF', build_check.VARIANTS['linux-client-x64'])
+        self.assertIn('linux-client-x64', build_check.DXVK_VARIANTS)
 
 
 if __name__ == '__main__':

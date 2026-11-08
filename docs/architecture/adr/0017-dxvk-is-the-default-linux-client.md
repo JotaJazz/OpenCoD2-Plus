@@ -1,6 +1,6 @@
 # 0017. DXVK is the default Linux client
 
-- Status: Accepted
+- Status: Superseded by 0018
 - Date: 2026-11-07
 
 ## Context

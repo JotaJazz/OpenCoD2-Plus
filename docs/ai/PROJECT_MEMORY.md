@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — the x64 Linux client on DXVK
+
+- `COD2_LINUX_DXVK` is on for `-DCOD2_X64=ON` too ([ADR 0018](../architecture/adr/0018-the-x64-linux-client-on-dxvk.md)): `scripts/build_linux_vk_deps.sh x64` builds the pinned DXVK and vkd3d-shader with the native gcc into `third_party/linux-vk64/`, taking SDL2's headers from `scripts/linux_x64_deps.sh`'s unpacked package (`PKG_CONFIG_SYSROOT_DIR`, plus its multiarch include dir for `_real_SDL_config.h`); DXVK loads SDL2 at run time, so nothing links the absent amd64 `libSDL2.so`.
+- Checked under WSL (llvmpipe): `build_check.py linux-client-x64` builds on DXVK and `client_view_test.py --binary` with it passes. Not checked: a native GPU, the other runtime tests on x64.
+
 ## 2026-11-08 — OpenCoD2-Plus Server 85f92f0: Plus batch 2
 
 - Brought the vendored files up to 85f92f0: the bots graph cap rises to 32768 nodes with a warning when a map hits it (`gsc_graph.cpp`, `libcod.cpp`), and the Plus build prints a repeated script runtime error once and then as a count every 10 s (`scr_parser.cpp`, `plus_rules_test.py`). Server code only; the Plus version stays 123.

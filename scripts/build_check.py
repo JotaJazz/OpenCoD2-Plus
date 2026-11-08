@@ -12,7 +12,8 @@ the client draws with the real d3d9 and d3dx9's HLSL compiler, and
 mingw-client-gl builds it on the Mac port's GL device instead
 (COD2_WIN32_REAL_D3D9=OFF); the -10 ones build 1.0. linux-client-x64 builds the
 64-bit Linux client (cod2_linux, -DCOD2_X64=ON), skipped without the amd64 SDL2
-headers scripts/linux_x64_deps.sh unpacks, and mingw-client-x64 the 64-bit
+headers scripts/linux_x64_deps.sh unpacks or scripts/build_linux_vk_deps.sh x64's
+64-bit DXVK, and mingw-client-x64 the 64-bit
 Windows client, skipped without scripts/mingw64_deps.sh's SDL2. msvc-client builds the
 Windows client on the MSVC ABI (clang + lld-link) through cmd.exe on a copy of the
 tree on a Windows drive (scripts/msvc_build.py), skipped without cmd.exe. web builds
@@ -59,12 +60,12 @@ VARIANTS['mingw-client-gl'] = VARIANTS['mingw-client'] + ['-DCOD2_WIN32_REAL_D3D
 VARIANTS['linux-gl'] = ['-DCOD2_LINUX_DXVK=OFF']
 # stock 1.3: the client and servers without CoD2 1.3 Plus (COD2_PLUS)
 VARIANTS['linux-13'] = ['-DCOD2_LINUX_DXVK=ON', '-DCOD2_PLUS_PROTOCOL=OFF']
-DXVK_VARIANTS = ('linux', 'linux-10', 'linux-13')
+DXVK_VARIANTS = ('linux', 'linux-10', 'linux-13', 'linux-client-x64')
 # the 64-bit dedicated server is its own project: no engine, so none of the engine's checks
 VARIANTS['linux-x64'] = ['-DCOD2_PROTOCOL=118']
 VARIANTS['linux-x64-10'] = ['-DCOD2_PROTOCOL=115']
-# the 64-bit Linux client: the engine on LP64, with scripts/linux_x64_deps.sh's SDL2 headers
-VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON', '-DCOD2_LINUX_DXVK=OFF']
+# the 64-bit Linux client: the engine on LP64, with scripts/linux_x64_deps.sh's SDL2 headers, on DXVK
+VARIANTS['linux-client-x64'] = ['-DCOD2_X64=ON', '-DCOD2_LINUX_DXVK=ON']
 # the 64-bit Windows client: scripts/mingw64_deps.sh's compilers and SDL2
 VARIANTS['mingw-client-x64'] = ['-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake', '-DCOD2_X64=ON',
                                  '-DCOD2_WIN32_CLIENT=ON', '-DCOD2_WIN32_REAL_D3D9=ON']
@@ -83,8 +84,9 @@ MINGW64_NM = os.path.join(ROOT, 'third_party', 'mingw64', 'usr', 'bin', 'x86_64-
 LINUX_X64_SDL2 = os.path.join(ROOT, 'third_party', 'linux-x64', 'usr', 'include', 'x86_64-linux-gnu', 'SDL2',
                               '_real_SDL_config.h')
 # what CMake needs of scripts/build_linux_vk_deps.sh's output for the DXVK client
-LINUX_VK_DEPS = tuple(os.path.join(ROOT, 'third_party', 'linux-vk', f) for f in
-                      ('lib/libdxvk_d3d9.so.0', 'lib/libvkd3d-shader.so.1', 'include/vkd3d_shader.h'))
+LINUX_VK_DEPS, LINUX_VK64_DEPS = (tuple(os.path.join(ROOT, 'third_party', d, f) for f in
+                                        ('lib/libdxvk_d3d9.so.0', 'lib/libvkd3d-shader.so.1', 'include/vkd3d_shader.h'))
+                                  for d in ('linux-vk', 'linux-vk64'))
 # the MinGW client links the static SDL2 the user supplies
 LAYOUT_VARIANTS = ('linux', 'linux-10', 'mingw')
 SDL2_MINGW = os.path.join(ROOT, 'src', 'win32', 'sdl2', 'lib', 'libSDL2.a')
@@ -370,9 +372,12 @@ def main():
             print(f'skip {variant} (no cmd.exe: builds on Windows from WSL)')
             skipped = True
             continue
-        missing = [f for f in LINUX_VK_DEPS if not os.path.exists(f)] if variant in DXVK_VARIANTS else []
+        x64_client = variant == 'linux-client-x64'
+        vk_deps = LINUX_VK64_DEPS if x64_client else LINUX_VK_DEPS
+        missing = [f for f in vk_deps if not os.path.exists(f)] if variant in DXVK_VARIANTS else []
         if missing:
-            print(f'skip {variant} (no {os.path.relpath(missing[0], ROOT)}: scripts/build_linux_vk_deps.sh)')
+            script = 'scripts/build_linux_vk_deps.sh' + (' x64' if x64_client else '')
+            print(f'skip {variant} (no {os.path.relpath(missing[0], ROOT)}: {script})')
             skipped = True
             continue
         errors = build(variant, extra)

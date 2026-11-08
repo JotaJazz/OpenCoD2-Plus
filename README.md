@@ -103,7 +103,7 @@ cmake --build build-native -j
 
 The client's libraries are needed to build both, but `cod2_lnxded` runs with only the 32-bit libc, libm, libz and libstdc++.
 
-`cod2_linux` draws with the game's own shaders on Vulkan: `scripts/build_linux_vk_deps.sh` builds DXVK native and vkd3d-shader (32-bit, from pinned releases), and the build copies them next to it. It needs a Vulkan device. `-DCOD2_LINUX_DXVK=OFF` builds it on the GL device instead, without that script, with stand-in shaders (no sun, a white sky).
+`cod2_linux` draws with the game's own shaders on Vulkan: `scripts/build_linux_vk_deps.sh` builds DXVK native and vkd3d-shader (32-bit, from pinned releases; `x64`: 64-bit, for the `-DCOD2_X64=ON` client), and the build copies them next to it. It needs a Vulkan device. `-DCOD2_LINUX_DXVK=OFF` builds it on the GL device instead, without that script, with stand-in shaders (no sun, a white sky).
 
 ### Windows (cross-compiled from Linux with MinGW)
 

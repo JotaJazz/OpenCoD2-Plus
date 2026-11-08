@@ -1,8 +1,9 @@
 #!/bin/bash
 # Builds the two libraries the Linux client on real Direct3D 9 (cod2_linux,
-# the default, -DCOD2_LINUX_DXVK=ON) loads at run time, 32-bit, into third_party/linux-vk:
+# the default, -DCOD2_LINUX_DXVK=ON) loads at run time, 32-bit, into third_party/linux-vk,
+# or with x64 64-bit, for the -DCOD2_X64=ON client, into third_party/linux-vk64:
 #
-#     scripts/build_linux_vk_deps.sh
+#     scripts/build_linux_vk_deps.sh [x64]
 #
 #   lib/libdxvk_d3d9.so.0     DXVK native (Direct3D 9 over Vulkan, SDL2 window)
 #   lib/libvkd3d-shader.so.1  vkd3d-shader (the game's HLSL to Direct3D 9 bytecode)
@@ -10,12 +11,28 @@
 #
 # Pinned: DXVK v2.7.1 (commit below) and vkd3d 1.19 (tarball SHA-256 below).
 # Needs gcc with -m32, meson, ninja, and SDL2 and the Vulkan loader for i386
-# (libsdl2-dev:i386, libvulkan1:i386). The build-only tools DXVK and vkd3d
+# (libsdl2-dev:i386, libvulkan1:i386); x64 needs the amd64 Vulkan loader and
+# the SDL2 headers scripts/linux_x64_deps.sh unpacks. The build-only tools DXVK and vkd3d
 # also need (glslang, flex, bison, perl's JSON, the Vulkan and SPIR-V
 # headers) are fetched with apt-get download (no root) when missing.
 set -e
 root=$(cd "$(dirname "$0")/.." && pwd)
-out=$root/third_party/linux-vk
+if [ "$1" = x64 ]; then
+    out=$root/third_party/linux-vk64 cc=gcc cxx=g++ elfclass=2
+    sdl2pc=$root/third_party/linux-x64/usr/lib/x86_64-linux-gnu/pkgconfig/sdl2.pc
+    vulkan=/usr/lib/x86_64-linux-gnu/libvulkan.so.1
+    # DXVK takes only SDL2's headers (it loads the library at run time), from the unpacked package
+    export PKG_CONFIG_SYSROOT_DIR=$root/third_party/linux-x64
+    export PKG_CONFIG_LIBDIR=$root/third_party/linux-x64/usr/lib/x86_64-linux-gnu/pkgconfig
+    cxxflags=-I$root/third_party/linux-x64/usr/include/x86_64-linux-gnu  # SDL2's multiarch config header
+    sdl2hint="run scripts/linux_x64_deps.sh, install libvulkan1"
+else
+    out=$root/third_party/linux-vk cc="gcc -m32" cxx="g++ -m32" elfclass=1
+    sdl2pc=/usr/lib/i386-linux-gnu/pkgconfig/sdl2.pc
+    vulkan=/usr/lib/i386-linux-gnu/libvulkan.so.1
+    export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
+    sdl2hint="install libsdl2-dev:i386 libvulkan1:i386"
+fi
 work=$out/work
 tools=$work/tools
 mkdir -p "$out/lib" "$out/include" "$work" "$tools"
@@ -28,8 +45,8 @@ VKD3D_SHA256=034613605baab8ba84674f8d272cf22b5e86bc6bc03fc5728ef9bce07308baa6
 for t in gcc meson ninja git curl pkg-config; do
     command -v $t >/dev/null || { echo "missing $t" >&2; exit 1; }
 done
-for f in /usr/lib/i386-linux-gnu/pkgconfig/sdl2.pc /usr/lib/i386-linux-gnu/libvulkan.so.1; do
-    [ -e "$f" ] || { echo "missing $f (install libsdl2-dev:i386 libvulkan1:i386)" >&2; exit 1; }
+for f in "$sdl2pc" "$vulkan"; do
+    [ -e "$f" ] || { echo "missing $f ($sdl2hint)" >&2; exit 1; }
 done
 
 # build-only tools: the system's if present, otherwise extracted into $tools
@@ -58,8 +75,7 @@ if [ "$(git -C "$work/dxvk" rev-parse HEAD 2>/dev/null)" != "$DXVK_COMMIT" ]; th
 fi
 if [ ! -e "$work/dxvk-build/build.ninja" ]; then
     rm -rf "$work/dxvk-build"
-    CC="gcc -m32" CXX="g++ -m32" PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig \
-        meson setup --buildtype release -Denable_d3d8=false -Denable_d3d10=false \
+    CC="$cc" CXX="$cxx" CXXFLAGS="$cxxflags" meson setup --buildtype release -Denable_d3d8=false -Denable_d3d10=false \
         -Denable_d3d11=false -Denable_dxgi=false -Dnative_sdl2=enabled -Dnative_sdl3=disabled \
         -Dnative_glfw=disabled "$work/dxvk-build" "$work/dxvk" >/dev/null
 fi
@@ -81,7 +97,7 @@ fi
 if [ ! -e "$work/vkd3d-build/Makefile" ]; then
     rm -rf "$work/vkd3d-build"
     mkdir -p "$work/vkd3d-build"
-    (cd "$work/vkd3d-build" && "../vkd3d-$VKD3D_VER/configure" -q CC="gcc -m32" \
+    (cd "$work/vkd3d-build" && "../vkd3d-$VKD3D_VER/configure" -q CC="$cc" \
         CPPFLAGS="-I$tools/usr/include" VULKAN_LIBS="-l:libvulkan.so.1" SONAME_LIBVULKAN=libvulkan.so.1 \
         --disable-doxygen-doc --disable-tests --without-ncurses >/dev/null)
 fi
@@ -94,6 +110,6 @@ cp -L "$work/vkd3d-build/.libs/libvkd3d-shader.so.1" "$out/lib/"
 cp "$work/vkd3d-$VKD3D_VER/include/vkd3d_shader.h" "$work/vkd3d-$VKD3D_VER/include/vkd3d_types.h" "$out/include/"
 
 for so in "$out/lib/libdxvk_d3d9.so.0" "$out/lib/libvkd3d-shader.so.1"; do
-    [ "$(od -An -tu1 -j4 -N1 "$so" | tr -d ' ')" = 1 ] || { echo "$so is not 32-bit" >&2; exit 1; }
+    [ "$(od -An -tu1 -j4 -N1 "$so" | tr -d ' ')" = $elfclass ] || { echo "$so is not for this architecture" >&2; exit 1; }
 done
 echo "built $out/lib/libdxvk_d3d9.so.0 and $out/lib/libvkd3d-shader.so.1"

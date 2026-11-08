@@ -24,7 +24,7 @@ Live list. Remove an entry when it is fixed (and record the fix in
 
 | Item | Why accepted |
 |---|---|
-| The GL Linux client (`-DCOD2_LINUX_DXVK=OFF`, and every x64 one) keeps stand-in shaders | the default `cod2_linux` draws the game's shaders on DXVK; the GL one is for machines without Vulkan |
+| The GL Linux client (`-DCOD2_LINUX_DXVK=OFF`) keeps stand-in shaders | the default `cod2_linux` draws the game's shaders on DXVK; the GL one is for machines without Vulkan |
 | `fxRestart` takes hunk memory each time until the next map load | developer command; many restarts on one map end in a drop error |
 | Server browser's find-player list indexes 1-based (`ui_main_mp.c`) | nothing starts that search, in the original either |
 | Windows dedicated server prints only to its window, shows a message box on fatal errors | OpenCoD2-Plus Server's `src/win32`; scripts read the console log |

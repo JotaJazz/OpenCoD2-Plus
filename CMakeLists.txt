@@ -626,18 +626,19 @@ else()
 # NATIVE Linux (cod2_linux + cod2_lnxded)
 # ----------------------------------------------------------------------------
 option(COD2_DEBUG "-O0, no hardening (gdb / canary-UB work; mirrors DEBUG=1)" OFF)
-# DXVK's libraries are 32-bit, so the 64-bit client stays on the GL device
+option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader); OFF: the GL device" ON)
+# the 64-bit client loads 64-bit builds of them: scripts/build_linux_vk_deps.sh x64
 if(COD2_X64)
-  set(COD2_LINUX_DXVK_DEFAULT OFF)
+  set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk64)
+  set(COD2_LINUX_VK_SCRIPT "scripts/build_linux_vk_deps.sh x64")
 else()
-  set(COD2_LINUX_DXVK_DEFAULT ON)
+  set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk)
+  set(COD2_LINUX_VK_SCRIPT "scripts/build_linux_vk_deps.sh")
 endif()
-option(COD2_LINUX_DXVK "Linux client on real Direct3D 9 (DXVK native, vkd3d-shader); OFF: the GL device" ${COD2_LINUX_DXVK_DEFAULT})
-set(COD2_LINUX_VK_DIR ${CMAKE_SOURCE_DIR}/third_party/linux-vk)
 if(COD2_LINUX_DXVK)
   if(NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libdxvk_d3d9.so.0 OR NOT EXISTS ${COD2_LINUX_VK_DIR}/lib/libvkd3d-shader.so.1
      OR NOT EXISTS ${COD2_LINUX_VK_DIR}/include/vkd3d_shader.h)
-    message(FATAL_ERROR "The Linux client draws on DXVK: run scripts/build_linux_vk_deps.sh first, "
+    message(FATAL_ERROR "The Linux client draws on DXVK: run ${COD2_LINUX_VK_SCRIPT} first, "
                         "or configure with -DCOD2_LINUX_DXVK=OFF for the GL device")
   endif()
   add_compile_definitions(GFX_REAL_D3D9)

@@ -9,7 +9,7 @@ into the client (no separate DLL: [ADR 0007](adr/0007-remove-the-renderer-dll-va
 |---|---|---|
 | Windows client (default, `COD2_WIN32_REAL_D3D9=ON`, `GFX_REAL_D3D9`) | real `IDirect3DDevice9` | the game's `materials/shaders/*.hlsl`, compiled with the system's d3dx9 (`d3dx9_43` down to `d3dx9_24`), `//` comments blanked first (Wine's compiler rejects one after an `#include`) |
 | Linux client `cod2_linux` (default, `COD2_LINUX_DXVK=ON`, `GFX_REAL_D3D9`) | DXVK native's `IDirect3DDevice9`, over Vulkan | the game's shaders, compiled with vkd3d-shader |
-| Windows client with `COD2_WIN32_REAL_D3D9=OFF`, Linux client with `COD2_LINUX_DXVK=OFF` (and every x64 Linux client) | Mac port's GL layer behind a Direct3D interface (`src/Mac`) | hand-written ARB programs picked by HLSL keywords: no sun, no specular, white world |
+| Windows client with `COD2_WIN32_REAL_D3D9=OFF`, Linux client with `COD2_LINUX_DXVK=OFF` | Mac port's GL layer behind a Direct3D interface (`src/Mac`) | hand-written ARB programs picked by HLSL keywords: no sun, no specular, white world |
 
 Decisions: [ADR 0008](adr/0008-windows-client-on-real-direct3d-9.md), [ADR 0009](adr/0009-linux-client-on-dxvk.md).
 
@@ -44,7 +44,8 @@ differ from Windows, each `#if defined(GFX_REAL_D3D9) && !defined(_WIN32)`:
 
 COM calls are cdecl there (`D3DVTCC` is stdcall on Windows only), as DXVK
 native declares them. `scripts/build_linux_vk_deps.sh` builds both libraries
-(DXVK v2.7.1, vkd3d 1.19, 32-bit) into `third_party/linux-vk/`, which is not
+(DXVK v2.7.1, vkd3d 1.19, 32-bit) into `third_party/linux-vk/`, and with `x64`
+64-bit into `third_party/linux-vk64/` for the x64 client; neither is
 in git; the build copies them next to `cod2_linux`. Under WSL the only
 Vulkan device is llvmpipe (the processor): correct pictures, slow.
 

@@ -24,7 +24,8 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0014](0014-name-1-3-plus.md) | The player-facing name is "1.3 Plus" | Accepted | 2026-11-02 |
 | [0015](0015-msvc-abi-client-on-the-bridge.md) | The MSVC-ABI client is built with clang on the bridge | Accepted | 2026-11-05 |
 | [0016](0016-sse2-float-math.md) | Float math on SSE2, not x87 | Accepted | 2026-11-05 |
-| [0017](0017-dxvk-is-the-default-linux-client.md) | DXVK is the default Linux client | Accepted | 2026-11-07 |
+| [0017](0017-dxvk-is-the-default-linux-client.md) | DXVK is the default Linux client | Superseded by 0018 | 2026-11-07 |
+| [0018](0018-the-x64-linux-client-on-dxvk.md) | The x64 Linux client on DXVK too | Accepted | 2026-11-08 |
 
 ## Template
 

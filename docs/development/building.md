@@ -13,7 +13,7 @@ Every x86 and x64 build computes float math on SSE2 (`-msse2 -mfpmath=sse`, [ADR
 | Linux 1.3 | `scripts/build_linux_vk_deps.sh`, then `cmake -S . -B build/check-linux` | `cod2_linux` on DXVK, with `libdxvk_d3d9.so.0` and `libvkd3d-shader.so.1` next to it, and `cod2_lnxded`, speaking CoD2 1.3 Plus (`COD2_PLUS`, OpenCoD2-Plus Server's `make PLUS=1`): the servers take only the Plus client |
 | Linux stock 1.3 | `+ -DCOD2_PLUS_PROTOCOL=OFF` | same, without 1.3 Plus: the servers take any 1.3 client, the client does not announce itself as Plus; every other improvement stays |
 | Linux 1.0 | `+ -DCOD2_FEATURE_CFLAGS=-DCOD2_PATCH_10` | same, protocol 115 |
-| Linux client on GL | `+ -DCOD2_LINUX_DXVK=OFF` (no `scripts/build_linux_vk_deps.sh` needed) | `cod2_linux` on the Mac port's GL device, stand-in shaders; the default for `-DCOD2_X64=ON`, as DXVK's libraries are 32-bit |
+| Linux client on GL | `+ -DCOD2_LINUX_DXVK=OFF` (no `scripts/build_linux_vk_deps.sh` needed) | `cod2_linux` on the Mac port's GL device, stand-in shaders; the 64-bit client's DXVK is `scripts/build_linux_vk_deps.sh x64` ([ADR 0018](../architecture/adr/0018-the-x64-linux-client-on-dxvk.md)) |
 | MinGW dedicated | `-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw32.cmake` | `cod2_win32_ded.exe` |
 | MinGW client | `+ -DCOD2_WIN32_CLIENT=ON` (static SDL2 in `src/win32/sdl2/lib`, not in git) | `cod2_win32.exe`, real Direct3D 9 |
 | Windows client on Vulkan | `scripts/fetch_windows_dxvk.sh DIR_WITH_THE_EXE`, then Options > Graphics or `+set r_gfxApi vulkan` ([ADR 0011](../architecture/adr/0011-graphics-apis-behind-direct3d-9.md)) | `dxvk/d3d9.dll` |
@@ -50,7 +50,7 @@ variant into `build/check-<variant>/` and runs the static checks.
 | `mingw-client-gl` | MinGW client on the GL device (`-DCOD2_WIN32_REAL_D3D9=OFF`) |
 | `mingw-client-x64` | 64-bit MinGW client (`cmake/toolchain-mingw64.cmake`, `-DCOD2_X64=ON`; skipped without `scripts/mingw64_deps.sh`'s SDL2); the three bridge checks with x86_64's `nm` and no `_` prefix |
 | `linux-gl` | Linux client on the GL device (`-DCOD2_LINUX_DXVK=OFF`) |
-| `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`; skipped without `scripts/linux_x64_deps.sh`'s headers); glibc and the three bridge checks apply |
+| `linux-client-x64` | 64-bit Linux client, `cod2_linux` only (`-DCOD2_X64=ON`, on DXVK; skipped without `scripts/linux_x64_deps.sh`'s headers or `scripts/build_linux_vk_deps.sh x64`'s libraries); glibc and the three bridge checks apply |
 
 Checks it runs (each a script in `scripts/`):
 
