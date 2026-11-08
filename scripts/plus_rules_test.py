@@ -833,20 +833,25 @@ def check_vote_reconnect(port, player, other, check):
 
 
 def check_error_repeats(port, player, other, check):
-    """With logErrors 1 the same runtime error every frame for 11 s prints once
-    and then once as a count after 10 s, not 220 times."""
+    """With logErrors 1 the same runtime error every frame for 11 s prints once,
+    then as a count after 10 s, then the count it left when it stopped, not 220
+    times."""
     # other threads of this gametype make errors too: count the blocks of this one
     mine = re.compile(r'script runtime error[^\n]*\n[^\n]*7777')
-    before = len(mine.findall(open(LOG, encoding='latin-1').read()))
+    count = lambda: len(mine.findall(open(LOG, encoding='latin-1').read()))
+    before = count()
     for command in ('set logErrors 1', 'set plustest_errored ""', 'set plustest_error 1'):
         smoke_test.rcon(port, RCON, command)
     deadline = time.time() + 25
     while time.time() < deadline and 'is: "1' not in (smoke_test.rcon(port, RCON, 'plustest_errored') or '').replace('^7', ''):
         player.read_frames(0.5, False)
     smoke_test.rcon(port, RCON, 'set logErrors 0')
+    deadline = time.time() + 15
+    while time.time() < deadline and count() - before < 3:
+        player.read_frames(0.5, False)
     text = open(LOG, encoding='latin-1').read()
-    printed = len(mine.findall(text)) - before
-    check('error repeats: one error a frame for 11 s prints twice', printed == 2 and re.search(r'runtime error, \d+ times in 1\d s[^\n]*\n[^\n]*7777', text) is not None,
+    printed = count() - before
+    check('error repeats: one error a frame for 11 s prints three times', printed == 3 and len(re.findall(r'runtime error, \d+ times in 1\d s[^\n]*\n[^\n]*7777', text)) >= 2,
           f'{printed} prints')
 
 

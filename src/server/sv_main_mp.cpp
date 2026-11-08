@@ -1263,6 +1263,11 @@ void SV_Frame( int msec )
 	SV_WwwPlus_Frame();
 #endif
 
+#if defined(LIBCOD) && defined(COD2_PLUS)
+	extern void Scr_PlusFlushRuntimeErrors();
+	Scr_PlusFlushRuntimeErrors();
+#endif
+
 	// check timeouts
 #ifdef LIBCOD
 	SV_CheckTimeouts_libcod();
