@@ -1954,7 +1954,7 @@ static void UI_StartServerRefresh(qboolean full)
         if (debugProtocol[0])
             Cbuf_ExecuteText(0, va("globalservers %d %s full empty\n", 0, debugProtocol));
         else
-            Cbuf_ExecuteText(0, va("globalservers %d %d full empty\n", 0, 0x73));
+            Cbuf_ExecuteText(0, va("globalservers %d %d full empty\n", 0, COD2_PROTOCOL_VERSION));
     }
 }
 #endif
@@ -2011,44 +2011,29 @@ static void UI_RemoveDuplicateFromFavorites(int serverIndex)
 #ifndef __EMSCRIPTEN__
 static void UI_BinaryInsertServer(int serverIndex)
 {
-    int numDisplay = sharedUiInfo.serverStatus.numDisplayServers;
     int *displayServers = sharedUiInfo.serverStatus.displayServers;
-    int lo, hi, mid, testIdx, cmp, position, lastCmp;
     int source = (ui_netSource)->current.integer;
     int sortKey = sharedUiInfo.serverStatus.sortKey;
     int sortDir = sharedUiInfo.serverStatus.sortDir;
+    int lo = 0;
+    int hi = sharedUiInfo.serverStatus.numDisplayServers;
 
-    lo = 0;
-    hi = numDisplay;
-    position = 0;
-    lastCmp = 0;
-
-    while (hi > 0) {
-        mid = hi / 2;
-        testIdx = lo + mid;
-
-        cmp = LAN_CompareServers(source, sortKey, sortDir, serverIndex, displayServers[testIdx]);
-        lastCmp = cmp;
+    /* the first place that sorts after it, as Quake 3's: the reconstructed
+     * search put the first server at 1 of an empty list, and so listed none */
+    while (lo < hi) {
+        int mid = (lo + hi) / 2;
+        int cmp = LAN_CompareServers(source, sortKey, sortDir, serverIndex, displayServers[mid]);
 
         if (cmp == 0) {
-            UI_InsertServerAtPosition(serverIndex, testIdx);
+            UI_InsertServerAtPosition(serverIndex, mid);
             return;
-        } else if (cmp > 0) {
-            hi -= mid;
-            position = testIdx + 1;
-            lo = position;
-            hi--;
-        } else {
-            hi -= mid;
         }
+        if (cmp > 0)
+            lo = mid + 1;
+        else
+            hi = mid;
     }
-
-    if (lastCmp >= 0)
-        position = lo + 1;
-    else
-        position = lo;
-
-    UI_InsertServerAtPosition(serverIndex, position);
+    UI_InsertServerAtPosition(serverIndex, lo);
 }
 #endif
 
@@ -4706,7 +4691,7 @@ static void UI_StartServerRefresh(qboolean full)
         if (debugProtocol[0])
             Cbuf_ExecuteText(0, va("globalservers %d %s full empty\n", 0, debugProtocol));
         else
-            Cbuf_ExecuteText(0, va("globalservers %d %d full empty\n", 0, 0x73));
+            Cbuf_ExecuteText(0, va("globalservers %d %d full empty\n", 0, COD2_PROTOCOL_VERSION));
     }
 }
 
@@ -5135,42 +5120,29 @@ static void UI_RemoveDuplicateFromFavorites(int serverIndex)
 
 static void UI_BinaryInsertServer(int serverIndex)
 {
-    int numDisplay = sharedUiInfo.serverStatus.numDisplayServers;
     int *displayServers = sharedUiInfo.serverStatus.displayServers;
-    int lo = 0;
-    int hi = numDisplay;
-    int position = 0;
-    int lastCmp = 0;
     int source = (ui_netSource)->current.integer;
     int sortKey = sharedUiInfo.serverStatus.sortKey;
     int sortDir = sharedUiInfo.serverStatus.sortDir;
+    int lo = 0;
+    int hi = sharedUiInfo.serverStatus.numDisplayServers;
 
-    while (hi > 0) {
-        int mid = hi / 2;
-        int testIdx = lo + mid;
-        int cmp = LAN_CompareServers(source, sortKey, sortDir, serverIndex, displayServers[testIdx]);
+    /* the first place that sorts after it, as Quake 3's: the reconstructed
+     * search put the first server at 1 of an empty list, and so listed none */
+    while (lo < hi) {
+        int mid = (lo + hi) / 2;
+        int cmp = LAN_CompareServers(source, sortKey, sortDir, serverIndex, displayServers[mid]);
 
-        lastCmp = cmp;
         if (cmp == 0) {
-            UI_InsertServerAtPosition(serverIndex, testIdx);
+            UI_InsertServerAtPosition(serverIndex, mid);
             return;
         }
-        if (cmp > 0) {
-            hi -= mid;
-            position = testIdx + 1;
-            lo = position;
-            hi--;
-        } else {
-            hi -= mid;
-        }
+        if (cmp > 0)
+            lo = mid + 1;
+        else
+            hi = mid;
     }
-
-    if (lastCmp >= 0)
-        position = lo + 1;
-    else
-        position = lo;
-
-    UI_InsertServerAtPosition(serverIndex, position);
+    UI_InsertServerAtPosition(serverIndex, lo);
 }
 
 static void UI_BuildServerDisplayList(qboolean force)

@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-09 — the server browser lists servers
+
+- Two bugs hid every internet server: `ui_main_mp.c` asked `globalservers` for protocol `0x73` (115) in the 1.3 build too, whose `CL_ServerInfoPacket` drops any other protocol, and `UI_BinaryInsertServer` (both copies) put the first server at 1 of an empty list, which `UI_InsertServerAtPosition` refuses; its loop also never ended at `hi == 1` with a server that sorts first. Now `COD2_PROTOCOL_VERSION` and a lower-bound search.
+- Found by running the Linux client with `developer 1` and `openmenu joinserver` from a cfg (after `wait 600`), a run of about 90 s: 306 of 410 servers listed, the rest filtered (unpure ones by default).
+
 ## 2026-11-09 — d3d12 falls back when it shows nothing
 
 - With `d3d12` in the menu, a GPU where it stays black would leave the player stuck: if none of the first 120 presents after the interface is made returns S_OK, the client sets `r_gfxApi d3d9` and runs `vid_restart` (`RealD3D9_D3D12ShowsNothing`).
