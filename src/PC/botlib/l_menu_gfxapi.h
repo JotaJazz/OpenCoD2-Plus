@@ -12,7 +12,7 @@ static inline void Script_PatchGraphicsMenu(char *buffer)
     static const char oldDvar[] = "dvar \"ui_r_rendererpreference\"";
     static const char newDvar[] = "dvar \"r_gfxApi\"";
     static const char list[] = "dvarStrList";
-    static const char newList[] = "dvarStrList { \"Direct3D 9\", \"d3d9\", \"Vulkan\", \"vulkan\" }";
+    static const char newList[] = "dvarStrList { \"Direct3D 9\", \"d3d9\", \"Vulkan\", \"vulkan\", \"Direct3D 12\", \"d3d12\" }";
     char *dvar = strstr(buffer, oldDvar);
     char *start = dvar ? strstr(dvar, list) : NULL;
     char *end = start ? strchr(start, '}') : NULL;

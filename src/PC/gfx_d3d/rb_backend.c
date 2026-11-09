@@ -784,7 +784,7 @@ static void RB_EndFrame_real(void)
 #ifdef GFX_REAL_D3D9
     {
         /* a result other than S_OK, once each: S_PRESENT_OCCLUDED (0x08760868)
-         * succeeds without showing the frame (r_gfxApi d3d12's black screen) */
+         * succeeds without showing the frame (a windowed r_gfxApi d3d12) */
         static HRESULT s_lastPresentHr;
 
         if (hr != 0 && hr != s_lastPresentHr)

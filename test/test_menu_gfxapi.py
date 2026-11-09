@@ -33,7 +33,7 @@ class MenuGfxApi(unittest.TestCase):
         out = self.patched(STOCK)
         self.assertEqual(len(out), len(STOCK))
         self.assertIn('dvar "r_gfxApi"', out)
-        self.assertIn('{ "Direct3D 9", "d3d9", "Vulkan", "vulkan" }', out)
+        self.assertIn('{ "Direct3D 9", "d3d9", "Vulkan", "vulkan", "Direct3D 12", "d3d12" }', out)
         self.assertNotIn('rendererpreference', out)
         self.assertNotIn('MENU_DIRECTX', out)
         self.assertTrue(out.endswith('rect 0 75'))

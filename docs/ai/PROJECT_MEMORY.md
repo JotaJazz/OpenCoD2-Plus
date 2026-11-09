@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — d3d12 in the graphics menu
+
+- Since `2659668` `d3d12` shows its frame in exclusive full screen, so the black screen that kept it out of the menu is gone: Options > Graphics now offers it with `d3d9` and `vulkan`.
+- The patched list (80 bytes) still fits in place of the stock one (89 in `iw_06.iwd`'s `ui/options_graphics.menu`).
+- Still open: windowed `d3d12`, and GPUs other than an RTX 5080.
+
 ## 2026-11-08 — OpenCoD2-Plus Server 274dca1: Plus ID review fixes
 
 - What: vendored 274dca1 (dates past 2038 on 32 bits, a bans file that cannot be stat'ed kept, the address rule taking only the host's own private IPs and the port in `sv_publicAddress`, the seen file in memory under a lock). The engine got `Sys_IsLocalIP` (`src/PC/win32/win_net.c`, over its `localIP` list) and the `client_server` bridge its import and ABI rows, since the local server's `plusid.cpp` now calls it.
