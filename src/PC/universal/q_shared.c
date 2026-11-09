@@ -450,7 +450,7 @@ void Info_RemoveKey(char *s, const char *key)
         *o = '\0';
 
         if (!strcmp(key, pkey)) {
-            strcpy(start, s);
+            memmove(start, s, strlen(s) + 1); /* the two overlap: strcpy shuffles them on x64 */
             return;
         }
 
@@ -494,7 +494,7 @@ void Info_RemoveKey_Big(char *s, const char *key)
         *o = '\0';
 
         if (!strcmp(key, pkey)) {
-            strcpy(start, s);
+            memmove(start, s, strlen(s) + 1); /* the two overlap: strcpy shuffles them on x64 */
             return;
         }
 

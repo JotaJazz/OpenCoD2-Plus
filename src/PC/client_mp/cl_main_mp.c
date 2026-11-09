@@ -158,6 +158,8 @@ extern qboolean NET_StringToAdr(const char *s, netadr_t *a);
 extern Bool NET_OutOfBandPrint(netsrc_t sock, netadr_t adr, const char *data);
 extern Bool NET_OutOfBandData(netsrc_t sock, netadr_t adr, unsigned char *data, int len);
 extern int Sys_IsLANAddress(netadr_t adr);
+extern void CL_PlusId_Init(void);
+extern void CL_PlusId_AddToInfo(char *info, int size, int challenge, netadr_t server);
 extern int Sys_Milliseconds(void);
 extern int Sys_MillisecondsRaw(void);
 extern int FS_FileExists(const char *path);
@@ -1138,6 +1140,7 @@ void CL_InitOnceForAllClients(void)
     Cmd_AddCommand("globalservers", CL_GlobalServers_f);
     CL_RconInit();
     Cmd_AddCommand("rcon", CL_Rcon_f);
+    CL_PlusId_Init();
     Cmd_AddCommand("ping", CL_Ping_f);
     Cmd_AddCommand("serverstatus", CL_ServerStatus_f);
     Cmd_AddCommand("toggleMenu", CL_ToggleMenu_f);
@@ -1931,6 +1934,8 @@ void CL_CheckForResend(void)
     /* in this packet only: stock servers do not read it; the stock 1.3 build does not say it */
     Info_SetValueForKey(info, (const char *)"plus", va((const char *)"%i", COD2_PLUS_VERSION));
 #endif
+    /* every variant: servers that do not verify a Plus ID ignore pk, ps and pa */
+    CL_PlusId_AddToInfo(info, sizeof(info), conn->challenge, conn->serverAddress);
 
     infoLen = strlen(info);
     data[0] = 'c';

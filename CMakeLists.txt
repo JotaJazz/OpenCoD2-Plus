@@ -180,6 +180,11 @@ function(cod2_plus_mbedtls)
   endif()
 endfunction()
 
+# the client's Plus ID signs with libcod's plusid.hpp and Mbed TLS (cod2_plus_mbedtls)
+set_source_files_properties(src/PC/client_mp/cl_plusid_mp.c PROPERTIES
+  COMPILE_DEFINITIONS "MBEDTLS_CONFIG_FILE=\"cod2rev_mbedtls_config.h\""
+  INCLUDE_DIRECTORIES "${COD2_SRC_DIR}/libcod/mbedtls;${COD2_SRC_DIR}/libcod/mbedtls/include")
+
 # cod2_plus_libcod(): the OBJECT library with libcod and the libraries it
 # brings (yyjson, SQLite; Mbed TLS is cod2_plus_mbedtls), each with the flags
 # CoD2rev-Plus's Makefile gives it. Its Speex is left out: the engine links its own
@@ -274,7 +279,7 @@ function(cod2_cxx_sources out)
     file(RELATIVE_PATH rel ${COD2_SRC_DIR} ${CMAKE_SOURCE_DIR}/${src})
     set(pick FALSE)
     if(src MATCHES "\\.c$" AND NOT rel MATCHES "^\\.\\." AND NOT rel MATCHES "${COD2_CXX_NEVER}")
-      if(COD2_CXX_ALL)
+      if(COD2_CXX_ALL OR rel STREQUAL "PC/client_mp/cl_plusid_mp.c")  # plusid.hpp is C++
         set(pick TRUE)
       else()
         foreach(dir ${COD2_CXX_DIRS})
@@ -297,6 +302,10 @@ function(cod2_cxx_sources out)
       get_source_file_property(defs ${src} COMPILE_DEFINITIONS)
       if(defs)
         set_source_files_properties(${wrapper} PROPERTIES COMPILE_DEFINITIONS "${defs}")
+      endif()
+      get_source_file_property(dirs ${src} INCLUDE_DIRECTORIES)
+      if(dirs)
+        set_source_files_properties(${wrapper} PROPERTIES INCLUDE_DIRECTORIES "${dirs}")
       endif()
       list(APPEND result ${wrapper})
     else()

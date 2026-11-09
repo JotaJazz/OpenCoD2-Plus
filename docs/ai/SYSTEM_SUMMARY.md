@@ -1,6 +1,6 @@
 # System summary (live snapshot)
 
-Last updated: 2026-11-07. Update in the same commit as the change that makes
+Last updated: 2026-11-08. Update in the same commit as the change that makes
 a line wrong.
 
 ## Repository
@@ -50,7 +50,7 @@ cod2rad/             upstream tool (not built by default)
 | Renderer | real D3D9 on Windows; GL elsewhere | [../architecture/renderer.md](../architecture/renderer.md) |
 | Effects | all primitives per 1.3 | [../architecture/effects.md](../architecture/effects.md) |
 | Sound | Our own SDL2 engine, `src/snd_sdl/`, behind the `AIL_*` calls, on Linux and Windows; `mss32.dll` is not used | [ADR 0012](../architecture/adr/0012-sound-engine-behind-the-ail-calls.md), [../architecture/client.md](../architecture/client.md#sound) |
-| Online play | CD key auth, HTTP downloads (curl on Linux, WinINet on Windows) | 1.3 servers; prediction measured against 1.3 on a modded server; hostile input bounded ([../architecture/client.md](../architecture/client.md#what-a-server-cannot-do)) |
+| Online play | CD key auth, HTTP downloads (curl on Linux, WinINet on Windows), a signed Plus ID at connect (`fs_homepath/plusid.key`, not on the web) | 1.3 servers; prediction measured against 1.3 on a modded server; hostile input bounded ([../architecture/client.md](../architecture/client.md#what-a-server-cannot-do)) |
 
 Open items: [../roadmap/debt.md](../roadmap/debt.md).
 

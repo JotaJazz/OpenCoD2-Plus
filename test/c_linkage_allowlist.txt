@@ -345,3 +345,6 @@ re:^__Z\d+v?[sf]?n?(printf|scanf)P
 # Inline functions of the C++ standard library headers (std::isfinite and
 # friends from <cmath>), emitted where the C sources use the C macro.
 re:^_{1,2}ZSt\d
+# The static locals of libcod/plusid.hpp's inline functions, which the client's
+# Plus ID (cl_plusid_mp.c) includes; nothing outside it names them.
+re:^_{1,2}ZZN?\d+PlusId_

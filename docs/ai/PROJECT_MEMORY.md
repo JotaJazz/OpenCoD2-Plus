@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — Plus ID: the client signs
+
+- What: with the server side vendored (OpenCoD2-Plus Server 48cf44c, its stage is at the end of this file), every non-web client keeps an ECDSA P-256 key in `fs_homepath/plusid.key` (64 hex and a newline; mode 0600 on POSIX; written once through `.tmp` and `link`/`rename`, never over a file) and adds `pk`, `ps` and `pa` to the `connect` userinfo (`src/PC/client_mp/cl_plusid_mp.c`, on the vendored `plusid.hpp` and `cod2_plus_mbedtls`); `plusid` prints the ID. Why: the Plus servers identify and ban a player by it, with no hardware data. A corrupt key file, or a userinfo without room for the keys, connects without an ID.
+- Found on the way: the engine's `NET_AdrToString` prints a port over 32767 negative (`(short)`), so the client writes the signed `ip:port` as the server's `%hu` does; `Info_RemoveKey` moved overlapping strings with `strcpy`, which on x64 glibc garbled a long userinfo (`Dvar_InfoString` sets `name` again), so a 500-byte userinfo broke connecting: now `memmove`, as the server's `q_shared.cpp`.
+- Left open: no run with a public address (`sv_publicAddress`; locally only LAN IDs exist); the Windows clients build but were not run with an ID; the key has no passphrase or OS keystore, backing the file up is the player's job.
+
 ## 2026-11-08 — OpenCoD2-Plus Server 0870352: error counts
 
 - Brought the vendored files up to 0870352: the Plus build prints the count a repeated script runtime error left when it stopped, from a call in `SV_Frame` (`scr_parser.cpp`, `sv_main_mp.cpp`, `plus_rules_test.py`). Server code only; the Plus version stays 123.
