@@ -63,6 +63,25 @@ extern "C" {
   #define COD2_VERSION_DATE  "Apr 18 2006"
 #endif
 
+/* what the console and the version dvar show; shortversion stays the bare
+ * number, which servers compare */
+#ifdef COD2_PLUS
+  #define COD2_VERSION_NAME COD2_VERSION_SHORT " Plus"
+#else
+  #define COD2_VERSION_NAME COD2_VERSION_SHORT
+#endif
+#if defined(__EMSCRIPTEN__)
+  #define COD2_BUILD_ARCH "web"
+#elif defined(_WIN32) && (defined(_WIN64) || defined(__x86_64__))
+  #define COD2_BUILD_ARCH "win-x64"
+#elif defined(_WIN32)
+  #define COD2_BUILD_ARCH "win-x86"
+#elif defined(__x86_64__)
+  #define COD2_BUILD_ARCH "linux-x64"
+#else
+  #define COD2_BUILD_ARCH "linux-x86"
+#endif
+
 #if COD2_IS_PATCH_13
   #define MAX_GAMESTATE_CHARS      0x20000
   #define MAX_MSGLEN               0x20000

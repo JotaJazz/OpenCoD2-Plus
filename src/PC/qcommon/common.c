@@ -1972,7 +1972,6 @@ void Com_Init_Try_Block_Function(char *commandLine)
     extern void SEH_UpdateLanguageInfo(void);
     extern void Com_InitHunkMemory(void);
     extern void Cmd_AddCommand(const char *name, void (*function)(void));
-    extern char *getBuildNumber(void);
     extern void FxMem_Init(void);
     extern void Sys_Init(void);
     extern void Netchan_Init(int port);
@@ -1993,7 +1992,8 @@ void Com_Init_Try_Block_Function(char *commandLine)
     char *p;
     int i;
 
-    Com_Printf("%s %s build %s %s\n", "CoD2 MP", COD2_VERSION_SHORT, "MacOSXS-i386", COD2_VERSION_DATE);
+    /* shortcut: __DATE__ is when this file last compiled; an incremental build that skips it keeps the older date */
+    Com_Printf("%s %s build %s %s\n", "CoD2 MP", COD2_VERSION_NAME, __DATE__, COD2_BUILD_ARCH);
 
     memset(com_pushedEvents, 0, sizeof(com_pushedEvents));
     com_pushedEventsHead = 0;
@@ -2094,7 +2094,7 @@ void Com_Init_Try_Block_Function(char *commandLine)
     Cmd_AddCommand("writedefaults", Com_WriteDefaults_f);
 
     {
-        char *s = va("%s %s build %s %s", "CoD2 MP", COD2_VERSION_SHORT, getBuildNumber(), "MacOSXS-i386");
+        char *s = va("%s %s build %s %s", "CoD2 MP", COD2_VERSION_NAME, __DATE__, COD2_BUILD_ARCH);
         version = Dvar_RegisterString("version", "", 0x1040);
         Dvar_SetString(version, s);
     }

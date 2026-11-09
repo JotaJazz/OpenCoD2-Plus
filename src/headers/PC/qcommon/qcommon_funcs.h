@@ -27,7 +27,6 @@ typedef enum {
 #define CM_MESH_REGPARM3_SSE_ABI COD2_REGPARM(3) COD2_SSEREGPARM
 #endif
 
-char *getBuildNumber(void);
 
 void CM_LoadMap(const char *name, int *checksum);
 void CM_Shutdown(void);
