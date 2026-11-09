@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-09 — the server browser's columns and clicks
+
+- The PC `joinserver.menu` has 11 columns, the Mac build this follows 10: the ping went into the PunkBuster column and the sort keys were one short. Column and sort key 9 are now PunkBuster (empty, sorted by ping) and 10 the ping, the default sort.
+- Three `UI_FeederCount` calls in `ui_shared_mp.c` passed `special`'s bits as an int, which C converts to a float of 1073741824 for feeder 2: every list counted 0 items in `Item_ListBox_HandleKey`, so a click never moved the selection.
+- `xdotool` under WSLg cannot move the game's cursor (it stays at the corner), so the click was not driven here; `openmenu joinserver` leaves `main_text` open behind it, unlike the main menu's own Join Game.
+
 ## 2026-11-09 — the server browser lists servers
 
 - Two bugs hid every internet server: `ui_main_mp.c` asked `globalservers` for protocol `0x73` (115) in the 1.3 build too, whose `CL_ServerInfoPacket` drops any other protocol, and `UI_BinaryInsertServer` (both copies) put the first server at 1 of an empty list, which `UI_InsertServerAtPosition` refuses; its loop also never ended at `hi == 1` with a server that sorts first. Now `COD2_PROTOCOL_VERSION` and a lower-bound search.

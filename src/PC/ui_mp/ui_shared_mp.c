@@ -3541,7 +3541,7 @@ int Item_ListBox_OverLB(itemDef_t *item, float x, float y)
     int horzAlign = (((rectDef_t*)(it))->horzAlign);
     int vertAlign = (((rectDef_t*)(it))->vertAlign);
 
-    UI_FeederCount((*(int *)&((itemDef_t *)it)->special));
+    UI_FeederCount(((itemDef_t *)it)->special);
     if (!Item_GetListBoxDef(item))
         return 0;
 
@@ -3689,7 +3689,7 @@ qboolean Item_ListBox_HandleKey(displayContextDef_t *dc, itemDef_t *item, int ke
     if (!listPtr)
         return 0;
 
-    count = UI_FeederCount((*(int *)&((itemDef_t *)it)->special));
+    count = UI_FeederCount(((itemDef_t *)it)->special);
 
     {
         float compareX, compareY;
@@ -3860,7 +3860,7 @@ qboolean Item_ListBox_HandleKey(displayContextDef_t *dc, itemDef_t *item, int ke
 
             {
                 int oldCursorPos = (((listBoxDef_s*)(listPtr))->cursorPos[0]);
-                if (oldCursorPos < UI_FeederCount((*(int *)&((itemDef_t *)it)->special)))
+                if (oldCursorPos < UI_FeederCount(((itemDef_t *)it)->special))
                     Item_SetCursorPos(item, (((listBoxDef_s*)(listPtr))->cursorPos[0]));
             }
             goto do_feeder_selection;

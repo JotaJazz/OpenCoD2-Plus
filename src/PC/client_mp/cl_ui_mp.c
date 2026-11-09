@@ -584,7 +584,8 @@ int LAN_CompareServers(int source, int sortKey, int sortDir, int s1, int s2)
             goto compare_ping_nosortdir;
         }
         break;
-    case 9:
+    case 9:  /* PunkBuster, which no server here reports: by ping */
+    case 10:
         goto compare_ping;
     default:
         diff = 0;

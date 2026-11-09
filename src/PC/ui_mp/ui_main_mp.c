@@ -1346,8 +1346,8 @@ void UI_Init(void)
 
     LAN_LoadCachedServers();
 
-    if (sharedUiInfo.serverStatus.sortKey != 9) {
-        sharedUiInfo.serverStatus.sortKey = 9;
+    if (sharedUiInfo.serverStatus.sortKey != 10) {
+        sharedUiInfo.serverStatus.sortKey = 10;
         qsort(sharedUiInfo.serverStatus.displayServers, sharedUiInfo.serverStatus.numDisplayServers, 4, UI_ServersQsortCompare);
     }
 
@@ -2455,7 +2455,9 @@ const char *UI_FeederItemText(float feederID, int index, int column, MaterialHan
 
         pingVal = atoi(Info_ValueForKey(info, "ping"));
 
-        if (column <= 9) {
+        /* the PC menu's 11 columns: 9 is PunkBuster, which this client has
+         * not, and 10 the ping (the Mac build this follows has no 9) */
+        if (column <= 10) {
             switch (column) {
             case 0:
                 if (atoi(Info_ValueForKey(info, "pswrd")))
@@ -2512,6 +2514,8 @@ const char *UI_FeederItemText(float feederID, int index, int column, MaterialHan
                     return "X";
                 return "";
             case 9:
+                return "";
+            case 10:
                 if (pingVal > 0)
                     return Info_ValueForKey(info, "ping");
                 return "...";
@@ -4986,8 +4990,8 @@ void UI_Init(void)
 
     LAN_LoadCachedServers();
 
-    if (sharedUiInfo.serverStatus.sortKey != 9) {
-        sharedUiInfo.serverStatus.sortKey = 9;
+    if (sharedUiInfo.serverStatus.sortKey != 10) {
+        sharedUiInfo.serverStatus.sortKey = 10;
         qsort(sharedUiInfo.serverStatus.displayServers, sharedUiInfo.serverStatus.numDisplayServers, 4, UI_ServersQsortCompare);
     }
 
