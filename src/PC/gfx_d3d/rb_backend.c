@@ -791,6 +791,16 @@ static void RB_EndFrame_real(void)
             ri.Printf(0, "Direct3DDevice9::Present returned 0x%08x\n", (unsigned)hr);
         s_lastPresentHr = hr;
     }
+#    ifdef _WIN32
+    {
+        extern int RealD3D9_D3D12ShowsNothing(long hr);
+
+        if (RealD3D9_D3D12ShowsNothing(hr)) {
+            ri.Printf(0, "^3Direct3D 12 shows nothing here, using Direct3D 9\n");
+            ri.Cbuf_ExecuteText(2, "r_gfxApi d3d9\nvid_restart\n");
+        }
+    }
+#    endif
 #endif
     if (hr < 0) {
         if (hr != (HRESULT)0x88760868) {

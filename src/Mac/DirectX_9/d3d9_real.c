@@ -165,6 +165,22 @@ static void *RealD3D9_CreateD3D12(void)
 }
 
 static int s_apiInUse = GFX_API_D3D9;
+/* presents since the interface was made with none S_OK; -1 once one was */
+static int s_presentsUnseen;
+
+/* 1 once, when d3d12 has presented 120 frames and none returned S_OK: the
+ * black screen of a GPU it was never tried on, which the menu cannot leave.
+ * shortcut: a black frame that returns S_OK goes unseen; checked only on an RTX 5080 */
+int RealD3D9_D3D12ShowsNothing(long hr)
+{
+    if (s_apiInUse != GFX_API_D3D12 || s_presentsUnseen < 0)
+        return 0;
+    if (hr == 0) {
+        s_presentsUnseen = -1;
+        return 0;
+    }
+    return ++s_presentsUnseen == 120;
+}
 
 /* the API r_gfxApi asks for, or plain Direct3D 9 if that cannot run here */
 void *RealD3D9_Direct3DCreate9(int api)
@@ -177,6 +193,7 @@ void *RealD3D9_Direct3DCreate9(int api)
         iface = RealD3D9_CreateVulkan();
     else if (api == GFX_API_D3D12)
         iface = RealD3D9_CreateD3D12();
+    s_presentsUnseen = 0;
     if (iface) {
         Com_Printf("Graphics API: %s\n", names[api]);
         s_apiInUse = api;

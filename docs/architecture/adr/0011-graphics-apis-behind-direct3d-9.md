@@ -14,7 +14,7 @@ The Windows client takes the API from `r_gfxApi` whenever it makes a device, at 
 ## Consequences
 
 - The renderer does not change, and on Vulkan the picture matches the Direct3D 9 path.
-- `d3d12` is experimental: it shows a frame only in exclusive full screen, which it always asks for, and was tried only on an RTX 5080 ([debt](../../roadmap/debt.md)).
+- `d3d12` is experimental: it shows a frame only in exclusive full screen, which it always asks for, and was tried only on an RTX 5080 ([debt](../../roadmap/debt.md)). If none of its first 120 presents returns S_OK, the client goes back to `d3d9` by itself.
 - These are translation layers: they cost some speed and open no new effects.
 - The client is large address aware, since DXVK maps its memory into the 32-bit process.
 - `r_gfxApi` is not a Linux setting: `cod2_linux_vk` is always on Vulkan.

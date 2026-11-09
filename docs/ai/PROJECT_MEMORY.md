@@ -5,6 +5,11 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-09 — d3d12 falls back when it shows nothing
+
+- With `d3d12` in the menu, a GPU where it stays black would leave the player stuck: if none of the first 120 presents after the interface is made returns S_OK, the client sets `r_gfxApi d3d9` and runs `vid_restart` (`RealD3D9_D3D12ShowsNothing`).
+- Only until the first S_OK: later, an alt-tabbed exclusive full screen returns S_PRESENT_OCCLUDED for as long as it likes. A black frame that returns S_OK is not caught.
+
 ## 2026-11-08 — d3d12 in the graphics menu
 
 - Since `2659668` `d3d12` shows its frame in exclusive full screen, so the black screen that kept it out of the menu is gone: Options > Graphics now offers it with `d3d9` and `vulkan`.
