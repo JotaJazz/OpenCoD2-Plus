@@ -92,16 +92,22 @@ def valid_id(text):
     return isinstance(text, str) and re.fullmatch(r'P-[A-Z2-7]{4}-[A-Z2-7]{4}-[A-Z2-7]{4}-[A-Z2-7]{4}', text) is not None
 
 
-def valid_time(text):
-    """PlusId_ParseTime: "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SSZ", a real date from 1970."""
+def parse_time(text):
+    """PlusId_ParseTime: "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SSZ", a real date
+    from 1970, as Unix seconds; None for anything else."""
     for fmt, n in (('%Y-%m-%d', 10), ('%Y-%m-%dT%H:%M:%SZ', 20)):
         if isinstance(text, str) and len(text) == n:
             try:
                 t = time.strptime(text, fmt)
             except ValueError:
-                return False
-            return t.tm_year >= 1970 and time.strftime(fmt, time.gmtime(calendar.timegm(t))) == text
-    return False
+                return None
+            seconds = calendar.timegm(t)
+            return seconds if t.tm_year >= 1970 and time.strftime(fmt, time.gmtime(seconds)) == text else None
+    return None
+
+
+def valid_time(text):
+    return parse_time(text) is not None
 
 
 def text_ok(value, longest):
@@ -127,6 +133,9 @@ def problems(path):
         out.append('appeal over 255 bytes')
     if not valid_time(doc.get('updated')):
         out.append('updated is not YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ')
+    elif parse_time(doc['updated']) > time.time() + 86400:
+        # servers refuse a version older than the one they hold: a typo here freezes the list
+        out.append('updated is more than a day in the future')
     entries = doc.get('entries')
     if not isinstance(entries, list):
         return out + ['entries is not a list']
@@ -147,6 +156,10 @@ def problems(path):
         for key in ('date', 'expires'):
             if e.get(key) is not None and not valid_time(e[key]):
                 out.append(f'entry {n}: {key} is not a date')
+        # PlusId_ParseBan: an expiry must come after the date (absent is 1970-01-01)
+        if valid_time(e.get('expires')) and (e.get('date') is None or valid_time(e['date'])) \
+                and parse_time(e['expires']) <= (parse_time(e['date']) if e.get('date') is not None else 0):
+            out.append(f'entry {n}: expires is not after date')
     return out
 
 

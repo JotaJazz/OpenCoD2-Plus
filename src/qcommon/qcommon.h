@@ -402,6 +402,7 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t to );
 qboolean Sys_GetPacket ( netadr_t *net_from, msg_t *net_message );
 qboolean Sys_StringToAdr( const char *s, netadr_t *a );
 qboolean Sys_IsLANAddress (netadr_t adr);
+qboolean Sys_IsLocalIP (netadr_t adr);
 
 void Huff_Compress( msg_t *buf, int offset );
 void Huff_Decompress( msg_t *buf, int offset );

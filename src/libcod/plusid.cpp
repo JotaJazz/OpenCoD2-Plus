@@ -3,8 +3,11 @@
 #include "yyjson/yyjson.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <string>
+#include <unordered_map>
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
@@ -27,15 +30,18 @@ static char plusIds[MAX_CLIENTS][22];
 static int plusFlags[MAX_CLIENTS];
 
 // Playtime per ID (docs/architecture/plus-id.md): the file has one line per
-// ID, "id first_seen seconds". A slot keeps what the file said when its player
-// connected (seen, stored) and the seconds only this server counted since
-// (unsaved); a save adds only those to whatever the file holds then, so two
-// servers sharing the file do not lose each other's time.
+// ID, "id first_seen seconds", kept in memory (seen) as last read or written.
+// A slot keeps what the table and pending said when its player connected
+// (first, stored) and the seconds only this server counted since (unsaved),
+// which go to pending at the drop. A save reads the file again only when its
+// size or time changed and adds only those seconds, so two servers sharing the
+// file do not lose each other's time; connects and drops do no file I/O.
 struct PlusId_Seen
 {
-	char id[22];
 	long long first, seconds;
 };
+
+typedef std::unordered_map<std::string, PlusId_Seen> PlusId_SeenTable;
 
 static struct { long long first, stored, unsaved; } slots[MAX_CLIENTS];
 static time_t lastTick, lastSave;
@@ -47,7 +53,7 @@ struct PlusId_CachedAddress
 {
 	const char *name;
 	char text[256];
-	bool valid;
+	bool valid, hasPort;
 	netadr_t adr;
 };
 
@@ -62,6 +68,7 @@ static bool PlusId_DvarAddress(PlusId_CachedAddress *cache, netadr_t *adr)
 	{
 		// a leading '+' keeps an empty dvar from looking unresolved
 		Com_sprintf(cache->text, sizeof(cache->text), "+%s", text);
+		cache->hasPort = strchr(text, ':') != NULL;
 		cache->valid = *text && Q_stricmp(text, "localhost") && NET_StringToAdr(text, &cache->adr)
 		               && cache->adr.type == NA_IP && ( cache->adr.ip[0] | cache->adr.ip[1] | cache->adr.ip[2] | cache->adr.ip[3] );
 	}
@@ -83,10 +90,12 @@ static bool PlusId_IsPrivate(netadr_t adr)
 bool PlusId_AddressAccepted(netadr_t signedAdr, netadr_t from)
 {
 	const dvar_t *port = Dvar_FindVar("net_port");
+	bool netPort;
 	netadr_t own;
 
-	if ( signedAdr.type != NA_IP || !port || (unsigned short)BigShort(signedAdr.port) != port->current.integer )
+	if ( signedAdr.type != NA_IP )
 		return false;
+	netPort = port && (unsigned short)BigShort(signedAdr.port) == port->current.integer;
 
 	// a private address names this server only for a packet that comes from a
 	// private network too, even when it is net_ip: from a public one it may be
@@ -94,13 +103,20 @@ bool PlusId_AddressAccepted(netadr_t signedAdr, netadr_t from)
 	if ( PlusId_IsPrivate(signedAdr) && !PlusId_IsPrivate(from) )
 		return false;
 
-	if ( PlusId_DvarAddress(&publicAddress, &own) && !memcmp(own.ip, signedAdr.ip, 4) )
+	// a port in sv_publicAddress is the one players dial (docker -p, a NAT remap)
+	if ( PlusId_DvarAddress(&publicAddress, &own) && !memcmp(own.ip, signedAdr.ip, 4)
+	     && ( publicAddress.hasPort ? own.port == signedAdr.port : netPort ) )
 		return true;
+
+	if ( !netPort )
+		return false;
 
 	if ( PlusId_DvarAddress(&netIp, &own) && !memcmp(own.ip, signedAdr.ip, 4) )
 		return true;
 
-	return PlusId_IsPrivate(signedAdr);
+	// a private address of this host, not any: another host of the LAN may be
+	// relaying a LAN player's signature
+	return PlusId_IsPrivate(signedAdr) && ( signedAdr.ip[0] == 127 || Sys_IsLocalIP(signedAdr) );
 }
 
 // the ip:port the client signed, only in the form NET_AdrToString writes, so
@@ -202,27 +218,50 @@ bool PlusId_Replace(const char *tmp, const char *path)
 #endif
 }
 
-// False when the file exists and cannot be read whole: it is then never
-// overwritten. A missing file is an empty list.
-static bool PlusId_ReadSeen(const char *path, std::vector<PlusId_Seen> &list)
+// 1 when the file is there, 0 when it is missing, -1 when it cannot be told (errno)
+static int PlusId_Stat(const char *path, long long *size, long long *mtime)
+{
+	struct stat st;
+
+	if ( stat(path, &st) )
+		return errno == ENOENT ? 0 : -1;
+	*size = st.st_size;
+	// in nanoseconds where there are: two writes in one second with one size still differ
+#ifdef __linux__
+	*mtime = st.st_mtim.tv_sec * 1000000000LL + st.st_mtim.tv_nsec;
+#else
+	// shortcut: seconds elsewhere, so a server sharing the seen file on Windows can miss a write of the same size in the same second; use the file times if groups report it
+	*mtime = st.st_mtime;
+#endif
+	return 1;
+}
+
+// the first_seen kept is the smallest, the seconds add up
+static void PlusId_AddSeen(PlusId_SeenTable &table, const std::string &id, long long first, long long seconds)
+{
+	PlusId_Seen e = { first, 0 };
+	PlusId_Seen &to = table.insert(std::make_pair(id, e)).first->second;
+
+	to.first = to.first < first ? to.first : first;
+	to.seconds += seconds;
+}
+
+// False when the file cannot be read whole
+static bool PlusId_ReadSeen(const char *path, PlusId_SeenTable &table)
 {
 	FILE *f = fopen(path, "r");
-	PlusId_Seen e;
 	char id[64];
 	long long first, seconds;
 	int n;
 
 	if ( !f )
-		return errno == ENOENT;
+		return false;
 
 	while ( ( n = fscanf(f, "%63s %lld %lld", id, &first, &seconds) ) == 3 )
 	{
-		if ( strlen(id) >= sizeof(e.id) )
+		if ( strlen(id) >= 22 )
 			break;
-		strcpy(e.id, id);
-		e.first = first;
-		e.seconds = seconds;
-		list.push_back(e);
+		PlusId_AddSeen(table, id, first, seconds);
 	}
 
 	bool ok = n == EOF && !ferror(f);
@@ -230,66 +269,82 @@ static bool PlusId_ReadSeen(const char *path, std::vector<PlusId_Seen> &list)
 	return ok;
 }
 
-// the time of dropped players that a save has not written yet: kept until one does
-static std::vector<PlusId_Seen> pending;
+// the file as last read or written; the time of dropped players that a save has not written yet
+static PlusId_SeenTable seen, pending;
+static std::string seenPath;
+static long long seenSize = -1, seenTime;
 
-static PlusId_Seen *PlusId_Find(std::vector<PlusId_Seen> &list, const char *id, long long first)
+// the table as the file is now, read again only when it changed (another
+// server sharing it wrote); false when it exists and cannot be read: it is
+// then never overwritten
+static bool PlusId_LoadSeen(const char *path)
 {
-	for ( size_t k = 0; k < list.size(); k++ )
-	{
-		if ( !strcmp(list[k].id, id) )
-			return &list[k];
-	}
+	PlusId_SeenTable table;
+	long long size = -1, mtime = 0;
+	int found = PlusId_Stat(path, &size, &mtime);
 
-	PlusId_Seen e = { "", first, 0 };
-	strcpy(e.id, id);
-	list.push_back(e);
-	return &list.back();
+	if ( found < 0 )
+		return false;
+	if ( seenPath == path && size == seenSize && mtime == seenTime )
+		return true;
+	if ( found && !PlusId_ReadSeen(path, table) )
+		return false;
+	seen.swap(table);
+	seenPath = path;
+	seenSize = size;
+	seenTime = mtime;
+	return true;
 }
 
-static void PlusId_Save()
+// Servers sharing the file take turns through <file>.lock, made with O_EXCL;
+// one older than 10 s was left by a crash and is taken over
+static bool PlusId_LockSeen(const char *lock)
 {
-	std::vector<PlusId_Seen> list;
-	char path[MAX_OSPATH * 2], tmp[MAX_OSPATH * 2 + 24];
-	bool any = !pending.empty();
+	struct stat st;
 
-	lastSave = time(NULL);
-	for ( int i = 0; i < MAX_CLIENTS; i++ )
-		any = any || ( plusIds[i][0] && slots[i].unsaved > 0 );
-	if ( !any )
-		return;
+	for ( int tries = 0; tries < 2; tries++ )
+	{
+		int fd = open(lock, O_WRONLY | O_CREAT | O_EXCL, 0644);
 
-	PlusId_Path(sv_plusIdSeenFile->current.string, path, sizeof(path));
-	if ( !PlusId_ReadSeen(path, list) )
+		if ( fd >= 0 )
+		{
+			close(fd);
+			return true;
+		}
+		if ( errno != EEXIST || stat(lock, &st) || time(NULL) - st.st_mtime < 10 )
+			return false;
+		remove(lock);
+	}
+	return false;
+}
+
+// the pending and unsaved seconds added to the file, under the lock
+static void PlusId_WriteSeen(const char *path)
+{
+	char tmp[MAX_OSPATH * 2 + 24];
+
+	if ( !PlusId_LoadSeen(path) )
 	{
 		Com_Printf("plusid: cannot read %s, playtime not saved\n", path);
 		return;
 	}
 
-	// the file is only changed in memory here; the slots are marked saved after the rename
-	for ( size_t k = 0; k < pending.size(); k++ )
-	{
-		PlusId_Seen *e = PlusId_Find(list, pending[k].id, pending[k].first);
-		e->first = e->first < pending[k].first ? e->first : pending[k].first;
-		e->seconds += pending[k].seconds;
-	}
+	// the file is only changed in a copy here; the slots are marked saved after the rename
+	PlusId_SeenTable table = seen;
+	for ( PlusId_SeenTable::const_iterator it = pending.begin(); it != pending.end(); ++it )
+		PlusId_AddSeen(table, it->first, it->second.first, it->second.seconds);
 	for ( int i = 0; i < MAX_CLIENTS; i++ )
 	{
-		if ( !plusIds[i][0] || slots[i].unsaved <= 0 )
-			continue;
-
-		PlusId_Seen *e = PlusId_Find(list, plusIds[i], slots[i].first);
-		e->first = e->first < slots[i].first ? e->first : slots[i].first;
-		e->seconds += slots[i].unsaved;
+		if ( plusIds[i][0] && slots[i].unsaved > 0 )
+			PlusId_AddSeen(table, plusIds[i], slots[i].first, slots[i].unsaved);
 	}
 
 	// a name of its own: servers sharing the file never write the same temporary file
-	// shortcut: two servers saving in the same instant can lose one interval; add a lock if groups report it
 	Com_sprintf(tmp, sizeof(tmp), "%s.tmp.%d", path, (int)getpid());
 	FILE *f = fopen(tmp, "w");
 	bool ok = f != NULL;
-	for ( size_t k = 0; ok && k < list.size(); k++ )
-		ok = fprintf(f, "%s %lld %lld\n", list[k].id, list[k].first, list[k].seconds) > 0;
+	for ( PlusId_SeenTable::const_iterator it = table.begin(); ok && it != table.end(); ++it )
+		ok = fprintf(f, "%s %lld %lld\n", it->first.c_str(), it->second.first, it->second.seconds) > 0;
 	ok = f && fclose(f) == 0 && ok;
 	ok = ok && PlusId_Replace(tmp, path);
 	if ( !ok )
@@ -298,21 +353,49 @@ static void PlusId_Save()
 		return;
 	}
 
+	seen.swap(table);
+	if ( PlusId_Stat(path, &seenSize, &seenTime) <= 0 )
+		seenSize = -2;
 	pending.clear();
 	for ( int i = 0; i < MAX_CLIENTS; i++ )
 	{
-		if ( !plusIds[i][0] || slots[i].unsaved <= 0 )
-			continue;
+		PlusId_SeenTable::const_iterator it = plusIds[i][0] ? seen.find(plusIds[i]) : seen.end();
 
-		PlusId_Seen *e = PlusId_Find(list, plusIds[i], 0);
-		slots[i].first = e->first;
-		slots[i].stored = e->seconds;
+		if ( it == seen.end() )
+			continue;
+		slots[i].first = it->second.first;
+		slots[i].stored = it->second.seconds;
 		slots[i].unsaved = 0;
 	}
 }
 
+// false when another server holds the lock: nothing is lost, the caller tries again
+static bool PlusId_Save()
+{
+	char path[MAX_OSPATH * 2], lock[MAX_OSPATH * 2 + 8];
+	bool any = !pending.empty();
+
+	lastSave = time(NULL);
+	for ( int i = 0; i < MAX_CLIENTS; i++ )
+		any = any || ( plusIds[i][0] && slots[i].unsaved > 0 );
+
+	PlusId_Path(sv_plusIdSeenFile->current.string, path, sizeof(path));
+	// read also with nothing to save, so that connects see what other servers wrote
+	if ( !any )
+	{
+		PlusId_LoadSeen(path);
+		return true;
+	}
+	Com_sprintf(lock, sizeof(lock), "%s.lock", path);
+	if ( !PlusId_LockSeen(lock) )
+		return false;
+	PlusId_WriteSeen(path);
+	remove(lock);
+	return true;
+}
+
 // adds the seconds that passed to every connected player with an ID; a
-// zombie slot keeps its ID until freed but is not playing
+// dropped one has none, SV_DropClient frees it before the slot is a zombie
 static void PlusId_Tick()
 {
 	time_t now = time(NULL);
@@ -331,22 +414,22 @@ void PlusId_Frame()
 {
 	PlusIdLists_Frame();
 	PlusId_Tick();
-	if ( time(NULL) - lastSave >= 60 )
-		PlusId_Save();
+	// a save the lock put off is tried again 5 s later
+	if ( time(NULL) - lastSave >= 60 && !PlusId_Save() )
+		lastSave -= 55;
 }
 
 // at the end of the map and at shutdown
 void PlusId_Shutdown()
 {
 	PlusId_Tick();
-	PlusId_Save();
+	// the last chance to save: wait up to 2 s for another server's lock
+	for ( int tries = 0; tries < 20 && !PlusId_Save(); tries++ )
+		Sys_SleepMSec(100);
 }
 
 void PlusId_ClientConnected(int clientNum, const char *id, int flags)
 {
-	std::vector<PlusId_Seen> list;
-	char path[MAX_OSPATH * 2];
-
 	Q_strncpyz(plusIds[clientNum], id, sizeof(plusIds[clientNum]));
 	plusFlags[clientNum] = flags;
 	slots[clientNum].first = time(NULL);
@@ -355,15 +438,16 @@ void PlusId_ClientConnected(int clientNum, const char *id, int flags)
 		return;
 
 	PlusId_Tick();
-	PlusId_Path(sv_plusIdSeenFile->current.string, path, sizeof(path));
-	PlusId_ReadSeen(path, list);
-	for ( size_t k = 0; k < list.size(); k++ )
+	// what the last save read and the time of an earlier visit not saved yet
+	PlusId_SeenTable *tables[] = { &seen, &pending };
+	for ( int k = 0; k < 2; k++ )
 	{
-		if ( !strcmp(list[k].id, id) )
-		{
-			slots[clientNum].first = list[k].first;
-			slots[clientNum].stored = list[k].seconds;
-		}
+		PlusId_SeenTable::const_iterator it = tables[k]->find(id);
+
+		if ( it == tables[k]->end() )
+			continue;
+		slots[clientNum].first = slots[clientNum].first < it->second.first ? slots[clientNum].first : it->second.first;
+		slots[clientNum].stored += it->second.seconds;
 	}
 }
 
@@ -372,14 +456,9 @@ void PlusId_ClientDropped(int clientNum)
 	if ( plusIds[clientNum][0] )
 	{
 		PlusId_Tick();
+		// pending only, which the next save writes: the slot must not write them again
 		if ( slots[clientNum].unsaved > 0 )
-		{
-			PlusId_Seen *e = PlusId_Find(pending, plusIds[clientNum], slots[clientNum].first);
-			e->seconds += slots[clientNum].unsaved;
-			// now pending only: the save must not write them again from the slot
-			slots[clientNum].unsaved = 0;
-		}
-		PlusId_Save();
+			PlusId_AddSeen(pending, plusIds[clientNum], slots[clientNum].first, slots[clientNum].unsaved);
 	}
 	plusIds[clientNum][0] = '\0';
 	plusFlags[clientNum] = 0;
@@ -444,30 +523,32 @@ static long long bansSize = -1, bansTime;
 // the file exists and could not be read: nothing is written over it until it reads
 static bool bansBad;
 
-// "YYYY-MM-DD" (00:00 UTC) or "YYYY-MM-DDTHH:MM:SSZ", nothing else, a real date
+// Dates as Unix seconds in long long, without time_t, whose 32 bits on the
+// x86 build end in 2038; days from and to a proleptic Gregorian date, after
+// http://howardhinnant.github.io/date_algorithms.html, for years from 1970
+static long long PlusId_DaysFromCivil(long long y, int m, int d)
+{
+	y -= m <= 2;
+	long long era = y / 400, yoe = y - era * 400, doy = ( 153 * ( m > 2 ? m - 3 : m + 9 ) + 2 ) / 5 + d - 1;
+
+	return era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719468;
+}
+
+// "YYYY-MM-DD" (00:00 UTC) or "YYYY-MM-DDTHH:MM:SSZ", nothing else, a real date from 1970
 bool PlusId_ParseTime(const char *text, long long *out)
 {
-	struct tm tm;
-	int n = (int)strlen(text);
+	int n = (int)strlen(text), y, m, d, hh = 0, mm = 0, ss = 0;
+	char again[21];
 
 	if ( ( n != 10 && n != 20 ) || strspn(text, "0123456789-T:Z") != (size_t)n )
 		return false;
-	memset(&tm, 0, sizeof(tm));
-	int fields = n == 10 ? sscanf(text, "%4d-%2d-%2d", &tm.tm_year, &tm.tm_mon, &tm.tm_mday)
-	                     : sscanf(text, "%4d-%2d-%2dT%2d:%2d:%2dZ", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
-	char again[21];
-	if ( fields != ( n == 10 ? 3 : 6 ) || tm.tm_year < 1970 )
+	int fields = n == 10 ? sscanf(text, "%4d-%2d-%2d", &y, &m, &d) : sscanf(text, "%4d-%2d-%2dT%2d:%2d:%2dZ", &y, &m, &d, &hh, &mm, &ss);
+	if ( fields != ( n == 10 ? 3 : 6 ) || y < 1970 || m < 1 || m > 12 || d < 1 || d > 31 || hh > 23 || mm > 59 || ss > 59 )
 		return false;
-	tm.tm_year -= 1900;
-	tm.tm_mon--;
-#ifdef _WIN32
-	time_t t = _mkgmtime(&tm);
-#else
-	time_t t = timegm(&tm);
-#endif
-	// timegm normalizes 31 February; the same text back means it was real
+	long long t = PlusId_DaysFromCivil(y, m, d) * 86400 + hh * 3600 + mm * 60 + ss;
+	// 31 February comes back as 3 March: the same text back means it was real
 	PlusId_FormatTime(t, n == 10, again);
-	if ( t == (time_t)-1 || strcmp(again, text) )
+	if ( strcmp(again, text) )
 		return false;
 	*out = t;
 	return true;
@@ -475,19 +556,22 @@ bool PlusId_ParseTime(const char *text, long long *out)
 
 void PlusId_FormatTime(long long t, bool dateOnly, char out[21])
 {
-	time_t tt = (time_t)t;
-	struct tm tm;
-	// the reentrant gmtime: the list threads parse dates too
-#ifdef _WIN32
-	bool ok = gmtime_s(&tm, &tt) == 0;
-#else
-	bool ok = gmtime_r(&tt, &tm) != NULL;
-#endif
+	// 1970 to 9999, the years PlusId_ParseTime reads
+	if ( t < 0 || t > 253402300799LL )
+		t = 0;
 
-	if ( !ok || tm.tm_year > 8099 )
-		strcpy(out, dateOnly ? "1970-01-01" : "1970-01-01T00:00:00Z");
+	long long z = t / 86400 + 719468, era = z / 146097, doe = z - era * 146097;
+	long long yoe = ( doe - doe / 1460 + doe / 36524 - doe / 146096 ) / 365, doy = doe - ( 365 * yoe + yoe / 4 - yoe / 100 );
+	int mp = (int)( ( 5 * doy + 2 ) / 153 ), d = (int)( doy - ( 153 * mp + 2 ) / 5 + 1 ), m = mp < 10 ? mp + 3 : mp - 9;
+	int y = (int)( yoe + era * 400 + ( m <= 2 ) ), s = (int)( t % 86400 );
+	// room for any int, which the compiler cannot bound
+	char text[64];
+
+	if ( dateOnly )
+		snprintf(text, sizeof(text), "%04d-%02d-%02d", y, m, d);
 	else
-		strftime(out, 21, dateOnly ? "%Y-%m-%d" : "%Y-%m-%dT%H:%M:%SZ", &tm);
+		snprintf(text, sizeof(text), "%04d-%02d-%02dT%02d:%02d:%02dZ", y, m, d, s / 3600, s / 60 % 60, s % 60);
+	Q_strncpyz(out, text, 21);
 }
 
 static bool PlusId_ValidId(const char *id)
@@ -511,7 +595,8 @@ static bool PlusId_ValidIp(const char *ip)
 }
 
 // text from the file or rcon into a field: cut to size, control characters
-// (the \x15 that localizes an error, line breaks) as spaces
+// (the \x15 that localizes an error, line breaks) as spaces and " as ', which
+// would end the quoted text of a disconnect or print command
 static void PlusId_CopyText(char *to, size_t size, const char *from)
 {
 	Q_strncpyz(to, from, size);
@@ -519,6 +604,8 @@ static void PlusId_CopyText(char *to, size_t size, const char *from)
 	{
 		if ( (unsigned char)*p < 32 )
 			*p = ' ';
+		else if ( *p == '"' )
+			*p = '\'';
 	}
 }
 
@@ -572,40 +659,38 @@ bool PlusId_ParseBan(yyjson_val *e, PlusIdBan *ban, bool shared)
 	     || !PlusId_ValidIp(ban->ip) || !PlusId_JsonTime(e, "date", &ban->date)
 	     || !PlusId_JsonTime(e, "expires", &ban->expires) || !PlusId_JsonNumber(e, "guid", &guid, INT_MIN, INT_MAX) )
 		return false;
+	// an expiry not after the date is a typo, and 1970-01-01 would read as permanent
+	yyjson_val *expires = yyjson_obj_get(e, "expires");
+	if ( expires && !yyjson_is_null(expires) && ban->expires <= ban->date )
+		return false;
 	ban->guid = (int)guid;
 	strcpy(ban->id, yyjson_get_str(id));
 	return true;
 }
 
-static bool PlusId_StatBans(const char *path, long long *size, long long *mtime)
-{
-	struct stat st;
-
-	if ( stat(path, &st) )
-		return false;
-	*size = st.st_size;
-	*mtime = st.st_mtime;
-	return true;
-}
-
 // reads the file when it changed; one that is missing is an empty list, one
-// that does not parse keeps the last good list and is logged once
+// that does not parse or cannot be stat'ed keeps the last good list and is logged once
 static void PlusId_LoadBans()
 {
 	char path[MAX_OSPATH * 2];
-	long long size, mtime;
+	long long size = -1, mtime = 0;
 
 	PlusId_Path("plusid_bans.json", path, sizeof(path));
-	if ( !PlusId_StatBans(path, &size, &mtime) )
+	int found = PlusId_Stat(path, &size, &mtime);
+	if ( found < 0 )
 	{
-		size = -1;
-		mtime = 0;
+		// -2: the size of a file that cannot be stat'ed, so that it is logged once
+		if ( bansSize != -2 )
+			Com_Printf("plusid: cannot read %s (%s), keeping the bans in memory\n", path, strerror(errno));
+		bansSize = -2;
+		bansBad = true;
+		return;
 	}
 	if ( size == bansSize && mtime == bansTime )
 		return;
 	bansSize = size;
 	bansTime = mtime;
-	if ( size < 0 )
+	if ( !found )
 	{
 		bansBad = false;
 		localBans.clear();
@@ -681,7 +766,7 @@ static bool PlusId_WriteBans()
 	free(text);
 	yyjson_mut_doc_free(doc);
 	if ( ok )
-		PlusId_StatBans(path, &bansSize, &bansTime);
+		PlusId_Stat(path, &bansSize, &bansTime);
 	else
 		Com_Printf("plusid: cannot write %s, the ban was not saved\n", path);
 	return ok;

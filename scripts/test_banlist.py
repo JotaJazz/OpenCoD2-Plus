@@ -86,6 +86,11 @@ class BanlistTest(unittest.TestCase):
     def test_check_accepts_a_good_list(self):
         self.assertEqual(self.run_tool('check', self.write(listing())).returncode, 0)
 
+    def test_check_accepts_dates_after_2038(self):
+        doc = listing([entry(expires='2099-01-01T00:00:00Z'), entry(date='2040-01-01', expires=None)])
+        r = self.run_tool('check', self.write(doc))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_check_rejects(self):
         bad = {'format 2': listing(format=2),
                'bad id': listing([entry(id='P-abcd-EFGH-IJKL-MNOP')]),
@@ -93,6 +98,11 @@ class BanlistTest(unittest.TestCase):
                'ip': listing([entry(ip='203.0.113.5')]),
                'bad date': listing([entry(date='2026-02-31')]),
                'bad updated': listing(updated='yesterday'),
+               # a typo that would freeze the list: servers refuse anything older than it
+               'updated in the future': listing(updated='2099-01-01T00:00:00Z'),
+               'expires before date': listing([entry(expires='2026-10-01')]),
+               'expires on date': listing([entry(expires='2026-11-01')]),
+               'expires 1970': listing([entry(date=None, expires='1970-01-01')]),
                'too many': listing([entry()] * 100001)}
         for what, doc in bad.items():
             with self.subTest(what):

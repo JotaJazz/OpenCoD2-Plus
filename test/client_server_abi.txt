@@ -259,6 +259,7 @@ Swap_Init v0 -
 Sys_FreeFileList v0 4
 Sys_GetValue i4 4
 Sys_IsLANAddress i4 20
+Sys_IsLocalIP i4 20
 Sys_IsMainThread i1 -
 Sys_ListFiles i4 4,4,4,4,4
 Sys_LoadingKeepAlive v0 -

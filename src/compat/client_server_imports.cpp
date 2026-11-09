@@ -903,13 +903,6 @@ static_assert(cod2_abi_slot<int>() == 4, "I_strncmp: parameter 2 differs from th
 extern "C" cod2_abi_int<decltype(I_strncmp(std::declval<char const*>(), std::declval<char const*>(), std::declval<int>())), 4> cod2c_I_strncmp(char const* a0, char const* a1, int a2) __asm__(COD2_SYM("I_strncmp"));
 decltype(I_strncmp(std::declval<char const*>(), std::declval<char const*>(), std::declval<int>())) I_strncmp(char const* a0, char const* a1, int a2) { return (decltype(I_strncmp(std::declval<char const*>(), std::declval<char const*>(), std::declval<int>())))cod2c_I_strncmp(a0, a1, a2); }
 
-static_assert(cod2_abi_class<decltype(I_strncpyz(std::declval<char*>(), std::declval<char const*>(), std::declval<int>()))>() == 'v', "I_strncpyz: return class differs from the engine");
-static_assert(cod2_abi_slot<char*>() == COD2_ABI_PICK(4, 8), "I_strncpyz: parameter 0 differs from the engine");
-static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "I_strncpyz: parameter 1 differs from the engine");
-static_assert(cod2_abi_slot<int>() == 4, "I_strncpyz: parameter 2 differs from the engine");
-extern "C" decltype(I_strncpyz(std::declval<char*>(), std::declval<char const*>(), std::declval<int>())) cod2c_I_strncpyz(char* a0, char const* a1, int a2) __asm__(COD2_SYM("I_strncpyz"));
-decltype(I_strncpyz(std::declval<char*>(), std::declval<char const*>(), std::declval<int>())) I_strncpyz(char* a0, char const* a1, int a2) { return cod2c_I_strncpyz(a0, a1, a2); }
-
 static_assert(cod2_abi_class<decltype(I_strnicmp(std::declval<char const*>(), std::declval<char const*>(), std::declval<int>()))>() == 'i' || cod2_abi_class<decltype(I_strnicmp(std::declval<char const*>(), std::declval<char const*>(), std::declval<int>()))>() == 'v', "I_strnicmp: return class differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "I_strnicmp: parameter 0 differs from the engine");
 static_assert(cod2_abi_slot<char const*>() == COD2_ABI_PICK(4, 8), "I_strnicmp: parameter 1 differs from the engine");
@@ -1389,6 +1382,11 @@ static_assert(cod2_abi_class<decltype(Sys_IsLANAddress(std::declval<netadr_t>())
 static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLANAddress: parameter 0 differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_IsLANAddress(std::declval<netadr_t>())), 4> cod2c_Sys_IsLANAddress(netadr_t a0) __asm__(COD2_SYM("Sys_IsLANAddress"));
 decltype(Sys_IsLANAddress(std::declval<netadr_t>())) Sys_IsLANAddress(netadr_t a0) { return (decltype(Sys_IsLANAddress(std::declval<netadr_t>())))cod2c_Sys_IsLANAddress(a0); }
+
+static_assert(cod2_abi_class<decltype(Sys_IsLocalIP(std::declval<netadr_t>()))>() == 'i' || cod2_abi_class<decltype(Sys_IsLocalIP(std::declval<netadr_t>()))>() == 'v', "Sys_IsLocalIP: return class differs from the engine");
+static_assert(cod2_abi_slot<netadr_t>() == 20, "Sys_IsLocalIP: parameter 0 differs from the engine");
+extern "C" cod2_abi_int<decltype(Sys_IsLocalIP(std::declval<netadr_t>())), 4> cod2c_Sys_IsLocalIP(netadr_t a0) __asm__(COD2_SYM("Sys_IsLocalIP"));
+decltype(Sys_IsLocalIP(std::declval<netadr_t>())) Sys_IsLocalIP(netadr_t a0) { return (decltype(Sys_IsLocalIP(std::declval<netadr_t>())))cod2c_Sys_IsLocalIP(a0); }
 
 static_assert(cod2_abi_class<decltype(Sys_IsMainThread())>() == 'i' || cod2_abi_class<decltype(Sys_IsMainThread())>() == 'v', "Sys_IsMainThread: return class differs from the engine");
 extern "C" cod2_abi_int<decltype(Sys_IsMainThread()), 1> cod2c_Sys_IsMainThread() __asm__(COD2_SYM("Sys_IsMainThread"));

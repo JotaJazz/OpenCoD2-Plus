@@ -5,6 +5,12 @@ stage; never rewrite a past stage (correct it with a new one). Not a
 changelog: record what changed, why it mattered, what was rejected or left
 open. Template in [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md#memory-entry).
 
+## 2026-11-08 — OpenCoD2-Plus Server 274dca1: Plus ID review fixes
+
+- What: vendored 274dca1 (dates past 2038 on 32 bits, a bans file that cannot be stat'ed kept, the address rule taking only the host's own private IPs and the port in `sv_publicAddress`, the seen file in memory under a lock). The engine got `Sys_IsLocalIP` (`src/PC/win32/win_net.c`, over its `localIP` list) and the `client_server` bridge its import and ABI rows, since the local server's `plusid.cpp` now calls it.
+- The boundaries matrix said the engine never uses OpenCoD2-Plus Server, but `cl_plusid_mp.c` includes `plusid.hpp` and links its Mbed TLS: now an accepted exception, [ADR 0019](../architecture/adr/0019-the-client-signs-with-the-server-s-plusid-header.md).
+- The key file is linked into place, which vfat, exFAT and some FUSE homes refuse (`EPERM`, `ENOTSUP`, `ENOSYS`, `EXDEV`): there it is renamed while no key exists; `plusid_client_test.py` checks it with an `LD_PRELOAD` shim.
+
 ## 2026-11-08 — Plus ID: the client signs
 
 - What: with the server side vendored (OpenCoD2-Plus Server 48cf44c, its stage is at the end of this file), every non-web client keeps an ECDSA P-256 key in `fs_homepath/plusid.key` (64 hex and a newline; mode 0600 on POSIX; written once through `.tmp` and `link`/`rename`, never over a file) and adds `pk`, `ps` and `pa` to the `connect` userinfo (`src/PC/client_mp/cl_plusid_mp.c`, on the vendored `plusid.hpp` and `cod2_plus_mbedtls`); `plusid` prints the ID. Why: the Plus servers identify and ban a player by it, with no hardware data. A corrupt key file, or a userinfo without room for the keys, connects without an ID.

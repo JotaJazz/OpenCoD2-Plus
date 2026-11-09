@@ -10,7 +10,8 @@ hex, and the server's rcon plusIdStatus shows the ID computed here from that
 file; the console command plusid prints it with the file's path; a second run
 keeps the file and the ID; a corrupt key file is left alone and the client
 plays without an ID; and so does a client whose userinfo has no room for the
-keys. The client opens a window and needs a CD key in ~/.cod2/preferences;
+keys. A home without hard links (link() failing with EPERM through an
+LD_PRELOAD shim, as on vfat or exFAT) still gets its key by rename. The client opens a window and needs a CD key in ~/.cod2/preferences;
 without one the test is skipped (exit 0). Exits with 0 when all of that holds.
 """
 import argparse, os, re, stat, subprocess, sys, tempfile, time
@@ -40,7 +41,7 @@ def main():
         if not ok:
             failures.append(name)
 
-    def play(home, name, extra=()):
+    def play(home, name, extra=(), env=None):
         """Connects a client with fs_homepath home as name; returns (its ID in
         plusIdStatus or None when it never joined, its console)."""
         log_path = os.path.join(home, f'{name}.log')
@@ -49,7 +50,7 @@ def main():
                                        '+set', 'fs_homepath', home, '+set', 'net_port', str(port + 1),
                                        '+set', 'name', name, *extra, '+connect', f'127.0.0.1:{port}'],
                                       stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, cwd=home,
-                                      env=dict(os.environ, COD2_CONSOLE_STDOUT='1', COD2_CRASH_NOPOPUP='1'))
+                                      env=dict(os.environ, COD2_CONSOLE_STDOUT='1', COD2_CRASH_NOPOPUP='1', **(env or {})))
         try:
             smoke_test.wait_for(lambda: client.poll() is not None or name in plusid_test.status(port), 120)
             plus_id = plusid_test.status(port).get(name)
@@ -66,7 +67,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='cod2_plusids_') as server_home, \
             tempfile.TemporaryDirectory(prefix='cod2_plusidc_') as home, \
             tempfile.TemporaryDirectory(prefix='cod2_plusidk_') as corrupt_home, \
-            tempfile.TemporaryDirectory(prefix='cod2_plusidl_') as long_home:
+            tempfile.TemporaryDirectory(prefix='cod2_plusidl_') as long_home, \
+            tempfile.TemporaryDirectory(prefix='cod2_plusidn_') as nolink_home:
         plusid_test.make_home(server_home)
         server_log = os.path.join(server_home, 'out.log')
         server = plusid_test.launch(args.server, game_dir, server_home, port, args.map, server_log)
@@ -105,6 +107,18 @@ def main():
                 check('long_userinfo: the client joins without an ID', plus_id == '-', plus_id)
                 check('long_userinfo: the console says so',
                       'plusid: userinfo too long, connecting without a Plus ID' in console)
+                # a shim of the client's word size: byte 4 of the ELF header is 1 for 32-bit
+                shim = os.path.join(nolink_home, 'nolink.so')
+                bits = '-m32' if open(args.binary, 'rb').read(5)[4] == 1 else '-m64'
+                built = subprocess.run(['gcc', bits, '-shared', '-fPIC', '-o', shim, '-x', 'c', '-'], capture_output=True,
+                                       input=b'#include <errno.h>\nint link(const char *a, const char *b) { errno = EPERM; return -1; }\n')
+                if built.returncode:
+                    print('skipped no_hard_links: gcc cannot build the shim')
+                else:
+                    plus_id, _ = play(nolink_home, 'pidnolink', env={'LD_PRELOAD': shim})
+                    key = os.path.join(nolink_home, 'plusid.key')
+                    check('no_hard_links: rename makes the key', re.fullmatch(r'[0-9a-f]{64}\n', read(key))
+                          and plus_id == key_id(key) and not os.path.exists(key + '.tmp'), plus_id)
                 check('the dedicated server makes no key', not os.path.exists(os.path.join(server_home, 'plusid.key')))
             check('the server still runs', server.poll() is None, f'exit code {server.poll()}')
         finally:

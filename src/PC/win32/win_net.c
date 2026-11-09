@@ -58,6 +58,7 @@ typedef struct {
 } sockaddr_gen;
 
 qboolean Sys_IsLANAddress(netadr_t adr);
+qboolean Sys_IsLocalIP(netadr_t adr);
 
 /* The name of the last socket error, as the original's NET_ErrorString: on
  * Windows errno is not set by the sockets, and the reconstruction's
@@ -207,6 +208,25 @@ qboolean Sys_IsLANAddress(netadr_t adr)
 
     for (i = 0; i < numIP; i++) {
         if (adr.ip[0] == localIP[i][0] && adr.ip[1] == localIP[i][1] && adr.ip[2] == localIP[i][2]) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/* One of the host's own IPs: the vendored Plus ID address rule
+ * (src/libcod/plusid.cpp) takes a private signed IP only when it is this host's. */
+qboolean Sys_IsLocalIP(netadr_t adr)
+{
+    int i;
+
+    if (adr.type != NA_IP) {
+        return 0;
+    }
+
+    for (i = 0; i < numIP; i++) {
+        if (!memcmp(adr.ip, localIP[i], 4)) {
             return 1;
         }
     }

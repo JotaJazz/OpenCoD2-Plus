@@ -94,18 +94,21 @@ def _private(ip):
             or (a[0] == 172 and a[1] & 0xF0 == 16))
 
 
-def address_accepted(signed_ip, from_ip, public, net_ip='', signed_port=28960, net_port=28960):
+def address_accepted(signed_ip, from_ip, public, net_ip='', signed_port=28960, net_port=28960, public_port=None, local_ips=()):
     """The server's rule (PlusId_AddressAccepted) for the address the client
-    signed, branch for branch: the server's port; a private address only from
-    a private source, even when it is net_ip; then the public address or net_ip;
-    then any private address."""
-    if signed_port != net_port:
-        return False
+    signed, branch for branch: a private address only from a private source,
+    even when it is net_ip; the public address with the port it names (else
+    net_port); net_ip with net_port; then, with net_port, a private address of
+    this host: 127/8 or one of its own IPs."""
     if _private(signed_ip) and not _private(from_ip):
         return False
-    if signed_ip in (public, net_ip) and signed_ip not in ('', '0.0.0.0'):
+    if signed_ip == public and public != '0.0.0.0' and signed_port == (public_port or net_port):
         return True
-    return _private(signed_ip)
+    if signed_port != net_port:
+        return False
+    if signed_ip == net_ip and net_ip != '0.0.0.0':
+        return True
+    return _private(signed_ip) and (signed_ip.startswith('127.') or signed_ip in local_ips)
 
 
 def id_keys(pk_hex, ps_hex, adr):
@@ -203,7 +206,7 @@ def check_shared_seen_file(args, check):
             time.sleep(1)
             smoke_test.rcon(ports[1], RCON, 'kick shared')
             want = plus_id(public_key(priv))
-            smoke_test.wait_for(lambda: seen_file(seen).get(want, (0, 0))[1] >= 9, 10)
+            smoke_test.wait_for(lambda: seen_file(seen).get(want, (0, 0))[1] >= 9, 75)
             row = seen_file(seen).get(want)
             check('shared_seen_file', row is not None and row[1] >= 8, str(row))
 
@@ -226,21 +229,31 @@ def check_shared_seen_file(args, check):
 
 
 def check_address_rule(check):
-    # (signed, from, sv_publicAddress, net_ip, signed port, expected)
+    # (signed, from, sv_publicAddress, net_ip, signed port, expected[, keyword arguments])
     table = [('10.0.0.5', '203.0.113.9', '203.0.113.7', '', 28960, False),  # relay from a public address
-             ('10.0.0.5', '192.168.1.2', '', '', 28960, True),
+             # another host of the LAN relaying a LAN player's signature
+             ('10.0.0.5', '192.168.1.2', '', '', 28960, False),
+             ('10.0.0.5', '192.168.1.2', '', '', 28960, True, {'local_ips': ('10.0.0.5',)}),  # an IP of this host
+             ('10.0.0.5', '192.168.1.2', '', '', 28961, False, {'local_ips': ('10.0.0.5',)}),
+             ('192.168.1.5', '192.168.1.9', '', '192.168.1.5', 28960, True),
+             # Docker bridge NAT: the LAN IP players dial is not the container's, only the dvar names it
+             ('192.168.1.5', '172.17.0.1', '192.168.1.5', '', 28960, True),
              ('127.0.0.1', '127.0.0.1', '', '', 28960, True),
              ('203.0.113.7', '198.51.100.1', '203.0.113.7', '', 28960, True),
              ('203.0.113.7', '198.51.100.1', '', '203.0.113.7', 28960, True),
              ('203.0.113.8', '198.51.100.1', '203.0.113.7', '', 28960, False),
              ('203.0.113.8', '127.0.0.1', '203.0.113.7', '', 28960, False),
              ('203.0.113.7', '198.51.100.1', '203.0.113.7', '', 28961, False),  # another port
+             # sv_publicAddress with a port (docker -p 28961:28960, a NAT remap): that port, not net_port
+             ('203.0.113.7', '198.51.100.1', '203.0.113.7', '', 28961, True, {'public_port': 28961}),
+             ('203.0.113.7', '198.51.100.1', '203.0.113.7', '', 28960, False, {'public_port': 28961}),
+             ('203.0.113.7', '198.51.100.1', '203.0.113.7', '203.0.113.7', 28960, True, {'public_port': 28961}),
              # private net_ip relayed from a public address
              ('192.168.1.5', '198.51.100.1', '', '192.168.1.5', 28960, False),
              # a public neighbour in the server's /24 (a shared VPN) relaying its own signed IP
              ('203.0.113.50', '203.0.113.50', '', '203.0.113.7', 28960, False),
              ('26.10.0.9', '26.10.0.20', '', '26.10.0.5', 28960, False)]
-    bad = [row for row in table if address_accepted(*row[:4], signed_port=row[4]) != row[5]]
+    bad = [row for row in table if address_accepted(*row[:4], signed_port=row[4], **(row[6] if len(row) > 6 else {})) != row[5]]
     check('address_rule', not bad, str(bad))
 
 
@@ -270,12 +283,13 @@ def run_cases(port, protocol, log_path, game_log, seen_path, check):
         check('no_id_playtime', status_rows(port)['noid'][1:] == (0, 0)
               and smoke_test.wait_for(lambda: 'plusidtime 0 0' in smoke_test.log_lines(game_log)), str(status_rows(port)))
 
-        # a player kept 5 s is counted, saved at the drop, and keeps first_seen when back
+        # a player kept 5 s is counted, saved after the drop, and keeps first_seen when back
         time.sleep(5)
         row = status_rows(port)['valid']
         check('playtime', row[1] >= 4, str(row))
         smoke_test.rcon(port, RCON, 'kick valid')
-        smoke_test.wait_for(lambda: want in seen_file(seen_path), 5)
+        # a drop only marks the time pending: the next save, at most 60 s away, writes it
+        smoke_test.wait_for(lambda: want in seen_file(seen_path), 70)
         first, seconds = seen_file(seen_path).get(want, (0, 0))
         check('playtime_saved', 4 <= seconds <= 8 and first > 0, str(seen_file(seen_path)))
         time.sleep(2)
@@ -297,10 +311,10 @@ def run_cases(port, protocol, log_path, game_log, seen_path, check):
         check('stripped', re.search(r'^name +valid$', dump, re.M) and not re.search(r'^(pk|ps|pa) ', dump, re.M), dump[-300:])
 
         smoke_test.rcon(port, RCON, f'set sv_publicAddress 203.0.113.7:{port}')
-        # both private: accepted; the real relay (from a public address) is in address_rule
-        priv = make_key()
-        reply = join('relay', priv, f'10.9.9.9:{port}')
-        check('relay', reply is None and status(port).get('relay') == plus_id(public_key(priv)), f'{reply} {status(port)}')
+        # both private, but 10.9.9.9 is not this host: another LAN host's relay; the public one is in address_rule
+        reply = join('relay', make_key(), f'10.9.9.9:{port}')
+        logged = f'signed for another address, 10.9.9.9:{port}' in open(log_path, encoding='latin-1').read()
+        check('relay', reply is None and status(port).get('relay') == '-' and logged, f'{reply} {logged} {status(port)}')
 
         # the new sv_publicAddress is resolved on the first connect after it changed
         priv = make_key()
@@ -311,6 +325,14 @@ def run_cases(port, protocol, log_path, game_log, seen_path, check):
         logged = f'signed for another address, 203.0.113.8:{port}' in open(log_path, encoding='latin-1').read()
         check('public_mismatch', reply is None and status(port).get('mismatch') == '-' and logged,
               f'{reply} {logged} {status(port)}')
+
+        # a port in sv_publicAddress is the one players dial (docker -p, a NAT remap), not net_port
+        smoke_test.rcon(port, RCON, 'set sv_publicAddress 203.0.113.7:28999')
+        priv = make_key()
+        reply = join('remapped', priv, '203.0.113.7:28999')
+        check('public_port', reply is None and status(port).get('remapped') == plus_id(public_key(priv)), f'{reply} {status(port)}')
+        reply = join('netport', make_key(), f'203.0.113.7:{port}')
+        check('public_port_not_net_port', reply is None and status(port).get('netport') == '-', f'{reply} {status(port)}')
         smoke_test.rcon(port, RCON, 'set sv_publicAddress ""')
 
         smoke_test.rcon(port, RCON, 'set sv_requirePlusId 1')
@@ -410,6 +432,42 @@ def run_ban_cases(port, protocol, log_path, game_log, bans_path, check):
         open(bans_path, 'w').write(json.dumps({'entries': [{'id': plus_id(public_key(make_key())), 'date': '2026-11-01', 'expires': None}]}))
         out = smoke_test.rcon(port, RCON, 'unbanPlusId P-AAAA-AAAA-AAAA-AAAA')
         check('good_file_clears', 'fix it first' not in out and 'is not banned' in out, out)
+
+        def write_bans(entries):
+            time.sleep(1.1)
+            open(bans_path, 'w').write(json.dumps({'format': 1, 'entries': entries}))
+
+        # dates after 2038, which a 32-bit time_t cannot hold; a " in a reason would cut the quoted refusal
+        priv = make_key()
+        write_bans([{'id': plus_id(public_key(priv)), 'reason': 'far "away"', 'date': '2026-11-01', 'expires': '2099-01-01T00:00:00Z'}])
+        reply = join('far', priv)
+        check('date_after_2038', reply is not None and reply.startswith('error') and 'far' in reply, str(reply))
+        check('quote_in_reason', reply is not None and "far 'away'" in reply, str(reply))
+        out = smoke_test.rcon(port, RCON, 'banPlusId P-AAAA-AAAA-AAAA-AAAA 9999999 long')
+        expires = ([b.get('expires') or '' for b in read_bans(bans_path) if b['id'] == 'P-AAAA-AAAA-AAAA-AAAA'] or [''])[0]
+        data = open(bans_path, 'rb').read()
+        time.sleep(1.1)
+        open(bans_path, 'wb').write(data)
+        out2 = smoke_test.rcon(port, RCON, 'unbanPlusId P-BBBB-BBBB-BBBB-BBBB')
+        check('long_ban_reloads', 'Banned' in out and expires[:4] >= '2045' and 'is not banned' in out2, f'{out} {expires} {out2}')
+
+        # a file that cannot be stat'ed (a symlink loop) is not a missing one: the bans stay, nothing is written
+        os.remove(bans_path)
+        os.symlink(os.path.basename(bans_path), bans_path)
+        try:
+            reply = join('far', priv)
+            out = smoke_test.rcon(port, RCON, f'banPlusId {plus_id(public_key(make_key()))} 0 lost')
+            check('stat_error_keeps_bans', reply is not None and 'far' in reply and 'fix it first' in out and os.path.islink(bans_path),
+                  f'{reply} {out}')
+        finally:
+            os.remove(bans_path)
+            open(bans_path, 'wb').write(data)
+
+        # an expiry that is not after the date rejects the file; 1970-01-01 is not "permanent"
+        for name, entry in (('expires_before_date', {'date': '2026-11-01', 'expires': '2026-11-01'}), ('expires_1970', {'expires': '1970-01-01'})):
+            write_bans([dict(entry, id='P-CCCC-CCCC-CCCC-CCCC')])
+            out = smoke_test.rcon(port, RCON, 'unbanPlusId P-AAAA-AAAA-AAAA-AAAA')
+            check(name, 'fix it first' in out, out)
     finally:
         for client in clients:
             client.close()

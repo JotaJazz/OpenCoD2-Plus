@@ -26,6 +26,7 @@ old one is its status line, set to `Superseded by NNNN`.
 | [0016](0016-sse2-float-math.md) | Float math on SSE2, not x87 | Accepted | 2026-11-05 |
 | [0017](0017-dxvk-is-the-default-linux-client.md) | DXVK is the default Linux client | Superseded by 0018 | 2026-11-07 |
 | [0018](0018-the-x64-linux-client-on-dxvk.md) | The x64 Linux client on DXVK too | Accepted | 2026-11-08 |
+| [0019](0019-the-client-signs-with-the-server-s-plusid-header.md) | The client signs with the server's Plus ID header | Accepted | 2026-11-08 |
 
 ## Template
 

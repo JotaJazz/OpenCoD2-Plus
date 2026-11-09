@@ -101,6 +101,9 @@ decltype(Hunk_SetMark()) Hunk_SetMark() { return cod2c_Hunk_SetMark(); }
 extern "C" decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) cod2c_I_stricmp(char const* a0, char const* a1) __asm__(COD2_SYM("I_stricmp"));
 decltype(I_stricmp(std::declval<char const*>(), std::declval<char const*>())) I_stricmp(char const* a0, char const* a1) { return cod2c_I_stricmp(a0, a1); }
 
+extern "C" decltype(I_strncpyz(std::declval<char*>(), std::declval<char const*>(), std::declval<int>())) cod2c_I_strncpyz(char* a0, char const* a1, int a2) __asm__(COD2_SYM("I_strncpyz"));
+decltype(I_strncpyz(std::declval<char*>(), std::declval<char const*>(), std::declval<int>())) I_strncpyz(char* a0, char const* a1, int a2) { return cod2c_I_strncpyz(a0, a1, a2); }
+
 extern "C" decltype(Sys_Milliseconds()) cod2c_Sys_Milliseconds() __asm__(COD2_SYM("Sys_Milliseconds"));
 decltype(Sys_Milliseconds()) Sys_Milliseconds() { return cod2c_Sys_Milliseconds(); }
 

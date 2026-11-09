@@ -182,11 +182,11 @@ static bool PlusIdLists_Read(const unsigned char pk[33], const unsigned char *sa
 	{
 		Q_strncpyz(v->name, yyjson_get_str(name), sizeof(v->name));
 		Q_strncpyz(v->appeal, yyjson_is_str(appeal) ? yyjson_get_str(appeal) : "", sizeof(v->appeal));
-		// the text goes into a refusal: no control characters
+		// the text goes into a quoted refusal: no control characters, ' for "
 		for ( char *p = v->name; *p; p++ )
-			*p = (unsigned char)*p < 32 ? ' ' : *p;
+			*p = (unsigned char)*p < 32 ? ' ' : *p == '"' ? '\'' : *p;
 		for ( char *p = v->appeal; *p; p++ )
-			*p = (unsigned char)*p < 32 ? ' ' : *p;
+			*p = (unsigned char)*p < 32 ? ' ' : *p == '"' ? '\'' : *p;
 		std::sort(v->bans.begin(), v->bans.end(), PlusIdLists_ById);
 	}
 	yyjson_doc_free(doc);

@@ -422,6 +422,20 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 	return qfalse;
 }
 
+// one of the host's own IPs, for the Plus ID address rule (a 0.0.0.0 entry
+// that NET_GetLocalAddress may leave is never a private address)
+qboolean Sys_IsLocalIP( netadr_t adr ) {
+	int i;
+
+	if ( adr.type != NA_IP )
+		return qfalse;
+	for ( i = 0 ; i < numIP ; i++ ) {
+		if ( !memcmp( adr.ip, localIP[i], 4 ) )
+			return qtrue;
+	}
+	return qfalse;
+}
+
 /*
 ==================
 Sys_ShowIP

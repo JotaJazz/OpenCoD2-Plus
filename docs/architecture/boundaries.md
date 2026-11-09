@@ -45,6 +45,7 @@ Hand-written parts: `*_missing.cpp` (what one side lacks), `server_data.cpp`,
 | On the MSVC ABI, C and C++ globals are joined by `/alternatename` aliases generated at link (`cmake/msvc_data_aliases.cmake`) | the MSVC ABI mangles C++ variables, Itanium does not; functions still cross only through the bridge | [ADR 0015](adr/0015-msvc-abi-client-on-the-bridge.md) |
 | The client keeps the engine's bgame for cgame (prediction) next to OpenCoD2-Plus Server's for the local server | cgame reaches its state through `bgs`; OpenCoD2-Plus Server uses `level_bgs` and another `animation_s` | [client.md](client.md) |
 | Functions only code the dedicated server never runs needs, which OpenCoD2-Plus Server lacks, stop the server with their name (`test/server_fatal.txt`) | linked for symbols, never called | [server.md](server.md) |
+| The engine's `cl_plusid_mp.c` includes OpenCoD2-Plus Server's `src/libcod/plusid.hpp` and links its Mbed TLS (`cod2_plus_mbedtls`) | the header is inline, includes no engine headers and calls no server symbol, so the proof the client signs is the one the server checks | [ADR 0019](adr/0019-the-client-signs-with-the-server-s-plusid-header.md) |
 
 ## Forbidden
 

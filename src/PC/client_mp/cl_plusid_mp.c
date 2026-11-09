@@ -26,6 +26,7 @@ void CL_PlusId_AddToInfo(char *info, int size, int challenge, netadr_t server)
 #include <io.h>
 #else
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 #include "../../libcod/plusid.hpp"
@@ -111,7 +112,16 @@ static bool CL_PlusId_Write(const unsigned char priv[32])
 #ifdef _WIN32
     ok = ok && rename(tmp, plusIdPath) == 0;
 #else
-    ok = ok && link(tmp, plusIdPath) == 0;
+    if (ok && link(tmp, plusIdPath) != 0)
+    {
+        /* vfat, exFAT and some FUSE homes have no hard links: rename, only
+         * while there is no key. shortcut: another client creating it between
+         * the stat and the rename loses its key to this one; both just started */
+        struct stat st;
+
+        ok = (errno == EPERM || errno == ENOTSUP || errno == ENOSYS || errno == EXDEV)
+             && stat(plusIdPath, &st) != 0 && errno == ENOENT && rename(tmp, plusIdPath) == 0;
+    }
 #endif
     remove(tmp);
     return ok;
